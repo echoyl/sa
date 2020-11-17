@@ -1,0 +1,246 @@
+<?php
+namespace Echoyl\Sa\Services;
+class PermService
+{
+    static public $allPerms = array();
+	static public $getLogTypes = array();
+	static public $formatPerms = array();
+	public $user_perms = '';
+	public function __construct($up = '')
+	{
+		$this->user_perms = $up;
+	}
+	public function allPerms() 
+	{
+		if (empty(self::$allPerms)) 
+		{
+			$perms = array(
+				'setting'=>$this->perm_setting(),
+				'news'=>$this->perm_news(),
+				'project'=>$this->perm_project(),
+				'perm' => $this->perm_perm(), 
+				'menu' => $this->perm_menu(), 
+				
+			);
+			self::$allPerms = $perms;
+		}
+		return self::$allPerms;
+	}
+
+	protected function perm_news()
+    {
+        return [
+			'text' => '文章管理', 
+			'news'=>$this->normal('文章管理')
+			,'category'=>$this->normal('分类管理')
+		];
+	}
+	protected function perm_project()
+    {
+        return [
+			'text' => '项目管理', 
+			'project'=>$this->normal('项目管理')
+			,'category'=>$this->normal('分类管理')
+		];
+	}
+	protected function perm_menu() 
+	{
+		return [
+			'text' => '导航', 
+			'menu'=>$this->normal('导航管理')
+		];
+	}
+
+    protected function perm_perm() 
+	{
+		return [
+			'text' => '后台权限', 
+			'role' =>$this->normal('角色'),
+			'user' =>$this->normal('用户'),
+		];
+	}
+	protected function perm_account() 
+	{
+		return [
+			'text' => '用户', 
+			'user'=>$this->normal('用户管理'),
+			'area'=>$this->normal('学校区域')
+		];
+	}
+
+	protected function perm_setting() 
+	{
+		return array( 
+			'text' => '设置'
+			,'banner'=>$this->normal('轮播图')
+			,'banner'=>$this->normal('外链')
+			,'sets'=>[
+				'text' => '配置', 
+				'web' => '网站设置',
+				'webindex' => '首页设置',
+			]
+		);
+	}
+
+	public function  normal($text)
+	{
+		return [
+				'text' => $text, 
+				'index' => '查看列表', 
+				'show'=>'查看详情',
+				'add'=>'新增',
+				'edit'=>'修改',
+				'destroy' => '删除-log'
+			];
+	}
+
+	public function check_perm($permtypes = '') 
+	{
+		$check = true;
+		if (empty($permtypes)) 
+		{
+			return false;
+		}
+		
+		if (strpos($permtypes, '&') === false && strpos($permtypes, '|') === false) 
+		{
+			$check = $this->check($permtypes);
+		}
+		else if (strpos($permtypes, '&') !== false) 
+		{
+			$pts = explode('&', $permtypes);
+			foreach ($pts as $pt ) 
+			{
+				$check = $this->check($pt);
+				if ($check) 
+				{
+					continue;
+				}
+				break;
+			}
+		}
+		else if (strpos($permtypes, '|') !== false) 
+		{
+			$pts = explode('|', $permtypes);
+			foreach ($pts as $pt ) 
+			{
+				$check = $this->check($pt);
+				if (!($check)) 
+				{
+					continue;
+				}
+				break;
+			}
+		}
+		return $check;
+	}
+	//检测是否有权限 如果大的权限没有的话表示不检测权限 如果有大权限设置 没找到的话表示没有权限
+	private function check($permtype = '') 
+	{
+		if (empty($permtype)) 
+		{
+			return false;
+		}
+		$perms = explode(',', $this->user_perms);
+		if (empty($perms)) 
+		{
+			return false;
+		}
+		$is_xxx = $this->check_xxx($permtype);
+		$allPerm = $this->allPerms();
+		$first = explode('.',$permtype);
+		if(!isset($allPerm[$first[0]]))
+		{
+			return true;
+		}
+		if ($is_xxx) 
+		{
+			if (!in_array($is_xxx, $perms)) 
+			{
+				return false;
+			}
+		}
+		else if (!in_array($permtype, $perms)) 
+		{
+			return false;
+		}
+		return true;
+	}
+	public function check_xxx($permtype) 
+	{
+		if ($permtype) 
+		{
+			$allPerm = $this->allPerms();
+			$permarr = explode('.', $permtype);
+			if (isset($permarr[3])) 
+			{
+				$is_xxx = ((isset($allPerm[$permarr[0]][$permarr[1]][$permarr[2]]['xxx'][$permarr[3]]) ? $allPerm[$permarr[0]][$permarr[1]][$permarr[2]]['xxx'][$permarr[3]] : false));
+			}
+			else if (isset($permarr[2])) 
+			{
+				$is_xxx = ((isset($allPerm[$permarr[0]][$permarr[1]]['xxx'][$permarr[2]]) ? $allPerm[$permarr[0]][$permarr[1]]['xxx'][$permarr[2]] : false));
+			}
+			else if (isset($permarr[1])) 
+			{
+				$is_xxx = ((isset($allPerm[$permarr[0]]['xxx'][$permarr[1]]) ? $allPerm[$permarr[0]]['xxx'][$permarr[1]] : false));
+			}
+			else 
+			{
+				$is_xxx = false;
+			}
+			if ($is_xxx) 
+			{
+				$permarr = explode('.', $permtype);
+				array_pop($permarr);
+				$is_xxx = implode('.', $permarr) . '.' . $is_xxx;
+			}
+			return $is_xxx;
+		}
+		return false;
+	}
+	
+	public function formatPerms() 
+	{
+		if (empty(self::$formatPerms)) 
+		{
+			$perms = $this->allPerms();
+			$array = array();
+			foreach ($perms as $key => $value ) 
+			{
+				if (is_array($value)) 
+				{
+					foreach ($value as $ke => $val ) 
+					{
+						if (!is_array($val)) 
+						{
+							$array['parent'][$key][$ke] = $val;
+						}
+						if (is_array($val) && ($ke != 'xxx')) 
+						{
+							foreach ($val as $k => $v ) 
+							{
+								if (!is_array($v)) 
+								{
+									$array['son'][$key][$ke][$k] = $v;
+								}
+								if (is_array($v) && ($k != 'xxx')) 
+								{
+									foreach ($v as $kk => $vv ) 
+									{
+										if (!is_array($vv)) 
+										{
+											$array['grandson'][$key][$ke][$k][$kk] = $vv;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			self::$formatPerms = $array;
+		}
+		return self::$formatPerms;
+	}
+
+}

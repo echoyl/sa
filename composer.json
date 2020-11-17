@@ -1,0 +1,12 @@
+{
+    "name": "echoyl/sa",
+    "description": "echoyl's something",
+    "type": "project",
+    "authors": [
+        {
+            "name": "echoyl",
+            "email": "yliang_1987@126.com"
+        }
+    ],
+    "require": {}
+}
