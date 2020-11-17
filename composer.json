@@ -9,5 +9,17 @@
         }
     ],
     "require": {},
-    "license": "MIT"
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Echoyl\\Sa\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Echoyl\\sa\\EchoylSaServiceProvider"
+            ]
+        }
+    }
 }
