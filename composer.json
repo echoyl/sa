@@ -8,5 +8,6 @@
             "email": "yliang_1987@126.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "license": "MIT"
 }
