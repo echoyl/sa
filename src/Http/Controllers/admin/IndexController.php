@@ -51,7 +51,7 @@ class IndexController extends Controller
     public function getMenus()
 	{
 		//根据权限获取相应的 界面目录 之前写在 menu.js中 现在放到后端判断返回显示
-		$menus = $this->menu?:[
+		$menus = $this->menus?:[
 			[
 				"name" => "setting"
 				, "title" => "设置"
