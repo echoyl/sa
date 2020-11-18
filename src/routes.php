@@ -24,7 +24,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>'sadm
 			Route::post('uploader/index', 'UploaderController@index');//上传文件路由
 			Route::post('uploader/video', 'UploaderController@video');//上传视频文件路由
 
-			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
+			Route::group(['prefix' => 'perm'], function(){
 				Route::resource('role', 'RoleController');
 				Route::resource('user', 'UserController');
 			});
