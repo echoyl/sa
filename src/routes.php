@@ -16,14 +16,22 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>'sadm
 			Route::any('attachment/delGroup', 'AttachmentController@delGroup');//图片管理列表路由
 			Route::resource('attachment', 'AttachmentController');//图片管理列表路由
 			
-			//Route::resource('category', 'CategoryController');//通用分类
-			//Route::resource('posts', 'PostsController');//内容Posts模块
+			Route::resource('category', 'CategoryController');//通用分类
+			Route::resource('posts', 'PostsController');//内容Posts模块
 			
-			//Route::any('sets/base', 'SetsController@base');//基础设置
+			Route::any('sets/base', 'SetsController@base');//基础设置
 			
+			Route::post('uploader/index', 'UploaderController@index');//上传文件路由
+			Route::post('uploader/video', 'UploaderController@video');//上传视频文件路由
 
+			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
+				Route::resource('role', 'RoleController');
+				Route::resource('user', 'UserController');
+			});
 
 		});
+		Route::any('login','LoginController@index');
+		Route::get('captcha', 'LoginController@captcha');
 	});
 });
 ?>
