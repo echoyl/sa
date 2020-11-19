@@ -12,44 +12,36 @@ class PermService
 	}
 	public function allPerms() 
 	{
+		
+
 		if (empty(self::$allPerms)) 
 		{
-			$perms = array(
-				'setting'=>$this->perm_setting(),
-				'news'=>$this->perm_news(),
-				'project'=>$this->perm_project(),
-				'perm' => $this->perm_perm(), 
-				'menu' => $this->perm_menu(), 
-				
-			);
+			if(file_exists(app_path('Services/PermService.php')))
+			{
+				$ps = new \App\Services\PermService();
+				$perms = $ps->allPerms();
+			}else
+			{
+				$perms = array(
+					'setting'=>$this->perm_setting(),
+					'perm' => $this->perm_perm(), 
+					
+				);
+			}
+			
 			self::$allPerms = $perms;
 		}
 		return self::$allPerms;
 	}
 
-	protected function perm_news()
-    {
-        return [
-			'text' => '文章管理', 
-			'news'=>$this->normal('文章管理')
-			,'category'=>$this->normal('分类管理')
-		];
-	}
-	protected function perm_project()
-    {
-        return [
-			'text' => '项目管理', 
-			'project'=>$this->normal('项目管理')
-			,'category'=>$this->normal('分类管理')
-		];
-	}
-	protected function perm_menu() 
-	{
-		return [
-			'text' => '导航', 
-			'menu'=>$this->normal('导航管理')
-		];
-	}
+	// protected function perm_news()
+    // {
+    //     return [
+	// 		'text' => '文章管理', 
+	// 		'news'=>$this->normal('文章管理')
+	// 		,'category'=>$this->normal('分类管理')
+	// 	];
+	// }
 
     protected function perm_perm() 
 	{
@@ -59,14 +51,7 @@ class PermService
 			'user' =>$this->normal('用户'),
 		];
 	}
-	protected function perm_account() 
-	{
-		return [
-			'text' => '用户', 
-			'user'=>$this->normal('用户管理'),
-			'area'=>$this->normal('学校区域')
-		];
-	}
+
 
 	protected function perm_setting() 
 	{

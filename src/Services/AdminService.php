@@ -61,17 +61,23 @@ class AdminService
             //读取用户权限信息 实时读取
             $permUser = new PermUser();
             $perms = $permUser->find($user['id'],['perms2']);
+            //默认的命名空间
+            $default_namespace = [
+                '\\Echoyl\\Sa\\Http\\Controllers\\admin\\',
+                'App\\Http\\Controllers\\admin\\'
+            ];
             //解析route
-            $controller = str_replace("App\\Http\\Controllers\\admin\\",'',request()->route()->action['controller']);
-            //检测是否有命名空间
-            if(strpos($controller,'\\') !== false)
+            $action = request()->route()->action;
+            $namespace = $action['namespace'];
+            $controller = str_replace($namespace,'',$action['controller']);
+
+            //处理命名空间
+            foreach($default_namespace as $val)
             {
-                list($namespace,$controller) = explode('\\',$controller);           
-            }else
-            {
-                $namespace = '';
-                
+                $namespace = str_replace($val,'',$namespace);
             }
+
+          
             list($c,$a) = explode('Controller@',$controller);
             if($a == 'store')
             {
@@ -84,12 +90,10 @@ class AdminService
                     $a = 'add';
                 }
             }
+            $now_router = implode('.',[$c,$a]);
             if($namespace)
             {
-                $now_router = implode('.',[$namespace,$c,$a]);
-            }else
-            {
-                $now_router = implode('.',[$c,$a]);
+                $now_router = implode('.',[$namespace,$now_router]);
             }
             $perm_obj = new PermService($perms['perms2']);
             $perm = $perm_obj->check_perm(strtolower($now_router));
