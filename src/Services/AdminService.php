@@ -60,24 +60,27 @@ class AdminService
             //id为1是超级管理员
             //读取用户权限信息 实时读取
             $permUser = new PermUser();
-            $perms = $permUser->find($user['id'],['perms2']);
+            $perms = $permUser->where(['id'=>$user['id']])->select(['perms2','roleid'])->with(['role'=>function($q){
+                $q->select(['id','perms2']);
+            }])->first()->toArray();
             //默认的命名空间
             $default_namespace = [
-                '\\Echoyl\\Sa\\Http\\Controllers\\admin\\',
-                'App\\Http\\Controllers\\admin\\'
+                '\\Echoyl\\Sa\\Http\\Controllers\\admin',
+                'Echoyl\\Sa\\Http\\Controllers\\admin',
+                'App\\Http\\Controllers\\admin'
             ];
             //解析route
             $action = request()->route()->action;
+            
             $namespace = $action['namespace'];
-            $controller = str_replace($namespace,'',$action['controller']);
-
+            $controller = str_replace($namespace.'\\','',$action['controller']);
+            
             //处理命名空间
             foreach($default_namespace as $val)
             {
                 $namespace = str_replace($val,'',$namespace);
             }
-
-          
+            //d($namespace);
             list($c,$a) = explode('Controller@',$controller);
             if($a == 'store')
             {
@@ -95,9 +98,11 @@ class AdminService
             {
                 $now_router = implode('.',[$namespace,$now_router]);
             }
-            $perm_obj = new PermService($perms['perms2']);
-            $perm = $perm_obj->check_perm(strtolower($now_router));
-            //d($now_router,$perms['perms2'],$perm);
+            $now_router = trim(strtolower($now_router),'\\');
+            //d($perms);
+            $perm_obj = new PermService($perms['perms2'],$perms['role']['perms2']);
+            $perm = $perm_obj->check_perm($now_router);
+            //d($now_router,$perms['perms2'],$perm,$action);
             if (!$perm) {
                 return false;
             }

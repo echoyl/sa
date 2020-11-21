@@ -13,17 +13,5 @@ class Role extends Model
      */
     protected $table = 'perm_role';
 
-    public function format($id = 0)
-    {
-        $data = $this->orderBy('id','asc')->get();
-        $ret = [];
-        foreach($data as $val)
-        {
-            $ret[] = [
-                'id'=>$val['id'],'name'=>$val['rolename'],'children'=>[]
-            ];
-        }
-        return $ret;
-    }
 
 }

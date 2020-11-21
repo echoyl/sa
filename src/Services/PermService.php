@@ -6,9 +6,11 @@ class PermService
 	static public $getLogTypes = array();
 	static public $formatPerms = array();
 	public $user_perms = '';
-	public function __construct($up = '')
+	public $role_perms = '';
+	public function __construct($user_perms = '',$role_perms = '')
 	{
-		$this->user_perms = $up;
+		$this->user_perms = $user_perms;
+		$this->role_perms = $role_perms;
 	}
 	public function allPerms() 
 	{
@@ -16,18 +18,19 @@ class PermService
 
 		if (empty(self::$allPerms)) 
 		{
+			$perms = [
+				'setting'=>$this->perm_setting(),
+				'perm' => $this->perm_perm(),
+				//'attachment'=>$this->perm_attachment(),
+			];
 			if(file_exists(app_path('Services/PermService.php')))
 			{
 				$ps = new \App\Services\PermService();
-				$perms = $ps->allPerms();
-			}else
-			{
-				$perms = array(
-					'setting'=>$this->perm_setting(),
-					'perm' => $this->perm_perm(), 
-					
-				);
+				$perms = array_merge($perms,$ps->allPerms());
 			}
+
+			$perms['attachment'] = $this->perm_attachment();
+			$perms['uploader'] = $this->perm_uploader();
 			
 			self::$allPerms = $perms;
 		}
@@ -55,7 +58,7 @@ class PermService
 
 	protected function perm_setting() 
 	{
-		return array( 
+		return [
 			'text' => '设置'
 			,'banner'=>$this->normal('轮播图')
 			,'banner'=>$this->normal('外链')
@@ -64,7 +67,29 @@ class PermService
 				'web' => '网站设置',
 				'webindex' => '首页设置',
 			]
-		);
+		];
+	}
+
+	protected function perm_uploader()
+	{
+		return [
+			'text' => '上传管理', 
+			'index' => '上传图片', 
+			'video'=>'上传视频'
+		];
+	}
+
+	protected function perm_attachment()
+	{
+		return [
+			'text' => '图片文件管理', 
+			'index' => '查看列表', 
+			'add'=>'新增',
+			'edit'=>'修改',
+			'destroy' => '删除-log',
+			'addGroup'=>'添加文件夹',
+			'delGroup'=>'删除文件夹',
+		];
 	}
 
 	public function  normal($text)
@@ -127,6 +152,8 @@ class PermService
 			return false;
 		}
 		$perms = explode(',', $this->user_perms);
+		$role_perms = explode(',',$this->role_perms);
+		$perms = array_intersect($role_perms,$perms);
 		if (empty($perms)) 
 		{
 			return false;

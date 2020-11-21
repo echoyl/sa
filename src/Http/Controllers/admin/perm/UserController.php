@@ -1,7 +1,8 @@
 <?php
 
-namespace Echoyl\Sa\Http\Controllers\admin;
+namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
+use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\PermUser;
 use Echoyl\Sa\Models\Role;
 use Echoyl\Sa\Services\AdminService;
@@ -17,13 +18,7 @@ class UserController extends CrudController
     public function __construct(PermUser $model)
 	{
 		$this->model = $model;
-		$this->cateModel = new Role();
-		$perm = new PermService();
-		$this->default_post = [
-			'perms'=>$perm->formatPerms(),
-			'roles'=>json_encode($this->cateModel->format()),
-			'user_perms'=>[]
-		];
+		
 	}
 
 	public function handleSearch()
@@ -51,9 +46,22 @@ class UserController extends CrudController
 
 	public function postData(&$item)
 	{
-		$item['perms'] = $this->default_post['perms'];
-		$item['roles'] = $this->default_post['roles'];
-		$item['user_perms'] = $item['perms2']?explode(',',$item['perms2']):[];
+		$perm = new PermService();
+
+		$roles = Role::get();
+		$_roles = [];
+		$role_perms = [];
+		foreach($roles as $val)
+		{
+			$_roles[] = ['id'=>$val['id'],'name'=>$val['rolename']];
+			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
+		}
+
+		$item['perms'] = $perm->formatPerms();
+		$item['roles'] = json_encode($_roles);
+		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
+		$item['role_perms'] = $role_perms;
+
 	}
 
 	public function beforePost(&$data)

@@ -19,14 +19,16 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>'sadm
 			Route::resource('category', 'CategoryController');//通用分类
 			Route::resource('posts', 'PostsController');//内容Posts模块
 			
-			Route::any('sets/base', 'SetsController@base');//基础设置
 			
 			Route::post('uploader/index', 'UploaderController@index');//上传文件路由
 			Route::post('uploader/video', 'UploaderController@video');//上传视频文件路由
 
-			Route::group(['prefix' => 'perm'], function(){
-				Route::resource('role', 'RoleController');
+			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
+                Route::resource('role', 'RoleController');
 				Route::resource('user', 'UserController');
+			});
+			Route::group(['namespace' => 'setting', 'prefix' => 'setting'], function(){
+                Route::any('sets/base', 'SetsController@base');
 			});
 
 		});

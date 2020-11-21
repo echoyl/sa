@@ -84,16 +84,17 @@ class CrudController extends Controller
 		$item = $m->where(['id'=>$id])->first();
 		
 		if (!empty($item)) {
-			if(method_exists($this,'postData'))
-			{
-				$this->postData($item);//postData为预处理数据格式
-			}
+			
 		}else
 		{
 			$item = $this->default_post;//数据的默认值
 			$item['created_at'] = now();
 		}
 		
+		if(method_exists($this,'postData'))
+		{
+			$this->postData($item);//postData为预处理数据格式
+		}
 
 
 		$type = request('actype');
