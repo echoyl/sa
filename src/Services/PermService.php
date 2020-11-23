@@ -92,16 +92,16 @@ class PermService
 		];
 	}
 
-	public function  normal($text)
+	public function  normal($text,$more = [])
 	{
-		return [
-				'text' => $text, 
-				'index' => '查看列表', 
-				'show'=>'查看详情',
-				'add'=>'新增',
-				'edit'=>'修改',
-				'destroy' => '删除-log'
-			];
+		return array_merge($more,[
+			'text' => $text, 
+			'index' => '查看列表', 
+			'show'=>'查看详情',
+			'add'=>'新增',
+			'edit'=>'修改',
+			'destroy' => '删除-log'
+		]);
 	}
 
 	public function check_perm($permtypes = '') 

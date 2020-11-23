@@ -12,21 +12,21 @@ class PostsController extends CrudController
     //
 	var $with_colunm = ['category'];
 	var $dont_post_colunms = ['pics_ids','files'];
+	//var $json_colunms = ['specs'];
 	var $cid = 0;
+	var $spec_arr = false;
     public function __construct()
 	{
 		$this->model = new Posts();
 		$this->cateModel = new Category();
-		$this->cid = intval(request('page_info.id'));
-		$this->default_post = [
-			'category_arr'=>json_encode($this->cateModel->format($this->cid))
-		];
+		//$this->cid = intval(request('page_info.id'));
 	}
 
 	public function postData(&$item)
 	{
-		$item['files'] = json_encode((new Attachment)->getAttachment($item['files_ids']));
-		$item['category_arr'] = $this->default_post['category_arr'];
+		//$item['files'] = json_encode((new Attachment)->getAttachment($item['files_ids']));
+		$item['category_arr'] = json_encode($this->cateModel->format($this->cid));
+		$item['spec_arr'] = $this->spec_arr?json_encode($this->spec_arr):false;
 		return;
 	}
 
@@ -36,7 +36,15 @@ class PostsController extends CrudController
 
 		$search = [];
 
-		$search['category_arr'] = $this->default_post['category_arr'];
+		$keyword = request('keyword','');
+		if($keyword)
+		{
+			$search['keyword'] = urldecode($keyword);
+			$m = $m->where([['title','like','%'.urldecode($keyword).'%']]);
+
+		}
+
+		$search['category_arr'] = json_encode($this->cateModel->format($this->cid));
 
 		$category_id = request('category_id','');
 

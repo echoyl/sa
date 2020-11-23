@@ -138,7 +138,7 @@ class CrudController extends Controller
 
 					if(method_exists($this,'beforePost'))
 					{
-						$this->beforePost($data);//操作前处理数据
+						$this->beforePost($data,$id);//操作前处理数据
 					}
 
 			}
