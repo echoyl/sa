@@ -2,6 +2,8 @@
 
 namespace Echoyl\Sa\Models;
 
+use App\Services\MenuService;
+use App\Services\WeburlService;
 use Illuminate\Database\Eloquent\Model;
 
 class Posts extends Model
@@ -33,6 +35,17 @@ class Posts extends Model
         ])->orWhere([
             ['displayorder','<',$news['displayorder']],['id','!=',$news['id']],['category_id','=',$news['category_id']]
         ])->orderBy('displayorder','desc')->orderBy('id','desc')->first();
+        
+        $menu = MenuService::getMenu();
+        if($prev)
+        {
+            $prev['href'] = WeburlService::create($menu['id'],'detail',$prev['id']);
+        }
+        if($next)
+        {
+            $next['href'] = WeburlService::create($menu['id'],'detail',$next['id']);
+        }
+
         return ['prev'=>$prev,'next'=>$next];
 
     }
