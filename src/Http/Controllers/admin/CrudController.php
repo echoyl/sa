@@ -15,7 +15,7 @@ class CrudController extends Controller
 	var $json_colunms = [];
 	var $displayorder =[];
 	var $can_be_null_colunms = [];//可以设置为空的字段
-	
+	var $with_count = [];
     public function index()
     {
         $psize = request('limit',10);
@@ -40,6 +40,10 @@ class CrudController extends Controller
 		if(!empty($this->with_colunm))
 		{
 			$m = $m->with($this->with_colunm);
+		}
+		if(!empty($this->with_count))
+		{
+			$m = $m->withCount($this->with_count);
 		}
 		if(!empty($this->displayorder))
 		{
