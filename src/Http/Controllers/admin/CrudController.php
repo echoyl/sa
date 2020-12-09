@@ -142,7 +142,11 @@ class CrudController extends Controller
 
 					if(method_exists($this,'beforePost'))
 					{
-						$this->beforePost($data,$id);//操作前处理数据
+						$ret = $this->beforePost($data,$id);//操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+						if($ret)
+						{
+							return $ret;
+						}
 					}
 
 			}
