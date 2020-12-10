@@ -22,7 +22,11 @@ class IndexController extends Controller
 	public function user(Request $request)
 	{
 		if ($request->isMethod('post')) {
-			$uinfo = AdminService::user(1);
+			$uinfo = AdminService::user();
+			if($uinfo['username'] == 'test')
+			{
+				return ['code'=>1,'msg'=>'体验账号暂时不支持修改密码'];
+			}
 			$p1 = trim($request->input('password',''));
 			$p2 = trim($request->input('password2',''));
 			if(strlen($p2) > 5 && AdminService::pwd($p1) == $uinfo['password']) 
