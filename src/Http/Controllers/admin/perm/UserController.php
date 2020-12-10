@@ -12,13 +12,16 @@ class UserController extends CrudController
 {
     //
 	var $model;
-	var $with_colunm = ['role'];
+	
 	//var $json_colunms = ['perms2'];
+	var $with_count = ['logs'];
 	var $can_be_null_colunms = ['desc'];
     public function __construct(PermUser $model)
 	{
 		$this->model = $model;
-		
+		$this->with_colunm = ['role','logs'=>function($q){
+			$q->orderBy('last_used_at','desc')->limit(1);
+		}];
 	}
 
 	public function handleSearch()
@@ -41,6 +44,9 @@ class UserController extends CrudController
 			$m = $m->where('roleid',$roleid);
 		}
 		$m = $m->where([['id','!=',1]]);
+
+		$search['roles'] = json_encode(Role::select(['title as name','id'])->get()->toArray());
+
 		return [$m,$search];
 	}
 
@@ -53,7 +59,7 @@ class UserController extends CrudController
 		$role_perms = [];
 		foreach($roles as $val)
 		{
-			$_roles[] = ['id'=>$val['id'],'name'=>$val['rolename']];
+			$_roles[] = ['id'=>$val['id'],'name'=>$val['title']];
 			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
 		}
 
