@@ -8,7 +8,9 @@
             "email": "yliang_1987@126.com"
         }
     ],
-    "require": {},
+    "require": {
+        "laravel/sanctum": "^2.7"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
