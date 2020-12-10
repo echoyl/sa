@@ -11,9 +11,13 @@ class CaptchaService
         //改变session存储方式 存到cache中
         if($key)
         {
-            Cache::forget($key);
+            Cache::forget(md5($key));
         }
-        Cache::put($captcha['key'],1,now()->addMinute(2));//2分钟有效期
+      	
+        Cache::put(md5($captcha['key']),$captcha['key'],now()->addMinute(2));//2分钟有效期
+      	//$captcha['key_back'] = $captcha['key'];
+      	$captcha['key'] = md5($captcha['key']);
+      	
         return $captcha;
     }
 
@@ -21,21 +25,12 @@ class CaptchaService
     {
         //清理过期cache
 
-
         $cache = Cache::get($key);
         Cache::forget($key);
-        //d([$cache,$key,$value]);
-        if($cache && app('captcha')->check_api($value,$key))
+        if($cache && app('captcha')->check_api($value,$cache))
         {
-            
             return true;
         }
         return false;
     }
-
-
-
-
-
-
 }
