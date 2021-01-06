@@ -92,7 +92,7 @@ class CrudController extends Controller
 		}else
 		{
 			$item = $this->default_post;//数据的默认值
-			$item['created_at'] = now();
+			$item['created_at'] = now()->toDateTimeString();
 		}
 		
 		if(method_exists($this,'postData'))
