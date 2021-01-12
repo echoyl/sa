@@ -45,7 +45,7 @@ class PostsController extends CrudController
 		}
 
 		$search['category_arr'] = json_encode($this->cateModel->format($this->cid));
-
+		$search['categorys'] = $this->cateModel->format($this->cid);
 		$category_id = request('category_id','');
 
 		$self_ids = $this->cateModel->childrenIds($this->cid);//自身包含的子分类id集合
