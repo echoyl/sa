@@ -1,5 +1,5 @@
 <?php
-Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>'sadmin'], function(){
+Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('APP_PREFIX','').'sadmin'], function(){
 
 	//默认暴露这些公用路由 
 	Route::middleware('api')->group(function(){
