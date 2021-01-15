@@ -9,12 +9,12 @@ class CrudController extends Controller
 	var $model;
 	var $cateModel;
 	var $cid = 0;
-	var $with_colunm = [];
-	var $dont_post_colunms = [];//多余字段不需要提交数据库
+	var $with_column = [];
+	var $dont_post_columns = [];//多余字段不需要提交数据库
 	var $default_post = [];
-	var $json_colunms = [];
+	var $json_columns = [];
 	var $displayorder =[];
-	var $can_be_null_colunms = [];//可以设置为空的字段
+	var $can_be_null_columns = [];//可以设置为空的字段
 	var $with_count = [];
     public function index()
     {
@@ -37,9 +37,9 @@ class CrudController extends Controller
 		}
 
 		$count = $m->count();
-		if(!empty($this->with_colunm))
+		if(!empty($this->with_column))
 		{
-			$m = $m->with($this->with_colunm);
+			$m = $m->with($this->with_column);
 		}
 		if(!empty($this->with_count))
 		{
@@ -81,9 +81,9 @@ class CrudController extends Controller
 		//sleep(10);
 		$id = request('id',0);
 		$m = $this->model;
-		if(!empty($this->with_colunm))
+		if(!empty($this->with_column))
 		{
-			$m = $m->with($this->with_colunm);
+			$m = $m->with($this->with_column);
 		}
 		$item = $m->where(['id'=>$id])->first();
 		
@@ -114,13 +114,13 @@ class CrudController extends Controller
 					$data = ['displayorder'=>intval(request('displayorder'))];
 				break;
 				default:
-				//d($this->can_be_null_colunms);
-					$data = filterEmpty(request('base'),$this->can_be_null_colunms);//后台传入数据统一使用base数组，懒得每个字段赋值
+				//d($this->can_be_null_columns);
+					$data = filterEmpty(request('base'),$this->can_be_null_columns);//后台传入数据统一使用base数组，懒得每个字段赋值
 
 					//设置不需要提交字段
-					if(!empty($this->dont_post_colunms))
+					if(!empty($this->dont_post_columns))
 					{
-						foreach($this->dont_post_colunms as $c)
+						foreach($this->dont_post_columns as $c)
 						{
 							if(isset($data[$c]))
 							{
@@ -129,9 +129,9 @@ class CrudController extends Controller
 						}
 					}
 					//json数据列
-					if(!empty($this->json_colunms))
+					if(!empty($this->json_columns))
 					{
-						foreach($this->json_colunms as $c)
+						foreach($this->json_columns as $c)
 						{
 							if(isset($data[$c]))
 							{
@@ -173,9 +173,9 @@ class CrudController extends Controller
 		$item['categoryarr'] = json_encode($category_arr);
 
 		//json数据列
-		if(!empty($this->json_colunms))
+		if(!empty($this->json_columns))
 		{
-			foreach($this->json_colunms as $c)
+			foreach($this->json_columns as $c)
 			{
 				if(isset($item[$c]) && $item[$c])
 				{

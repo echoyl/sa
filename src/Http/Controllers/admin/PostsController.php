@@ -10,9 +10,9 @@ use Echoyl\Sa\Models\Posts;
 class PostsController extends CrudController
 {
     //
-	var $with_colunm = ['category'];
-	var $dont_post_colunms = ['pics_ids','files'];
-	//var $json_colunms = ['specs'];
+	var $with_column = ['category'];
+	var $dont_post_columns = ['pics_ids','files'];
+	//var $json_columns = ['specs'];
 	var $cid = 0;
 	var $spec_arr = false;
     public function __construct()

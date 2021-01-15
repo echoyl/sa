@@ -13,13 +13,13 @@ class UserController extends CrudController
     //
 	var $model;
 	
-	//var $json_colunms = ['perms2'];
+	//var $json_columns = ['perms2'];
 	var $with_count = ['logs'];
-	var $can_be_null_colunms = ['desc'];
+	var $can_be_null_columns = ['desc'];
     public function __construct(PermUser $model)
 	{
 		$this->model = $model;
-		$this->with_colunm = ['role','logs'=>function($q){
+		$this->with_column = ['role','logs'=>function($q){
 			$q->orderBy('last_used_at','desc')->limit(1);
 		}];
 	}
