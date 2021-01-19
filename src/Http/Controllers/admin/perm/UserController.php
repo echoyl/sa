@@ -45,7 +45,7 @@ class UserController extends CrudController
 		}
 		$m = $m->where([['id','!=',1]]);
 
-		$search['roles'] = json_encode(Role::select(['title as name','id'])->get()->toArray());
+		$search['roles'] = Role::select(['title as name','id'])->get()->toArray();
 
 		return [$m,$search];
 	}
