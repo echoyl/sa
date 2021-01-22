@@ -51,9 +51,12 @@ class CrudController extends Controller
 			{
 				$m = $m->orderBy($val[0],$val[1]);
 			}
+		}else
+		{
+			//默认按照id排序
+			$m = $m->orderBy('id','desc');
 		}
-		$list = $m->orderBy('id','desc')
-				->offset(($page-1)*$psize)
+		$list = $m->offset(($page-1)*$psize)
 				->limit($psize)
 				->get();
 		
