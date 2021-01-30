@@ -165,8 +165,9 @@ class UploadService
         //新增功能 将图片插入到数据库，统一管理用户上传的图片
         //前台上传图片不插入数据库中
 
-		$waterImg = Sets::getSet('web.waterImg');
-		if(Sets::getSet('web.waterFlag') == 1 && $waterImg && $isImage)
+		$base_set = (new SetsService)->get('base');
+
+		if(isset($base_set['image_water']) && $base_set['image_water'] && isset($base_set['image_water_url']) && $base_set['image_water_url'])
 		{
 			//图片已经开始上传需要增加水印
 			
@@ -176,7 +177,7 @@ class UploadService
 			$x = 15;
 			$y = 15;
 			//d($width);
-			$img->insert(Image::make(storage_path('app/public/'.$waterImg))->resize($width,$width),'bottom-right', $x, $y)->save($newPath);
+			$img->insert(Image::make(storage_path('app/public/'.$base_set['image_water_url']))->resize($width,$width),'bottom-right', $x, $y)->save($newPath);
 		}
 		
         return ['code'=>0,'msg'=>'上传成功','data'=>['value'=>$path,'src'=>tomedia($path),'thumb_url'=>$thumb_url]];
