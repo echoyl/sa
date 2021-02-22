@@ -67,7 +67,7 @@ class UserController extends CrudController
 		$item['roles'] = json_encode($_roles);
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 		$item['role_perms'] = $role_perms;
-
+		$item['password'] = '';
 	}
 
 	public function beforePost(&$data)
