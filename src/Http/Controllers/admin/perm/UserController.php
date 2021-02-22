@@ -24,6 +24,14 @@ class UserController extends CrudController
 		}];
 	}
 
+	public function listData(&$list)
+	{
+		foreach($list as $key=>$val)
+		{
+			$list[$key]['password'] = '';
+		}
+	}
+
 	public function handleSearch()
 	{
 		$m = $this->model;
