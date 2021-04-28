@@ -15,14 +15,14 @@ class Category extends Model
 
     public function format($id = 0)
     {
-        $data = self::allData($this->table)->filter(function($user) use ($id) {
-            return $user->parent_id === $id;
+        $data = self::allData($this->table)->filter(function($item) use ($id) {
+            return $item->parent_id === $id;
         });
         $ret = [];
         foreach($data as $val)
         {
             $ret[] = [
-                'id'=>$val['id'],'name'=>$val['title'],'parent_id'=>$val['parent_id'],'children'=>$this->format($val['id'])
+                'id'=>$val['id'],'title'=>$val['title'],'parent_id'=>$val['parent_id'],'child'=>$this->format($val['id'])
             ];
         }
         return $ret;
@@ -94,6 +94,12 @@ class Category extends Model
         }
         return array_filter(array_unique($ids));
     }
+    /**
+     * 将数据全部取出后 循环获取自己的子集
+     *
+     * @param integer $parent_id
+     * @return void
+     */
     public function children($parent_id = 0)
     {
         $children = self::allData($this->table)->filter(function($user) use ($parent_id) {
@@ -101,4 +107,20 @@ class Category extends Model
         });
         return $children;
     }
+
+    /**
+     * 循环通过读取数据库获取自己的子集
+     *
+     * @param [int] $cid
+     * @return void
+     */
+    public function getChild($cid = 0)
+	{
+		$list = $this->where(['parent_id'=>$cid])->orderBy('displayorder','desc')->get()->toArray();
+		foreach($list as $key=>$val)
+		{
+			$list[$key]['children'] = $this->getChild($val['id']);
+		}
+		return $list;
+	}
 }

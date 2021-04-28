@@ -45,6 +45,18 @@ class CrudController extends Controller
 		{
 			$m = $m->withCount($this->with_count);
 		}
+		$has_id = false;
+		if(request('sort'))
+		{
+			//添加排序检测
+			$sort = explode('.',request('sort'));
+			if(count($sort) > 1)
+			{
+				$m = $m->orderBy($sort[0],$sort[1]);
+				$has_id = true;
+			}
+		}
+
 		if(!empty($this->displayorder))
 		{
 			foreach($this->displayorder as $val)
@@ -54,7 +66,11 @@ class CrudController extends Controller
 		}else
 		{
 			//默认按照id排序
-			$m = $m->orderBy('id','desc');
+			if(!$has_id)
+			{
+				$m = $m->orderBy('id','desc');
+			}
+			
 		}
 		$list = $m->offset(($page-1)*$psize)
 				->limit($psize)
@@ -91,7 +107,14 @@ class CrudController extends Controller
 		$item = $m->where(['id'=>$id])->first();
 		
 		if (!empty($item)) {
-			
+			if(method_exists($this,'checkPost'))
+			{
+				$ret = $this->checkPost($item,$id);//编辑数据检测
+				if($ret)
+				{
+					return $ret;
+				}
+			}
 		}else
 		{
 			$item = $this->default_post;//数据的默认值
@@ -102,6 +125,7 @@ class CrudController extends Controller
 		{
 			$this->postData($item);//postData为预处理数据格式
 		}
+		
 
 
 		$type = request('actype');
@@ -171,9 +195,9 @@ class CrudController extends Controller
 		$category_arr = [];
 		if($this->cateModel)
 		{
-			$category_arr = $this->cateModel->format(0,'');
+			$category_arr = $this->cateModel->format($this->cid);
 		}
-		$item['categoryarr'] = json_encode($category_arr);
+		$item['categorys'] = $category_arr;
 
 		//json数据列
 		if(!empty($this->json_columns))

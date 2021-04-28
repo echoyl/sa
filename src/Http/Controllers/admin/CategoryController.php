@@ -23,34 +23,12 @@ class CategoryController extends CrudController
 
     public function index()
     {
-		$ids = $this->model->childrenIds($this->cid,false);
+		//修改获取分类模式 直接递归 查询数据库获取数据
 
-		$m = $this->model;
-
-		[$m,$search] = $this->handleSearch();
-
-		//d($ids);
-		$list = $m->whereIn('id',$ids)->orderBy('parent_id','asc')->orderBy('displayorder','desc')->get();
-		return ['code'=>0,'msg'=>'','data'=>$list];	
+		return ['code'=>0,'msg'=>'','data'=>$this->model->getChild($this->cid)];	
 
 	}
+
 	
-	public function handleSearch()
-	{
-		$m = $this->model;
-
-		$search = [];
-
-		$keyword = request('keyword','');
-		if($keyword)
-		{
-			$search['keyword'] = urldecode($keyword);
-			$m = $m->where([['title','like','%'.urldecode($keyword).'%']]);
-
-		}
-
-		return [$m,$search];
-
-	}
 
 }
