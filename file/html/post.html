@@ -1,0 +1,136 @@
+<div class="layui-fluid">
+	<div class="layui-row layui-col-space15">
+		<div class="layui-col-md12">
+			<div class="layui-card">
+				<div class="layui-card-body">
+					<form class="layui-form" lay-filter="form_post">
+					<div class="layui-tab layui-tab-brief" lay-filter="component-tabs-brief">
+					<script type="text/html" tpl lay-url="$url$/show" lay-done="layui.saPageRender(d);">
+						<ul class="layui-tab-title">
+							<li  class="layui-this">基本信息</li>
+						</ul>
+						<div class="layui-tab-content">
+							<div class="layui-tab-item layui-show">
+								<div class="layui-form-item">
+									<label class="layui-form-label">标题</label>
+									<div class="layui-input-inline">
+										<input type="text" name="base[title]" value="{{d.data.title}}" placeholder="请输入标题" autocomplete="off" class="layui-input layui-col-md6">
+									</div>
+								</div>
+								
+								<div class="layui-form-item">
+									<label class="layui-form-label">分类选择</label>
+									<div class="layui-input-inline">
+										<input type="text" lay-verify="required" name="base[category_id]" data-data="{{=JSON.stringify(d.data.categorys)}}" data-value="{{d.data.category_id}}"  placeholder="请选择分类" value="" readonly="" class="layui-input sa_picker">
+									</div>
+								</div>
+								
+								<div class="layui-form-item">
+									<label class="layui-form-label">发布时间</label>
+									<div class="layui-input-inline">
+										<input type="text" name="base[created_at]" data-type="datetime" value="{{d.data.created_at?d.data.created_at:''}}" placeholder="请选择发布时间" autocomplete="off" class="layui-input layui-col-md6 bldate">
+									</div>
+									<div class="layui-form-mid layui-word-aux">
+										这个时间只在详情页起显示作用
+									</div>
+								</div>
+
+								<div class="attachment" data-name="base[titlepic]" data-limit="1" data-input="1" data-title="封面图" data-value="{{d.data.titlepic}}"></div>
+			
+								<div class="attachment" data-name="base[pics]" data-limit="10" data-title="图集" data-value="{{d.data.pics}}"></div>
+								
+								<div class="layui-form-item">
+									<label class="layui-form-label">简介</label>
+									<div class="layui-input-inline">
+										<textarea class="layui-textarea" name="base[desc]" placeholder="请输入简介">{{d.data.desc}}</textarea>
+									</div>
+								</div>
+								
+								<div class="layui-form-item">
+									<label class="layui-form-label">内容</label>
+									<div class="layui-input-block">
+										<textarea class="tinymce" name="base[content]" placeholder="请输入内容">{{d.data.content}}</textarea>
+									</div>
+								</div>
+			
+								<div class="layui-form-item">
+									<label class="layui-form-label">排序</label>
+									<div class="layui-input-inline">
+										<input type="text" name="base[displayorder]" value="{{d.data.displayorder?d.data.displayorder:0}}" placeholder="请输入排序" autocomplete="off" class="layui-input layui-col-md6">
+									</div>
+									<div class="layui-form-mid layui-word-aux">
+										值越大越排在前面
+									</div>
+								</div>
+								
+								<div class="layui-form-item">
+									<label class="layui-form-label">状态</label>
+									<div class="layui-input-block">
+										<input type="checkbox" name="base[status]" {{# if(d.data.status == 1){ }}checked{{# } }} value="1" lay-skin="switch" lay-text="启用|启用">
+									</div>
+								</div>
+							</div>
+
+
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<button class="layui-btn" lay-submit lay-filter="form_post">立即提交</button>
+									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+									<input type="hidden" name="id" value="{{d.data.id}}">
+									
+								</div>
+							</div>
+						</div>
+					</script>
+					</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+layui.saPageRender = function(d){
+	layui.use(['form'],function(){
+		var form = layui.form
+		,layer = layui.layer
+		,sa = layui.sa
+		,$ = layui.$;
+		
+		layui.form.render();
+
+		//监听提交
+		form.on('submit(form_post)', function(data){
+			var url = '$url$';
+			
+			if(!data.field['base[status]'])
+			{
+				data.field['base[status]'] = 0;
+			}
+			
+			sa.request({
+				url: url
+				,type:'post'
+				,data: data.field
+				,done: function(res) {
+					layer.msg('操作成功', {
+						offset: '15px',
+						icon: 1,
+						time: 1000
+					}, function() {
+						window.history.go(-1);
+					});
+					
+				}
+			});
+			return false;
+		});
+		
+		sa.methods.picker = function(res)
+		{
+			console.log(res);
+		}
+		
+	});
+}
+</script>

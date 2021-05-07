@@ -2,6 +2,7 @@
 
 namespace Echoyl\Sa;
 
+use Echoyl\Sa\Console\Commands\SaCommand;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 
 class ServiceProvider extends LaravelServiceProvider
@@ -25,6 +26,12 @@ class ServiceProvider extends LaravelServiceProvider
     {
         //
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SaCommand::class
+            ]);
+        }
 
         $router = $this->app['router'];
  

@@ -3,14 +3,14 @@
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\Role;
+use Echoyl\Sa\Models\perm\PermRole;
 use Echoyl\Sa\Services\PermService;
 
 class RoleController extends CrudController
 {
     //
 	var $model;
-    public function __construct(Role $model)
+    public function __construct(PermRole $model)
 	{
 		$this->model = $model;
 	}

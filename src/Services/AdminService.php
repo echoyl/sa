@@ -1,8 +1,9 @@
 <?php
 namespace Echoyl\Sa\Services;
 
-
-use Echoyl\Sa\Models\PermUser;
+use Echoyl\Sa\Models\perm\PermLog;
+use Echoyl\Sa\Models\perm\PermUser;
+use Illuminate\Http\Request;
 
 class AdminService
 {
@@ -121,6 +122,30 @@ class AdminService
         {
             return $permUser->select('id','username')->where('id','=',$user['id'])->get();
         }
+    }
+
+    public static function log(Request $request)
+    {
+        $admin = self::user();
+        //d($admin);
+        if(!$admin)
+        {
+            return;
+        }
+        if($request->isMethod('post'))
+        {
+            //只记录post的日志
+            $data = [
+                'user_id'=>$admin['id'],
+                'url'=>$request->fullUrl(),
+                'request'=>json_encode($request->all()),
+                'ip'=>$request->ip(),
+                'created_at'=>now(),
+                'type'=>'POST'
+            ];
+            PermLog::insert($data);
+        }
+        return;
     }
 
 }

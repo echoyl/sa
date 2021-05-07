@@ -1,10 +1,10 @@
 <?php
 
-namespace Echoyl\Sa\Models;
+namespace Echoyl\Sa\Models\perm;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class PermRole extends Model
 {
     /**
      * 与模型关联的数据表

@@ -1,6 +1,6 @@
 <?php
 
-namespace Echoyl\Sa\Models;
+namespace Echoyl\Sa\Models\perm;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,12 +19,12 @@ class PermUser extends Authenticatable
 
     public function role()
     {
-        return $this->hasOne(Role::class,'id','roleid');
+        return $this->hasOne(PermRole::class,'id','roleid');
     }
 
 
     public function logs()
     {
-        return $this->hasMany(PersonalAccessToken::class,'tokenable_id','id')->where(['tokenable_type'=>'Echoyl\Sa\Models\PermUser']);
+        return $this->hasMany(PersonalAccessToken::class,'tokenable_id','id')->where(['tokenable_type'=>'Echoyl\Sa\Models\perm\PermUser']);
     }
 }

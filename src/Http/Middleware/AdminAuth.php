@@ -20,6 +20,8 @@ class AdminAuth
             {
                 return response()->json(['code'=>1,'msg'=>'无操作权限']);
             }
+            //添加操作日志
+            AdminService::log($request);
             return $next($request);
         }
     }

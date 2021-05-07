@@ -3,8 +3,8 @@
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\PermUser;
-use Echoyl\Sa\Models\Role;
+use Echoyl\Sa\Models\perm\PermUser;
+use Echoyl\Sa\Models\perm\PermRole;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\PermService;
 
@@ -53,7 +53,7 @@ class UserController extends CrudController
 		}
 		$m = $m->where([['id','!=',1]]);
 
-		$search['roles'] = Role::select(['title as name','id'])->get()->toArray();
+		$search['roles'] = PermRole::select(['title as name','id'])->get()->toArray();
 
 		return [$m,$search];
 	}
@@ -62,7 +62,7 @@ class UserController extends CrudController
 	{
 		$perm = new PermService();
 
-		$roles = Role::get();
+		$roles = PermRole::get();
 		$_roles = [];
 		$role_perms = [];
 		foreach($roles as $val)

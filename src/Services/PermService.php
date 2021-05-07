@@ -52,6 +52,7 @@ class PermService
 			'text' => '后台权限', 
 			'role' =>$this->normal('角色'),
 			'user' =>$this->normal('用户'),
+			'log' =>$this->normal('日志'),
 		];
 	}
 

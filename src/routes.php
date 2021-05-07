@@ -26,6 +26,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('
 			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
                 Route::resource('role', 'RoleController');
 				Route::resource('user', 'UserController');
+				Route::resource('log', 'LogController');
 			});
 			Route::group(['namespace' => 'setting', 'prefix' => 'setting'], function(){
                 Route::any('sets/base', 'SetsController@base');
