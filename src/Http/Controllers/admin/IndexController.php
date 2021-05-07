@@ -4,7 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Echoyl\Sa\Models\PermUser;
+use Echoyl\Sa\Models\perm\PermUser;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\PermService;
 
@@ -46,8 +46,9 @@ class IndexController extends Controller
 		return ['code'=>0,'msg'=>'','data'=>$item];
 	}
 
-	public function logout()
+	public function logout(Request $request)
     {
+		AdminService::log($request,'退出登录');
         AdminService::logout();
         return['code'=>0,'msg'=>'退出成功'];
     }

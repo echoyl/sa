@@ -124,28 +124,56 @@ class AdminService
         }
     }
 
-    public static function log(Request $request)
+    public static function log(Request $request,$force_type = false,$data = [])
     {
-        $admin = self::user();
-        //d($admin);
+        if(!empty($data))
+        {
+            $admin = $data;
+        }else
+        {
+            $admin = self::user();
+        }
         if(!$admin)
         {
             return;
         }
-        if($request->isMethod('post'))
+        if($request->isMethod('post') || $force_type)
         {
             //只记录post的日志
+            //屏蔽敏感数据
+            $log_data = self::logParse($request->all());
+            
+
             $data = [
                 'user_id'=>$admin['id'],
                 'url'=>$request->fullUrl(),
-                'request'=>json_encode($request->all()),
+                'request'=>json_encode($log_data),
                 'ip'=>$request->ip(),
                 'created_at'=>now(),
-                'type'=>'POST'
+                'type'=>$force_type?:'POST'
             ];
             PermLog::insert($data);
         }
         return;
+    }
+
+    public static function logParse($data)
+    {
+        foreach($data as $key=>$val)
+        {
+            if(is_array($val))
+            {
+                $data[$key] = self::logParse($val);
+            }else
+            {
+                if(strpos($key,'password') !== false)
+                {
+                    $data[$key] = '******';
+                }
+            }
+        }
+
+        return $data;
     }
 
 }

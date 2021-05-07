@@ -34,7 +34,7 @@ class LoginController extends Controller
                 'roleid'=>$user['roleid'],
                 'access_token'=>$token,
             ];
-
+            AdminService::log($request,'登录',['id'=>$user['id']]);
             return ['code'=>0,'msg'=>'登录成功','data'=>$info,'status'=>0];
         }else
         {
