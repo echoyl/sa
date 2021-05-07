@@ -9,10 +9,15 @@ class LogController extends CrudController
 {
     //
 	var $model;
-	var $with_column = ['user'];
+	var $with_column = [];
     public function __construct(PermLog $model)
 	{
 		$this->model = $model;
+		$this->with_column = [
+			'user'=>function($q){
+				$q->select(['id','username']);
+			}
+		];
 	}
 
 
