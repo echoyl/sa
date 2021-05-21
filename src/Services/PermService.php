@@ -21,6 +21,7 @@ class PermService
 			$perms = [
 				'setting'=>$this->perm_setting(),
 				'perm' => $this->perm_perm(),
+				'wechat' => $this->perm_wechat(),
 				//'attachment'=>$this->perm_attachment(),
 			];
 			if(file_exists(app_path('Services/PermService.php')))
@@ -53,6 +54,22 @@ class PermService
 			'role' =>$this->normal('角色'),
 			'user' =>$this->normal('用户'),
 			'log' =>$this->normal('日志'),
+		];
+	}
+
+	protected function perm_wechat() 
+	{
+		return [
+			'text' => '微信相关', 
+			'sets' =>[
+				'text' => '配置', 
+				'wxconfig' => '公众号配置',
+				'wxpay' => '支付配置',
+				'wxappconfig' => '小程序配置',
+			],
+			'menu' =>$this->normal('自定义菜单',['sync'=>'拉取菜单','saveAndPub'=>'保存并发布','pub'=>'发布']),
+			'wx' =>$this->normal('公众号用户',['syncUser'=>'同步用户信息']),
+			'wxapp' =>$this->normal('小程序用户'),
 		];
 	}
 

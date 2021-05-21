@@ -11,6 +11,8 @@ class $name$ extends Model
      */
     protected $table = '$table_name$';
 
+    //public $timestamps = false;
+
     /*
     public function category()
     {

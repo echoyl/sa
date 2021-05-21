@@ -32,6 +32,20 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('
                 Route::any('sets/base', 'SetsController@base');
 			});
 
+			Route::group(['namespace' => 'wechat', 'prefix' => 'wechat'], function(){
+                Route::any('sets/wxappconfig', 'SetsController@wxappconfig');
+                Route::any('sets/wxconfig', 'SetsController@wxconfig');
+				Route::any('sets/wxpayconfig', 'SetsController@wxpayconfig');
+				
+				Route::get('menu/sync', 'MenuController@sync');
+				Route::post('menu/saveAndPub', 'MenuController@saveAndPub');
+				Route::post('menu/pub', 'MenuController@pub');
+				Route::resource('menu', 'MenuController');
+				Route::get('wx/syncUser', 'WxController@syncUser');
+				Route::resource('wx', 'WxController');
+				Route::resource('wxapp', 'WxappController');
+			});
+
 		});
 		Route::any('login','LoginController@index');
 		Route::get('captcha', 'LoginController@captcha');

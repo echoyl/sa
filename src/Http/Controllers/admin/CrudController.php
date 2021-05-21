@@ -186,11 +186,12 @@ class CrudController extends Controller
 				$data['created_at'] = now();
 				$id = $this->model->insertGetId($data);
 			}
+			$ret = null;
 			if(method_exists($this,'afterPost'))
 			{
-				$this->afterPost($id);//数据更新或插入后的 补充操作
+				$ret = $this->afterPost($id);//数据更新或插入后的 补充操作
 			}
-			return ['code'=>0,'msg'=>''];
+			return $ret?:['code'=>0,'msg'=>'操作成功'];
 		}
 		$category_arr = [];
 		if($this->cateModel)

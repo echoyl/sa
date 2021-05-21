@@ -5,7 +5,17 @@ use Echoyl\Sa\Models\Sets;
 
 class SetsService
 {
-    
+    public function __construct($model = null)
+	{
+        if(!$model)
+        {
+            $this->model = new Sets();
+        }else
+        {
+            $this->model = $model;
+        }
+	}
+
     public function get($key,$type = '')
     {
         $data = $this->getSet($key);
@@ -17,7 +27,7 @@ class SetsService
     }
     public function post($key)
     {
-        $item = Sets::where(['key'=>$key])->first();
+        $item = $this->model->where(['key'=>$key])->first();
 
 		if(request()->isMethod('post'))
 		{
@@ -29,10 +39,10 @@ class SetsService
 			if($item)
 			{
 				//更新数据
-				Sets::where(['id'=>$item['id']])->update($data);
+				$this->model->where(['id'=>$item['id']])->update($data);
 			}else
 			{
-				Sets::insert($data);
+				$this->model->insert($data);
 			}
 			return ['code'=>0,'msg'=>'success'];
 		}else
@@ -90,7 +100,7 @@ class SetsService
         {
             return $data[$key];
         }
-        $data[$key] = Sets::where(['key'=>$key])->first();
+        $data[$key] = $this->model->where(['key'=>$key])->first();
         return $data[$key];
     }
 
