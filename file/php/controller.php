@@ -11,6 +11,17 @@ class $controller_name$ extends CrudController
 	{
 		$this->model = new $name$();
 	}
+	
+	public function listData(&$list)
+	{
+		/*
+		foreach($list as $key=>$val)
+		{
+			
+		}
+		*/
+		return;
+	}
 
 	public function postData(&$item)
 	{

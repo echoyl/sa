@@ -74,7 +74,8 @@ class WechatService
 
     public static function getwxapp()
     {
-        $ss = new SetsService;
+        $model = new Sets();
+        $ss = new SetsService($model);
         $sets = $ss->getSet('wxappconfig');
         $config = [
             'app_id' => $sets['appid'],

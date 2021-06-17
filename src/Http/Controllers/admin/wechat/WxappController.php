@@ -5,7 +5,7 @@ use Echoyl\Sa\Models\wechat\Wxapp;
 
 class WxappController extends CrudController
 {
-	var $with_column = ['category'];
+	//var $with_column = ['category'];
 
     public function __construct()
 	{
@@ -58,7 +58,7 @@ class WxappController extends CrudController
 		$keyword = request('keyword','');
 		if($keyword)
 		{
-			$m = $m->where([['title','like','%'.urldecode($keyword).'%']]);
+			$m = $m->where([['nickName','like','%'.urldecode($keyword).'%']]);
 
 		}
 
