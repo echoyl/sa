@@ -1,38 +1,19 @@
-<div style="padding:10px;">	
-	<div class="layui-card-body">
-		<form class="layui-form" lay-filter="post_filter">
-		<script type="text/html" tpl lay-url="$url$/show" lay-done="layui.saPageOpen(d);">
-			<div class="layui-form-item">
-				<label class="layui-form-label">分类名</label>
-				<div class="layui-input-inline">
-					<input type="text" name="base[title]" value="{{d.data.title}}" placeholder="请输入分类名" autocomplete="off" class="layui-input layui-col-md6">
-				</div>
-			</div>
-
-			<div class="layui-form-item">
-				<label class="layui-form-label">排序</label>
-				<div class="layui-input-inline">
-					<input type="text" name="base[displayorder]" value="{{d.data.displayorder}}" placeholder="请输入排序" autocomplete="off" class="layui-input layui-col-md6">
-				</div>
-			</div>
-			<div class="layui-form-item">
-				<label class="layui-form-label">状态</label>
-				<div class="layui-input-block">
-					<input type="checkbox" name="base[status]" {{# if(d.data.status == 1){ }}checked{{# } }} value="1" lay-skin="switch" lay-text="启用|关闭">
-				</div>
-			</div>
-			<div class="layui-form-item">
-				<div class="layui-input-block">
-					<button class="layui-btn" lay-submit lay-filter="post_filter">立即提交</button>
-					<button type="reset" class="layui-btn layui-btn-primary">重置</button>
-					<input type="hidden" name="id" value="{{d.data.id}}">
-					<input type="hidden" name="base[parent_id]" value="{{d.data.parent_id}}">
-				</div>
-			</div>
-		</script>
-		</form>
-	</div>
-</div>
+					<div style="padding:10px;">	
+						<div class="layui-card-body">
+							<form class="layui-form" lay-filter="post_filter">
+							<script type="text/html" tpl lay-url="$url$/show" lay-done="layui.saPageOpen(d);">
+								$form$
+								<div class="layui-form-item">
+									<div class="layui-input-block">
+										<button class="layui-btn" lay-submit lay-filter="post_filter">立即提交</button>
+										<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+										<input type="hidden" name="id" value="{{d.data.id}}">
+									</div>
+								</div>
+							</script>
+							</form>
+						</div>
+					</div>
 
 <script>
 layui.saPageOpen = function(d){
@@ -46,6 +27,7 @@ layui.saPageOpen = function(d){
 		//监听提交
 		form.on('submit(post_filter)', function(data){
 			var url = '$url$';
+			$switch$
 			sa.request({
 				url: url
 				,type:'post'

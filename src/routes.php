@@ -45,6 +45,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('
 				Route::resource('wx', 'WxController');
 				Route::resource('wxapp', 'WxappController');
 			});
+			Route::resource('tool', 'ToolController');
 
 		});
 		Route::any('login','LoginController@index');

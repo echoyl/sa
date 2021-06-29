@@ -198,7 +198,11 @@ class CrudController extends Controller
 		{
 			$category_arr = $this->cateModel->format($this->cid);
 		}
-		$item['categorys'] = $category_arr;
+		if(!isset($item['categorys']))
+		{
+			$item['categorys'] = $category_arr;
+		}
+		
 
 		//json数据列
 		if(!empty($this->json_columns))

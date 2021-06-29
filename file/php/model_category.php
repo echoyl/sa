@@ -1,8 +1,8 @@
 <?php
 namespace App\Models$namespace$;
-use Illuminate\Database\Eloquent\Model;
+use Echoyl\Sa\Models\Category as SaCategory;
 
-class $name$ extends Model
+class $name$ extends SaCategory
 {
     /**
      * 与模型关联的数据表

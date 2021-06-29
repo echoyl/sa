@@ -21,8 +21,7 @@ layui.saPageRender = function(d){
 		page_config.search = d.page_info.search?d.page_info.search:{
 			options:[
 				//筛选项
-				{name:'category_id',data_name:'categorys',type:'sa_picker',params:{sa_pars:{empty:'全部'}}},
-				{name:'keyword',encode:true,type:'input'}
+				$search$
 			],
 			buttons:[
 				//按钮
@@ -32,13 +31,8 @@ layui.saPageRender = function(d){
 		
 		
 		page_config.cols = [ //表头
-			{field: '', title: '', width:80, type:'checkbox'}
-			,{field: 'id', title: 'ID', width:80, align:"center"}
-			,{field: 'title', title: '标题', width:300}
-			,{field: 'category.title', title: '分类', width:120}
-			,{field: 'created_at', title: '添加时间', width:180}
-			,{field:'displayorder',sort: true, edit:'text',width:100, title: '排序'}
-			,{field: 'status', title: '状态', width: 100, sa_filter:{field:'status'}}
+			{field: '', title: '', width:80, type:'checkbox'},
+			$cols$
 			,{field: 'edit', title: '操作'}
 		]
 		sl.render(page_config);

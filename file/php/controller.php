@@ -1,15 +1,16 @@
 <?php
 namespace App\Http\Controllers\admin$namespace$;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use App\Models$namespace$\$name$;
+use App\Models$modelnamespace$\$modelname$;
+$relation_models$
 
 class $controller_name$ extends CrudController
 {
-	var $with_column = ['category'];
+	var $with_column = $with_column$;
 
     public function __construct()
 	{
-		$this->model = new $name$();
+		$this->model = new $modelname$();
 	}
 	
 	public function listData(&$list)
@@ -25,7 +26,7 @@ class $controller_name$ extends CrudController
 
 	public function postData(&$item)
 	{
-
+		$relations$
 		return;
 	}
 
@@ -66,12 +67,7 @@ class $controller_name$ extends CrudController
 
 		$search = [];
 
-		$keyword = request('keyword','');
-		if($keyword)
-		{
-			$m = $m->where([['title','like','%'.urldecode($keyword).'%']]);
-
-		}
+		$search$
 
 		$status = request('status','');
 		if($status !== '')
@@ -91,6 +87,8 @@ class $controller_name$ extends CrudController
 		$search['status'] = [
 			['title'=>'启用','id'=>1],['title'=>'禁用','id'=>0],
 		];
+
+		$search_relations$
 
 		return [$m,$search];
 
