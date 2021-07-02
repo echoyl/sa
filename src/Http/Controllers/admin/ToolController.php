@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 
 use App\Http\Controllers\Controller;
+use Echoyl\Sa\Models\tool\Code;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -135,18 +136,31 @@ class ToolController extends Controller
 			]
         ];
 
-        return ['code'=>0,'msg'=>'','data'=>[
-            'cols'=>$cols,
-            'fields'=>[],
-            'controller'=>'ext/posts',
-            'model'=>'ext/posts',
-            'is_list'=>1,
-            'is_open'=>0,
-            'support_query'=>0,
-            'support_displayorder'=>1,
-            'support_status'=>1,
-            'many_relation'=>''
-        ]];
+        $id = request('id');
+        $data = Code::where(['id'=>$id])->first();
+        if($data)
+        {
+            $data['fields'] = json_decode($data['fields'],true);
+            $data['cols'] = $cols;
+            return ['code'=>0,'msg'=>'','data'=>$data];
+        }else
+        {
+            return ['code'=>0,'msg'=>'','data'=>[
+                'cols'=>$cols,
+                'fields'=>[],
+                'controller'=>'ext/posts',
+                'model'=>'ext/posts',
+                'is_list'=>1,
+                'is_open'=>0,
+                'support_query'=>0,
+                'support_displayorder'=>1,
+                'support_status'=>1,
+                'many_relation'=>''
+            ]];
+        }
+
+
+        
     }
 
     public function store()
@@ -165,6 +179,8 @@ class ToolController extends Controller
         $this->html($name2);
         //d(implode("\r",$this->msg));
         //d(json_encode(request('fields')),implode("\r",$this->msg));
+        $data['fields'] = json_encode(request('fields'));
+        Code::insert($data);
         return ['code'=>0,'msg'=>'生成成功'];
 
 
@@ -440,7 +456,7 @@ class ToolController extends Controller
                 {
                     if(!empty($with))
                     {
-                        $search[] = str_replace(['_name','_hasname'],[$val['name'],$with['name']],$with_search_tpl);
+                        $search[] = str_replace(['_name','_hasname'],[$with['name'],$with['name']],$with_search_tpl);
                     }else
                     {
                         $search[] = str_replace(['_name'],[$val['name']],$input_search_tpl);
@@ -515,10 +531,11 @@ class ToolController extends Controller
         $search = [];//search项
         $cols = [];//列表项
         [$form,$switch] = $this->form();//form表单项
-        $input_search_tpl = '{name:"_name",label:"查询",encode:true,type:"input",params:{placeholder:"请输入查询"}}';
-        $picker_search_tpl = '{name:"__name",label:"选择查询",data_name:"_data_name",type:"sa_picker",params:{sa_pars:{empty:"全部"}}}';
+        $input_search_tpl = '{name:"_name",label:"__label",encode:true,type:"input",params:{placeholder:"请输入查询"}}';
+        $picker_search_tpl = '{name:"__name",label:"__label",data_name:"_data_name",type:"sa_picker",params:{sa_pars:{empty:"全部"}}}';
         $cols_tpl = '{field: "_name", title:"_title", width:120, align:"center"}';
         $displayorder_tpl = '{field:"displayorder",sort: true, edit:"text",width:100, title: "排序"}';
+        $cols[] = '{field:"id",width:80, title: "ID", align:"center"}';
         $status_tpl = '{field: "status", title: "状态", width: 92, sa_filter:{field:"status"}}';
         foreach($fields as $val)
         {
@@ -527,12 +544,19 @@ class ToolController extends Controller
             {
                 if($val['search_type'] == 'input')
                 {
-                    $search[] = str_replace(['_name'],[$val['name']],$input_search_tpl);
+                    if(!empty($with))
+                    {
+                        $search[] = str_replace(['_name','__label'],[$with['name'],$val['desc']],$input_search_tpl);
+                    }else
+                    {
+                        $search[] = str_replace(['_name','__label'],[$val['name'],$val['desc']],$input_search_tpl);
+                    }
+                    
                 }else
                 {
                     if(!empty($with))
                     {
-                        $search[] = str_replace(['__name','_data_name'],[$val['name'],$with['name'].'s'],$picker_search_tpl);
+                        $search[] = str_replace(['__name','_data_name','__label'],[$val['name'],$with['name'].'s',$val['desc']],$picker_search_tpl);
                     }
                 }
             }
@@ -670,7 +694,7 @@ class ToolController extends Controller
         "sa_query"=>'
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">__desc</label>
-                                    <div class="sa_query" data-url="__withone/posts/query" data-value="{{d.data.__name}}" data-title="{{d.data.__withone.title}}"  name="base[__name]" tpl-title="{{!{{d.id}}-{{d.title}}!}}"></div>
+                                    <div class="sa_query" data-url="__withone/posts/query" data-value="{{d.data.__name}}" data-title="{{d.data.__withone?d.data.__withone.title:\'未选择\'}}"  name="base[__name]" tpl-title="{{!{{d.id}}-{{d.title}}!}}"></div>
                                 </div>
         ',
         "bloption"=>'

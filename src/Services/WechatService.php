@@ -10,27 +10,7 @@ use Exception;
 
 class WechatService
 {
-    public static function wxconfig()
-    {
-        $app = self::getApp();
-        if(env('APP_ENV') == 'local')
-        {
-            $wxconfig = json_encode([]);
-        }else
-        {
-            $app->jssdk->setUrl(env('APP_URL'));
-            $wxconfig = $app->jssdk->buildConfig(['getLocation'
-                ,'updateTimelineShareData'
-                ,'updateAppMessageShareData'
-                ,'onMenuShareTimeline'
-                ,'onMenuShareAppMessage'
-                //,'chooseWXPay'
-            ],false,false,true);
-        }
-        return $wxconfig;
-    }
-
-    public static function wxconfig2($url)
+    public static function wxconfig($url,$config = [])
     {
         $app = self::getApp();
         if(env('APP_ENV') == 'local')
@@ -39,13 +19,25 @@ class WechatService
         }else
         {
             $app->jssdk->setUrl($url?:env('APP_URL'));
-            $wxconfig = $app->jssdk->buildConfig(['getLocation'
-                ,'updateTimelineShareData'
-                ,'updateAppMessageShareData'
-                ,'onMenuShareTimeline'
-                ,'onMenuShareAppMessage'
-                //,'chooseWXPay'
-            ],false,false,false);
+            if(!empty($config))
+            {
+                $wxconfig = $app->jssdk->buildConfig($config,false,false,false,["wx-open-launch-weapp"]);
+            }else
+            {
+                $wxconfig = $app->jssdk->buildConfig([
+                    'getLocation'
+                    ,'updateTimelineShareData'
+                    ,'updateAppMessageShareData'
+                    ,'onMenuShareTimeline'
+                    ,'onMenuShareAppMessage'
+                    ,"chooseImage"
+                    ,"uploadImage"
+                    ,"previewImage"
+                    ,"getLocalImgData"
+                    ,"downloadImage"
+                    ,"chooseWXPay"
+                ],false,false,false,["wx-open-launch-weapp"]);
+            }
         }
         return $wxconfig;
     }
@@ -94,8 +86,8 @@ class WechatService
         $app = Factory::miniProgram($config);
         return $app;
     }
-
-    public static function getApp()
+    //$scopes = ['snsapi_base']
+    public static function getApp($scopes = ['snsapi_userinfo'])
     {
         $model = new Sets();
         $ss = new SetsService($model);
@@ -108,8 +100,8 @@ class WechatService
             'token' => $sets['token'],
             'aes_key' => $sets['encodingaeskey'],
             'oauth' => [
-                'scopes'   => ['snsapi_base'],
-                'callback' => '/auth',
+                'scopes'   => $scopes,
+                'callback' => '/'.env('APP_PREFIX','').'wx/auth',
             ],
             'response_type' => 'array',
         ];
@@ -119,19 +111,21 @@ class WechatService
 
     public static function getPayment($cert_path = '')
     {
-        $ss = new SetsService;
+        $model = new Sets();
+        $ss = new SetsService($model);
         $sets = $ss->getSet('wxconfig');
+        $pay_set = $ss->getSet('wxpayconfig');
         $config = [
             // 必要配置
             'app_id'             => $sets['appid'],
-            'mch_id'             => $sets['wxapp_mchid'],
-            'key'                => $sets['wxapp_apikey'],   // API 密钥
+            'mch_id'             => $pay_set['wxapp_mchid'],
+            'key'                => $pay_set['wxapp_apikey'],   // API 密钥
         
             // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
             // 'cert_path'          => 'path/to/your/cert.pem', // XXX: 绝对路径！！！！
             // 'key_path'           => 'path/to/your/key',      // XXX: 绝对路径！！！！
         
-            'notify_url'         => env('APP_URL').'/wxnotifys',     // 你也可以在下单时单独设置来想覆盖它
+            'notify_url'         => env('APP_URL').'/wx/wxnotifys',     // 你也可以在下单时单独设置来想覆盖它
         ];
         if($cert_path != '')
         {
@@ -267,5 +261,83 @@ class WechatService
         return;
     }
 
+    /**
+     * 检测是否关注公众号 关注的话 更新状态
+     *
+     * @param [type] $user
+     * @return void
+     */
+    public static function isSubscribe($user)
+    {
+        $app = self::getApp();
+
+        if(env('APP_ENV') == 'local')
+        {
+            return true;
+        }
+
+        if($user)
+        {
+            $user = $app->user->get($user['id']);
+        }else
+        {
+            return;
+        }
+
+        if($user && $user['subscribe'] == 1)
+        {
+            $has = Wx::where(['openid'=>$user['openid']])->first();
+            if($has && !$has['subscribe'])
+            {
+                Wx::where(['openid'=>$user['openid']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+            }
+            return true;
+        }
+        return;
+    }
+
+    public static function subscribe($openid,$flag = true,$user = false)
+    {
+        $user = Wx::where(['openid'=>$openid])->first();
+        if($user)
+        {
+            //关注事件
+            if($flag)
+            {
+                Wx::where(['openid'=>$openid])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+            }else
+            {
+                //取消关注
+                Wx::where(['openid'=>$openid])->update(['subscribe'=>0]);
+            }
+        }
+        return;
+        
+    }
+
+    public static function wxUser($original)
+    {
+        if($original)
+        {
+            $has = Wx::where(['openid'=>$original['openid']])->first();
+            if(!$has)
+            {
+                $wx_user = [
+                    'nickname'=>$original['nickname'],
+                    'openid'=>$original['openid'],
+                    'headimgurl'=>$original['headimgurl'],
+                    'sex'=>$original['sex'],
+                    'city'=>$original['city'],
+                    'province'=>$original['province'],
+                    'country'=>$original['country'],
+                    'unionid'=>$original['unionid'],
+                    'status'=>1,
+                    'created_at'=>date("Y-m-d H:i:s")
+                ];
+                Wx::insert($wx_user);
+            }
+        }
+        return;
+    }
 
 }
