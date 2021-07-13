@@ -330,7 +330,7 @@ class WechatService
                     'city'=>$original['city'],
                     'province'=>$original['province'],
                     'country'=>$original['country'],
-                    'unionid'=>$original['unionid'],
+                    'unionid'=>$original['unionid']??'',
                     'status'=>1,
                     'created_at'=>date("Y-m-d H:i:s")
                 ];

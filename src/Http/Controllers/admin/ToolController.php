@@ -87,7 +87,8 @@ class ToolController extends Controller
 					["title"=>"显示图片","id"=>"sa_images"],
 					["title"=>"特色标签","id"=>"input_tags"],
                     ["title"=>"xm-select","id"=>"xm_select"],
-                    ["title"=>"sa_radio","id"=>"sa_radio"]
+                    ["title"=>"sa_radio","id"=>"sa_radio"],
+                    ["title"=>"sa_pickers","id"=>"sa_pickers"]
 				],
 				"width"=>"140px"
 			],
@@ -449,6 +450,16 @@ class ToolController extends Controller
                     $search_relations[] = "\$search['".$with['name']."s'] = (new ".$relation_name."())->format(0);";
                 }
             }
+
+            if($val['form_type'] == 'sa_pickers')
+            {
+                //添加关联获取列表数据
+                $relation_names = explode('_',$val['name']);
+                $relation_name = ucfirst($relation_names[0]);
+                $relation_models[] = "use App\\Models".$model_name_info['namespace']."\\".$relation_name.";";
+                $relations[] = "\$item['".$relation_names[0]."s'] = (new ".$relation_name."())->format(0);";
+            }
+
             if($val['search_show'])
             {
 
@@ -650,6 +661,14 @@ class ToolController extends Controller
                                     <label class="layui-form-label">__desc</label>
                                     <div class="layui-input-inline">
                                         <input type="text" name="base[__name]" value="{{d.data.__name}}" __verify placeholder="请输入__desc" autocomplete="off" class="layui-input layui-col-md6">
+                                    </div>
+                                </div>
+        ',
+        "sa_pickers" => '
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">__desc</label>
+                                    <div class="layui-input-inline">
+                                        <div class="sa_pickers" data-name="base[__name]" sa_pars=\'{readonly:true,placeholder:"请选择__desc"}\' data-data="{{=JSON.stringify(d.data.__withname)}}" data-value="{{d.data.__name}}"></div>
                                     </div>
                                 </div>
         ',
