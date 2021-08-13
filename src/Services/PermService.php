@@ -93,7 +93,10 @@ class PermService
 		return [
 			'text' => '上传管理', 
 			'index' => '上传图片', 
-			'video'=>'上传视频'
+			'video'=>'上传视频',
+			'createUploadVideo'=>'阿里云视频上传',
+			'refreshUploadVideo'=>'阿里云视频上传（重传）',
+			'getVideoUrl'=>'获取播放地址',
 		];
 	}
 

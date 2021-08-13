@@ -344,8 +344,8 @@ class UploadService
 
 		try {
 			//先存入缓存
-			$path = $file->store('public/images');
-			$newPath = storage_path('app/'.$path);
+			$path = $file->store('');
+			$newPath = storage_path('app/public/'.$path);
 			require_once app_path(). DIRECTORY_SEPARATOR.'Libs'. DIRECTORY_SEPARATOR . 'voduploadsdk' . DIRECTORY_SEPARATOR . 'Autoloader.php';
 			$uploader = new \AliyunVodUploader(env('ALI_accessKeyId_video'), env('ALI_accessKeySecret_video'));
 			$uploadVideoRequest = new \UploadVideoRequest($newPath, $file->getClientOriginalName());

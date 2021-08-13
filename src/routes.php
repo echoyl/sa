@@ -22,6 +22,9 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('
 			
 			Route::post('uploader/index', 'UploaderController@index');//上传文件路由
 			Route::post('uploader/video', 'UploaderController@video');//上传视频文件路由
+			Route::post('uploader/createUploadVideo', 'UploaderController@createUploadVideo');
+			Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
+			Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
 
 			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
                 Route::resource('role', 'RoleController');
