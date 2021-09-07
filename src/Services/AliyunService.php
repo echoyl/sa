@@ -31,7 +31,12 @@ class AliyunService
                                             ])
                                 ->request();
             $url = $result->toArray();
-            return $url['PlayInfoList']['PlayInfo'][0]['PlayURL'];
+            return [
+                'play_url'=>$url['PlayInfoList']['PlayInfo'][0]['PlayURL'],
+                'cover_url'=>$url['VideoBase']['CoverURL']??'',
+                'title'=>$url['VideoBase']['Title']??'',
+                'duration'=>$url['VideoBase']['Duration']??''
+            ];
         } catch (ClientException $e) {
             //return $e->getErrorMessage().":".$e->getErrorCode();
         } catch (ServerException $e) {
