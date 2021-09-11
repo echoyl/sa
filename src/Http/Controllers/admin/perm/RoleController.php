@@ -34,5 +34,21 @@ class RoleController extends CrudController
 		return;
 	}
 
+	public function handleSearch()
+	{
+		$m = $this->model;
+
+
+		$keyword = request('keyword','');
+		$search = [];
+		if($keyword)
+		{
+			$search['keyword'] = urldecode($keyword);
+			$m = $m->where([['title','like','%'.$search['keyword'].'%']]);
+
+		}
+
+		return [$m,$search];
+	}
     
 }
