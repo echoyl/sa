@@ -36,10 +36,12 @@ class ServiceProvider extends LaravelServiceProvider
         $router = $this->app['router'];
  
         if (method_exists($router, 'aliasMiddleware')) {
-            return $router->aliasMiddleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
+            $router->aliasMiddleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
+            $router->aliasMiddleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
         }
     
-        return $router->middleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
+        $router->middleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
+        $router->middleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
 
     }
 }
