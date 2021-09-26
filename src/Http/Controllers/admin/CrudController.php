@@ -50,7 +50,7 @@ class CrudController extends Controller
 		{
 			//添加排序检测
 			$sort = explode('.',request('sort'));
-			if(count($sort) > 1)
+			if(count($sort) > 1 && $sort[1])
 			{
 				$m = $m->orderBy($sort[0],$sort[1]);
 				$has_id = true;
@@ -135,7 +135,8 @@ class CrudController extends Controller
 			switch($type)
 			{
 				case 'status':
-					$data = ['status'=>intval(request('status'))];
+					$name = request('field','status');
+					$data = [$name=>request('val')];
 				break;
 				case 'displayorder':
 					$data = ['displayorder'=>intval(request('displayorder'))];
