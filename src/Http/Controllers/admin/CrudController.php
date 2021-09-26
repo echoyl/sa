@@ -136,7 +136,14 @@ class CrudController extends Controller
 			{
 				case 'status':
 					$name = request('field','status');
-					$data = [$name=>request('val')];
+					if($name == 'status')
+					{
+						$val = request('status');
+					}else
+					{
+						$val = request('val');
+					}
+					$data = [$name=>$val];
 				break;
 				case 'displayorder':
 					$data = ['displayorder'=>intval(request('displayorder'))];
