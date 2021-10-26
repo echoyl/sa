@@ -132,6 +132,7 @@ class PermService
 		{
 			return false;
 		}
+		$permtypes = str_replace("\\",'.',$permtypes);
 		
 		if (strpos($permtypes, '&') === false && strpos($permtypes, '|') === false) 
 		{
