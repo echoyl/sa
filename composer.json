@@ -9,11 +9,7 @@
         }
     ],
     "require": {
-        "laravel/sanctum": "^2.7",
-        "overtrue/laravel-wechat": "^5.0",
-		"mews/captcha": "^3.0",
-		"simplesoftwareio/simple-qrcode": "1.3.*",
-        "alibabacloud/client": "*"
+        "laravel/sanctum": "^2.7"
     },
     "license": "MIT",
     "autoload": {
