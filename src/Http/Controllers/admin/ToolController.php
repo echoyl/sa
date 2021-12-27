@@ -31,7 +31,7 @@ class ToolController extends Controller
     {
         $cols = [
             [
-				"name"=>"name",
+				"key"=>"name",
 				"title"=>"字段名",
 				"type"=>"input",
 				"required"=>1,
@@ -39,7 +39,7 @@ class ToolController extends Controller
 				"width"=>"150px"
 			],
             [
-				"name"=>"desc",
+				"key"=>"desc",
 				"title"=>"描述",
 				"type"=>"input",
 				"required"=>1,
@@ -47,9 +47,9 @@ class ToolController extends Controller
 				"width"=>"150px"
 			],
 			[
-				"name"=>"type",
+				"key"=>"type",
 				"title"=>"数据类型",
-				"type"=>"sa_picker",
+				"type"=>"select",
 				"data"=>[
 					["title"=>"int","id"=>"int"],
 					["title"=>"vachar","id"=>"vachar"],
@@ -60,41 +60,36 @@ class ToolController extends Controller
 				"width"=>"140px"
 			],
 			[
-				"name"=>"default",
+				"key"=>"default",
 				"title"=>"默认值",
 				"type"=>"input",
                 "placeholder"=>"1|0|null",
-				"width"=>"140px"
+				"width"=>"100px"
 			],
 			[
-				"name"=>"form_type",
+				"key"=>"form_type",
 				"title"=>"表单类型",
-				"type"=>"sa_picker",
+				"type"=>"select",
 				"data"=>[
 					["title"=>"输入框","id"=>"input"],
 					["title"=>"图片选择","id"=>"attachment"],
                     ["title"=>"多图","id"=>"attachments"],
-					["title"=>"dropdown","id"=>"sa_picker"],
+					["title"=>"select","id"=>"select"],
+                    ["title"=>"cascader","id"=>"cascader"],
 					["title"=>"日期选","id"=>"bldate"],
-					["title"=>"省市区","id"=>"cas"],
                     ["title"=>"简介输入框","id"=>"textarea"],
-                    ["title"=>"富文本tinymce","id"=>"tinymce"],
+                    ["title"=>"quill","id"=>"quill"],
                     ["title"=>"hidden","id"=>"hidden"],
-                    ["title"=>"switch","id"=>"switch"],
+                    ["title"=>"checkbox","id"=>"checkbox"],
 					["title"=>"地图位置","id"=>"blmap"],
-					["title"=>"查询数据","id"=>"sa_query"],
-					["title"=>"复杂项配置","id"=>"bloption"],
-					["title"=>"显示图片","id"=>"sa_images"],
-					["title"=>"特色标签","id"=>"input_tags"],
-                    ["title"=>"xm-select","id"=>"xm_select"],
-                    ["title"=>"sa_radio","id"=>"sa_radio"],
-                    ["title"=>"sa_pickers","id"=>"sa_pickers"]
+					["title"=>"options","id"=>"options"],
+					["title"=>"显示图片","id"=>"sa_images"]
 				],
 				"width"=>"140px"
 			],
 			
 			[
-				"name"=>"verify",
+				"key"=>"verify",
 				"title"=>"表单验证",
 				"type"=>"input",
 				"placeholder"=>"required|number",
@@ -102,7 +97,7 @@ class ToolController extends Controller
 			]
 			,
 			[
-				"name"=>"with",
+				"key"=>"with",
 				"title"=>"模型with",
 				"type"=>"input",
 				"placeholder"=>"name|modelName|foreignKey",
@@ -110,28 +105,31 @@ class ToolController extends Controller
 			]
 			,
 			[
-				"name"=>"list_show",
+				"key"=>"list_show",
 				"title"=>"显示在列表",
 				"type"=>"checkbox",
 				"data"=>"是|否",
-				"width"=>"70px"
+				"width"=>"105px"
 			]
             ,
 			[
-				"name"=>"search_show",
+				"key"=>"search_show",
 				"title"=>"搜索项",
 				"type"=>"checkbox",
 				"data"=>"是|否",
-				"width"=>"70px"
+				"width"=>"80px"
 			]
             ,
 			[
-				"name"=>"search_type",
+				"key"=>"search_type",
 				"title"=>"搜索类型",
-				"type"=>"sa_picker",
+				"type"=>"select",
 				"data"=>[
-                    ['title'=>'dropdown','id'=>'sa_picker'],
-                    ['title'=>'input','id'=>'input']
+                    ['title'=>'input','id'=>'input'],
+                    ['title'=>'select','id'=>'select'],
+                    ['title'=>'cascader','id'=>'cascader'],
+                    ['title'=>'date','id'=>'date'],
+                    ['title'=>'datetime','id'=>'datetime'],
                 ],
 				"width"=>"120px"
 			]
@@ -180,7 +178,7 @@ class ToolController extends Controller
         $this->html($name2);
         //d(implode("\r",$this->msg));
         //d(json_encode(request('fields')),implode("\r",$this->msg));
-        $data['fields'] = json_encode(request('fields'));
+        $data['fields'] = json_encode($data['fields']);
         Code::insert($data);
         return ['code'=>0,'msg'=>'生成成功'];
 
@@ -189,9 +187,9 @@ class ToolController extends Controller
 
     public function createTable($name,$prefix = '')
     {
-        $fields = request('fields');
-        $data = request('base');
         
+        $data = request('base');
+        $fields = $data['fields'];
         $table_name = $prefix?"{$prefix}_".$name['table_name']:"".$name['table_name'];
         $table_sql = ['CREATE TABLE `la_'.$table_name.'` ('];
         $table_sql[] = '`id`  int NOT NULL AUTO_INCREMENT ,';
@@ -276,8 +274,9 @@ class ToolController extends Controller
 
     public function model($name)
     {
-        $fields = request('fields');
+        
         $data = request('base');
+        $fields = $data['fields'];
         $this->line('开始生成model文件：');
         $path_prefix = $this->path_source.'php';
         $path = $this->createFolder($name['phpfolder'],'model');
@@ -433,7 +432,8 @@ class ToolController extends Controller
             });
         }";
 
-        $fields = request('fields');
+        //$fields = request('fields');
+        $fields = $data['fields'];
         $model_name_info = $this->parseName($data['model']);
         foreach($fields as $val)
         {
@@ -441,7 +441,7 @@ class ToolController extends Controller
             if(!empty($with))
             {
                 $with_column[] = $with['name'];
-                if($val['form_type'] == 'sa_picker' || $val['search_type'] == 'sa_picker')
+                if($val['form_type'] == 'select' || $val['search_type'] == 'cascader')
                 {
                     //添加关联获取列表数据
                     $relation_name = ucfirst($with['name']);
@@ -449,16 +449,19 @@ class ToolController extends Controller
                     $relations[] = "\$item['".$with['name']."s'] = (new ".$relation_name."())->format(0);";
                     $search_relations[] = "\$search['".$with['name']."s'] = (new ".$relation_name."())->format(0);";
                 }
+            }else
+            {
+                if($val['form_type'] == 'select' || $val['search_type'] == 'cascader')
+                {
+                    //添加关联获取列表数据
+                    $relation_names = explode('_',$val['name']);
+                    $relation_name = ucfirst($relation_names[0]);
+                    $relation_models[] = "use App\\Models".$model_name_info['namespace']."\\".$relation_name.";";
+                    $relations[] = "\$item['".$relation_names[0]."s'] = (new ".$relation_name."())->format(0);";
+                }
             }
 
-            if($val['form_type'] == 'sa_pickers')
-            {
-                //添加关联获取列表数据
-                $relation_names = explode('_',$val['name']);
-                $relation_name = ucfirst($relation_names[0]);
-                $relation_models[] = "use App\\Models".$model_name_info['namespace']."\\".$relation_name.";";
-                $relations[] = "\$item['".$relation_names[0]."s'] = (new ".$relation_name."())->format(0);";
-            }
+            
 
             if($val['search_show'])
             {
@@ -524,8 +527,9 @@ class ToolController extends Controller
     }
     public function html($name)
     {
-        $fields = request('fields');
+        //$fields = request('fields');
         $data = request('base');
+        $fields = $data['fields'];
         $this->line('开始生成html文件：');
         $path_prefix = $this->path_source.'html';
         $copy_index = 'index.html';
@@ -542,9 +546,16 @@ class ToolController extends Controller
         $search = [];//search项
         $cols = [];//列表项
         [$form,$switch] = $this->form();//form表单项
-        $input_search_tpl = '{name:"_name",label:"__label",encode:true,type:"input",params:{placeholder:"请输入查询"}}';
-        $picker_search_tpl = '{name:"__name",label:"__label",data_name:"_data_name",type:"sa_picker",params:{sa_pars:{empty:"全部"}}}';
-        $cols_tpl = '{field: "_name", title:"_title", width:120, align:"center"}';
+
+        $search_tpl = [
+            'select'=>'{name:"__name",label:"__label",data_name:"_data_name",width:"200px",type:"select",params:{palceholder:"请选择"}}',
+            'cascader'=>'{name:"__name",label:"__label",data_name:"_data_name",width:"200px",type:"cascader",params:{palceholder:"请选择"}}',
+            'date'=>'{name:"__name",label:"__label",width:"200px",type:"bldate",params:{"data-type":"date",palceholder:"请选择日期"}}',
+            'datetime'=>'{name:"__name",label:"__label",width:"200px",type:"bldate",params:{"data-type":"datetime",palceholder:"请选择日期"}}',
+            'input'=>'{name:"__name",label:"__label",encode:true,type:"input",params:{placeholder:"请输入查询"}}'
+        ];
+
+        $cols_tpl = '{field: "_name", title:"_title", width:120, align:"center"__more}';
         $displayorder_tpl = '{field:"displayorder",sort: true, edit:"text",width:100, title: "排序"}';
         $cols[] = '{field:"id",width:80, title: "ID", align:"center"}';
         $status_tpl = '{field: "status", title: "状态", width: 92, sa_filter:{field:"status"}}';
@@ -553,24 +564,30 @@ class ToolController extends Controller
             $with = $this->parseWith($val['with']);
             if($val['search_show'])
             {
-                if($val['search_type'] == 'input')
+                if(!isset($search_tpl[$val['search_type']]))
+                {
+                    continue;
+                }
+                $_tpl = $search_tpl[$val['search_type']];
+                if(in_array($val['search_type'],['input','date','datetime']))
                 {
                     if(!empty($with))
                     {
-                        $search[] = str_replace(['_name','__label'],[$with['name'],$val['desc']],$input_search_tpl);
+                        $search[] = str_replace(['__name','__label'],[$with['name'],$val['desc']],$_tpl);
                     }else
                     {
-                        $search[] = str_replace(['_name','__label'],[$val['name'],$val['desc']],$input_search_tpl);
+                        $search[] = str_replace(['__name','__label'],[$val['name'],$val['desc']],$_tpl);
                     }
                     
                 }else
                 {
                     if(!empty($with))
                     {
-                        $search[] = str_replace(['__name','_data_name','__label'],[$val['name'],$with['name'].'s',$val['desc']],$picker_search_tpl);
+                        $search[] = str_replace(['__name','_data_name','__label'],[$val['name'],$with['name'].'s',$val['desc']],$_tpl);
                     }
                 }
             }
+            $more = '';
             if($val['list_show'])
             {
                 //处理name值
@@ -581,7 +598,11 @@ class ToolController extends Controller
                 {
                     $col_name = $val['name'];
                 }
-                $cols[] =  str_replace(['_name','_title'],[$col_name,$val['desc']],$cols_tpl);
+                if($val['form_type'] == 'attachment')
+                {
+                    $more = ',tpl:"img"';
+                }
+                $cols[] =  str_replace(['_name','_title','__more'],[$col_name,$val['desc'],$more],$cols_tpl);
             }
             
         }
@@ -600,12 +621,12 @@ class ToolController extends Controller
         $is_query = $data['support_query']??0;
 
         $replace_arr = [
-            '/\$type\$/'=>$is_list?'searchlist':'sa_category',
+            '/\$type\$/'=>$is_list?'searchlist':'category',
             '/\$url\$/'=>$name['url'],
             '/\$page\$/'=>$name['page'],
             '/\$post_type\$/'=>$is_open?'open':'',
-            '/\$search\$/'=>implode(",\r\t\t\t\t",$search),
-            '/\$cols\$/'=>implode(",\r\t\t\t",$cols),
+            '/\$search\$/'=>implode(",\r\t\t\t",$search),
+            '/\$cols\$/'=>implode(",\r\t\t",$cols),
             '/\$form\$/'=>implode("",$form),
             '/\$switch\$/'=>implode("",$switch),
         ];
@@ -653,62 +674,54 @@ class ToolController extends Controller
     public function form()
     {
         $form = [];
-        $fields = request('fields');
+        //$fields = request('fields');
         $data = request('base');
+        $fields = $data['fields'];
         $tpls = [
         'input' => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <input type="text" name="base[__name]" value="{{d.data.__name}}" __verify placeholder="请输入__desc" autocomplete="off" class="layui-input layui-col-md6">
-                                    </div>
-                                </div>
+                <sa-antd-form-item :uparams=\'{name:"__name",label:"__desc"__verify}\'>
+                    <sa-antd-input v-model="post.__name" :uparams=\'{allowClear:true,placeholder:"请输入__desc"}\' />
+                </sa-antd-form-item>
         ',
-        "sa_pickers" => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <div class="sa_pickers" data-name="base[__name]" sa_pars=\'{readonly:true,placeholder:"请选择__desc"}\' data-data="{{=JSON.stringify(d.data.__withname)}}" data-value="{{d.data.__name}}"></div>
-                                    </div>
-                                </div>
+        "select" => '
+                <sa-antd-form-item :uparams=\'{name:"__name",label:"__desc"__verify}\'>
+                    <sa-antd-select v-model="post.__name" :default_value="data.__name" :data="data.__withname" :uparams=\'{allowClear:true,optionLabelProp:"title"}\' />
+                </sa-antd-form-item>
         ',
-        "sa_picker" => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <input type="text" __verify name="base[__name]" data-data="{{=JSON.stringify(d.data.__withname)}}" data-value="{{d.data.__name}}"  placeholder="请选择__desc" value="" readonly="" class="layui-input sa_picker">
-                                    </div>
-                                </div>
+        "cascader" => '
+                <sa-antd-form-item :uparams=\'{name:"__name",label:"分类"__verify}\'>
+                    <sa-antd-cascader v-model="post.__name" :default_value="data.__name" :data="data.__withname" />
+                </sa-antd-form-item>
         ',
         "attachment" => '
-                                <div class="attachment" __verify data-name="base[__name]" data-limit="1" data-input="1" data-title="__desc" data-value="{{d.data.__name}}"></div>
+                <sa-antd-form-item :uparams=\'{label:"__desc"__verify}\'>
+                    <div class="attachment" data-limit="1" data-name="__name" :data-value="data.__name"></div>
+                </sa-antd-form-item>
         ',
         "attachments" => '
-                                <div class="attachment" __verify data-name="base[__name]" data-limit="10" data-title="__desc" data-value="{{d.data.__name}}"></div>
+                <sa-antd-form-item :uparams=\'{label:"__desc"__verify}\'>
+                    <div class="attachment" data-limit="10" data-name="__name" :data-value="data.__name"></div>
+                </sa-antd-form-item>
         ',
         "bldate" => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <input type="text" __verify name="base[__name]" sa_pars=\'{type:"datetime"}\' value="{{d.data.__name?d.data.__name:\'\'}}" placeholder="请选择__desc" autocomplete="off" class="layui-input layui-col-md6 bldate">
-                                    </div>
-                                </div>
-        ',
-        "cas" => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <input type="text" __verify sa_pars=\'{level:3,split:" - "}\' name="base[__name]" value="{{d.data.__name}}" placeholder="请选择__desc" autocomplete="off" class="layui-input layui-col-md6 cas">
-                                    </div>
-                                </div>
+                <sa-antd-form-item :uparams=\'{name:"__name",label:"__desc"__verify}\'>
+                    <sa-antd-input 
+                        :readonly="true" 
+                        :ext-params=\'{type:"datetime"}\' 
+                        v-model="post.__name" 
+                        :ext-class-name="[\'bldate\']" 
+                        :uparams=\'{allowClear:true,placeholder:"请选择__desc"}\' />
+                </sa-antd-form-item>
         ',
         "blmap" => '
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <div class="blmap" name="base[lat],base[lng]" data-value="{{d.data.__name}}"></div>
-                                    </div>
-                                </div>
+                <sa-antd-form-item :uparams=\'{label:"__desc"}\'>
+                    <div class="blmap" name="lat,lng" data-type="tmap" :data-value="data.lat?data.lat+\',\'+data.lng:\'\'"></div>
+                </sa-antd-form-item>
+        ',
+        'quill' => '
+                <sa-antd-form-item :uparams=\'{label:"__desc"}\'>
+                    <div class="sa_quill"  style="min-height:400px;" data-name="__name" v-html="data.__name"></div>
+                </sa-antd-form-item>
         ',
         "sa_query"=>'
                                 <div class="layui-form-item">
@@ -733,45 +746,10 @@ class ToolController extends Controller
                                     </div>
                                 </div>
         ',
-        "input_tags"=>'
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <div class="input_tags" data-name="base[__name]" data-value="{{d.data.__name}}" data-source="极简,封装,简单复制,测试中"></div>
-                                    </div>
-                                </div>
-        ',
-        "switch"=>'
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-block">
-                                        <input type="checkbox" name="base[__name]" {{# if(d.data.__name == 1){ }}checked{{# } }} value="1" lay-skin="switch" lay-text="是|否">
-                                    </div>
-                                </div>
-        ',
         "textarea"=>'
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <textarea class="layui-textarea" name="base[__name]" placeholder="请输入__desc">{{d.data.__name}}</textarea>
-                                    </div>
-                                </div>
-        ',
-        'tinymce'=>'
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-block">
-                                        <textarea class="tinymce" name="base[__name]" placeholder="请输入__desc">{{d.data.__name}}</textarea>
-                                    </div>
-                                </div>
-        ',
-        'xm_select'=>'
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">__desc</label>
-                                    <div class="layui-input-inline">
-                                        <div filterable="true" toolbar="true" class="xm_select" name="base[__name]" value="{{d.data.__name}}" placeholder="请选择__desc" data-list="{{=JSON.stringify(d.data.xm_select)}}"></div>
-                                    </div>
-                                </div>
+                <sa-antd-form-item :uparams=\'{name:"__name",label:"__desc"}\'>
+                    <sa-antd-textarea v-model="post.__name" :uparams=\'{allowClear:true,placeholder:"请输入__desc",rows:5,showCount:true,maxLength:300}\' />
+                </sa-antd-form-item>
         ',
         'sa_radio'=>'
                                 <div class="layui-form-item">
@@ -783,27 +761,18 @@ class ToolController extends Controller
                                 </div>
         ',
         "hidden"=>'
-                                <input type="hidden" name="base[__name]" value="{{d.data.__name}}" />
+                <input type="hidden" name="__name" :value="data.__name">
         ',
         ];
         $displayorder_tpl = '
-                                <div class="layui-form-item">
-									<label class="layui-form-label">排序</label>
-									<div class="layui-input-inline" style="width:200px;">
-										<input type="text" name="base[displayorder]" value="{{d.data.displayorder?d.data.displayorder:0}}" placeholder="请输入排序" autocomplete="off" class="layui-input layui-col-md6">
-									</div>
-									<div class="layui-form-mid layui-word-aux">
-										值越大越排在前面
-									</div>
-								</div>
+                <sa-antd-form-item tooltip="值越大越排在前面" :uparams=\'{name:"displayorder",label:"排序",rules:[{type: "number",message: "必须为数字"}]}\'>
+                    <sa-antd-input v-model="post.displayorder" :uparams=\'{allowClear:true,placeholder:"请输入排序"}\' />
+                </sa-antd-form-item>
         ';
         $status_tpl = '
-                                <div class="layui-form-item">
-									<label class="layui-form-label">状态</label>
-									<div class="layui-input-block">
-										<input type="checkbox" name="base[status]" {{# if(d.data.status == 1){ }}checked{{# } }} value="1" lay-skin="switch" lay-text="启用|启用">
-									</div>
-								</div>
+                <sa-antd-form-item :uparams=\'{name:"status",label:"状态"}\'>
+                    <sa-antd-checkbox v-model="post.status" :checked="post.status == 1?true:false">开启</sa-antd-checkbox>
+                </sa-antd-form-item>
         ';
 
         $switch_tpl = '
@@ -813,13 +782,19 @@ class ToolController extends Controller
             }
         ';
         $switch = [];
-
         foreach($fields as $val)
         {
             $verify = '';
             if($val['verify'])
             {
-                $verify = 'lay-verify="'.$val['verify'].'"';
+                $verify = explode('|',$val['verify']);
+                $_v = [];
+                foreach($verify as $v)
+                {
+                    $_v[] = ['type'=>$v];
+                }
+                $verify = ',rules:'.json_encode($_v);
+
             }
             $withname = $withname2 = $val['name'];
             $search = ['__name','__desc','__verify','__withname','__withone'];

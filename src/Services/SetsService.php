@@ -44,7 +44,7 @@ class SetsService
 			{
 				$this->model->insert($data);
 			}
-			return ['code'=>0,'msg'=>'success'];
+			return ['code'=>0,'msg'=>'提交成功'];
 		}else
 		{
 			if($item && $item['value'])

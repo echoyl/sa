@@ -72,7 +72,7 @@ class UserController extends CrudController
 		}
 
 		$item['perms'] = $perm->formatPerms();
-		$item['roles'] = json_encode($_roles);
+		$item['roles'] = $_roles;
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 		$item['role_perms'] = $role_perms;
 		$item['password'] = '';

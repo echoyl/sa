@@ -298,8 +298,8 @@ class WechatService
 
     public static function subscribe($openid,$flag = true,$user = false)
     {
-        $user = Wx::where(['openid'=>$openid])->first();
-        if($user)
+        $has_user = Wx::where(['openid'=>$openid])->first();
+        if($has_user)
         {
             //关注事件
             if($flag)
@@ -310,6 +310,8 @@ class WechatService
                 //取消关注
                 Wx::where(['openid'=>$openid])->update(['subscribe'=>0]);
             }
+        }else{
+            self::wxUser($user);
         }
         return;
         
@@ -331,6 +333,7 @@ class WechatService
                     'province'=>$original['province'],
                     'country'=>$original['country'],
                     'unionid'=>$original['unionid']??'',
+                    'subscribe'=>$original['subscribe']??0,
                     'status'=>1,
                     'created_at'=>date("Y-m-d H:i:s")
                 ];

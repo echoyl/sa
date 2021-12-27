@@ -1,42 +1,27 @@
-<script type="text/html" tpl lay-done="layui.saPageRender(d);"></script>
-
 <script>
-layui.saPageRender = function(d){
+require(['sa/$type$'], function(sl){
 
-	layui.use(['$type$'], function(){
-		
-		var page_config = {
-			page:'$page$/',
-			page_post:'',
-			post_type:'$post_type$',//open为弹出层编辑模式 否则是跳转页面编辑
-			table:{
-				url:'$url$'
-			}
-		};
-		
-		var sl = layui.$type$;
-		var $ = layui.$;
-
-		
-		page_config.search = d.page_info.search?d.page_info.search:{
-			options:[
-				//筛选项
-				$search$
-			],
-			buttons:[
-				//按钮
-			]
-		};
-		
-		
-		page_config.cols = [ //表头
-			{field: '', title: '', width:50, type:'checkbox'},
-			$cols$
-			,{field: 'edit', title: '操作'}
+	var page_config = {
+		page:'$page$/',
+		page_post:'',
+		post_type:'$post_type$',//open为弹出层编辑模式 否则是跳转页面编辑
+		table:{
+			url:'$url$'
+		}
+	};
+	page_config.search = {
+		options:[
+			//筛选项
+			$search$
 		]
-		sl.render(page_config);
-		
-		
-	});
-}
+	};
+
+	page_config.cols = [ //表头
+		{field: '', title: '', width:50, type:'checkbox'},
+		$cols$
+		,{field: 'edit', title: '操作'}
+	]
+	sl.render(page_config);
+});
+
 </script>

@@ -108,7 +108,7 @@ class AttachmentController extends Controller
 				 $data['created_at'] = date("Y-m-d H:i:s");
 				$id = $this->model->insert($data);
 			}
-			return ['code'=>0,'msg'=>''];
+			return ['code'=>0,'msg'=>'操作成功'];
 		}
 
 		return ['code'=>0,'msg'=>'','data'=>$item];
@@ -127,7 +127,7 @@ class AttachmentController extends Controller
 				@unlink(storage_path('app/public/'.$val['thumb_url']));
 				$val->delete();
 			}
-			return ['code'=>0,'msg'=>'success'];
+			return ['code'=>0,'msg'=>'操作成功'];
 		}
 		return ['code'=>1,'msg'=>'参数错误'];
 	}
@@ -164,7 +164,7 @@ class AttachmentController extends Controller
 				//删除文件夹
 				$val->delete();
 			}
-			return ['code'=>0,'msg'=>'success'];
+			return ['code'=>0,'msg'=>'操作成功'];
 		}
 		return ['code'=>1,'msg'=>'参数错误'];
 	}

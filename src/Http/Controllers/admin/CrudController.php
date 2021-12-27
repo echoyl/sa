@@ -232,6 +232,8 @@ class CrudController extends Controller
 
 	public function destroy()
 	{
+		sleep(3);
+		return ['code'=>0,'msg'=>'删除成功'];
 		$ids = request('ids','');
 		if (!empty($ids)) {
 			$ids = explode('.',$ids);
@@ -240,7 +242,7 @@ class CrudController extends Controller
 			{
 				$val->delete();
 			}
-			return ['code'=>0,'msg'=>'success'];
+			return ['code'=>0,'msg'=>'删除成功'];
 		}
 		return ['code'=>1,'msg'=>'参数错误'];
 	}

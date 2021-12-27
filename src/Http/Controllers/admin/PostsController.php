@@ -53,7 +53,7 @@ class PostsController extends CrudController
 	 * @param [type] $id
 	 * @return void
 	 */
-	public function beforePost($data,$id = 0)
+	public function beforePost(&$data,$id = 0)
 	{
 		if(isset($data['category_id']))
 		{

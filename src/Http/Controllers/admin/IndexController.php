@@ -29,16 +29,22 @@ class IndexController extends Controller
 			}
 			$p1 = trim($request->input('password',''));
 			$p2 = trim($request->input('password2',''));
-			if(strlen($p2) > 5 && AdminService::pwd($p1) == $uinfo['password']) 
+
+			if(strlen($p2) < 6)
+			{
+				return ['code'=>1,'msg'=>'密码长度至少为6位'];
+			}
+
+			if(AdminService::pwd($p1) == $uinfo['password']) 
 			{
 				$permUser = new PermUser();
 				$data = ['password'=>AdminService::pwd($p2)];
 				$permUser->where('id','=',$uinfo['id'])->update($data);
 			}else
 			{
-				return ['code'=>1,'msg'=>'密码长度至少为6位或旧密码错误'];
+				return ['code'=>1,'msg'=>'原密码错误'];
 			}
-			return ['code'=>0,'msg'=>'success'];
+			return ['code'=>0,'msg'=>'修改成功'];
 			
 		}
 		$uinfo = AdminService::user();

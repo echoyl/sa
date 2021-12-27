@@ -1,74 +1,49 @@
-<div class="layui-fluid">
-	<div class="layui-row layui-col-space15">
-		<div class="layui-col-md12">
-			<div class="layui-card">
-				<div class="layui-card-body">
-					<form class="layui-form" lay-filter="form_post">
-					<div class="layui-tab layui-tab-brief" lay-filter="component-tabs-brief">
-					<script type="text/html" tpl lay-url="$url$/show" lay-done="layui.saPageRender(d);">
-						<ul class="layui-tab-title">
-							<li  class="layui-this">基本信息</li>
-						</ul>
-						<div class="layui-tab-content">
-							<div class="layui-tab-item layui-show">
+<template id="form" v-cloak>
+	<sa-antd-form :url="url" v-slot="{data,post}" @ready="ready" ref="form" :on-submit="submit" :bottom-submit="false">
+		<div class="ant-card">
+			<div class="ant-card-body" style="padding-top:12px;">
+				<sa-antd-tabs :default-active-key="1">
+					<sa-antd-tab-pane tab="基本资料" key="1" :style='{maxWidth:"600px"}'>
 								$form$
-							</div>
-
-
-							<div class="layui-form-item">
-								<div class="layui-input-block">
-									<button class="layui-btn" lay-submit lay-filter="form_post">立即提交</button>
-									<button type="reset" class="layui-btn layui-btn-primary">重置</button>
-									<input type="hidden" name="id" value="{{d.data.id}}">
-									
-								</div>
-							</div>
-						</div>
-					</script>
-					</div>
-					</form>
+					</sa-antd-tab-pane>
+				</sa-antd-tabs>
+				<div style="width:600px;">
+					<sa-antd-form-item :wrapper-col='{span:18,offset:6}'>
+						<sa-antd-button :type="'submit'" :uparams='{type:"primary"}'>提 交</sa-antd-button>
+						<sa-antd-button :on-click="reset" :uparams='{type:"default"}'>重 置</sa-antd-button>
+					</sa-antd-form-item>
 				</div>
 			</div>
 		</div>
-	</div>
-</div>
+	</sa-antd-form>
+</template>
 <script>
-layui.saPageRender = function(d){
-	layui.use(['form'],function(){
-		var form = layui.form
-		,layer = layui.layer
-		,sa = layui.sa
-		,$ = layui.$;
-		
-		layui.form.render();
-
-		//监听提交
-		form.on('submit(form_post)', function(data){
-			var url = '$url$';			
-			$switch$
-			sa.request({
-				url: url
-				,type:'post'
-				,data: data.field
-				,done: function(res) {
-					layer.msg('操作成功', {
-						offset: '15px',
-						icon: 1,
-						time: 1000
-					}, function() {
-						window.history.go(-1);
-					});
-					
-				}
-			});
-			return false;
-		});
-		
-		sa.methods.picker = function(res)
+require(['sa/render','sa-antd/form'],function(render){
+	new Vue({
+		el:"#form",
+		data()
 		{
-			console.log(res);
+			return {
+				url:'$url$/show',
+			}
+		},
+		methods:{
+			submit(data)
+			{
+				return sadmin.form('$url$',{base:data}).then(function(res)
+				{
+					
+				});
+			},
+			reset()
+			{
+				this.$refs.form.reset();
+			},
+			ready()
+			{
+				render.init();
+			}
 		}
-		
 	});
-}
+});
 </script>

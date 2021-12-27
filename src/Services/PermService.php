@@ -107,7 +107,7 @@ class PermService
 			'index' => '查看列表', 
 			'add'=>'新增',
 			'edit'=>'修改',
-			'destroy' => '删除-log',
+			'destroy' => '删除',
 			'addGroup'=>'添加文件夹',
 			'delGroup'=>'删除文件夹',
 		];
@@ -115,14 +115,14 @@ class PermService
 
 	public function  normal($text,$more = [])
 	{
-		return array_merge($more,[
+		return array_merge([
 			'text' => $text, 
 			'index' => '查看列表', 
 			'show'=>'查看详情',
 			'add'=>'新增',
 			'edit'=>'修改',
-			'destroy' => '删除-log'
-		]);
+			'destroy' => '删除'
+		],$more);
 	}
 
 	public function check_perm($permtypes = '') 
