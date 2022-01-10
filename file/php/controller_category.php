@@ -12,7 +12,8 @@ class $controller_name$ extends CrudController
 		$this->model = new $modelname$();
 		$post_parent_id = request('parent_id',0);
 		$this->default_post = [
-			'parent_id'=>$post_parent_id?:$this->cid
+			'parent_id'=>$post_parent_id?:$this->cid,
+			'displayorder'=>0
 		];
 	}
 	

@@ -558,7 +558,7 @@ class ToolController extends Controller
         $cols_tpl = '{field: "_name", title:"_title", width:120, align:"center"__more}';
         $displayorder_tpl = '{field:"displayorder",sort: true, edit:"text",width:100, title: "排序"}';
         $cols[] = '{field:"id",width:80, title: "ID", align:"center"}';
-        $status_tpl = '{field: "status", title: "状态", width: 92, sa_filter:{field:"status"}}';
+        $status_tpl = '{field: "status", title: "状态", width: 110,filter:{params:{},field:"status"}}';
         foreach($fields as $val)
         {
             $with = $this->parseWith($val['with']);
@@ -705,12 +705,7 @@ class ToolController extends Controller
         ',
         "bldate" => '
                 <sa-antd-form-item :uparams=\'{name:"__name",label:"__desc"__verify}\'>
-                    <sa-antd-input 
-                        :readonly="true" 
-                        :ext-params=\'{type:"datetime"}\' 
-                        v-model="post.__name" 
-                        :ext-class-name="[\'bldate\']" 
-                        :uparams=\'{allowClear:true,placeholder:"请选择__desc"}\' />
+                    <sa-antd-datepicker v-model="post.__name" placeholder="请选择__desc" picker="date" :show-time="true" format="YYYY-MM-DD HH:mm:ss" />
                 </sa-antd-form-item>
         ',
         "blmap" => '

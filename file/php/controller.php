@@ -72,8 +72,7 @@ class $controller_name$ extends CrudController
 		$status = request('status','');
 		if($status !== '')
 		{
-			$m = $m->where('status',$status);
-
+			$m = $m->whereIn('status',explode(',',$status));
 		}
 		
 		$sdate = request('sdate','');
