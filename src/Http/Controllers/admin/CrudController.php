@@ -232,8 +232,6 @@ class CrudController extends Controller
 
 	public function destroy()
 	{
-		sleep(3);
-		return ['code'=>0,'msg'=>'删除成功'];
 		$ids = request('ids','');
 		if (!empty($ids)) {
 			$ids = explode('.',$ids);
