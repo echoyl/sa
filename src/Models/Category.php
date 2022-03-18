@@ -119,7 +119,11 @@ class Category extends Model
 		$list = $this->where(['parent_id'=>$cid])->where($where)->orderBy('displayorder','desc')->get()->toArray();
 		foreach($list as $key=>$val)
 		{
-			$list[$key]['children'] = $this->getChild($val['id'],$where);
+            $children = $this->getChild($val['id'],$where);
+            if(!empty($children))
+            {
+                $list[$key]['children'] = $children;
+            }
 		}
 		return $list;
 	}

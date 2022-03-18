@@ -99,6 +99,7 @@ class CrudController extends Controller
     {
 		//sleep(10);
 		$id = request('id',0);
+		$id = $id?:request('base.id',0);
 		$m = $this->model;
 		if(!empty($this->with_column))
 		{

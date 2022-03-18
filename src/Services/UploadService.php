@@ -91,12 +91,12 @@ class UploadService
 				'type'=>$type,
 				'group_id'=>$request->input('groupId',0)
 			];
-			Attachment::insert($data);
+			$attachment_id = Attachment::insertGetId($data);
 		}
 
 		
 		
-        return ['code'=>0,'data'=>$path];
+        return ['code'=>0,'data'=>$path,'attachment_id'=>$attachment_id];
 	}
 
 

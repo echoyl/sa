@@ -228,7 +228,7 @@ class WechatService
                     'country'=>$user['country'],
                     'headimgurl'=>$user['headimgurl'],
                     'subscribe_time'=>$user['subscribe_time'],
-                    'unionid'=>$user['unionid'],
+                    'unionid'=>$user['unionid']??'',
                     'subscribe_scene'=>$user['subscribe_scene']
                 ];
                 if($has){
@@ -334,10 +334,27 @@ class WechatService
                     'country'=>$original['country'],
                     'unionid'=>$original['unionid']??'',
                     'subscribe'=>$original['subscribe']??0,
+					'subscribe_time'=>$original['subscribe_time']??0,
                     'status'=>1,
                     'created_at'=>date("Y-m-d H:i:s")
                 ];
                 Wx::insert($wx_user);
+            }else
+            {
+                //更新
+                $wx_user = [
+                    'nickname'=>$original['nickname'],
+                    'openid'=>$original['openid'],
+                    'headimgurl'=>$original['headimgurl'],
+                    'sex'=>$original['sex'],
+                    'city'=>$original['city'],
+                    'province'=>$original['province'],
+                    'country'=>$original['country'],
+                    'unionid'=>$original['unionid']??'',
+                    'subscribe'=>$original['subscribe']??0,
+                    'subscribe_time'=>$original['subscribe_time']??0,
+                ];
+                Wx::where(['id'=>$has['id']])->update($wx_user);
             }
         }
         return;
