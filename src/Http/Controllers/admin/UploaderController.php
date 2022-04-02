@@ -19,7 +19,7 @@ class UploaderController extends Controller
 			return $res;
 		}else
 		{
-			return ['code'=>0,'msg'=>'success','data'=>['value'=>$res['data'],'src'=>tomedia($res['data'])]];
+			return ['code'=>0,'msg'=>'success','data'=>['value'=>$res['data'],'url'=>$res['data'],'src'=>tomedia($res['data'])]];
 		}
 	}
 	

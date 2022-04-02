@@ -18,8 +18,8 @@ class CrudController extends Controller
 	var $with_count = [];
     public function index()
     {
-        $psize = request('limit',10);
-		$page = request('page',1);
+        $psize = request('pageSize',10);
+		$page = request('current',1);
 		$search = [];
 		if(method_exists($this,'handleSearch'))
 		{
