@@ -20,6 +20,7 @@ class CrudController extends Controller
     {
         $psize = request('pageSize',10);
 		$page = request('current',1);
+		
 		$search = [];
 		if(method_exists($this,'handleSearch'))
 		{
@@ -28,7 +29,14 @@ class CrudController extends Controller
 		{
 			$m = $this->model;
 		}
-	
+		
+		if(!isset($search['status']))
+		{
+			$search['status'] = [
+				'1'=>['text'=>'启用','status'=>'success'],
+				'0'=>['text'=>'禁用','status'=>'error']
+			];
+		}
 		
 
 		if(request('actype') == 'search')
@@ -81,7 +89,7 @@ class CrudController extends Controller
 			$this->listData($list);
 		}
 		
-		return ['code'=>0,'msg'=>'','count'=>$count,'data'=>$list,'search'=>$search];	
+		return ['code'=>0,'success'=>true,'msg'=>'','count'=>$count,'total'=>$count,'data'=>$list,'search'=>$search];	
 
     }
 
@@ -233,10 +241,16 @@ class CrudController extends Controller
 
 	public function destroy()
 	{
-		$ids = request('ids','');
-		if (!empty($ids)) {
-			$ids = explode('.',$ids);
-			$items = $this->model->whereIn('id',$ids)->get();
+		$id = request('id',0);
+		if($id)
+		{
+			if(!is_array($id))
+			{
+				$id = [$id];
+			}
+		}
+		if (!empty($id)) {
+			$items = $this->model->whereIn('id',$id)->get();
 			foreach($items as $val)
 			{
 				$val->delete();

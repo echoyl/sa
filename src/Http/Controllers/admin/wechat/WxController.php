@@ -63,7 +63,7 @@ class WxController extends CrudController
 
 		$search = [];
 
-		$keyword = request('keyword','');
+		$keyword = request('nickname','');
 		if($keyword)
 		{
 			$m = $m->where([['nickname','like','%'.urldecode($keyword).'%']]);
@@ -77,17 +77,18 @@ class WxController extends CrudController
 
 		}
 		
-		$sdate = request('sdate','');
+		$startTime = request('startTime','');
+		$endTime = request('endTime','');
 
-		if($sdate)
+		if($startTime)
 		{
-			$m = $m->whereBetween('created_at',[$sdate,date("Y-m-d H:i:s",strtotime($sdate)+3600*24-1)]);
-			$search['sdate'] = $sdate;
+			$m = $m->where([['updated_at','>=',$startTime]]);
+		}
+		if($endTime)
+		{
+			$m = $m->where([['updated_at','<=',date("Y-m-d H:i:s",strtotime($endTime)+3600*24-1)]]);
 		}
 
-		$search['status'] = [
-			['title'=>'启用','id'=>1],['title'=>'禁用','id'=>0],
-		];
 
 		return [$m,$search];
 

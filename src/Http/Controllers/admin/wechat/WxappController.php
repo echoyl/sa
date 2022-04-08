@@ -81,10 +81,6 @@ class WxappController extends CrudController
 			$m = $m->where([['last_used_at','<=',date("Y-m-d H:i:s",strtotime($endTime)+3600*24-1)]]);
 		}
 
-		$search['status'] = [
-			'1'=>['text'=>'启用','status'=>'success'],
-			'0'=>['text'=>'禁用','status'=>'error']
-		];
 
 		return [$m,$search];
 

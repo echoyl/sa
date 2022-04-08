@@ -141,8 +141,12 @@ class AdminService
         {
             //只记录post的日志
             //屏蔽敏感数据
-            $log_data = self::logParse($request->all());
-            
+            $rq = $request->all();
+            if(isset($rq['post']))
+            {
+                unset($rq['post']);
+            }
+            $log_data = self::logParse($rq);
 
             $data = [
                 'user_id'=>$admin['id'],
@@ -172,8 +176,6 @@ class AdminService
                 }
             }
         }
-
         return $data;
     }
-
 }
