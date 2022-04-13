@@ -13,7 +13,7 @@ class Category extends Model
      */
     protected $table = 'category';
 
-    public function format($id = 0)
+    public function format($id = 0,$fields = ['id'=>'value','title'=>'label','children'=>'children'])
     {
         $data = self::allData($this->table)->filter(function($item) use ($id) {
             return $item->parent_id === $id;
@@ -22,7 +22,10 @@ class Category extends Model
         foreach($data as $val)
         {
             $ret[] = [
-                'id'=>$val['id'],'title'=>$val['title'],'parent_id'=>$val['parent_id'],'child'=>$this->format($val['id'])
+                $fields['id']=>$val['id'],
+                $fields['title']=>$val['title'],
+                'parent_id'=>$val['parent_id'],
+                $fields['children']=>$this->format($val['id'],$fields)
             ];
         }
         return $ret;

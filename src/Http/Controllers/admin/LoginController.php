@@ -15,11 +15,11 @@ class LoginController extends Controller
     public function index(Request $request)
     {
         //提交登录信息
-        $code = $request->input('vercode');
+        $code = $request->input('captcha.captchaCode');
 
-        if(!CaptchaService::check(request('key'),$code))
+        if(!CaptchaService::check(request('captcha.captchaKey'),$code))
         {
-            return ['code'=>0,'msg'=>'验证码错误','status'=>1];
+            return ['code'=>1,'msg'=>'验证码错误','status'=>1];
         }
 
         $username = $request->input('username');
@@ -38,7 +38,7 @@ class LoginController extends Controller
             return ['code'=>0,'msg'=>'登录成功','data'=>$info,'status'=>0];
         }else
         {
-            return ['code'=>0,'msg'=>'登录失败','status'=>1];
+            return ['code'=>1,'msg'=>'登录失败','status'=>1];
         }
         
         

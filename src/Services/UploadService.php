@@ -18,6 +18,7 @@ class UploadService
 	public function store(Request $request,$formname = 'file',$type = 0,$insert_db = false)
 	{
 		$file = $request->file($formname);
+
 		$ext = $file->extension();
 
 		if(!in_array($ext,array_merge($this->file_ext_arr,$this->image_ext_arr)))
@@ -110,7 +111,7 @@ class UploadService
 			return ['code'=>1,'msg'=>'获取数据错误'];
 		}
 
-		$ext = $file->extension();
+		$ext = $file->getClientOriginalExtension();
 		
 		if($sizelimit > 0)
 		{
@@ -138,8 +139,18 @@ class UploadService
 		$isImage = in_array($ext,['jpg','jpeg','png','gif'])?1:0;
 		
 		$fileType = !$isImage?'files':'images';
-		$path = $file->store('user/'.$fileType.'/'.date("Ym"),'public');
-		$newPath = storage_path('app/public/'.$path);
+		if($isImage)
+		{
+		    $path = $file->store('user/'.$fileType.'/'.date("Ym"),'public');
+		    $newPath = storage_path('app/public/'.$path);
+		}else
+		{
+		    $filename =  uniqid().'.'.$ext;
+		    $public_path = storage_path('app/public/user/files/'.date("Ym"));
+		    $file->move($public_path,$filename);
+		    $path = 'user/files/'.date("Ym").'/'.$filename;
+		    $newPath = $public_path.'/'.$filename;
+		}
 		//生成缩略图
 		if($isImage && $thumb)
 		{

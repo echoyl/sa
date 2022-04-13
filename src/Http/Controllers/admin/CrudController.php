@@ -7,8 +7,6 @@ use App\Http\Controllers\Controller;
 class CrudController extends Controller
 {
 	var $model;
-	var $cateModel;
-	var $cid = 0;
 	var $with_column = [];
 	var $dont_post_columns = [];//多余字段不需要提交数据库
 	var $default_post = [];
@@ -210,17 +208,7 @@ class CrudController extends Controller
 			}
 			return $ret?:['code'=>0,'msg'=>'操作成功'];
 		}
-		$category_arr = [];
-		if($this->cateModel)
-		{
-			$category_arr = $this->cateModel->format($this->cid);
-		}
-		if(!isset($item['categorys']))
-		{
-			$item['categorys'] = $category_arr;
-		}
 		
-
 		//json数据列
 		if(!empty($this->json_columns))
 		{

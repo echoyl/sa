@@ -13,7 +13,7 @@ class AdminAuth
         if(!AdminService::checkToken())
         {
             //未登录的情况下返回登录失败
-            return response()->json(['code'=>1001,'msg'=>'error']);
+            return response()->json(['code'=>1001,'msg'=>'登录超时']);
         }else {
             //var_dump(IlluminateRoute::currentRouteName());exit;
             if(!AdminService::checkAuth())
