@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\HelperService;
 
 class CrudController extends Controller
 {
@@ -14,12 +15,57 @@ class CrudController extends Controller
 	var $displayorder =[];
 	var $can_be_null_columns = [];//可以设置为空的字段
 	var $with_count = [];
+
+	var $parse_columns = [
+        ['name'=>'state','type'=>'state','default'=>'enable']
+    ];
+	var $withs = [];
+
+	public function defaultSearch($m)
+	{
+		$category_id = request('category_id');
+        if(!empty($category_id))
+        {
+            $category_id = array_pop($category_id);
+            $m = $m->where(['category_id'=>$category_id]);
+        }
+
+
+		$title = request('title','');
+		if($title)
+		{
+			$m = $m->where([['title','like','%'.urldecode($title).'%']]);
+
+		}
+
+		$state = request('state','');
+		if($state !== '')
+		{
+			$m = $m->where('state',$state);
+
+		}
+
+        $startTime = request('startTime','');
+		$endTime = request('endTime','');
+
+		if($startTime)
+		{
+			$m = $m->where([['created_at','>=',$startTime]]);
+		}
+		if($endTime)
+		{
+			$m = $m->where([['created_at','<=',date("Y-m-d H:i:s",strtotime($endTime)+3600*24-1)]]);
+		}
+		return $m;
+	}
+
     public function index()
     {
         $psize = request('pageSize',10);
 		$page = request('current',1);
 		
 		$search = [];
+
 		if(method_exists($this,'handleSearch'))
 		{
 			[$m,$search] = $this->handleSearch();
@@ -27,20 +73,10 @@ class CrudController extends Controller
 		{
 			$m = $this->model;
 		}
-		
-		if(!isset($search['status']))
-		{
-			$search['status'] = [
-				'1'=>['text'=>'启用','status'=>'success'],
-				'0'=>['text'=>'禁用','status'=>'error']
-			];
-		}
-		
 
-		if(request('actype') == 'search')
-		{
-			return ['code'=>0,'msg'=>'','search'=>$search];	
-		}
+		$this->parseWiths($search);
+
+		$m = $this->defaultSearch($m);
 
 		$count = $m->count();
 		if(!empty($this->with_column))
@@ -52,13 +88,18 @@ class CrudController extends Controller
 			$m = $m->withCount($this->with_count);
 		}
 		$has_id = false;
+		$sort_type = ['descend'=>'desc','ascend'=>'asc'];
 		if(request('sort'))
 		{
 			//添加排序检测
-			$sort = explode('.',request('sort'));
-			if(count($sort) > 1 && $sort[1])
+			$sort = json_decode(request('sort'),true);
+			if(!empty($sort))
 			{
-				$m = $m->orderBy($sort[0],$sort[1]);
+				foreach($sort as $skey=>$sval)
+				{
+					$m = $m->orderBy($skey,$sort_type[$sval]??'desc');
+				}
+				
 				$has_id = true;
 			}
 		}
@@ -81,6 +122,12 @@ class CrudController extends Controller
 		$list = $m->offset(($page-1)*$psize)
 				->limit($psize)
 				->get();
+
+		foreach($list as $key=>$val)
+		{
+			$this->parseData($val,'decode','list');
+			$list[$key] = $val;
+		}
 		
 		if(method_exists($this,'listData'))
 		{
@@ -182,6 +229,8 @@ class CrudController extends Controller
 						}
 					}
 
+					$this->parseData($data);
+
 					if(method_exists($this,'beforePost'))
 					{
 						$ret = $this->beforePost($data,$id);//操作前处理数据 如果返回数据表示 数据错误 返回错误信息
@@ -207,6 +256,10 @@ class CrudController extends Controller
 				$ret = $this->afterPost($id);//数据更新或插入后的 补充操作
 			}
 			return $ret?:['code'=>0,'msg'=>'操作成功'];
+		}else
+		{
+			$this->parseData($item,'decode');
+			$this->parseWiths($item);
 		}
 		
 		//json数据列
@@ -261,4 +314,66 @@ class CrudController extends Controller
 		$this->model->insert($data);
 		return ['code'=>0,'msg'=>'复制成功'];
 	}
+
+	public function parseWiths(&$data)
+    {
+        $ret = [];
+        foreach($this->withs as $with)
+        {
+            $name = $with['name'].'s';
+            $data[$name] = (new $with['class'])->format($with['cid']);
+            $ret[] = $with['name'];
+        }
+        $data['states'] = [
+            'enable'=>['text'=>'启用','status'=>'success'],
+            'disable'=>['text'=>'禁用','status'=>'error']
+        ];
+        return $ret;
+    }
+
+	public function parseData(&$data,$in = 'encode',$from = 'detail')
+    {
+        foreach($this->parse_columns as $col)
+        {
+            $name = $col['name'];
+            $type = $col['type'];
+
+            $data[$name] = $data[$name]??$col['default'];
+
+            switch($type)
+            {
+                case 'image':
+                    $data[$name] = HelperService::uploadParse($data[$name]??'',$in == 'encode'?true:false);
+                    break;
+                case 'cascader':
+                    $_name = '_'.$name;
+                    if($in == 'encode')
+                    {
+                        if(!empty($data[$name]))
+                        {
+                            $data[$_name] = json_encode($data[$name]);
+                            $data[$name] = array_pop($data[$name]);
+                        }
+                    }else
+                    {
+                        $data[$name] = isset($data[$_name]) && $data[$_name]?json_decode($data[$_name],true):[];
+                    }
+                break;
+                case 'state':
+                    if($in == 'encode')
+                    {
+                        $data[$name] = !$data[$name] || $data[$name] == 'disable'?'disable':'enable';
+                    }else
+                    {
+                        if($from == 'detail')
+                        {
+                            $data[$name] = $data[$name] == 'enable'?true:false;
+                        }
+                    }
+                break; 
+            }
+        }
+        return;
+    }
+
 }

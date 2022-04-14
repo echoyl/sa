@@ -61,13 +61,6 @@ class WxappController extends CrudController
 			$m = $m->where([['nickName','like','%'.urldecode($nickName).'%']]);
 
 		}
-
-		$status = request('status','');
-		if($status !== '')
-		{
-			$m = $m->where('status',$status);
-
-		}
 		
 		$startTime = request('startTime','');
 		$endTime = request('endTime','');
