@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\HelperService;
+use Echoyl\Sa\Models\Category;
 
 class CrudController extends Controller
 {
@@ -17,7 +18,7 @@ class CrudController extends Controller
 	var $with_count = [];
 
 	var $parse_columns = [
-        ['name'=>'state','type'=>'state','default'=>'enable']
+        ['name'=>'state','type'=>'state','default'=>'disable']
     ];
 	var $withs = [];
 
@@ -26,8 +27,16 @@ class CrudController extends Controller
 		$category_id = request('category_id');
         if(!empty($category_id))
         {
-            $category_id = array_pop($category_id);
-            $m = $m->where(['category_id'=>$category_id]);
+            $category_id = json_decode($category_id,true);
+			$cids = [];
+			$cmodel = new Category();
+			foreach($category_id as $cid)
+			{
+				$cid = array_pop($cid);
+				$_cids = $cmodel->childrenIds($cid);
+				$cids = array_merge($cids,$_cids);
+			}
+            $m = $m->whereIn('category_id',$cids);
         }
 
 
@@ -181,7 +190,6 @@ class CrudController extends Controller
 		}
 		
 
-
 		$type = request('actype');
 		
 		if (request()->isMethod('post')) 
@@ -255,7 +263,11 @@ class CrudController extends Controller
 			{
 				$ret = $this->afterPost($id);//数据更新或插入后的 补充操作
 			}
-			return $ret?:['code'=>0,'msg'=>'操作成功'];
+
+			//返回插入或更新后的数据
+			$new_data = $this->model->where(['id'=>$id])->first();
+			$this->parseData($new_data,'decode','list');
+			return $ret?:['code'=>0,'msg'=>'操作成功','data'=>$new_data];
 		}else
 		{
 			$this->parseData($item,'decode');
@@ -337,41 +349,46 @@ class CrudController extends Controller
         {
             $name = $col['name'];
             $type = $col['type'];
-
-            $data[$name] = $data[$name]??$col['default'];
-
+            $val = isset($data[$name])?$data[$name]:$col['default'];
             switch($type)
             {
                 case 'image':
-                    $data[$name] = HelperService::uploadParse($data[$name]??'',$in == 'encode'?true:false);
+                    $val = HelperService::uploadParse($val??'',$in == 'encode'?true:false);
                     break;
                 case 'cascader':
                     $_name = '_'.$name;
                     if($in == 'encode')
                     {
-                        if(!empty($data[$name]))
+                        if(!empty($val))
                         {
-                            $data[$_name] = json_encode($data[$name]);
-                            $data[$name] = array_pop($data[$name]);
+                            $data[$_name] = json_encode($val);
+                            $val = array_pop($val);
                         }
                     }else
                     {
-                        $data[$name] = isset($data[$_name]) && $data[$_name]?json_decode($data[$_name],true):[];
+                        $val = isset($data[$_name]) && $data[$_name]?json_decode($data[$_name],true):[];
                     }
-                break;
+                	break;
                 case 'state':
                     if($in == 'encode')
                     {
-                        $data[$name] = !$data[$name] || $data[$name] == 'disable'?'disable':'enable';
+						if($val == 1 || $val == 'enable')
+						{
+							$val = 'enable';
+						}else
+						{
+							$val = 'disable';
+						}
                     }else
                     {
                         if($from == 'detail')
                         {
-                            $data[$name] = $data[$name] == 'enable'?true:false;
+                            $val = $val == 'enable'?true:false;
                         }
                     }
                 break; 
             }
+			$data[$name] = $val;
         }
         return;
     }
