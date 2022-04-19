@@ -35,7 +35,7 @@ class LoginController extends Controller
                 'access_token'=>$token,
             ];
             AdminService::log($request,'登录',['id'=>$user['id']]);
-            return ['code'=>0,'msg'=>'登录成功','data'=>$info,'status'=>0];
+            return ['code'=>0,'msg'=>'登录成功，页面跳转中...','data'=>$info,'status'=>0];
         }else
         {
             return ['code'=>1,'msg'=>'登录失败','status'=>1];

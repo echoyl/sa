@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\HelperService;
 use Echoyl\Sa\Models\perm\PermUser;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\PermService;
@@ -30,26 +31,52 @@ class IndexController extends Controller
 			$p1 = trim($request->input('password',''));
 			$p2 = trim($request->input('password2',''));
 
-			if(strlen($p2) < 6)
+			if($p2 && strlen($p2) < 6)
 			{
 				return ['code'=>1,'msg'=>'密码长度至少为6位'];
 			}
 
-			if(AdminService::pwd($p1) == $uinfo['password']) 
+			$update = [];
+			$msg = '';
+			$pwd = false;
+
+			$update = [
+				'realname'=>request('realname',''),
+				'desc'=>request('desc',''),
+				'mobile'=>request('mobile',''),
+				'avatar'=>HelperService::uploadParse(request('avatar'))
+			];
+
+			if($p2)
 			{
-				$permUser = new PermUser();
-				$data = ['password'=>AdminService::pwd($p2)];
-				$permUser->where('id','=',$uinfo['id'])->update($data);
-			}else
-			{
-				return ['code'=>1,'msg'=>'原密码错误'];
+				if(AdminService::pwd($p1) == $uinfo['password'])
+				{
+					$update['password'] = AdminService::pwd($p2);
+					$pwd = true;
+				}else
+				{
+					$msg = '，密码未修改成功';
+				}
+				
+				
 			}
-			return ['code'=>0,'msg'=>'修改成功'];
+
+			
+
+			$permUser = new PermUser();
+			$permUser->where('id','=',$uinfo['id'])->update($update);
+			return ['code'=>0,'msg'=>'修改成功'.$msg,'pwd'=>$pwd];
 			
 		}
 		$uinfo = AdminService::user();
 		$item['username'] = $uinfo['username'];
-		return ['code'=>0,'msg'=>'','data'=>$item];
+		return ['code'=>0,'msg'=>'','data'=>[
+			'username'=>$uinfo['username'],
+			'mobile'=>$uinfo['mobile'],
+			'desc'=>$uinfo['desc'],
+			'realname'=>$uinfo['realname'],
+			'avatar'=>HelperService::uploadParse($uinfo['avatar'],false)
+		]];
 	}
 
 	public function logout(Request $request)
