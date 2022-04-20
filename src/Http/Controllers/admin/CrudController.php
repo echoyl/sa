@@ -2,11 +2,11 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
 use App\Services\HelperService;
+use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Models\Category;
 
-class CrudController extends Controller
+class CrudController extends ApiBaseController
 {
 	var $model;
 	var $with_column = [];
@@ -142,8 +142,7 @@ class CrudController extends Controller
 		{
 			$this->listData($list);
 		}
-		
-		return ['code'=>0,'success'=>true,'msg'=>'','count'=>$count,'total'=>$count,'data'=>$list,'search'=>$search];	
+		return $this->list($list,$count,$search);
 
     }
 
@@ -237,7 +236,7 @@ class CrudController extends Controller
 						}
 					}
 
-					$this->parseData($data);
+					
 
 					if(method_exists($this,'beforePost'))
 					{
@@ -252,10 +251,12 @@ class CrudController extends Controller
 			//d($data);
 			if(!empty($id)) 
 			{
+				$this->parseData($data,'encode','update');
 				$this->model->where(['id'=>$id])->update($data);
 			}else
 			{
 				$data['created_at'] = now();
+				$this->parseData($data);
 				$id = $this->model->insertGetId($data);
 			}
 			$ret = null;
@@ -267,7 +268,7 @@ class CrudController extends Controller
 			//返回插入或更新后的数据
 			$new_data = $this->model->where(['id'=>$id])->first();
 			$this->parseData($new_data,'decode','list');
-			return $ret?:['code'=>0,'msg'=>'操作成功','data'=>$new_data];
+			return $ret?:$this->success($new_data);
 		}else
 		{
 			$this->parseData($item,'decode');
@@ -288,8 +289,7 @@ class CrudController extends Controller
 				}
 			}
 		}
-
-		return ['code'=>0,'msg'=>'','data'=>$item];
+		return $this->success($item);
     }
 
 	public function destroy()
@@ -349,6 +349,13 @@ class CrudController extends Controller
         {
             $name = $col['name'];
             $type = $col['type'];
+
+			if(!isset($data[$name]) && $from == 'update')
+			{
+				//更新数据时 不写入默认值
+				continue;
+			}
+
             $val = isset($data[$name])?$data[$name]:$col['default'];
             switch($type)
             {
