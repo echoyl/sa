@@ -210,4 +210,25 @@ class IndexController extends Controller
 		return ['code'=>0,'msg'=>'','data'=>$menus];	
 	}
 
+	public function currentUser()
+    {
+        $user = AdminService::user();
+		$avatar = HelperService::uploadParse($user['avatar'],false);
+		$avatar = !empty($avatar)?tomedia($avatar[0]['url']):'/dist/logo.png';
+        $info = [
+            'id'=>$user['id'],
+            'username'=>$user['username'],
+            'roleid'=>$user['roleid'],
+            'name'=>$user['username'],
+            'avatar'=>$avatar
+        ];
+
+        return ['code'=>0,'msg'=>'','data'=>$info];
+
+    }
+    public function notice()
+    {
+        return ['code'=>0,'success'=>true,'msg'=>'','data'=>[]];
+    }
+
 }

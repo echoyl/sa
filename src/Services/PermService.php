@@ -277,4 +277,63 @@ class PermService
 		return self::$formatPerms;
 	}
 
+	public function parsePerms()
+	{
+		$perms = $this->allPerms();
+		$_perms = [];
+		foreach($perms as $perm_key=>$perm)
+		{
+			$p1 = ['label'=>$perm['text'],'value'=>$perm_key,'options'=>[]];
+			$bigOne = [
+				'label'=>$perm['text'],'value'=>$perm_key,
+				'options'=>[
+					[
+						'label'=>$perm['text'],'value'=>$perm_key,'options'=>[],
+					]
+				]
+			];
+			foreach($perm as $key1=>$val1)
+			{
+				if($key1 == 'text')
+				{
+					continue;
+				}
+				if(is_array($val1))
+				{
+					$p2 = [
+						'label'=>$val1['text'],'value'=>$key1,'options'=>[]
+					];
+					foreach($val1 as $key2=>$val2)
+					{
+						if($key2 == 'text')
+						{
+							continue;
+						}
+						$p2['options'][] = ['label'=>$val2,'value'=>implode('.',[$perm_key,$key1,$key2])];
+					}
+					$p1['options'][] = $p2;
+				}else
+				{
+					$bigOne['options'][0]['options'][] = [
+						'label'=>$val1,'value'=>implode('.',[$perm_key,$key1])
+					];
+					//d($bigOne);
+				}
+			}
+
+			if(!empty($bigOne['options'][0]['options']))
+			{
+				$_perms[] = $bigOne;
+			}
+
+			if(!empty($p1['options']))
+			{
+				$_perms[] = $p1;
+			}
+
+			
+		}
+		return $_perms;
+	}
+
 }

@@ -10,6 +10,9 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('
 			Route::get('index/getmenus', 'IndexController@getMenus');//后台获取左侧菜单路由
 			Route::any('index/user', 'IndexController@user');//用户修改信息
 			Route::any('index/logout', 'IndexController@logout');//退出登录
+
+			Route::any('currentUser', 'IndexController@currentUser');
+			Route::any('notice', 'IndexController@notice');
 			
 
 			Route::any('attachment/addGroup', 'AttachmentController@addGroup');//图片管理列表路由

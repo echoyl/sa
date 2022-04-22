@@ -16,6 +16,9 @@ class UserController extends CrudController
 	//var $json_columns = ['perms2'];
 	var $with_count = ['logs'];
 	var $can_be_null_columns = ['desc'];
+	var $withs = [
+        ['name'=>'role','class'=>PermRole::class,'cid'=>0]
+    ];
     public function __construct(PermUser $model)
 	{
 		$this->model = $model;
@@ -37,12 +40,12 @@ class UserController extends CrudController
 		$m = $this->model;
 
 
-		$keyword = request('keyword','');
+		$username = request('username','');
 		$search = [];
-		if($keyword)
+		if($username)
 		{
-			$search['keyword'] = urldecode($keyword);
-			$m = $m->where([['username','like','%'.$search['keyword'].'%']]);
+			$username = urldecode($username);
+			$m = $m->where([['username','like','%'.$username.'%']]);
 
 		}
 
@@ -53,26 +56,22 @@ class UserController extends CrudController
 		}
 		$m = $m->where([['id','!=',1]]);
 
-		$search['roles'] = PermRole::select(['title as name','id'])->get()->toArray();
-
 		return [$m,$search];
 	}
 
 	public function postData(&$item)
 	{
-		$perm = new PermService();
+		$ps = new PermService();
 
 		$roles = PermRole::get();
-		$_roles = [];
 		$role_perms = [];
 		foreach($roles as $val)
 		{
-			$_roles[] = ['id'=>$val['id'],'name'=>$val['title']];
 			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
 		}
 
-		$item['perms'] = $perm->formatPerms();
-		$item['roles'] = $_roles;
+		$item['perms'] = $ps->parsePerms();
+
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 		$item['role_perms'] = $role_perms;
 		$item['password'] = '';
@@ -95,22 +94,8 @@ class UserController extends CrudController
 		}
 	}
 
-	public function destroy()
+	public function beforeDestroy($m)
 	{
-		$ids = request('ids','');
-		if (!empty($ids)) {
-			$ids = explode('.',$ids);
-			$items = $this->model->whereIn('id',$ids)->get();
-			foreach($items as $val)
-			{
-				if($val['id'] == 1)
-				{
-					continue;
-				}
-				$val->delete();
-			}
-			return ['code'=>0,'msg'=>'success'];
-		}
-		return ['code'=>1,'msg'=>'参数错误'];
+		return $m->where([['id','!=',1]]);
 	}
 }

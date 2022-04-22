@@ -17,10 +17,10 @@ class RoleController extends CrudController
 
 	public function postData(&$item)
 	{
-		$perm = new PermService();
+		$ps = new PermService();
 
 
-		$item['perms'] = $perm->formatPerms();
+		$item['perms'] = $ps->parsePerms();
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 
 	}
@@ -39,12 +39,12 @@ class RoleController extends CrudController
 		$m = $this->model;
 
 
-		$keyword = request('keyword','');
+		$title = request('title','');
 		$search = [];
-		if($keyword)
+		if($title)
 		{
-			$search['keyword'] = urldecode($keyword);
-			$m = $m->where([['title','like','%'.$search['keyword'].'%']]);
+			$title = urldecode($title);
+			$m = $m->where([['title','like','%'.$title.'%']]);
 
 		}
 

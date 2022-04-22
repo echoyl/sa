@@ -32,6 +32,12 @@ class SetsService
 		if(request()->isMethod('post'))
 		{
 			$post_data = filterEmpty(request('base'));
+
+            if(isset($post_data['qrcode']))
+            {
+                $post_data['qrcode'] = HelperService::uploadParse($post_data['qrcode'],true);
+            }
+
 			$data = [
 				'key'=>$key,
 				'value'=>json_encode($post_data)
@@ -50,6 +56,10 @@ class SetsService
 			if($item && $item['value'])
 			{
 				$data = json_decode($item['value'],true);
+                if(isset($data['qrcode']))
+                {
+                    $data['qrcode'] = HelperService::uploadParse($data['qrcode'],false);
+                }
 			}else
 			{
 				$data = [];

@@ -27,19 +27,17 @@ class LogController extends CrudController
 
 		$search = [];
 		
-		$sdate = request('sdate','');
+		$startTime = request('startTime','');
+		$endTime = request('endTime','');
 
-		if($sdate)
+		if($startTime)
 		{
-			$sdate = urldecode($sdate);
-			$date_range = explode(' - ',$sdate);
-			$m = $m->whereBetween('created_at',[$date_range[0],$date_range[1].' 23:59:59']);
-			$search['sdate'] = $sdate;
+			$m = $m->where([['created_at','>=',$startTime]]);
 		}
-
-		$search['status'] = [
-			['title'=>'启用','id'=>1],['title'=>'禁用','id'=>0],
-		];
+		if($endTime)
+		{
+			$m = $m->where([['created_at','<=',date("Y-m-d H:i:s",strtotime($endTime)+3600*24-1)]]);
+		}
 
 		return [$m,$search];
 	}

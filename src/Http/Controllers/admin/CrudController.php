@@ -2,7 +2,7 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
-use App\Services\HelperService;
+use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Models\Category;
 
@@ -18,7 +18,7 @@ class CrudController extends ApiBaseController
 	var $with_count = [];
 
 	var $parse_columns = [
-        ['name'=>'state','type'=>'state','default'=>'disable']
+        ['name'=>'state','type'=>'state','default'=>'enable']
     ];
 	var $withs = [];
 
@@ -303,7 +303,9 @@ class CrudController extends ApiBaseController
 			}
 		}
 		if (!empty($id)) {
-			$items = $this->model->whereIn('id',$id)->get();
+			$m = $this->beforeDestroy($this->model->whereIn('id',$id));
+
+			$items = $m->get();
 			foreach($items as $val)
 			{
 				$val->delete();
@@ -312,6 +314,12 @@ class CrudController extends ApiBaseController
 		}
 		return ['code'=>1,'msg'=>'参数错误'];
 	}
+
+	public function beforeDestroy($m)
+	{
+		return $m;
+	}
+
 	public function copyOne()
 	{
 		$id = request('id',0);

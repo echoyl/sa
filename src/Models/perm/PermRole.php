@@ -14,4 +14,17 @@ class PermRole extends Model
     protected $table = 'perm_role';
 
 
+    public function format($id = 0,$fields = ['id'=>'value','title'=>'label','children'=>'children'])
+    {
+        $data = $this->get()->toArray();
+        $ret = [];
+        foreach($data as $val)
+        {
+            $ret[] = [
+                $fields['id']=>$val['id'],
+                $fields['title']=>$val['title']
+            ];
+        }
+        return $ret;
+    }
 }
