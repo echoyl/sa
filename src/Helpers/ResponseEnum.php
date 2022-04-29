@@ -42,7 +42,7 @@ class ResponseEnum
     const CLIENT_DELETED_ERROR = [400202, '数据不存在'];
     // 401 - 访问被拒绝
     const CLIENT_HTTP_UNAUTHORIZED = [401001, '授权失败，请先登录'];
-    const CLIENT_HTTP_UNAUTHORIZED_EXPIRED = [401200, '账号信息已过期，请重新登录'];
+    const CLIENT_HTTP_UNAUTHORIZED_EXPIRED = [1001, '账号信息已过期，请重新登录'];
     const CLIENT_HTTP_UNAUTHORIZED_BLACKLISTED = [401201, '账号在其他设备登录，请重新登录'];
     // 403 - 禁止访问
     // 404 - 没有找到文件或目录

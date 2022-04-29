@@ -32,6 +32,7 @@ trait ApiResponse
             'msg' => $message,
             'search'=>$search,
             'total'=>$total,
+            'count'=>$total,
             'data'    => $data ?? null,
             'error'  => null,
             'success'=>true

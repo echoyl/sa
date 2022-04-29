@@ -16,8 +16,11 @@ class LoginController extends Controller
     {
         //提交登录信息
         $code = $request->input('captcha.captchaCode');
+        $code = $code?:$request->input('vercode');
+        $key = $request->input('captcha.captchaKey');
+        $key = $key?:$request->input('key');
 
-        if(!CaptchaService::check(request('captcha.captchaKey'),$code))
+        if(!CaptchaService::check($key,$code))
         {
             return ['code'=>1,'msg'=>'验证码错误','status'=>1];
         }

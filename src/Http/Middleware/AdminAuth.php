@@ -2,7 +2,7 @@
 
 namespace Echoyl\Sa\Http\Middleware;
 
-use App\Helper\ResponseEnum;
+use Echoyl\Sa\Helpers\ResponseEnum;
 use Echoyl\Sa\Services\AdminService;
 use Closure;
 
