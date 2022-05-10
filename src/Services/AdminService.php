@@ -57,6 +57,9 @@ class AdminService
     public static function checkAuth()
     {
         $user = self::user();
+
+        $config_namespace = config('sa.namespace',[]);
+        
         if ($user['id'] != 1) {
             //id为1是超级管理员
             //读取用户权限信息 实时读取
@@ -68,11 +71,18 @@ class AdminService
             $default_namespace = [
                 '\\Echoyl\\Sa\\Http\\Controllers\\admin',
                 'Echoyl\\Sa\\Http\\Controllers\\admin',
-                'App\\Http\\Controllers\\admin'
+                'App\\Http\\Controllers\\admin',
             ];
+            if(!empty($config_namespace))
+            {
+                foreach($config_namespace as $ns)
+                {
+                    $default_namespace[] = 'App\\Http\\Controllers\\'.$ns;
+                }
+            }
             //解析route
             $action = request()->route()->action;
-            
+            //d($action);
             $namespace = $action['namespace'];
             $controller = str_replace($namespace.'\\','',$action['controller']);
             
