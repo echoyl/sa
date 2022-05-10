@@ -4,7 +4,6 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
-use Echoyl\Sa\Models\Category;
 
 class CrudController extends ApiBaseController
 {
@@ -24,27 +23,44 @@ class CrudController extends ApiBaseController
 
 	public function defaultSearch($m)
 	{
-		$category_id = request('category_id');
-        if(!empty($category_id))
-        {
-            $category_id = json_decode($category_id,true);
-			$cids = [];
-			$cmodel = new Category();
-			foreach($category_id as $cid)
-			{
-				$cid = array_pop($cid);
-				$_cids = $cmodel->childrenIds($cid);
-				$cids = array_merge($cids,$_cids);
-			}
-            $m = $m->whereIn('category_id',$cids);
-        }
-
-
 		$title = request('title','');
 		if($title)
 		{
 			$m = $m->where([['title','like','%'.urldecode($title).'%']]);
 
+		}
+
+		foreach($this->parse_columns as $col)
+		{
+			$name = $col['name'];
+            $type = $col['type'];
+			$search_val = request($name,'');
+			if(empty($search_val) && $search_val !== 0)
+			{
+				continue;
+			}
+			switch($type)
+			{
+				case 'state':
+					$m = $m->where($name,$search_val);
+					break;
+				case 'cascader':
+					$category_id = json_decode($search_val,true);
+					$cids = [];
+					if(isset($col['class']))
+					{
+						$cmodel = new $col['class'];
+						foreach($category_id as $cid)
+						{
+							$cid = array_pop($cid);
+							$_cids = $cmodel->childrenIds($cid);
+							$cids = array_merge($cids,$_cids);
+						}
+						$m = $m->whereIn($name,$cids);
+					}
+					
+					break;
+			}
 		}
 
 		$state = request('state','');
@@ -378,7 +394,10 @@ class CrudController extends ApiBaseController
                         {
                             $data[$_name] = json_encode($val);
                             $val = array_pop($val);
-                        }
+                        }else
+						{
+							$val = 0;
+						}
                     }else
                     {
                         $val = isset($data[$_name]) && $data[$_name]?json_decode($data[$_name],true):[];
