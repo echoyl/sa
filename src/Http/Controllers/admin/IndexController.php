@@ -214,13 +214,14 @@ class IndexController extends Controller
     {
         $user = AdminService::user();
 		$avatar = HelperService::uploadParse($user['avatar'],false);
-		$avatar = !empty($avatar)?tomedia($avatar[0]['url']):'/dist/logo.png';
+		$avatar = !empty($avatar)?tomedia($avatar[0]['url']):'/antadmin/logo.png';
         $info = [
             'id'=>$user['id'],
             'username'=>$user['username'],
             'roleid'=>$user['roleid'],
             'name'=>$user['username'],
-            'avatar'=>$avatar
+            'avatar'=>$avatar,
+			'permission'=>$user['perms2']
         ];
 
         return ['code'=>0,'msg'=>'','data'=>$info];

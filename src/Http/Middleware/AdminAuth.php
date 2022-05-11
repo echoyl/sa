@@ -20,7 +20,8 @@ class AdminAuth
             //var_dump(IlluminateRoute::currentRouteName());exit;
             if(!AdminService::checkAuth())
             {
-                return response()->json(['code'=>1,'msg'=>'无操作权限']);
+                [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM;
+                return response()->json(['code'=>$code,'msg'=>$msg]);
             }
             //添加操作日志
             AdminService::log($request);
