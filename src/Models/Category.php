@@ -13,19 +13,18 @@ class Category extends Model
      */
     protected $table = 'category';
 
-    public function format($id = 0,$fields = ['id'=>'value','title'=>'label','children'=>'children'])
+    public function format($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'])
     {
-        $data = self::allData($this->table)->filter(function($item) use ($id) {
+        $data = self::allData($this->table)->filter(function ($item) use ($id) {
             return $item->parent_id === $id;
         });
         $ret = [];
-        foreach($data as $val)
-        {
+        foreach ($data as $val) {
             $ret[] = [
-                $fields['id']=>$val['id'],
-                $fields['title']=>$val['title'],
-                'parent_id'=>$val['parent_id'],
-                $fields['children']=>$this->format($val['id'],$fields)
+                $fields['id'] => $val['id'],
+                $fields['title'] => $val['title'],
+                'parent_id' => $val['parent_id'],
+                $fields['children'] => $this->format($val['id'], $fields),
             ];
         }
         return $ret;
@@ -33,8 +32,7 @@ class Category extends Model
     public static function allData($table)
     {
         static $all = [];
-        if(!isset($all[$table]) ||empty($all[$table]))
-        {
+        if (!isset($all[$table]) || empty($all[$table])) {
             $all[$table] = self::all();
         }
         return $all[$table];
@@ -43,13 +41,11 @@ class Category extends Model
     {
         static $ids = [];
         $data = $this->find($id);
-        if(!$data)
-        {
+        if (!$data) {
             $ids[] = 0;
         }
         $ids[] = $data['id'];
-        if($data['parent_id'] != 0)
-        {
+        if ($data['parent_id'] != 0) {
             $this->parentIds($data['parent_id']);
         }
         return array_reverse($ids);
@@ -58,41 +54,33 @@ class Category extends Model
     {
         static $par = [];
         $data = $this->find($id);
-        if($data)
-        {
-            $par[] = ['id'=>$data['id'],'title'=>$data['title']];
-            if($data['parent_id'] != 0)
-            {
+        if ($data) {
+            $par[] = ['id' => $data['id'], 'title' => $data['title']];
+            if ($data['parent_id'] != 0) {
                 $this->parentInfo($data['parent_id']);
             }
         }
 
-        
-
         return array_reverse($par);
     }
-    public function childrenIds($id,$self = true)
+    public function childrenIds($id, $self = true)
     {
         //获取子类的所有id
         $ids = [];
-        if(!$id)
-        {
+        if (!$id) {
             //return [];
         }
-        if($self)
-        {
+        if ($self) {
             $ids[] = $id;
         }
-        
-        $children = self::allData($this->table)->filter(function($user) use ($id) {
+
+        $children = self::allData($this->table)->filter(function ($user) use ($id) {
             return $user->parent_id == $id;
         });
-        if($children)
-        {
-            foreach($children as $val)
-            {
+        if ($children) {
+            foreach ($children as $val) {
                 $ids[] = $val['id'];
-                $ids = array_merge($ids,$this->childrenIds($val['id'],$self));
+                $ids = array_merge($ids, $this->childrenIds($val['id'], $self));
             }
         }
         return array_filter(array_unique($ids));
@@ -105,7 +93,7 @@ class Category extends Model
      */
     public function children($parent_id = 0)
     {
-        $children = self::allData($this->table)->filter(function($user) use ($parent_id) {
+        $children = self::allData($this->table)->filter(function ($user) use ($parent_id) {
             return $user->parent_id == $parent_id;
         });
         return $children;
@@ -117,17 +105,15 @@ class Category extends Model
      * @param [int] $cid
      * @return void
      */
-    public function getChild($cid = 0,$where = [])
-	{
-		$list = $this->where(['parent_id'=>$cid])->where($where)->orderBy('displayorder','desc')->get()->toArray();
-		foreach($list as $key=>$val)
-		{
-            $children = $this->getChild($val['id'],$where);
-            if(!empty($children))
-            {
+    public function getChild($cid = 0, $where = [])
+    {
+        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->get()->toArray();
+        foreach ($list as $key => $val) {
+            $children = $this->getChild($val['id'], $where);
+            if (!empty($children)) {
                 $list[$key]['children'] = $children;
             }
-		}
-		return $list;
-	}
+        }
+        return $list;
+    }
 }

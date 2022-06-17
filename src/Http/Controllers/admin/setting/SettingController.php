@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Echoyl\Sa\Models\Sets;
 use Echoyl\Sa\Services\SetsService;
 
-class SetsController extends Controller
+class SettingController extends Controller
 {
 	var $model;
     public function __construct(Sets $model)

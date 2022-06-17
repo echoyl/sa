@@ -10,12 +10,10 @@ class AdminService
     public static function checkToken()
     {
         $user = self::user();
-        if($user)
-        {
+        if ($user) {
             //读取到用户 检测用户权限
             return true;
-        }else
-        {
+        } else {
             return false;
         }
     }
@@ -23,15 +21,12 @@ class AdminService
     public static function user()
     {
         $user = request()->user();
-        if($user && $user->currentAccessToken()->name == 'admin')
-        {
+        if ($user && $user->currentAccessToken()->name == 'admin') {
             return $user;
-        }else
-        {
+        } else {
             return false;
         }
-        
-        
+
     }
 
     public static function pwd($str)
@@ -47,7 +42,6 @@ class AdminService
         return $token->plainTextToken;
     }
 
-
     public static function logout()
     {
         request()->user()->currentAccessToken()->delete();
@@ -58,14 +52,14 @@ class AdminService
     {
         $user = self::user();
 
-        $config_namespace = config('sa.namespace',[]);
-        
+        $config_namespace = config('sa.namespace', []);
+
         if ($user['id'] != 1) {
             //id为1是超级管理员
             //读取用户权限信息 实时读取
             $permUser = new PermUser();
-            $perms = $permUser->where(['id'=>$user['id']])->select(['perms2','roleid'])->with(['role'=>function($q){
-                $q->select(['id','perms2']);
+            $perms = $permUser->where(['id' => $user['id']])->select(['perms2', 'roleid'])->with(['role' => function ($q) {
+                $q->select(['id', 'perms2']);
             }])->first()->toArray();
             //默认的命名空间
             $default_namespace = [
@@ -73,45 +67,38 @@ class AdminService
                 'Echoyl\\Sa\\Http\\Controllers\\admin',
                 'App\\Http\\Controllers\\admin',
             ];
-            if(!empty($config_namespace))
-            {
-                foreach($config_namespace as $ns)
-                {
-                    $default_namespace[] = 'App\\Http\\Controllers\\'.$ns;
+            if (!empty($config_namespace)) {
+                foreach ($config_namespace as $ns) {
+                    $default_namespace[] = 'App\\Http\\Controllers\\' . $ns;
                 }
             }
             //解析route
             $action = request()->route()->action;
             //d($action);
             $namespace = $action['namespace'];
-            $controller = str_replace($namespace.'\\','',$action['controller']);
-            
+            $controller = str_replace($namespace . '\\', '', $action['controller']);
+
             //处理命名空间
-            foreach($default_namespace as $val)
-            {
-                $namespace = str_replace($val,'',$namespace);
+            foreach ($default_namespace as $val) {
+                $namespace = str_replace($val, '', $namespace);
             }
             //d($namespace);
-            list($c,$a) = explode('Controller@',$controller);
-            if($a == 'store')
-            {
+            list($c, $a) = explode('Controller@', $controller);
+            if ($a == 'store') {
                 //检测是 编辑还是 新增
-                if(request('id',0))
-                {
+                if (request('id', 0)) {
                     $a = 'edit';
-                }else
-                {
+                } else {
                     $a = 'add';
                 }
             }
-            $now_router = implode('.',[$c,$a]);
-            if($namespace)
-            {
-                $now_router = implode('.',[$namespace,$now_router]);
+            $now_router = implode('.', [$c, $a]);
+            if ($namespace) {
+                $now_router = implode('.', [$namespace, $now_router]);
             }
-            $now_router = trim(strtolower($now_router),'\\');
+            $now_router = trim(strtolower($now_router), '\\');
             //d($perms);
-            $perm_obj = new PermService($perms['perms2'],$perms['role']['perms2']);
+            $perm_obj = new PermService($perms['perms2'], $perms['role']['perms2']);
             $perm = $perm_obj->check_perm($now_router);
             //d($now_router,$perms['perms2'],$perm,$action);
             if (!$perm) {
@@ -125,46 +112,39 @@ class AdminService
     {
         $user = self::user();
         $permUser = new PermUser();
-        if($user['id'] == 1)
-        {
-            return $permUser->select('id','username')->where('id','!=',1)->get();
-        }else
-        {
-            return $permUser->select('id','username')->where('id','=',$user['id'])->get();
+        if ($user['id'] == 1) {
+            return $permUser->select('id', 'username')->where('id', '!=', 1)->get();
+        } else {
+            return $permUser->select('id', 'username')->where('id', '=', $user['id'])->get();
         }
     }
 
-    public static function log(Request $request,$force_type = false,$data = [])
+    public static function log(Request $request, $force_type = false, $data = [])
     {
-        if(!empty($data))
-        {
+        if (!empty($data)) {
             $admin = $data;
-        }else
-        {
+        } else {
             $admin = self::user();
         }
-        if(!$admin)
-        {
+        if (!$admin) {
             return;
         }
-        if($request->isMethod('post') || $force_type)
-        {
+        if ($request->isMethod('post') || $force_type) {
             //只记录post的日志
             //屏蔽敏感数据
             $rq = $request->all();
-            if(isset($rq['post']))
-            {
+            if (isset($rq['post'])) {
                 unset($rq['post']);
             }
             $log_data = self::logParse($rq);
 
             $data = [
-                'user_id'=>$admin['id'],
-                'url'=>$request->fullUrl(),
-                'request'=>json_encode($log_data),
-                'ip'=>$request->ip(),
-                'created_at'=>now(),
-                'type'=>$force_type?:'POST'
+                'user_id' => $admin['id'],
+                'url' => $request->fullUrl(),
+                'request' => json_encode($log_data),
+                'ip' => $request->ip(),
+                'created_at' => now(),
+                'type' => $force_type ?: 'POST',
             ];
             PermLog::insert($data);
         }
@@ -173,15 +153,11 @@ class AdminService
 
     public static function logParse($data)
     {
-        foreach($data as $key=>$val)
-        {
-            if(is_array($val))
-            {
+        foreach ($data as $key => $val) {
+            if (is_array($val)) {
                 $data[$key] = self::logParse($val);
-            }else
-            {
-                if(strpos($key,'password') !== false)
-                {
+            } else {
+                if (strpos($key, 'password') !== false) {
                     $data[$key] = '******';
                 }
             }

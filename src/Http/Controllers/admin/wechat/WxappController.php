@@ -1,7 +1,9 @@
 <?php
 namespace Echoyl\Sa\Http\Controllers\admin\wechat;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Models\wechat\Sets;
 use Echoyl\Sa\Models\wechat\Wxapp;
+use Echoyl\Sa\Services\SetsService;
 
 class WxappController extends CrudController
 {
@@ -78,5 +80,10 @@ class WxappController extends CrudController
 		return [$m,$search];
 
 	}
+
+	public function config()
+    {
+        return (new SetsService(new Sets()))->post('wxappconfig');
+    }
 
 }

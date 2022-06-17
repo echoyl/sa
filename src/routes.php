@@ -1,62 +1,60 @@
 <?php
-Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin','prefix'=>env('APP_PREFIX','').'sadmin'], function(){
+Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => env('APP_PREFIX', '') . 'sadmin'], function () {
 
-	//默认暴露这些公用路由 
-	Route::middleware('api')->group(function(){
+    //默认暴露这些公用路由
+    Route::middleware('api')->group(function () {
 
-		Route::middleware(['echoyl.remember','auth:sanctum','echoyl.sa'])->group(function(){
-			//系统通用路由
-			Route::get('', 'IndexController@index');
-			Route::get('index/getmenus', 'IndexController@getMenus');//后台获取左侧菜单路由
-			Route::any('index/user', 'IndexController@user');//用户修改信息
-			Route::any('index/logout', 'IndexController@logout');//退出登录
+        Route::middleware(['echoyl.remember', 'auth:sanctum', 'echoyl.sa'])->group(function () {
+            //系统通用路由
+            Route::get('', 'IndexController@index');
+            Route::get('index/getmenus', 'IndexController@getMenus'); //后台获取左侧菜单路由
+            Route::any('index/user', 'IndexController@user'); //用户修改信息
+            Route::any('index/logout', 'IndexController@logout'); //退出登录
 
-			Route::any('currentUser', 'IndexController@currentUser');
-			Route::any('notice', 'IndexController@notice');
-			
+            Route::any('currentUser', 'IndexController@currentUser');
+            Route::any('notice', 'IndexController@notice');
 
-			Route::any('attachment/addGroup', 'AttachmentController@addGroup');//图片管理列表路由
-			Route::any('attachment/delGroup', 'AttachmentController@delGroup');//图片管理列表路由
-			Route::resource('attachment', 'AttachmentController');//图片管理列表路由
-			
-			Route::resource('category', 'CategoryController');//通用分类
-			Route::resource('posts', 'PostsController');//内容Posts模块
-			
-			
-			Route::post('uploader/index', 'UploaderController@index');//上传文件路由
-			Route::post('uploader/video', 'UploaderController@video');//上传视频文件路由
-			Route::post('uploader/createUploadVideo', 'UploaderController@createUploadVideo');
-			Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
-			Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
+            Route::any('attachment/addGroup', 'AttachmentController@addGroup'); //图片管理列表路由
+            Route::any('attachment/delGroup', 'AttachmentController@delGroup'); //图片管理列表路由
+            Route::resource('attachment', 'AttachmentController'); //图片管理列表路由
 
-			Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function(){
+            //Route::resource('category', 'CategoryController'); //通用分类
+            //Route::resource('posts', 'PostsController'); //内容Posts模块
+
+            Route::post('uploader/index', 'UploaderController@index'); //上传文件路由
+            Route::post('uploader/video', 'UploaderController@video'); //上传视频文件路由
+            Route::post('uploader/createUploadVideo', 'UploaderController@createUploadVideo');
+            Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
+            Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
+
+            Route::any('helper/pca', 'HelperController@pca');
+
+            Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function () {
                 Route::resource('role', 'RoleController');
-				Route::resource('user', 'UserController');
-				Route::resource('log', 'LogController');
-			});
-			Route::group(['namespace' => 'setting', 'prefix' => 'setting'], function(){
-                Route::any('sets/base', 'SetsController@base');
-			});
+                Route::resource('user', 'UserController');
+                Route::resource('log', 'LogController');
+            });
+            Route::group(['namespace' => 'setting', 'prefix' => 'setting'], function () {
+                Route::any('base', 'SettingController@base');
+                Route::any('web', 'SettingController@web');
+            });
 
-			Route::group(['namespace' => 'wechat', 'prefix' => 'wechat'], function(){
-                Route::any('sets/wxappconfig', 'SetsController@wxappconfig');
-                Route::any('sets/wxconfig', 'SetsController@wxconfig');
-				Route::any('sets/wxpayconfig', 'SetsController@wxpayconfig');
-				
-				Route::get('menu/sync', 'MenuController@sync');
-				Route::post('menu/saveAndPub', 'MenuController@saveAndPub');
-				Route::post('menu/pub', 'MenuController@pub');
-				Route::resource('menu', 'MenuController');
-				Route::get('wx/syncUser', 'WxController@syncUser');
-				Route::resource('wx', 'WxController');
-				Route::resource('wxapp', 'WxappController');
-			});
-			Route::resource('tool', 'ToolController');
+            Route::group(['namespace' => 'wechat', 'prefix' => 'wechat'], function () {
+                Route::get('menu/sync', 'MenuController@sync');
+                Route::post('menu/saveAndPub', 'MenuController@saveAndPub');
+                Route::post('menu/pub', 'MenuController@pub');
+                Route::resource('menu', 'MenuController');
+                Route::get('wx/syncUser', 'WxController@syncUser');
+                Route::get('wx/config', 'WxController@config');
+                Route::get('wx/pay', 'WxController@pay');
+                Route::resource('wx', 'WxController');
+                Route::get('wxapp/config', 'WxappController@config');
+                Route::resource('wxapp', 'WxappController');
+            });
+            Route::resource('tool', 'ToolController');
 
-		});
-		Route::any('login','LoginController@index');
-		Route::get('captcha', 'LoginController@captcha');
-	});
+        });
+        Route::any('login', 'LoginController@index');
+        Route::get('captcha', 'LoginController@captcha');
+    });
 });
-?>
-
