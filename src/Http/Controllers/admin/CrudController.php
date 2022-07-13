@@ -40,16 +40,15 @@ class CrudController extends ApiBaseController
                 case 'state':
                     $m = $m->where($name, $search_val);
                     break;
-                case 'cascader':
+                case 'cascader': //单选分类
                     if (is_numeric($search_val)) {
                         $category_id = [$search_val];
                     } else {
                         $category_id = json_decode($search_val, true);
                     }
 
-                    
                     if (isset($col['class'])) {
-						$cids = [];
+                        $cids = [];
                         $cmodel = new $col['class'];
                         foreach ($category_id as $cid) {
                             if (is_array($cid)) {
@@ -60,6 +59,36 @@ class CrudController extends ApiBaseController
                             $cids = array_merge($cids, $_cids);
                         }
                         $m = $m->whereIn($name, $cids);
+                    }
+
+                    break;
+                case 'cascaders': //分类多选
+                    if (is_numeric($search_val)) {
+                        $category_id = [$search_val];
+                    } else {
+                        $category_id = json_decode($search_val, true);
+                    }
+
+                    if (isset($col['class'])) {
+                        $cids = [];
+                        $cmodel = new $col['class'];
+                        foreach ($category_id as $cid) {
+                            if (is_array($cid)) {
+                                $cid = array_pop($cid);
+                            }
+
+                            $_cids = $cmodel->childrenIds($cid);
+                            $cids = array_merge($cids, $_cids);
+                        }
+                        $cids = array_unique($cids);
+                        //d($cids);
+                        if (!empty($cids)) {
+                            $m = $m->where(function ($q) use ($cids, $name) {
+                                foreach ($cids as $cid) {
+                                    $q->orWhereRaw("FIND_IN_SET(?,{$name})", [$cid]);
+                                }
+                            });
+                        }
                     }
 
                     break;
@@ -338,11 +367,23 @@ class CrudController extends ApiBaseController
                     $val = HelperService::uploadParse($val ?? '', $in == 'encode' ? true : false);
                     break;
                 case 'cascader':
+                case 'cascaders':
                     $_name = '_' . $name;
                     if ($in == 'encode') {
                         if (!empty($val)) {
                             $data[$_name] = json_encode($val);
-                            $val = array_pop($val);
+                            $__val = [];
+                            $val_len = count($val);
+                            foreach ($val as $_key => $_val) {
+                                if (is_numeric($_val)) {
+                                    if ($_key == $val_len - 1) {
+                                        $__val[] = $_val;
+                                    }
+                                } elseif (is_array($_val)) {
+                                    $__val[] = array_pop($_val);
+                                }
+                            }
+                            $val = implode(',', $__val);
                         } else {
                             $val = 0;
                         }
