@@ -4,6 +4,8 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\AdminMenuService;
+use App\Services\HelperService;
 use Echoyl\Sa\Models\perm\PermUser;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\CaptchaService;
@@ -31,10 +33,19 @@ class LoginController extends Controller
         if($user && $user['password'] == AdminService::pwd($pwd))
         {
             $token = AdminService::login($user);
+            $as = new AdminMenuService;
+            $avatar = HelperService::uploadParse($user['avatar'], false);
+            $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
             $info = [
-                'id'=>$user['id'],
-                'username'=>$user['username'],
-                'roleid'=>$user['roleid'],
+                'userinfo'=>[
+                    'id'=>$user['id'],
+                    'username'=>$user['username'],
+                    'roleid'=>$user['roleid'],
+                    'name' => $user['username'],
+                    'avatar' => $avatar,
+                    'permission' => $user['perms2'],
+                    'menuData'=>$as->get(),
+                ],
                 'access_token'=>$token,
             ];
             AdminService::log($request,'登录',['id'=>$user['id']]);

@@ -50,7 +50,7 @@ class UploadService
 
             Image::make($new_path)->resize(200, 200, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
             //获取参数是否压缩原图
-            if($toSize && isset($toSize[0]) && isset($toSize[1]))
+            if($toSize)
             {
                 if(is_numeric($toSize))
                 {

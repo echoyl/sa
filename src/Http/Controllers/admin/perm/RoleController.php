@@ -2,8 +2,10 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
+use App\Services\AdminMenuService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\perm\PermRole;
+use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\PermService;
 
 class RoleController extends CrudController
@@ -18,9 +20,10 @@ class RoleController extends CrudController
 	public function postData(&$item)
 	{
 		$ps = new PermService();
+		$as = new AdminMenuService;
 
-
-		$item['perms'] = $ps->parsePerms();
+		//$item['perms'] = $ps->parsePerms();
+		$item['perms'] = $as->perms();
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 
 	}

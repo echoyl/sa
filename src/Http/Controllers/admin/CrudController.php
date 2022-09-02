@@ -92,6 +92,21 @@ class CrudController extends ApiBaseController
                     }
 
                     break;
+                case 'selects':
+                    if (is_numeric($search_val)) {
+                        $category_id = $search_val;
+                    } else {
+                        $category_id = json_decode($search_val, true);
+                        $len = count($category_id);
+                        if($len <= 0)
+                        {
+                            break;
+                        }
+                        $category_id = array_pop($category_id);
+                    }
+
+                    $m = $m->whereRaw("FIND_IN_SET(?,{$name})", [$category_id]);
+                    break;
             }
         }
 
@@ -376,8 +391,14 @@ class CrudController extends ApiBaseController
                             $val_len = count($val);
                             foreach ($val as $_key => $_val) {
                                 if (is_numeric($_val)) {
-                                    if ($_key == $val_len - 1) {
+                                    if($type == 'selects')
+                                    {
                                         $__val[] = $_val;
+                                    }else
+                                    {
+                                        if ($_key == $val_len - 1) {
+                                            $__val[] = $_val;
+                                        }
                                     }
                                 } elseif (is_array($_val)) {
                                     $__val[] = array_pop($_val);
@@ -389,6 +410,24 @@ class CrudController extends ApiBaseController
                         }
                     } else {
                         $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : [];
+                    }
+                    break;
+                case 'selects':
+                    //select 不需要而外字段了
+                    if ($in == 'encode') {
+                        $val = implode(',',$val);
+                    }else{
+                        if($val)
+                        {
+                            $val = explode(',',$val);
+                            foreach($val as $k=>$v)
+                            {
+                                if(is_numeric($v))
+                                {
+                                    $val[$k] = intval($v);
+                                }
+                            }
+                        }
                     }
                     break;
                 case 'state':
