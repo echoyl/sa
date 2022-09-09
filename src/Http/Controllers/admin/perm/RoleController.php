@@ -24,16 +24,16 @@ class RoleController extends CrudController
 
 		//$item['perms'] = $ps->parsePerms();
 		$item['perms'] = $as->perms();
-		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
+		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 
 	}
 
 	public function beforePost(&$data)
 	{
-		if(isset($data['perms2']) && $data['perms2'])
-		{
-			$data['perms2'] = implode(',',$data['perms2']);
-		}
+		// if(isset($data['perms2']) && $data['perms2'])
+		// {
+		// 	$data['perms2'] = implode(',',$data['perms2']);
+		// }
 		return;
 	}
 

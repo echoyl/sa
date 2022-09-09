@@ -379,7 +379,13 @@ class CrudController extends ApiBaseController
             $val = isset($data[$name]) ? $data[$name] : $col['default'];
             switch ($type) {
                 case 'image':
-                    $val = HelperService::uploadParse($val ?? '', $in == 'encode' ? true : false);
+                    if(!$val && $in == 'decode')
+                    {
+                        $val = '__unset';
+                    }else
+                    {
+                        $val = HelperService::uploadParse($val ?? '', $in == 'encode' ? true : false);
+                    }
                     break;
                 case 'cascader':
                 case 'cascaders':
@@ -409,7 +415,7 @@ class CrudController extends ApiBaseController
                             $val = 0;
                         }
                     } else {
-                        $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : [];
+                        $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : '';
                     }
                     break;
                 case 'selects':
@@ -427,6 +433,9 @@ class CrudController extends ApiBaseController
                                     $val[$k] = intval($v);
                                 }
                             }
+                        }else
+                        {
+                            $val = '__unset';
                         }
                     }
                     break;
@@ -443,6 +452,10 @@ class CrudController extends ApiBaseController
                         }
                     }
                     break;
+            }
+            if($val == '__unset')
+            {
+                continue;
             }
             $data[$name] = $val;
         }

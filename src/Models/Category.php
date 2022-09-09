@@ -105,11 +105,15 @@ class Category extends Model
      * @param [int] $cid
      * @return void
      */
-    public function getChild($cid = 0, $where = [])
+    public function getChild($cid = 0, $where = [],$parseData = false)
     {
-        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
+        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->get()->toArray();
         foreach ($list as $key => $val) {
-            $children = $this->getChild($val['id'], $where);
+            if($parseData)
+            {
+                $list[$key] = $parseData($val);
+            }
+            $children = $this->getChild($val['id'], $where,$parseData);
             if (!empty($children)) {
                 $list[$key]['children'] = $children;
             }

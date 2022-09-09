@@ -92,26 +92,26 @@ class HelperService
     {
         if($encode)
         {
-            $_data = [];
-            if(is_array($data))
-            {
-                foreach($data as $item)
-                {
-                    if(isset($item['response']))
-                    {
-                        $url = $item['response']['data']['value'];
-                    }else
-                    {
-                        $url = $item['value'];
-                    }
-                    $_data[] = [
-                        'name'=>$item['name'],
-                        'url'=>$url
-                    ];
-                }
-            }
+            // $_data = [];
+            // if(is_array($data))
+            // {
+            //     foreach($data as $item)
+            //     {
+            //         if(isset($item['response']))
+            //         {
+            //             $url = $item['response']['data']['value'];
+            //         }else
+            //         {
+            //             $url = $item['value'];
+            //         }
+            //         $_data[] = [
+            //             'name'=>$item['name'],
+            //             'url'=>$url
+            //         ];
+            //     }
+            // }
             
-            return json_encode($_data);
+            return json_encode($data);
         }else
         {
             $_data = [];
@@ -120,16 +120,17 @@ class HelperService
                 $data = json_decode($data,'true');
                 if(is_array($data))
                 {
-                    foreach($data as $val)
+                    foreach($data as $key=>$val)
                     {
-                        $_data[] = [
-                            'name'=>$val['name'],
-                            'url'=>tomedia($val['url']),
-                            'value'=>$val['url']
-                        ];
+                        $data[$key]['url'] = tomedia($val['value']);
+                        // $_data[] = [
+                        //     'name'=>$val['name'],
+                        //     'url'=>tomedia($val['url']),
+                        //     'value'=>$val['url']
+                        // ];
                     }
+                    return $data;
                 }
-                
             }
             return $_data;
         }

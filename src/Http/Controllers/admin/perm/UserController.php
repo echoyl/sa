@@ -2,6 +2,7 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
+use App\Services\AdminMenuService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\perm\PermUser;
 use Echoyl\Sa\Models\perm\PermRole;
@@ -70,7 +71,9 @@ class UserController extends CrudController
 			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
 		}
 
-		$item['perms'] = $ps->parsePerms();
+		$as = new AdminMenuService;
+		$item['perms'] = $as->perms();
+		//$item['perms'] = $ps->parsePerms();
 
 		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 		$item['role_perms'] = $role_perms;
@@ -79,10 +82,10 @@ class UserController extends CrudController
 
 	public function beforePost(&$data)
 	{
-		if(isset($data['perms2']) && $data['perms2'])
-		{
-			$data['perms2'] = implode(',',$data['perms2']);
-		}
+		// if(isset($data['perms2']) && $data['perms2'])
+		// {
+		// 	$data['perms2'] = implode(',',$data['perms2']);
+		// }
 		return;
 	}
 	public function afterPost($id)
