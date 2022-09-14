@@ -375,8 +375,9 @@ class CrudController extends ApiBaseController
                 //更新数据时 不写入默认值
                 continue;
             }
+            $isset = isset($data[$name])?true:false;
 
-            $val = isset($data[$name]) ? $data[$name] : $col['default'];
+            $val = $isset ? $data[$name] : $col['default'];
             switch ($type) {
                 case 'image':
                     if(!$val && $in == 'decode')
@@ -423,9 +424,9 @@ class CrudController extends ApiBaseController
                     if ($in == 'encode') {
                         $val = implode(',',$val);
                     }else{
-                        if($val)
+                        if($val && $isset)
                         {
-                            $val = explode(',',$val);
+                            $val = is_string($val)?explode(',',$val):$val;
                             foreach($val as $k=>$v)
                             {
                                 if(is_numeric($v))

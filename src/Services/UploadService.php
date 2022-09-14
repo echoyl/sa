@@ -44,11 +44,11 @@ class UploadService
 
             $path_parts = pathinfo($new_path);
 
-            $thumb_url = $folder_name . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
+            //$thumb_url = $folder_name . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
 
-            $thumbnail_file_path = storage_path('app/public/' . $thumb_url);
+            //$thumbnail_file_path = storage_path('app/public/' . $thumb_url);
 
-            Image::make($new_path)->resize(200, 200, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
+            //Image::make($new_path)->resize(200, 200, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
             //获取参数是否压缩原图
             if($toSize)
             {
@@ -58,6 +58,17 @@ class UploadService
                 }elseif(is_array($toSize) && isset($toSize[1]))
                 {
                     Image::make($new_path)->resize($toSize[0], $toSize[1])->save($new_path);
+                }
+                
+            }else
+            {
+                //没有size 那么默认图片最大为1200
+                $height = Image::make($new_path)->getHeight();
+                $width = Image::make($new_path)->getWidth();
+                $max_size = 1200;
+                if($height > $max_size || $width > $max_size)
+                {
+                    Image::make($new_path)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
                 }
             }
 
@@ -102,7 +113,7 @@ class UploadService
                 'size' => $file->getSize(),
                 'url' => $path,
                 'ext' => $ext,
-                'thumb_url' => $thumb_url,
+                //'thumb_url' => $thumb_url,
                 'created_at' => now(),
                 'height' => $height,
                 'width' => $width,

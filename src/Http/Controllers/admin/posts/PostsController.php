@@ -37,7 +37,7 @@ class PostsController extends CrudController
         $this->parse_columns = [
             ['name' => 'titlepic', 'type' => 'image', 'default' => ''],
             ['name' => 'pics', 'type' => 'image', 'default' => ''],
-            ['name' => 'category_id', 'type' => 'selects', 'default' => '', 'class' => Category::class],
+            ['name' => 'category_id', 'type' => 'selects', 'default' => [$this->cid], 'class' => Category::class],
             ['name' => 'state', 'type' => 'state', 'default' => 'enable'],
             ['name' => 'attachment', 'type' => 'image', 'default' => ''],
         ];

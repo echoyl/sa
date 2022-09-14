@@ -20,12 +20,18 @@ class Category extends Model
         });
         $ret = [];
         foreach ($data as $val) {
-            $ret[] = [
+            $children = $this->format($val['id'], $fields);
+            $item = [
                 $fields['id'] => $val['id'],
                 $fields['title'] => $val['title'],
                 'parent_id' => $val['parent_id'],
-                $fields['children'] => $this->format($val['id'], $fields),
+                //$fields['children'] => $this->format($val['id'], $fields),
             ];
+            if(!empty($children))
+            {
+                $item[$fields['children']] = $children;
+            }
+            $ret[] = $item;
         }
         return $ret;
     }
@@ -107,7 +113,7 @@ class Category extends Model
      */
     public function getChild($cid = 0, $where = [],$parseData = false)
     {
-        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->get()->toArray();
+        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
         foreach ($list as $key => $val) {
             if($parseData)
             {
