@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\admin\Menu;
 use App\Services\AdminMenuService;
 use App\Services\HelperService;
+use Echoyl\Sa\Models\perm\PermRole;
 use Echoyl\Sa\Models\perm\PermUser;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\PermService;
@@ -126,10 +127,21 @@ class IndexController extends Controller
         $avatar = HelperService::uploadParse($user['avatar'], false);
         $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
 		$as = new AdminMenuService;
+        $rolename = '超级管理员';
+        if($user['roleid'])
+        {
+            $role = (new PermRole())->where(['id'=>$user['roleid']])->first();
+            if($role)
+            {
+                $rolename = $role['title'];
+            }
+        }
         $info = [
             'id' => $user['id'],
             'username' => $user['username'],
+            'realname'=>$user['realname'],
             'roleid' => $user['roleid'],
+            'rolename'=>$rolename,
             'name' => $user['username'],
             'avatar' => $avatar,
             'permission' => $user['perms2'],

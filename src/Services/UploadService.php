@@ -43,6 +43,8 @@ class UploadService
             $new_path = storage_path('app/public/' . $path);
 
             $path_parts = pathinfo($new_path);
+            $height = Image::make($new_path)->getHeight();
+            $width = Image::make($new_path)->getWidth();
 
             //$thumb_url = $folder_name . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
 
@@ -54,18 +56,25 @@ class UploadService
             {
                 if(is_numeric($toSize))
                 {
-                    Image::make($new_path)->resize($toSize, $toSize, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
+                    if($toSize < $height || $toSize < $width)
+                    {
+                        Image::make($new_path)->resize($toSize, $toSize, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
+                    }
+                    
                 }elseif(is_array($toSize) && isset($toSize[1]))
                 {
-                    Image::make($new_path)->resize($toSize[0], $toSize[1])->save($new_path);
+                    if($toSize[1] < $height || $toSize[0] < $width)
+                    {
+                        Image::make($new_path)->resize($toSize[0], $toSize[1])->save($new_path);
+                    }
+                    
                 }
                 
             }else
             {
                 //没有size 那么默认图片最大为1200
-                $height = Image::make($new_path)->getHeight();
-                $width = Image::make($new_path)->getWidth();
-                $max_size = 1200;
+                
+                $max_size = 2000;
                 if($height > $max_size || $width > $max_size)
                 {
                     Image::make($new_path)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($new_path);

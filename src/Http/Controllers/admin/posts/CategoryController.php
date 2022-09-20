@@ -26,6 +26,7 @@ class CategoryController extends CrudController
         ];
 
         $this->parse_columns = [
+            ['name' => 'titlepic', 'type' => 'image', 'default' => ''],
             ['name' => 'state', 'type' => 'state', 'default' => 'disable'],
             ['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
         ];
@@ -37,7 +38,11 @@ class CategoryController extends CrudController
         //修改获取分类模式 直接递归 查询数据库获取数据
         //$search = [];
         $this->parseWiths($search);
-        return ['success' => true, 'msg' => '', 'data' => $this->model->getChild($this->cid), 'search' => $search];
+        $data = $this->model->getChild($this->cid,[],function($item){
+            $this->parseData($item,'decode','list');
+            return $item;
+        });
+        return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
     }
 }
