@@ -42,6 +42,7 @@ class CategoryController extends CrudController
             $this->parseData($item,'decode','list');
             return $item;
         });
+        
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
     }
