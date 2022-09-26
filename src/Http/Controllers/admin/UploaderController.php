@@ -13,7 +13,7 @@ class UploaderController extends Controller
     {
         $us = new UploadService();
         $type = $request->input('isFile', 0);
-        $res = $us->store($request, 'file', $type ? 1 : 0, true, $request->input('toSize'));
+        $res = $us->store($request, 'file', $type ? 1 : 0, false, $request->input('toSize'));
         if ($res['code']) {
             return $res;
         } else {
