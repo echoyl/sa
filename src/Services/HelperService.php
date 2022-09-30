@@ -1,6 +1,10 @@
 <?php
 namespace Echoyl\Sa\Services;
 
+use Exception;
+use Illuminate\Support\Facades\Log;
+use GuzzleHttp\Client;
+
 class HelperService
 {
     public static function picStr($pics = [])
@@ -135,6 +139,34 @@ class HelperService
             return $_data;
         }
         
+    }
+
+    public static function asynUrl($url,$data = [],$method = 'GET')
+    {
+        $client = new Client();
+
+		$options = [
+			'headers' => [
+				'Authorization' => request()->header('Authorization'),
+				'Sa-Remember' => request()->header('Sa-Remember'),
+			],
+			'timeout'=>1
+		];
+        if($method == 'GET')
+        {
+            $options['query'] = $data;
+        }else
+        {
+            $options['form_params'] = $data;
+        }
+
+		try{
+			$client->request($method, $url, $options);
+		}catch(Exception $e)
+		{
+			//异步执行url 无返回
+		}
+        return;
     }
 
 }

@@ -55,16 +55,31 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => en
                 });
 
                 Route::group(['namespace' => 'wechat', 'prefix' => 'wechat'], function () {
-                    Route::get('menu/sync', 'MenuController@sync');
-                    Route::post('menu/saveAndPub', 'MenuController@saveAndPub');
-                    Route::post('menu/pub', 'MenuController@pub');
-                    Route::resource('menu', 'MenuController');
-                    Route::get('wx/syncUser', 'WxController@syncUser');
-                    Route::any('wx/config', 'WxController@config');
-                    Route::any('wx/pay', 'WxController@pay');
-                    Route::resource('wx', 'WxController');
-                    Route::any('wxapp/config', 'WxappController@config');
-                    Route::resource('wxapp', 'WxappController');
+                    Route::group(['namespace' => 'offiaccount', 'prefix' => 'offiaccount'], function () {
+                        Route::resource('account', 'AccountController');
+
+                        Route::post('user/syncUser', 'UserController@syncUser');
+                        Route::get('user/_syncUser', 'UserController@_syncUser');
+                        Route::resource('user', 'UserController');
+                    });
+                    Route::group(['namespace' => 'miniprogram', 'prefix' => 'miniprogram'], function () {
+                        Route::resource('account', 'AccountController');
+                        Route::resource('user', 'UserController');
+                    });
+
+                    Route::resource('pay', 'PayController');
+                    
+
+                    // Route::get('menu/sync', 'MenuController@sync');
+                    // Route::post('menu/saveAndPub', 'MenuController@saveAndPub');
+                    // Route::post('menu/pub', 'MenuController@pub');
+                    // Route::resource('menu', 'MenuController');
+                    // Route::get('wx/syncUser', 'WxController@syncUser');
+                    // Route::any('wx/config', 'WxController@config');
+                    // Route::any('wx/pay', 'WxController@pay');
+                    // Route::resource('wx', 'WxController');
+                    // Route::any('wxapp/config', 'WxappController@config');
+                    // Route::resource('wxapp', 'WxappController');
                 });
                 Route::resource('tool', 'ToolController');
             });    

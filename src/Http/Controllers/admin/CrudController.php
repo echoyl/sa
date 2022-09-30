@@ -355,10 +355,16 @@ class CrudController extends ApiBaseController
         $ret = [];
         foreach ($this->withs as $with) {
             $name = $with['name'] . 's';
-            $data[$name] = (new $with['class'])->format($with['cid']);
+            if(isset($with['class']))
+            {
+                $data[$name] = (new $with['class'])->format($with['cid']);
+            }elseif(isset($with['data']))
+            {
+                $data[$name] = $with['data'];
+            }
             $ret[] = $with['name'];
         }
-        $data['states'] = [
+        $data['states'] = $data['states']??[
             'enable' => ['text' => '启用', 'status' => 'success'],
             'disable' => ['text' => '禁用', 'status' => 'error'],
         ];
@@ -370,6 +376,7 @@ class CrudController extends ApiBaseController
         foreach ($this->parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
+            $encode = $in == 'encode'?true:false;
 
             if (!isset($data[$name]) && $from == 'update') {
                 //更新数据时 不写入默认值
@@ -380,18 +387,18 @@ class CrudController extends ApiBaseController
             $val = $isset ? $data[$name] : $col['default'];
             switch ($type) {
                 case 'image':
-                    if(!$val && $in == 'decode')
+                    if(!$val && !$encode)
                     {
                         $val = '__unset';
                     }else
                     {
-                        $val = HelperService::uploadParse($val ?? '', $in == 'encode' ? true : false);
+                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false);
                     }
                     break;
                 case 'cascader':
                 case 'cascaders':
                     $_name = '_' . $name;
-                    if ($in == 'encode') {
+                    if ($encode) {
                         if (!empty($val)) {
                             $data[$_name] = json_encode($val);
                             $__val = [];
@@ -421,8 +428,8 @@ class CrudController extends ApiBaseController
                     break;
                 case 'selects':
                     //select 不需要而外字段了
-                    if ($in == 'encode') {
-                        $val = implode(',',$val);
+                    if ($encode) {
+                        $val = is_array($val)?implode(',',$val):'';
                     }else{
                         if($val && $isset)
                         {
@@ -437,11 +444,12 @@ class CrudController extends ApiBaseController
                         }else
                         {
                             $val = '__unset';
+                            
                         }
                     }
                     break;
                 case 'state':
-                    if ($in == 'encode') {
+                    if ($encode) {
                         if ($val == 1 || $val == 'enable') {
                             $val = 'enable';
                         } else {
@@ -453,13 +461,76 @@ class CrudController extends ApiBaseController
                         }
                     }
                     break;
+                case 'pca':
+                    if ($encode) {
+                        if($isset)
+                        {
+                            if(isset($val[0]))
+                            {
+                                $data['province'] = $val[0];
+                            }
+                            if(isset($val[1]))
+                            {
+                                $data['city'] = $val[1];
+                            }
+                            if(isset($val[2]))
+                            {
+                                $data['area'] = $val[2];
+                            }
+                            $val = '__unset';
+                        }
+                    } else {
+                        if(isset($data['province']) && $data['province'])
+                        {
+                            $val = [$data['province'],$data['city'],$data['area']];
+                        }
+                        
+                    }
+                    break;
+                case 'latlng':
+                    if ($encode) {
+                        if($isset)
+                        {
+                            if(isset($val[0]))
+                            {
+                                $data['lat'] = $val[0];
+                            }
+                            if(isset($val[1]))
+                            {
+                                $data['lng'] = $val[1];
+                            }
+                            $val = '__unset';
+                        }
+                    } else {
+                        if(isset($data['lat']) && $data['lat'])
+                        {
+                            $val = [$data['lat'],$data['lng']];
+                        }
+                    }
+                    break;
+                case 'price':
+                    if($encode)
+                    {
+                        if($isset)
+                        {
+                            $val = intval($val * 100);
+                        }
+                    }else
+                    {
+                        if($isset)
+                        {
+                            $val = floatval($val / 100);
+                        }
+                    }
             }
             if($val == '__unset')
             {
+                unset($data[$name]);
                 continue;
             }
             $data[$name] = $val;
         }
+
         return;
     }
 

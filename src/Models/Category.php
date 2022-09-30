@@ -111,7 +111,7 @@ class Category extends Model
      * @param [int] $cid
      * @return void
      */
-    public function getChild($cid = 0, $where = [],$parseData = false)
+    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1)
     {
         $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
         foreach ($list as $key => $val) {
@@ -119,10 +119,14 @@ class Category extends Model
             {
                 $list[$key] = $parseData($val);
             }
-            $children = $this->getChild($val['id'], $where,$parseData);
-            if (!empty($children)) {
-                $list[$key]['children'] = $children;
+            if($max_level == 0 || $max_level > $level)
+            {
+                $children = $this->getChild($val['id'], $where,$parseData,$max_level,$level+1);
+                if (!empty($children)) {
+                    $list[$key]['children'] = $children;
+                }
             }
+            
         }
         return $list;
     }

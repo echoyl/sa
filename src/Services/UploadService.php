@@ -4,8 +4,6 @@ namespace Echoyl\Sa\Services;
 use Echoyl\Sa\Models\Attachment;
 use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
-// use OSS\Core\OssException;
-// use OSS\OssClient;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UploadService
@@ -116,15 +114,7 @@ class UploadService
 				rename($new_path,storage_path('app/public/' . $thumb_url));
 			}
         }
-
-        $ret = $this->aliyunOssCheck($path);
-        if($ret['code'])
-        {
-            return $ret;
-        }
-
         $attachment_id = 0;
-
         if ($insert_db) {
             //如果需要插入数据库中
             $data = [
@@ -143,39 +133,6 @@ class UploadService
         }
 
         return ['code' => 0, 'data' => $path, 'attachment_id' => $attachment_id];
-    }
-
-    public function aliyunOssCheck($path)
-    {
-        // if(env('ALIYUN_OSS'))
-        // {
-        //     //将图片文件数据传入到aliyun OSS 中 将本地图片删除
-        //     $accessKeyId  = env('ALI_accessKeyId_video');
-        //     $accessKeySecret  = env('ALI_accessKeySecret_video');
-        //     $endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
-        //     $bucket= "banlvit-images";
-        //     $object = env('ALIYUN_OSS').'/'.$path;
-        //     $filePath = storage_path('app/public/' . $path);
-
-        //     try{
-        //         $ossClient = new OssClient($accessKeyId, $accessKeySecret, $endpoint);
-            
-        //         $ossClient->uploadFile($bucket, $object, $filePath);
-        //         //删除本地文件
-        //         @unlink($filePath);
-
-        //     } catch(OssException $e) {
-        //         // printf(__FUNCTION__ . ": FAILED\n");
-        //         // printf($e->getMessage() . "\n");
-        //         // return;
-        //         @unlink($filePath);
-        //         return [
-        //             'code'=>1,
-        //             'msg'=>$e->getMessage(),
-        //         ];
-        //     }
-        // }
-        return ['code'=>0,'path'=>$path];
     }
 
     public function front($formname = 'file', $ext_arr = ['jpg', 'jpeg', 'png', 'gif'], $sizelimit = 5, $thumb = false, $rewrite = false)
@@ -253,12 +210,6 @@ class UploadService
             $y = 15;
             //d($width);
             $img->insert(Image::make(storage_path('app/public/' . $base_set['image_water_url']))->resize($width, $width), 'bottom-right', $x, $y)->save($newPath);
-        }
-
-        $ret = $this->aliyunOssCheck($path);
-        if($ret['code'])
-        {
-            return $ret;
         }
 
         return ['code' => 0, 'msg' => '上传成功', 'data' => ['value' => $path, 'src' => tomedia($path), 'thumb_url' => $thumb_url]];

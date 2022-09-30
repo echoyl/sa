@@ -4,6 +4,8 @@ namespace Echoyl\Sa\Services;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use EasyWeChat\Factory;
+use Echoyl\Sa\Models\wechat\offiaccount\Account;
+use Echoyl\Sa\Models\wechat\offiaccount\User;
 use Echoyl\Sa\Models\wechat\Sets;
 use Echoyl\Sa\Models\wechat\Wx;
 use Exception;
@@ -206,46 +208,98 @@ class WechatService
         }
     }
 
-    public static function wxuserlist($nextid = null)
+    public static function getOffiaccount($account_id = 0,$params = [])
     {
-        $app = self::getApp();
-        $model = new Wx();
+        if($account_id)
+        {
+            $account = (new Account())->where(['id'=>$account_id,'state'=>'enable'])->first();
+        }else
+        {
+            $account = (new Account())->where(['state'=>'enable'])->orderBy('id','desc')->first();
+        }
+        if(!$account)
+        {
+            return ['code'=>1,'msg'=>'请先配置或开启公众号'];
+        }
+
+        $account_id = $account['id'];
+        
+        $config = [
+            // 必要配置
+            'app_id' => $account['appid'],
+            'secret' => $account['secret'],
+            'token' => $account['token'],
+            'aes_key' => $account['encodingaeskey'],
+            'oauth' => [
+                'scopes'   => $params['scopes']??['snsapi_userinfo'],
+                'callback' => '/'.env('APP_PREFIX','').'wx/auth',
+            ],
+            'response_type' => 'array',
+        ];
+        $app = Factory::officialAccount($config);
+        return ['code'=>0,'app'=>$app,'account_id'=>$account_id];
+    }
+
+    public static function wxuserlist($nextid = null,$account_id)
+    {
+        $offiaccount = self::getOffiaccount($account_id);
+
+        if($offiaccount['code'])
+        {
+            return $offiaccount;
+        }
+
+        $app = $offiaccount['app'];
+        $account_id = $offiaccount['account_id'];
+        $model = new User();
         $list = $app->user->list($nextid);
+        //Log::channel('daily')->info('list:',$list);
 
         if($list['count'] > 0)
         {
-            foreach($list['data']['openid'] as $openid)
+            $openids = array_chunk($list['data']['openid'],100);
+            foreach($openids as $_openids)
             {
-                $user = $app->user->get($openid);
-                $has = $model->where(['openid'=>$user['openid']])->first();
-                $data = [
-                    'subscribe'=>$user['subscribe'],
-                    'openid'=>$user['openid'],
-                    'nickname'=>$user['nickname'],
-                    'sex'=>$user['sex'],
-                    'city'=>$user['city'],
-                    'province'=>$user['province'],
-                    'country'=>$user['country'],
-                    'headimgurl'=>$user['headimgurl'],
-                    'subscribe_time'=>$user['subscribe_time'],
-                    'unionid'=>$user['unionid']??'',
-                    'subscribe_scene'=>$user['subscribe_scene']
-                ];
-                if($has){
-                    $model->where(['id'=>$has['id']])->update($data);
-                }else
+                $users = $app->user->select($_openids);
+                //Log::channel('daily')->info('users:',$users); 
+                if(!isset($users['user_info_list']))
                 {
-                    $data['created_at'] = now();
-                    $model->insert($data);
+                    continue;
+                }
+                foreach($users['user_info_list'] as $user)
+                {
+                    $has = $model->where(['openid'=>$user['openid']])->first();
+                    $data = [
+                        'subscribe'=>$user['subscribe'],
+                        'openid'=>$user['openid'],
+                        //微信接口不返回以下信息了
+                        //'nickname'=>$user['nickname'],
+                        //'gender'=>$user['sex'],
+                        //'city'=>$user['city'],
+                        //'province'=>$user['province'],
+                        //'country'=>$user['country'],
+                        //'avatar'=>$user['headimgurl'],
+                        'subscribe_time'=>$user['subscribe_time'],
+                        'unionid'=>$user['unionid']??'',
+                        'subscribe_scene'=>$user['subscribe_scene'],
+                        'account_id'=>$account_id
+                    ];
+                    if($has){
+                        $model->where(['id'=>$has['id']])->update($data);
+                    }else
+                    {
+                        $data['created_at'] = now();
+                        $model->insert($data);
+                    }
                 }
             }
         }
 
         if($list['next_openid'])
         {
-            self::wxuserlist($list['next_openid']);
+            self::wxuserlist($list['next_openid'],$account_id);
         }
-        return;
+        return ['code'=>0,'msg'=>'同步完成'];
     }
 
     public static function getMenu()
