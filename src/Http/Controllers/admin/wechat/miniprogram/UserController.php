@@ -1,4 +1,7 @@
 <?php
+/*
+ * @Author: echoyl inandan@126.com
+ */
 namespace Echoyl\Sa\Http\Controllers\admin\wechat\miniprogram;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\wechat\miniprogram\Account;
@@ -85,8 +88,11 @@ class UserController extends CrudController
 		$account_id = request('account_id','');
 		if($account_id)
 		{
-			$m = $m->where(['account_id'=>$account_id]);
-
+			$account = (new Account())->where(['id'=>$account_id])->first();
+			if($account)
+			{
+				$m = $m->where(['appid'=>$account['appid']]);
+			}
 		}
 
 		return [$m,$search];

@@ -82,8 +82,13 @@ class UserController extends CrudController
 		}
 
 		$account_id = request('account_id', '');
-		if ($account_id) {
-			$m = $m->where(['account_id' => $account_id]);
+		if($account_id)
+		{
+			$account = (new Account())->where(['id'=>$account_id])->first();
+			if($account)
+			{
+				$m = $m->where(['appid'=>$account['appid']]);
+			}
 		}
 
 		return [$m, $search];
