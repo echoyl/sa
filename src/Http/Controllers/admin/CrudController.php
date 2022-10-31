@@ -179,7 +179,7 @@ class CrudController extends ApiBaseController
         }
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)
-            ->get();
+            ->get()->toArray();
 
         foreach ($list as $key => $val) {
             $this->parseData($val, 'decode', 'list');
@@ -215,6 +215,7 @@ class CrudController extends ApiBaseController
         $item = $m->where(['id' => $id])->first();
 
         if (!empty($item)) {
+            $item = $item->toArray();
             if (method_exists($this, 'checkPost')) {
                 $ret = $this->checkPost($item, $id); //编辑数据检测
                 if ($ret) {
@@ -226,9 +227,7 @@ class CrudController extends ApiBaseController
             $item['created_at'] = now()->toDateTimeString();
         }
 
-        if (method_exists($this, 'postData')) {
-            $this->postData($item); //postData为预处理数据格式
-        }
+        
 
         $type = request('actype');
 
@@ -268,7 +267,7 @@ class CrudController extends ApiBaseController
                     }
 
                     if (method_exists($this, 'beforePost')) {
-                        $ret = $this->beforePost($data, $id); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+                        $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
                         if ($ret) {
                             return $ret;
                         }
@@ -294,8 +293,12 @@ class CrudController extends ApiBaseController
             $this->parseData($new_data, 'decode', 'list');
             return $ret ?: $this->success($new_data);
         } else {
+            
             $this->parseData($item, 'decode');
             $this->parseWiths($item);
+            if (method_exists($this, 'postData')) {
+                $this->postData($item); //postData为预处理数据格式
+            }
         }
 
         //json数据列
@@ -373,16 +376,18 @@ class CrudController extends ApiBaseController
 
     public function parseData(&$data, $in = 'encode', $from = 'detail')
     {
+        $unsetNames = [];
         foreach ($this->parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
             $encode = $in == 'encode'?true:false;
 
-            if (!isset($data[$name]) && $from == 'update') {
+            $isset = isset($data[$name])?true:false;
+            if (!$isset && $from == 'update') {
                 //更新数据时 不写入默认值
                 continue;
             }
-            $isset = isset($data[$name])?true:false;
+            
 
             $val = $isset ? $data[$name] : $col['default'];
             switch ($type) {
@@ -449,6 +454,7 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'state':
+                    
                     if ($encode) {
                         if ($val == 1 || $val == 'enable') {
                             $val = 'enable';
@@ -482,7 +488,17 @@ class CrudController extends ApiBaseController
                     } else {
                         if(isset($data['province']) && $data['province'])
                         {
-                            $val = [$data['province'],$data['city'],$data['area']];
+                            if(isset($col['level']) && $col['level'] == 2)
+                            {
+                                $val = [$data['province'],$data['city']];
+                            }elseif(isset($col['level']) && $col['level'] == 1)
+                            {
+                                $val = [$data['province']];
+                            }else
+                            {
+                                $val = [$data['province'],$data['city'],$data['area']];
+                            }
+                            
                         }
                         
                     }
@@ -522,16 +538,35 @@ class CrudController extends ApiBaseController
                             $val = floatval($val / 100);
                         }
                     }
+                    break;
+                case 'with':
+                    if($isset && $val)
+                    {
+                        foreach($val as $k=>$v)
+                        {
+                            $new_key = implode('_',[$name,$k]);
+                            $data[$new_key] = $v;
+                        }
+                    }
+                    break;
+                // case 'enum':
+                //     if($from == 'list' && $isset)
+                //     {
+                //         $val = $col['data'][$val]['value'];
+                //     }
+                //     break;
             }
-            if($val == '__unset')
+            if($val === '__unset')
             {
+                
+                $unsetNames[] = $name;
                 unset($data[$name]);
                 continue;
             }
             $data[$name] = $val;
         }
 
-        return;
+        return $unsetNames;
     }
 
 }

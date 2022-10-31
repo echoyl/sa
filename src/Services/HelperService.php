@@ -115,7 +115,23 @@ class HelperService
             //     }
             // }
             
-            return json_encode($data);
+            //return json_encode($data);
+            if (is_array($data)) {
+                $_data = [];
+                foreach ($data as $item) {
+                    if(isset($item['url']))
+                    {
+                        unset($item['url']);
+                    }
+                    $_data[] = $item;
+                }
+
+                
+                return json_encode($_data);
+            }else
+            {
+                return '';
+            }
         }else
         {
             $_data = [];

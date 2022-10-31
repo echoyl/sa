@@ -4,6 +4,8 @@ namespace Echoyl\Sa\Services;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use EasyWeChat\Factory;
+use Echoyl\Sa\Models\wechat\miniprogram\Account as MiniprogramAccount;
+use Echoyl\Sa\Models\wechat\miniprogram\User as MiniprogramUser;
 use Echoyl\Sa\Models\wechat\offiaccount\Account;
 use Echoyl\Sa\Models\wechat\offiaccount\User;
 use Echoyl\Sa\Models\wechat\Sets;
@@ -240,6 +242,44 @@ class WechatService
         return ['code'=>0,'app'=>$app,'account_id'=>$account_id];
     }
 
+    public static function getMiniprogram($account)
+    {
+        $config = [
+            'app_id' => $account['appid'],
+            'secret' => $account['secret'],
+
+            // 下面为可选项
+            // 指定 API 调用返回结果的类型：array(default)/collection/object/raw/自定义类名
+            'response_type' => 'array',
+
+            'log' => [
+                'level' => 'debug',
+                'file' => storage_path('logs/wechat.log'),
+            ],
+        ];
+
+        $app = Factory::miniProgram($config);
+        return $app;
+    }
+
+    public static function getMiniprogramAccountConfig($account_id = 0)
+    {
+        if($account_id)
+        {
+            $account = (new MiniprogramAccount())->where(['id'=>$account_id,'state'=>'enable'])->first();
+        }else
+        {
+            $account = (new MiniprogramAccount())->where(['state'=>'enable'])->orderBy('id','desc')->first();
+        }
+        if(!$account)
+        {
+            return false;
+        }
+
+        return $account;
+
+    }
+
     public static function wxuserlist($nextid = null,$account_id)
     {
         $offiaccount = self::getOffiaccount($account_id);
@@ -369,6 +409,43 @@ class WechatService
         }
         return;
         
+    }
+
+    /**
+     * 更新或新增小程序用户信息
+     * 
+     */
+    public static function miniprogramUser($original,$app_id = 0)
+    {
+
+        $model = new MiniprogramUser();
+
+        $has = $model->where(['openid'=>$original['openid']])->first();
+        $data = [
+            'nickname'=>$original['nickName'],
+            'openid'=>$original['openid'],
+            'avatar'=>$original['avatarUrl'],
+            'gender'=>$original['gender'],
+            'city'=>$original['city'],
+            'province'=>$original['province'],
+            'country'=>$original['country'],
+            'unionid'=>$original['unionid']??'',
+            'last_used_at'=>now(),
+            'appid'=>$app_id
+        ];
+        if($has)
+        {
+            //更新
+            $model->where(['id'=>$has['id']])->update($data);
+            $id = $has['id'];
+        }else
+        {
+            //新增
+            $data['created_at'] = now();
+            $id = $model->insertGetId($data);
+        }
+        $data['id'] = $id;
+        return $data;
     }
 
     public static function wxUser($original)
