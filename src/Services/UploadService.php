@@ -65,7 +65,7 @@ class UploadService
                 {
                     if($toSize[1] < $height || $toSize[0] < $width)
                     {
-                        Image::make($new_path)->resize($toSize[0], $toSize[1])->save($new_path);
+                        Image::make($new_path)->resize($toSize[0], $toSize[1], function ($constraint) {$constraint->aspectRatio();})->save($new_path);
                     }
                     
                 }

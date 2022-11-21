@@ -8,6 +8,8 @@ use Echoyl\Sa\Models\wechat\miniprogram\Account as MiniprogramAccount;
 use Echoyl\Sa\Models\wechat\miniprogram\User as MiniprogramUser;
 use Echoyl\Sa\Models\wechat\offiaccount\Account;
 use Echoyl\Sa\Models\wechat\offiaccount\User;
+use Echoyl\Sa\Models\wechat\Pay;
+use Echoyl\Sa\Models\wechat\pay\Log as PayLog;
 use Echoyl\Sa\Models\wechat\Sets;
 use Echoyl\Sa\Models\wechat\Wx;
 use Exception;
@@ -113,17 +115,19 @@ class WechatService
         return $app;
     }
 
-    public static function getPayment($cert_path = '')
+    public static function getPayment($id)
     {
-        $model = new Sets();
-        $ss = new SetsService($model);
-        $sets = $ss->getSet('wxconfig');
-        $pay_set = $ss->getSet('wxpayconfig');
+        $pay = (new Pay())->where(['id'=>$id])->first();
+        if(!$pay)
+        {
+            return [1,'请先配置支付信息'];
+        }
+
         $config = [
             // 必要配置
-            'app_id'             => $sets['appid'],
-            'mch_id'             => $pay_set['wxapp_mchid'],
-            'key'                => $pay_set['wxapp_apikey'],   // API 密钥
+            'app_id'             => $pay['appid'],
+            'mch_id'             => $pay['mch_id'],
+            'key'                => $pay['apikey'],   // API 密钥
         
             // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
             // 'cert_path'          => 'path/to/your/cert.pem', // XXX: 绝对路径！！！！
@@ -131,29 +135,84 @@ class WechatService
         
             'notify_url'         => env('APP_URL').'/wx/wxnotifys',     // 你也可以在下单时单独设置来想覆盖它
         ];
-        if($cert_path != '')
+
+        $cert_path = base_path('cert/cert_'.$pay['id'].'.pem');
+        $key_path = base_path('cert/key_'.$pay['id'].'.pem');
+
+        if(file_exists($cert_path))
         {
-            $config['cert_path'] = $cert_path.'/cert.pem';
-            $config['key_path'] = $cert_path.'/key.pem';
+            $config['cert_path'] = $cert_path;
+            $config['key_path'] = $key_path;
         }
         
         $app = Factory::payment($config);
-        return $app;
+        return [0,$app];
+    }
+
+    public static function createPayLog($money,$sn,$openid,$type = 'miniprogram')
+    {
+        $pay_log = [
+            'money'=>$money,
+            'sn'=>$sn,
+            'openid'=>$openid,
+            'created_at'=>now()
+        ];
+        if($type == 'miniprogram')
+        {
+            $pay_log['miniprogram_user_openid'] = $openid;
+        }else
+        {
+            $pay_log['offiaccount_user_openid'] = $openid;
+        }
+        $id = (new PayLog())->insertGetId($pay_log);
+        $pay_log['id'] = $id;
+        return $pay_log;
+    }
+
+    public static function wxJsapi($pay_log,$pay_id,$title = '支付')
+    {
+        //$msg_body = '{"tran_cd":"1192","acc_mod":"01","prod_cd":"1151","biz_cd":"0000007","mcht_cd":"996180418866693","tran_dt_tm":"20200904143149","order_id":"PGC20200904143149E43505","sys_order_id":"202009040196060","tran_order_id":"10001866202009040196060","resp_cd":"00","tran_amt":"1","sett_dt":"20200609","qr_code_info":{"wx_jsapi":"{\"appId\":\"wx2421b1c4370ec43b\",\"timeStamp\":\"1599201115\",\"package\":\"prepay_id\\u003dwx04143155547501cb1eacfffa8582310000\",\"signType\":\"RSA\",\"nonceStr\":\"3d6d9afe47394464ba262cbf2e600072\",\"paySign\":\"Yyhir9cY5tRLeFJ/oGsMi47UOMgSqTzsgHr+KApJU1paeWPIaUF1aSixKHMkZxjPRwOrBKzetDQ4rqR9ZE+xVMoouhpeWLhitYBQ7iG0HtJNcsbeJNatPfX2t7xxIYYklgq15FzqZ1yLt8kB8pLlQBRvViKOB9Vq+IgwWS6RtYxZCQl6+IxL2mdTnZ2uafAGnfVX8Dl34WEVZ7bG/9c0pKnQGzF8TSMVRafY5ZnmT3d5LX892+C4LjWPKAH8SjgAjpgRvepPLUfLAoV+ChkaNouzr+43PTyrJf23KGz9omnR6+L2yeXAF8GMe6TInCqP1t86FrKIr6kUZTjD3TNM9Q\\u003d\\u003d\"}"}}';
+        //return ['code'=>0,'msg'=>'','data'=>json_decode($msg_body,true)];
+
+
+        [$code,$app] = self::getPayment($pay_id);
+
+        if($code)
+        {
+            return [$code,$app];
+        }
+
+        $par = [
+            'body' => $title,
+            'out_trade_no' => $pay_log['sn'],
+            'total_fee' => $pay_log['money'],
+            //'spbill_create_ip' => '123.12.12.123', // 可选，如不传该参数，SDK 将会自动获取相应 IP 地址
+            'notify_url' => env('APP_URL').'/wx/wxnotifys', // 支付结果通知网址，如果不设置则会使用配置里的默认地址
+            'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
+            'openid' => $pay_log['openid']
+        ];
+
+        Log::channel('daily')->info('pay_msg_body:',$par);
+
+        $result = $app->order->unify($par);
+        Log::channel('daily')->info('pay_msg_result:',$result);
+        $jssdk = $app->jssdk;
+        if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK')
+        {
+            $config = $jssdk->sdkConfig($result['prepay_id']);
+
+            Log::channel('daily')->info('sdkConfig:',$config);
+
+            return [0,$config];
+        }else
+        {
+            return [1,'支付调用失败:'.$result['return_msg']];
+        }
     }
 
 
-    public static function createWxaQrcode($scene,$page = '')
+    public static function createWxaQrcode($scene,$page = '',$app)
     {
-        $app = self::getwxapp();
-        $file_path = storage_path('app/public/qrcode');
-        $name = md5($scene).'.png';
-
-        if(file_exists($file_path.'/'.$name))
-        {
-            return 'qrcode/'.$name;
-        }
-
-        //d($scene);
         if($page)
         {
             $result = $app->app_code->getUnlimit($scene,['page'=>$page]);
@@ -162,28 +221,20 @@ class WechatService
             $result = $app->app_code->getUnlimit($scene);
         }
         //d($result);
-
+        
         if(is_array($result) && isset($result['errcode']))
         {
-            return false;
+            Log::channel('wechatOffiaccount')->info('createWxaQrcode:',$result);
+            return [1,$result['errmsg']];
         }
 
         if($result)
         {
-            //将文件保存至本地
-
-            if(!is_dir($file_path))
-            {
-                File::makeDirectory($file_path,0755,true);
-            }
-            
-
-            File::put($file_path.'/'.$name,$result);
-            return 'qrcode/'.$name;
+            return [0,$result];
         }
         
 
-        return false;
+        return [1,'生成错误'];;
     }
 
     public function wxnotify()
@@ -221,7 +272,7 @@ class WechatService
         }
         if(!$account)
         {
-            return ['code'=>1,'msg'=>'请先配置或开启公众号'];
+            return [1,'请先配置或开启公众号'];
         }
 
         $account_id = $account['id'];
@@ -239,7 +290,7 @@ class WechatService
             'response_type' => 'array',
         ];
         $app = Factory::officialAccount($config);
-        return ['code'=>0,'app'=>$app,'account_id'=>$account_id];
+        return [0,$app];
     }
 
     public static function getMiniprogram($account)
@@ -282,15 +333,13 @@ class WechatService
 
     public static function wxuserlist($nextid = null,$account_id)
     {
-        $offiaccount = self::getOffiaccount($account_id);
+        [$code,$app] = self::getOffiaccount($account_id);
 
-        if($offiaccount['code'])
+        if($code)
         {
-            return $offiaccount;
+            return [$code,$app];
         }
 
-        $app = $offiaccount['app'];
-        $account_id = $offiaccount['account_id'];
         $model = new User();
         $list = $app->user->list($nextid);
         //Log::channel('daily')->info('list:',$list);
@@ -308,7 +357,7 @@ class WechatService
                 }
                 foreach($users['user_info_list'] as $user)
                 {
-                    $has = $model->where(['openid'=>$user['openid']])->first();
+                    $has = $model->where(['openid'=>$user['openid'],'appid'=>$app->config->app_id])->first();
                     $data = [
                         'subscribe'=>$user['subscribe'],
                         'openid'=>$user['openid'],
@@ -322,7 +371,7 @@ class WechatService
                         'subscribe_time'=>$user['subscribe_time'],
                         'unionid'=>$user['unionid']??'',
                         'subscribe_scene'=>$user['subscribe_scene'],
-                        'account_id'=>$account_id
+                        'appid'=>$app->config->app_id
                     ];
                     if($has){
                         $model->where(['id'=>$has['id']])->update($data);
@@ -361,10 +410,10 @@ class WechatService
      * @param [type] $user
      * @return void
      */
-    public static function isSubscribe($user)
+    public static function isSubscribe($user,$app)
     {
-        $app = self::getApp();
-
+        //$app = self::getApp();
+        $model = new User();
         if(env('APP_ENV') == 'local')
         {
             return true;
@@ -380,32 +429,33 @@ class WechatService
 
         if($user && $user['subscribe'] == 1)
         {
-            $has = Wx::where(['openid'=>$user['openid']])->first();
+            $has = $model->where(['openid'=>$user['openid'],'appid'=>$app->config->app_id])->first();
             if($has && !$has['subscribe'])
             {
-                Wx::where(['openid'=>$user['openid']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+                $model->where(['openid'=>$user['openid']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
             }
             return true;
         }
         return;
     }
 
-    public static function subscribe($openid,$flag = true,$user = false)
+    public static function subscribe($openid,$flag = true,$user = false,$app)
     {
-        $has_user = Wx::where(['openid'=>$openid])->first();
+        $model = new User();
+        $has_user = $model->where(['openid'=>$openid,'appid'=>$app->config->app_id])->first();
         if($has_user)
         {
             //关注事件
             if($flag)
             {
-                Wx::where(['openid'=>$openid])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+                $model->where(['id'=>$has_user['id']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
             }else
             {
                 //取消关注
-                Wx::where(['openid'=>$openid])->update(['subscribe'=>0]);
+                $model->where(['id'=>$has_user['id']])->update(['subscribe'=>0]);
             }
         }else{
-            self::wxUser($user);
+            self::offiaccountUser($user,$app->config->app_id);
         }
         return;
         
@@ -420,7 +470,7 @@ class WechatService
 
         $model = new MiniprogramUser();
 
-        $has = $model->where(['openid'=>$original['openid']])->first();
+        $has = $model->where(['openid'=>$original['openid'],'appid'=>$app_id])->first();
         $data = [
             'nickname'=>$original['nickName'],
             'openid'=>$original['openid'],
@@ -435,8 +485,11 @@ class WechatService
         ];
         if($has)
         {
-            //更新
-            $model->where(['id'=>$has['id']])->update($data);
+            //更新 - 更新的话只更新最后使用时间了
+            $update = [
+                'last_used_at'=>now(),
+            ];
+            $model->where(['id'=>$has['id']])->update($update);
             $id = $has['id'];
         }else
         {
@@ -448,47 +501,160 @@ class WechatService
         return $data;
     }
 
-    public static function wxUser($original)
+    /**
+     * 更新小程序用户  头像及昵称
+     *
+     * @param [type] $id
+     * @param [type] $data
+     * @return void
+     */
+    public static function miniprogramUserUpdate($id,$data)
     {
+        $model = new MiniprogramUser();
+        $model->where(['id'=>$id])->update($data);
+        return;
+    }
+
+    public static function miniprogramUserMobile($openid,$mobile)
+    {
+        $model = new MiniprogramUser();
+        $has = $model->where(['openid'=>$openid])->first();
+        if($has)
+        {
+            $model->where(['id'=>$has['id']])->update(['mobile'=>$mobile]);
+        }
+        return;
+    }
+
+    public static function offiaccountUser($original,$app_id = '')
+    {
+        $model = new User();
         if($original)
         {
-            $has = Wx::where(['openid'=>$original['openid']])->first();
+            $data = [
+                'openid'=>$original['openid'],
+                'gender'=>$original['sex'],
+                'city'=>$original['city'],
+                'province'=>$original['province'],
+                'country'=>$original['country'],
+                'unionid'=>$original['unionid']??'',
+                'subscribe'=>$original['subscribe']??0,
+                'subscribe_time'=>$original['subscribe_time']??0,
+                'created_at'=>date("Y-m-d H:i:s"),
+                'appid'=>$app_id
+            ];
+            if($original['nickname'])
+            {
+                $data['nickname'] = $original['nickname'];
+            }
+            if($original['headimgurl'])
+            {
+                $data['avatar'] = $original['headimgurl'];
+            }
+            $has = $model->where(['openid'=>$original['openid'],'appid'=>$app_id])->first();
             if(!$has)
             {
-                $wx_user = [
-                    'nickname'=>$original['nickname'],
-                    'openid'=>$original['openid'],
-                    'headimgurl'=>$original['headimgurl'],
-                    'sex'=>$original['sex'],
-                    'city'=>$original['city'],
-                    'province'=>$original['province'],
-                    'country'=>$original['country'],
-                    'unionid'=>$original['unionid']??'',
-                    'subscribe'=>$original['subscribe']??0,
-					'subscribe_time'=>$original['subscribe_time']??0,
-                    'status'=>1,
-                    'created_at'=>date("Y-m-d H:i:s")
-                ];
-                Wx::insert($wx_user);
+                $data['created_at'] = now();
+                $id = $model->insertGetId($data);
             }else
             {
                 //更新
-                $wx_user = [
-                    'nickname'=>$original['nickname'],
-                    'openid'=>$original['openid'],
-                    'headimgurl'=>$original['headimgurl'],
-                    'sex'=>$original['sex'],
-                    'city'=>$original['city'],
-                    'province'=>$original['province'],
-                    'country'=>$original['country'],
-                    'unionid'=>$original['unionid']??'',
-                    'subscribe'=>$original['subscribe']??0,
-                    'subscribe_time'=>$original['subscribe_time']??0,
-                ];
-                Wx::where(['id'=>$has['id']])->update($wx_user);
+                $model->where(['id'=>$has['id']])->update($data);
+                $id = $has['id'];
             }
+            $data['id'] = $id;
+            return $data;
+        }
+        return false;
+    }
+
+    /**
+     * 微信公众号发送订阅模板消息
+     *
+     * @param [type] $data
+     * @param [type] $app
+     * @return void
+     */
+    public static function sendMessage($data,$app)
+    {
+        $ret = $app->template_message->send($data);
+        Log::channel('wechatOffiaccount')->info('template_message:',$ret);
+        return;
+    }
+    /**
+     * 发送多条模板消息
+     *
+     * @param [type] $data
+     * @param [type] $app
+     * @return void
+     */
+    public static function sendMessages($data,$app)
+    {
+        foreach($data as $val)
+        {
+            self::sendMessage($val,$app);
         }
         return;
+    }
+
+    public static function payRefund($pay_log_id,$tran_amt,$app)
+    {
+        $model = new PayLog();
+        $pay_log = $model->where(['id'=>$pay_log_id])->first();
+        if(!$pay_log)
+        {
+            return [1,'订单信息错误'];
+        }
+        if($pay_log['state'] != 1)
+        {
+            return [1,'订单状态错误'];
+        }
+
+        [$code,$refund] = self::payRefundQuery($pay_log['sn'],$app);
+        if(!$code)
+        {
+            $model->where(['id'=>$pay_log['id']])->update([
+                'state'=>2,
+                'refund_at'=>now(),
+                'refund_out_sn'=>$refund['refund_id_0'],
+                'refund_sn'=>$refund['out_refund_no_0'],
+                'refund_money'=>$tran_amt
+            ]);
+            return [0,'退款成功'];
+        }
+
+        $rf = $pay_log['sn'].'TK'.rand(10,99);
+        $result = $app->refund->byOutTradeNumber($pay_log['sn'],$rf,$pay_log['money'],$tran_amt);
+
+        Log::channel('wechatOffiaccount')->info('tuikuan_result:',$result);
+        if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK' && $result['result_code'] == 'SUCCESS')
+        {
+            $model->where(['id'=>$pay_log['id']])->update([
+                'state'=>2,
+                'refund_at'=>now(),
+                'refund_out_sn'=>$result['refund_id'],
+                'refund_sn'=>$rf,
+                'refund_money'=>$tran_amt
+            ]);
+            return [0,'退款成功'];
+        }else
+        {
+            return [1,$result['err_code_des']??'未知原因'];
+        }
+
+    }
+
+    public static function payRefundQuery($sn,$app)
+    {
+        $result = $app->refund->queryByOutTradeNumber($sn);
+        Log::channel('wechatOffiaccount')->info('tuikuan_query_result:',$result);
+        if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK' && $result['result_code'] == 'SUCCESS')
+        {
+            return [0,$result];
+        }else
+        {
+            return [1,'fail'];;
+        }
     }
 
 }

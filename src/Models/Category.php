@@ -109,7 +109,7 @@ class Category extends Model
      * 循环通过读取数据库获取自己的子集
      *
      * @param [int] $cid
-     * @return void
+     * @return array
      */
     public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1)
     {

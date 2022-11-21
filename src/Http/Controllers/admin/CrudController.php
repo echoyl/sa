@@ -5,6 +5,9 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 
+/**
+ * Undocumented class
+ */
 class CrudController extends ApiBaseController
 {
     public $model;
@@ -289,8 +292,13 @@ class CrudController extends ApiBaseController
             }
 
             //返回插入或更新后的数据
-            $new_data = $this->model->where(['id' => $id])->first();
+            $new_data = $this->model->where(['id' => $id])->first()->toArray();
             $this->parseData($new_data, 'decode', 'list');
+            if(method_exists($this,'postData'))
+            {
+                $this->postData($new_data);
+            }
+            
             return $ret ?: $this->success($new_data);
         } else {
             

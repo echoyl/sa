@@ -1,7 +1,4 @@
 <?php
-/*
- * @Author: echoyl inandan@126.com
- */
 namespace Echoyl\Sa\Http\Controllers\admin\wechat\miniprogram;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\wechat\miniprogram\Account;
