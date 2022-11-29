@@ -116,7 +116,7 @@ class HelperService
             // }
             
             //return json_encode($data);
-            if (is_array($data)) {
+            if (is_array($data) && !empty($data)) {
                 $_data = [];
                 foreach ($data as $item) {
                     if(isset($item['url']))

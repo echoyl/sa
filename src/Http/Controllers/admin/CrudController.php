@@ -249,7 +249,6 @@ class CrudController extends ApiBaseController
                     $data = ['displayorder' => intval(request('displayorder'))];
                     break;
                 default:
-                    //d($this->can_be_null_columns);
                     $data = filterEmpty(request('base'), $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
 
                     //设置不需要提交字段
@@ -315,7 +314,7 @@ class CrudController extends ApiBaseController
                 if (isset($item[$c]) && $item[$c]) {
                     $item[$c] = json_decode($item[$c], true);
                 } else {
-                    $item[$c] = [];
+                    //$item[$c] = [];
                 }
             }
         }
@@ -393,7 +392,11 @@ class CrudController extends ApiBaseController
             $isset = isset($data[$name])?true:false;
             if (!$isset && $from == 'update') {
                 //更新数据时 不写入默认值
-                continue;
+                //d($this->parse_columns,$this->can_be_null_columns);
+                if(!in_array($name,$this->can_be_null_columns))
+                {
+                    continue;
+                }
             }
             
 
@@ -437,6 +440,19 @@ class CrudController extends ApiBaseController
                         }
                     } else {
                         $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : '';
+                    }
+                    break;
+                case 'select':
+                    if ($encode) {
+                        $val = intval($val);
+                    }else{
+                        if($val && $isset)
+                        {
+                            $val = intval($val);
+                        }else
+                        {
+                            $val = '__unset';
+                        }
                     }
                     break;
                 case 'selects':
