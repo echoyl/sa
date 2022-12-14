@@ -17,7 +17,7 @@ class Category extends Model
     {
         $data = self::allData($this->table)->filter(function ($item) use ($id) {
             return $item->parent_id === $id;
-        });
+        })->sortByDesc('displayorder');
         $ret = [];
         foreach ($data as $val) {
             $children = $this->format($val['id'], $fields);

@@ -18,6 +18,7 @@ class CrudController extends ApiBaseController
     public $displayorder = [];
     public $can_be_null_columns = []; //可以设置为空的字段
     public $with_count = [];
+    public $select_columns = [];
 
     public $parse_columns = [
         ['name' => 'state', 'type' => 'state', 'default' => 'enable'],
@@ -180,6 +181,10 @@ class CrudController extends ApiBaseController
             }
 
         }
+        if(!empty($this->select_columns))
+        {
+            $m = $m->select($this->select_columns);
+        }
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)
             ->get()->toArray();
@@ -215,23 +220,31 @@ class CrudController extends ApiBaseController
         if (!empty($this->with_column)) {
             $m = $m->with($this->with_column);
         }
-        $item = $m->where(['id' => $id])->first();
+        if(!is_array($id))
+        {
+            $item = $m->where(['id' => $id])->first();
 
-        if (!empty($item)) {
-            $item = $item->toArray();
-            if (method_exists($this, 'checkPost')) {
-                $ret = $this->checkPost($item, $id); //编辑数据检测
+            if (!empty($item)) {
+                $item = $item->toArray();
+                if (method_exists($this, 'checkPost')) {
+                    $ret = $this->checkPost($item, $id); //编辑数据检测
+                    if ($ret) {
+                        return $ret;
+                    }
+                }
+            } else {
+                $item = $this->default_post; //数据的默认值
+                $item['created_at'] = now()->toDateTimeString();
+            }
+        }else
+        {
+            if (method_exists($this, 'beforeMorePost')) {
+                $ret = $this->beforeMorePost($id); //批量操作检测所有数据id值
                 if ($ret) {
                     return $ret;
                 }
             }
-        } else {
-            $item = $this->default_post; //数据的默认值
-            $item['created_at'] = now()->toDateTimeString();
         }
-
-        
-
         $type = request('actype');
 
         if (request()->isMethod('post')) {
@@ -244,6 +257,14 @@ class CrudController extends ApiBaseController
                         $val = request('val');
                     }
                     $data = [$name => $val];
+                    break;
+                case 'state':
+                    $val = request('state');
+                    $data = ['state' => $val];
+                    //批量操作
+                    $this->parseData($data, 'encode', 'update');
+                    $this->model->whereIn('id',$id)->update($data);
+                    return $this->success();
                     break;
                 case 'displayorder':
                     $data = ['displayorder' => intval(request('displayorder'))];
@@ -281,7 +302,7 @@ class CrudController extends ApiBaseController
                 $this->parseData($data, 'encode', 'update');
                 $this->model->where(['id' => $id])->update($data);
             } else {
-                $data['created_at'] = now();
+                $data['created_at'] = $data['created_at']??now();
                 $this->parseData($data);
                 $id = $this->model->insertGetId($data);
             }
