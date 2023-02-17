@@ -20,6 +20,11 @@ class CrudController extends ApiBaseController
     public $with_count = [];
     public $select_columns = [];
 
+    /**
+     * 搜索项配置
+     */
+    public $search_config = [];
+
     public $parse_columns = [
         ['name' => 'state', 'type' => 'state', 'default' => 'enable'],
     ];
@@ -111,6 +116,19 @@ class CrudController extends ApiBaseController
 
                     $m = $m->whereRaw("FIND_IN_SET(?,{$name})", [$category_id]);
                     break;
+                case 'pca':
+                    //地区筛选
+                    $pca = json_decode($search_val, true);
+                    $keys = ['province','city','area'];
+                    foreach($pca as $k=>$v)
+                    {
+                        if(isset($keys[$k]))
+                        {
+                            $m = $m->where($keys[$k],$v);
+                        }
+                        
+                    }
+                    break;
             }
         }
 
@@ -129,6 +147,28 @@ class CrudController extends ApiBaseController
         if ($endTime) {
             $m = $m->where([['created_at', '<=', date("Y-m-d H:i:s", strtotime($endTime) + 3600 * 24 - 1)]]);
         }
+
+        //搜索配置 自动根据name搜索对应的字段
+        if(!empty($this->search_config))
+        {
+            foreach($this->search_config as $sc)
+            {
+                $name = $sc['name'];
+                $r_name = HelperService::uncamelize($name);
+                $columns = $sc['columns'];
+                $type = $sc['type']??'';
+                if($type == 'has')
+                {
+                    $m = HelperService::searchWhereHas($m,$name,$columns,request($r_name,''));
+                }else
+                {
+                    $where_type = $sc['where_type']??'=';
+                    $m = HelperService::searchWhere($m,$name,$columns,request($r_name,''),$where_type);
+                }
+                
+            }
+        }
+
         return $m;
     }
 
@@ -388,17 +428,34 @@ class CrudController extends ApiBaseController
             $name = $with['name'] . 's';
             if(isset($with['class']))
             {
-                $data[$name] = (new $with['class'])->format($with['cid']);
+                $data[$name] = (new $with['class'])->format($with['cid']??0);
             }elseif(isset($with['data']))
             {
                 $data[$name] = $with['data'];
             }
             $ret[] = $with['name'];
         }
-        $data['states'] = $data['states']??[
-            'enable' => ['text' => '启用', 'status' => 'success'],
-            'disable' => ['text' => '禁用', 'status' => 'error'],
-        ];
+
+        foreach ($this->parse_columns as $with) {
+            if(!isset($with['with']))
+            {
+                continue;
+            }
+            $name = $with['name'] . 's';
+            if(isset($with['class']))
+            {
+                $data[$name] = (new $with['class'])->format($with['cid']??0);
+            }elseif(isset($with['data']))
+            {
+                $data[$name] = $with['data'];
+            }
+            $ret[] = $with['name'];
+        }
+
+        // $data['states'] = $data['states']??[
+        //     'enable' => ['text' => '启用', 'status' => 'success'],
+        //     'disable' => ['text' => '禁用', 'status' => 'error'],
+        // ];
         return $ret;
     }
 
@@ -411,6 +468,7 @@ class CrudController extends ApiBaseController
             $encode = $in == 'encode'?true:false;
 
             $isset = isset($data[$name])?true:false;
+            $need_set = true;//如果是true表示需要 将$data[$name] 赋值一遍
             if (!$isset && $from == 'update') {
                 //更新数据时 不写入默认值
                 //d($this->parse_columns,$this->can_be_null_columns);
@@ -528,15 +586,23 @@ class CrudController extends ApiBaseController
                             {
                                 $data['area'] = $val[2];
                             }
-                            $val = '__unset';
+                            if(!in_array($name,['province','city','area']))
+                            {
+                                //如果用了其它字段需要将该字段移除
+                                $val = '__unset';
+                            }else
+                            {
+                                $need_set = false;//字段重复不需要再设值了
+                            }
                         }
                     } else {
                         if(isset($data['province']) && $data['province'])
                         {
-                            if(isset($col['level']) && $col['level'] == 2)
+                            $level = $col['level']??3;
+                            if($level == 2)
                             {
                                 $val = [$data['province'],$data['city']];
-                            }elseif(isset($col['level']) && $col['level'] == 1)
+                            }elseif($level == 1)
                             {
                                 $val = [$data['province']];
                             }else
@@ -560,7 +626,14 @@ class CrudController extends ApiBaseController
                             {
                                 $data['lng'] = $val[1];
                             }
-                            $val = '__unset';
+                            if(!in_array($name,['lat','lng']))
+                            {
+                                //如果用了其它字段需要将该字段移除
+                                $val = '__unset';
+                            }else
+                            {
+                                $need_set = false;//字段重复不需要再设值了
+                            }
                         }
                     } else {
                         if(isset($data['lat']) && $data['lat'])
@@ -594,6 +667,38 @@ class CrudController extends ApiBaseController
                         }
                     }
                     break;
+                case 'search_select':
+                    //表单类型为 搜索select时
+                    $id_name = $col['value']??'id';
+                    if($encode)
+                    {
+                        if($isset && $val)
+                        {
+                            $val = $val[$id_name];
+                        }
+                    }else
+                    {
+                        //特定字段名称 label value
+                        if(isset($col['data_name']) && isset($data[$col['data_name']]))
+                        {
+                            $d = $data[$col['data_name']];
+                            $val = ['label'=>$d[$col['label']??'title'],'value'=>$d[$id_name],$id_name=>$d[$id_name]];
+                        }
+                    }
+                    break;
+                case 'password':
+                    if($encode)
+                    {
+                        if($isset && $val)
+                        {
+                            $val = md5($val);
+                        }
+                    }else
+                    {
+                        //特定字段名称 label value
+                        $val = '__unset';
+                    }
+                    break;
                 // case 'enum':
                 //     if($from == 'list' && $isset)
                 //     {
@@ -608,7 +713,10 @@ class CrudController extends ApiBaseController
                 unset($data[$name]);
                 continue;
             }
-            $data[$name] = $val;
+            if($need_set)
+            {
+                $data[$name] = $val;
+            }
         }
 
         return $unsetNames;

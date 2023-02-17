@@ -185,4 +185,129 @@ class HelperService
         return;
     }
 
+
+    public static function searchWhereHas($model,$name,$columns,$search)
+    {
+        if($search === '')
+        {
+            return $model;
+        }
+        $search_val = $search;
+        $search = self::json_validate($search);
+        if($search !== false)
+        {
+            $search = array_values($search);
+            $search_val = array_shift($search);
+        }
+        
+        if(!$search_val)
+        {
+            return $model;
+        }
+        $model = $model->whereHas($name,function($q) use($columns,$search_val){
+            foreach($columns as $key=>$val)
+            {
+                if($key == 0)
+                {
+                    $q->where([[$val, 'like', '%' . $search_val . '%']]);
+                }else
+                {
+                    $q->orWhere([[$val, 'like', '%' . $search_val . '%']]);
+                }
+            }
+        });
+        return $model;
+    }
+
+    public static function searchWhere($model,$name,$columns,$search_val,$type)
+    {
+        if($search_val === '')
+        {
+            return $model;
+        }
+        if($type == 'like')
+        {
+            $search_val = '%' . $search_val . '%';
+        }
+
+        if(count($columns) == 1)
+        {
+            //只搜索一个字段
+            $model = $model->where([[$columns[0], $type, $search_val]]);
+        }else
+        {
+            //多个字段搜索
+            $model = $model->where(function($q) use($columns,$search_val,$type){
+                foreach($columns as $key=>$val)
+                {
+                    if($key == 0)
+                    {
+                        $q->where([[$val, $type, $search_val]]);
+                    }else
+                    {
+                        $q->orWhere([[$val, $type, $search_val]]);
+                    }
+                }
+            });
+        }
+
+        return $model;
+    }
+
+    public static function uncamelize($camelCaps,$separator='_')
+    {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+    }
+
+    public static function json_validate($string)
+    {
+        // decode the JSON data
+        $result = json_decode($string,true);
+
+        // switch and check possible JSON errors
+        switch (json_last_error()) {
+            case JSON_ERROR_NONE:
+                $error = ''; // JSON is valid // No error has occurred
+                break;
+            case JSON_ERROR_DEPTH:
+                $error = 'The maximum stack depth has been exceeded.';
+                break;
+            case JSON_ERROR_STATE_MISMATCH:
+                $error = 'Invalid or malformed JSON.';
+                break;
+            case JSON_ERROR_CTRL_CHAR:
+                $error = 'Control character error, possibly incorrectly encoded.';
+                break;
+            case JSON_ERROR_SYNTAX:
+                $error = 'Syntax error, malformed JSON.';
+                break;
+            // PHP >= 5.3.3
+            case JSON_ERROR_UTF8:
+                $error = 'Malformed UTF-8 characters, possibly incorrectly encoded.';
+                break;
+            // PHP >= 5.5.0
+            case JSON_ERROR_RECURSION:
+                $error = 'One or more recursive references in the value to be encoded.';
+                break;
+            // PHP >= 5.5.0
+            case JSON_ERROR_INF_OR_NAN:
+                $error = 'One or more NAN or INF values in the value to be encoded.';
+                break;
+            case JSON_ERROR_UNSUPPORTED_TYPE:
+                $error = 'A value of a type that cannot be encoded was given.';
+                break;
+            default:
+                $error = 'Unknown JSON error occured.';
+                break;
+        }
+
+        if ($error !== '') {
+            // throw the Exception or exit // or whatever :)
+            return false;
+        }
+
+        // everything is OK
+        return $result;
+    }
+
 }
