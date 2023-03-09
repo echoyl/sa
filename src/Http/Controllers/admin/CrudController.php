@@ -548,14 +548,22 @@ class CrudController extends ApiBaseController
             $val = $isset ? $data[$name] : $col['default'];
             switch ($type) {
                 case 'model':
-                    $cls = new $col['class'];
-                    $cls_p_c = $cls->getParseColumns();
-                    if(!empty($cls_p_c) && $is_first)
+                    if($encode)
                     {
-                        //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
-                        //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
-                        $this->parseData($val,$in,$from,$cls_p_c);
+                        //提交数据时 不需要处理 将数据删除
+                        $val = '__unset';
+                    }else
+                    {
+                        $cls = new $col['class'];
+                        $cls_p_c = $cls->getParseColumns();
+                        if(!empty($cls_p_c) && $is_first && $isset)
+                        {
+                            //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
+                            //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
+                            $this->parseData($val,$in,$from,$cls_p_c);
+                        }
                     }
+                    
                     break;
                 case 'image':
                     if(!$val && !$encode)
