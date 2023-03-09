@@ -1,15 +1,11 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\miniprogram;
 
+use Echoyl\Sa\Models\BaseAuth;
 use Echoyl\Sa\Models\wechat\offiaccount\User as OffiaccountUser;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
-
-class User extends Authenticatable
+class User extends BaseAuth
 {
-    use HasApiTokens,Notifiable;
     /**
      * 与模型关联的数据表
      *

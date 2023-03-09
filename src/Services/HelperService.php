@@ -2,7 +2,6 @@
 namespace Echoyl\Sa\Services;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
 
 class HelperService
@@ -219,7 +218,7 @@ class HelperService
         return $model;
     }
 
-    public static function searchWhere($model,$name,$columns,$search_val,$type)
+    public static function searchWhere($model,$columns,$search_val,$type)
     {
         if($search_val === '')
         {
@@ -309,5 +308,59 @@ class HelperService
         // everything is OK
         return $result;
     }
+    public static function format_var_export($data = [],$tab_len = 0,$json = false)
+    {
+        if(!$data)
+        {
+            return '[]';
+        }
+        $start_tab = $tab_len > 0?str_repeat("\t",$tab_len):'';
+        $end_tab = $tab_len - 1 > 0?str_repeat("\t",$tab_len-1):'';
+        if($json)
+        {
+            $string = $data;
+        }else
+        {
+            $data = self::arrayrecursive($data, 'urlencode', true); 
+            $string = json_encode($data); 
+            $string = urldecode($string); 
+        }
+        
+        $string = str_replace("[[", "[\r{$start_tab}[", $string);
+        $string = str_replace("],[", "],\r{$start_tab}[", $string);
+        $string = str_replace("]]", "]\r{$end_tab}]", $string);
+        $string = str_replace("{", "\r{$start_tab}[", $string);
+        $string = str_replace("},", "],", $string);
+        $string = str_replace("}", "]", $string);
+        $string = str_replace("]]", "],\r{$end_tab}]", $string);
+        $string = str_replace("::", "@@", $string);
+        $string = str_replace(":", " => ", $string);
+        $string = str_replace("@@", "::", $string);
+        $string = str_replace("\"@php", "", $string);
+        $string = str_replace("@endphp\"", "", $string);
+        //$string = var_export($data, TRUE);
+        // $string = str_replace("=> \n  array (", "=> [", $string);
+        // $string = str_replace("),", "],", $string);
+        // $string = str_replace(");", "];", $string);
+        // $string = str_replace("array (", "[", $string);
+        // $string = str_replace("  ", "    ", $string);
+        return $string;
+    }
+
+    public static function arrayrecursive($array, $function) 
+    { 
+        foreach ($array as $key => $value) { 
+            if (is_array($value)) { 
+                $array[$key] = self::arrayrecursive($array[$key],$function); 
+            } else {
+                if(is_string($value))
+                {
+                    $array[$key] = $function($value); 
+                }
+                
+            } 
+        }
+        return $array;
+    } 
 
 }

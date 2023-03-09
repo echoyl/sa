@@ -2,9 +2,9 @@
 
 namespace Echoyl\Sa\Models\perm;
 
-use Illuminate\Database\Eloquent\Model;
+use Echoyl\Sa\Models\Base;
 
-class PermRole extends Model
+class PermRole extends Base
 {
     /**
      * 与模型关联的数据表

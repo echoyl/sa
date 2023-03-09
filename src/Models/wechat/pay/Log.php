@@ -1,11 +1,11 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\pay;
 
+use Echoyl\Sa\Models\Base;
 use Echoyl\Sa\Models\wechat\miniprogram\User as MiniprogramUser;
 use Echoyl\Sa\Models\wechat\offiaccount\User;
-use Illuminate\Database\Eloquent\Model;
 
-class Log extends Model
+class Log extends Base
 {
     /**
      * 与模型关联的数据表

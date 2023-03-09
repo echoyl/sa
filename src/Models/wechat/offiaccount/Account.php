@@ -1,8 +1,9 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\offiaccount;
-use Illuminate\Database\Eloquent\Model;
 
-class Account extends Model
+use Echoyl\Sa\Models\Base;
+
+class Account extends Base
 {
     /**
      * 与模型关联的数据表

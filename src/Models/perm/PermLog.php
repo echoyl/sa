@@ -1,9 +1,10 @@
 <?php
 
 namespace Echoyl\Sa\Models\perm;
-use Illuminate\Database\Eloquent\Model;
 
-class PermLog extends Model
+use Echoyl\Sa\Models\Base;
+
+class PermLog extends Base
 {
     /**
      * 与模型关联的数据表

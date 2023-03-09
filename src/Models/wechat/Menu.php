@@ -1,8 +1,9 @@
 <?php
 namespace Echoyl\Sa\Models\wechat;
-use Illuminate\Database\Eloquent\Model;
 
-class Menu extends Model
+use Echoyl\Sa\Models\Base;
+
+class Menu extends Base
 {
     /**
      * 与模型关联的数据表

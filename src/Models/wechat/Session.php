@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Echoyl\Sa\Models\Base;
 
-class Session extends Model
+class Session extends Base
 {
     /**
      * 与模型关联的数据表

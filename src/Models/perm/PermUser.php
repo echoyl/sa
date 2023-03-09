@@ -2,14 +2,11 @@
 
 namespace Echoyl\Sa\Models\perm;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Echoyl\Sa\Models\BaseAuth;
 use Laravel\Sanctum\PersonalAccessToken;
 
-class PermUser extends Authenticatable
+class PermUser extends BaseAuth
 {
-    use HasApiTokens,Notifiable;
     /**
      * 与模型关联的数据表
      *

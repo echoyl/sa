@@ -43,5 +43,6 @@ class ServiceProvider extends LaravelServiceProvider
         $router->middleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
         $router->middleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
         $router->middleware('echoyl.permcheck', \Echoyl\Sa\Http\Middleware\PermCheck::class);
+
     }
 }

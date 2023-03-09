@@ -2,9 +2,9 @@
 
 namespace Echoyl\Sa\Models\wechat;
 
-use Illuminate\Database\Eloquent\Model;
+use Echoyl\Sa\Models\Base;
 
-class Sets extends Model
+class Sets extends Base
 {
     /**
      * 与模型关联的数据表

@@ -1,8 +1,9 @@
 <?php
 namespace Echoyl\Sa\Models\wechat;
-use Illuminate\Database\Eloquent\Model;
 
-class Wxapp extends Model
+use Echoyl\Sa\Models\Base;
+
+class Wxapp extends Base
 {
     /**
      * 与模型关联的数据表

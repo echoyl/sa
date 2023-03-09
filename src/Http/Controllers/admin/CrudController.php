@@ -5,20 +5,20 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 
-/**
- * Undocumented class
- */
 class CrudController extends ApiBaseController
 {
     public $model;
     public $with_column = [];
+    public $with_sum = [];//hasmany需要求和的配置
     public $dont_post_columns = []; //多余字段不需要提交数据库
     public $default_post = [];
     public $json_columns = [];
     public $displayorder = [];
     public $can_be_null_columns = []; //可以设置为空的字段
-    public $with_count = [];
+    public $with_count = [];//计算总数量
     public $select_columns = [];
+
+    public $model_id = 0;//系统所选的模型id值
 
     /**
      * 搜索项配置
@@ -38,13 +38,26 @@ class CrudController extends ApiBaseController
 
         }
 
-        foreach ($this->parse_columns as $col) {
+        $model_parse_columns = $this->getParseColumns();
+
+        $parse_columns = !empty($model_parse_columns)?$model_parse_columns:$this->parse_columns;
+        foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
             $search_val = request($name, '');
             if (empty($search_val) && $search_val !== 0) {
                 continue;
             }
+
+            if(isset($col['table_menu']) && $col['table_menu'])
+            {
+                if($search_val != 'all')
+                {
+                    $m = $m->where($name, $search_val);
+                }
+                continue;
+            }
+
             switch ($type) {
                 case 'state':
                     $m = $m->where($name, $search_val);
@@ -118,9 +131,9 @@ class CrudController extends ApiBaseController
                     break;
                 case 'pca':
                     //地区筛选
-                    $pca = json_decode($search_val, true);
+                    $search_val = json_decode($search_val, true);
                     $keys = ['province','city','area'];
-                    foreach($pca as $k=>$v)
+                    foreach($search_val as $k=>$v)
                     {
                         if(isset($keys[$k]))
                         {
@@ -132,8 +145,8 @@ class CrudController extends ApiBaseController
             }
         }
 
-        $state = request('state', '');
-        if ($state !== '') {
+        $state = request('state', 'all');
+        if ($state != 'all') {
             $m = $m->where('state', $state);
 
         }
@@ -154,16 +167,30 @@ class CrudController extends ApiBaseController
             foreach($this->search_config as $sc)
             {
                 $name = $sc['name'];
-                $r_name = HelperService::uncamelize($name);
+                
                 $columns = $sc['columns'];
                 $type = $sc['type']??'';
+                
                 if($type == 'has')
                 {
-                    $m = HelperService::searchWhereHas($m,$name,$columns,request($r_name,''));
+                    $search_val = request(HelperService::uncamelize($name),'');
+                    $m = HelperService::searchWhereHas($m,$name,$columns,$search_val);
                 }else
                 {
+                    $search_val = request($name,'');
                     $where_type = $sc['where_type']??'=';
-                    $m = HelperService::searchWhere($m,$name,$columns,request($r_name,''),$where_type);
+                    if($where_type == 'whereBetween')
+                    {
+                        if($search_val)
+                        {
+                            $search_val = json_decode($search_val,true);
+                            $m = $m->whereBetween($columns[0],$search_val);
+                        }
+                    }else
+                    {
+                        $m = HelperService::searchWhere($m,$columns,$search_val,$where_type);
+                    }
+                    
                 }
                 
             }
@@ -196,6 +223,15 @@ class CrudController extends ApiBaseController
         if (!empty($this->with_count)) {
             $m = $m->withCount($this->with_count);
         }
+
+        if (!empty($this->with_sum)) {
+            foreach($this->with_sum as $with_sum)
+            {
+                $m = $m->withSum($with_sum[0],$with_sum[1]);
+            }
+            
+        }
+
         $has_id = false;
         $sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
         if (request('sort')) {
@@ -352,7 +388,7 @@ class CrudController extends ApiBaseController
             }
 
             //返回插入或更新后的数据
-            $new_data = $this->model->where(['id' => $id])->first()->toArray();
+            $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
             $this->parseData($new_data, 'decode', 'list');
             if(method_exists($this,'postData'))
             {
@@ -436,33 +472,63 @@ class CrudController extends ApiBaseController
             $ret[] = $with['name'];
         }
 
-        foreach ($this->parse_columns as $with) {
-            if(!isset($with['with']))
+        $model_parse_columns = $this->getParseColumns();
+
+        $parse_columns = !empty($model_parse_columns)?$model_parse_columns:$this->parse_columns;
+
+        foreach ($parse_columns as $with) {
+            if(isset($with['with']))
             {
-                continue;
+                $name = $with['name'] . 's';
+                if(isset($with['class']))
+                {
+                    $data[$name] = (new $with['class'])->format($with['cid']??0);
+                }elseif(isset($with['data']))
+                {
+                    $data[$name] = $with['data'];
+                }
             }
-            $name = $with['name'] . 's';
-            if(isset($with['class']))
-            {
-                $data[$name] = (new $with['class'])->format($with['cid']??0);
-            }elseif(isset($with['data']))
-            {
-                $data[$name] = $with['data'];
-            }
+            
             $ret[] = $with['name'];
+            //检测是否有table_menu设置
+            if(isset($with['table_menu']) && !isset($data['table_menu']))
+            {
+                $data['table_menu'] = $with['data']??[];
+            }
         }
 
-        // $data['states'] = $data['states']??[
-        //     'enable' => ['text' => '启用', 'status' => 'success'],
-        //     'disable' => ['text' => '禁用', 'status' => 'error'],
-        // ];
+        $data['states'] = $data['states']??[
+            'enable' => ['text' => '启用', 'status' => 'success'],
+            'disable' => ['text' => '禁用', 'status' => 'error'],
+        ];
         return $ret;
     }
 
-    public function parseData(&$data, $in = 'encode', $from = 'detail')
+    public function getParseColumns()
+    {
+        if(method_exists($this->model,'getParseColumns'))
+        {
+            return $this->model->getParseColumns();
+        }else
+        {
+            return [];
+        }
+    }
+
+    public function parseData(&$data, $in = 'encode', $from = 'detail',$parse_columns = [])
     {
         $unsetNames = [];
-        foreach ($this->parse_columns as $col) {
+        $is_first = true;
+        if(!empty($parse_columns))
+        {
+            $is_first = false;
+        }
+
+        $model_parse_columns = $this->getParseColumns();
+
+        $parse_columns = !empty($parse_columns)?$parse_columns:(!empty($model_parse_columns)?$model_parse_columns:$this->parse_columns);
+
+        foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
             $encode = $in == 'encode'?true:false;
@@ -477,10 +543,20 @@ class CrudController extends ApiBaseController
                     continue;
                 }
             }
-            
+            $col['default'] = $col['default']??"";
 
             $val = $isset ? $data[$name] : $col['default'];
             switch ($type) {
+                case 'model':
+                    $cls = new $col['class'];
+                    $cls_p_c = $cls->getParseColumns();
+                    if(!empty($cls_p_c) && $is_first)
+                    {
+                        //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
+                        //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
+                        $this->parseData($val,$in,$from,$cls_p_c);
+                    }
+                    break;
                 case 'image':
                     if(!$val && !$encode)
                     {
@@ -523,11 +599,11 @@ class CrudController extends ApiBaseController
                     break;
                 case 'select':
                     if ($encode) {
-                        $val = intval($val);
+                        $val = is_numeric($val)?intval($val):$val;
                     }else{
                         if($val && $isset)
                         {
-                            $val = intval($val);
+                            $val = is_numeric($val)?intval($val):$val;
                         }else
                         {
                             $val = '__unset';
@@ -615,6 +691,7 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'latlng':
+                case 'tmapInput':
                     if ($encode) {
                         if($isset)
                         {
@@ -697,6 +774,34 @@ class CrudController extends ApiBaseController
                     {
                         //特定字段名称 label value
                         $val = '__unset';
+                    }
+                    break;
+                case 'link':
+                    //如果字段是链接类型 返回数据的时候渲染成链接的格式
+                    if($encode)
+                    {
+                        $val = '__unset';
+                    }else
+                    {
+                        if ($from == 'list') 
+                        {
+                            $uris = [];
+                            if(isset($col['uri']) && is_array($col['uri']))
+                            {
+                                foreach($col['uri'] as $uri)
+                                {
+                                    $uris[] = implode('=',[$uri[0],$data[$uri[1]]]);
+                                }
+                            }
+                            $val = [
+                                'title'=>$val,
+                                'href'=>implode('?',[$col['path'],implode('&',$uris)])
+                            ];
+                        }else
+                        {
+                            $val = '__unset';
+                        }
+                        
                     }
                     break;
                 // case 'enum':

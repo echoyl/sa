@@ -2,9 +2,7 @@
 
 namespace Echoyl\Sa\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Sets extends Model
+class Sets extends Base
 {
     /**
      * 与模型关联的数据表

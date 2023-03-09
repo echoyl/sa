@@ -1,10 +1,10 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\offiaccount;
 
+use Echoyl\Sa\Models\BaseAuth;
 use Echoyl\Sa\Models\wechat\miniprogram\User as MiniprogramUser;
-use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class User extends BaseAuth
 {
     /**
      * 与模型关联的数据表
