@@ -3,12 +3,11 @@
 namespace Echoyl\Sa\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\admin\Menu;
-use App\Services\AdminMenuService;
 use App\Services\HelperService;
-use Echoyl\Sa\Models\perm\PermRole;
-use Echoyl\Sa\Models\perm\PermUser;
+use Echoyl\Sa\Models\perm\Role;
+use Echoyl\Sa\Models\perm\User;
 use Echoyl\Sa\Services\AdminService;
+use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\PermService;
 use Illuminate\Http\Request;
 
@@ -61,8 +60,8 @@ class IndexController extends Controller
 
             }
 
-            $permUser = new PermUser();
-            $permUser->where('id', '=', $uinfo['id'])->update($update);
+            $user = new User();
+            $user->where('id', '=', $uinfo['id'])->update($update);
             return ['code' => 0, 'msg' => '修改成功' . $msg,'data'=>['pwd' => $pwd]];
 
         }
@@ -126,11 +125,11 @@ class IndexController extends Controller
         $user = AdminService::user();
         $avatar = HelperService::uploadParse($user['avatar'], false);
         $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
-		$as = new AdminMenuService;
+		$as = new MenuService;
         $rolename = '超级管理员';
         if($user['roleid'])
         {
-            $role = (new PermRole())->where(['id'=>$user['roleid']])->first();
+            $role = (new Role())->where(['id'=>$user['roleid']])->first();
             if($role)
             {
                 $rolename = $role['title'];

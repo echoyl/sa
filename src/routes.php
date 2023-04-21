@@ -39,11 +39,11 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
                 Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
 
-                Route::group(['namespace' => 'posts'], function () {
-                    //文章模型的通用路由，自定义需要定义在这个路由前面
-                    Route::resource('{path}/posts', 'PostsController');
-                    Route::resource('{path}/category', 'CategoryController');
-                });
+                // Route::group(['namespace' => 'posts'], function () {
+                //     //文章模型的通用路由，自定义需要定义在这个路由前面 将这个路由删除，优先执行导致后面覆盖后的路由不生效了
+                //     Route::resource('{path}/posts', 'PostsController');
+                //     Route::resource('{path}/category', 'CategoryController');
+                // });
 
                 Route::group(['namespace' => 'perm', 'prefix' => 'perm'], function () {
                     Route::resource('role', 'RoleController');
@@ -95,6 +95,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     Route::resource('relation', 'RelationController');
                 });
                 Route::resource('tool', 'ToolController');
+                
             });    
         });
         Route::any('login', 'LoginController@index');

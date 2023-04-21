@@ -86,6 +86,7 @@ class MenuController extends CrudController
             }
             $formColumns = $json;
         }
+        $left_menu =false;
         if(isset($data['table_config']))
         {
             //根据form配置生成json配置
@@ -96,7 +97,7 @@ class MenuController extends CrudController
             {
                 $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
                 $json[] = $columns;
-                if(isset($val['table_menu']) && $val['table_menu'])
+                if(isset($val['table_menu']) && !empty($val['table_menu']))
                 {
                     //如果该字段设置了 table_menu
                     $key = $val['key'];
@@ -107,7 +108,7 @@ class MenuController extends CrudController
                     $table_menu_key = $key;
                 }
 
-                if(isset($val['left_menu']) && $val['left_menu'])
+                if(isset($val['left_menu']) && !empty($val['left_menu']))
                 {
                     //设置左侧菜单 配置
                     $key = $val['key'];
@@ -135,18 +136,24 @@ class MenuController extends CrudController
         if(isset($data['other_config']) && $data['other_config'])
         {
             $other_config = json_decode($data['other_config'],true);
+        }else
+        {
+            $other_config = json_decode($item['other_config'],true);
         }
         if(isset($tableColumns) || isset($formColumns))
         {
-            $data['desc'] = json_decode($item['desc'],true);
+            $desc = json_decode($item['desc'],true);
+
+            $data['desc'] = [
+                'tableColumns'=>$desc['tableColumns']??[],
+                'formColumns'=>$desc['formColumns']??[],
+            ];
+
             if(isset($table_menu_key))
             {
                 $data['desc']['table_menu_key'] = $table_menu_key;
             }
-            if(isset($left_menu))
-            {
-                $data['desc']['leftMenu'] = $left_menu;
-            }
+            $data['desc']['leftMenu'] = $left_menu;
             if(isset($tableColumns))
             {
                 $data['desc']['tableColumns'] = $tableColumns;
@@ -155,11 +162,16 @@ class MenuController extends CrudController
             {
                 $data['desc']['formColumns'] = $formColumns;
             }
-            if($item['admin_model'])
-            {
-                $path = array_reverse($ds->getPath($item['admin_model'],$ds->allData(new Model())));
-                $data['desc']['url'] = implode('/',$path);
-            }
+            // if($item['admin_model'])
+            // {
+            //     $path = array_reverse($ds->getPath($item['admin_model'],$ds->allModel()));
+            //     $data['desc']['url'] = implode('/',$path);
+            // }
+
+            //所有请求使用菜单的path路径
+            $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
+            $data['desc']['url'] = implode('/',$path);
+
             if(isset($other_config))
             {
                 $data['desc'] = array_merge($data['desc'],$other_config);

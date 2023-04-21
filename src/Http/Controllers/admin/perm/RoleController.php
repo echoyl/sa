@@ -2,17 +2,16 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
-use App\Services\AdminMenuService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\perm\PermRole;
-use Echoyl\Sa\Services\AdminService;
+use Echoyl\Sa\Models\perm\Role;
+use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\PermService;
 
 class RoleController extends CrudController
 {
     //
 	var $model;
-    public function __construct(PermRole $model)
+    public function __construct(Role $model)
 	{
 		$this->model = $model;
 	}
@@ -20,7 +19,7 @@ class RoleController extends CrudController
 	public function postData(&$item)
 	{
 		$ps = new PermService();
-		$as = new AdminMenuService;
+		$as = new MenuService;
 
 		//$item['perms'] = $ps->parsePerms();
 		$item['perms'] = $as->perms();

@@ -93,7 +93,7 @@ class ModelController extends CrudController
 
         $ds = new DevService;
 
-        $all = $ds->allData($this->model);
+        $all = $ds->allModel();
 
         $name = implode('_', array_reverse($ds->getPath($data, $all)));
 
@@ -119,7 +119,7 @@ class ModelController extends CrudController
 
         $ds = new DevService;
 
-        $all = $ds->allData($this->model);
+        $all = $ds->allModel();
 
         $names = array_reverse($ds->getPath($data, $all));
 
@@ -146,7 +146,7 @@ class ModelController extends CrudController
 
         $ds = new DevService;
 
-        $all = $ds->allData($this->model);
+        $all = $ds->allModel();
 
         $names = array_reverse($ds->getPath($data, $all));
 

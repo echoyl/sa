@@ -2,11 +2,11 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\posts;
 
-use App\Services\AdminMenuService;
 use App\Services\WebsiteService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\Category;
 use Echoyl\Sa\Models\Posts;
+use Echoyl\Sa\Services\dev\MenuService;
 
 class PostsController extends CrudController
 {
@@ -24,7 +24,7 @@ class PostsController extends CrudController
         $this->model = new Posts();
 
         if (!$this->cid) {
-            $as = new AdminMenuService;
+            $as = new MenuService;
             $menu = $as->posts();
             $this->cid = $menu ? $menu['category_id'] : 0;
             $this->spec_arr = $menu ? ($menu['desc']['spec_arr'] ?? []) : [];

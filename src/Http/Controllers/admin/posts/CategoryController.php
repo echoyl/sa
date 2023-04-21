@@ -2,9 +2,9 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\posts;
 
-use App\Services\AdminMenuService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\Category;
+use Echoyl\Sa\Services\dev\MenuService;
 
 class CategoryController extends CrudController
 {
@@ -15,7 +15,7 @@ class CategoryController extends CrudController
         $this->model = $model;
         
         if (!$this->cid) {
-            $as = new AdminMenuService;
+            $as = new MenuService;
             $this->cid = $as->categoryId('posts');
         }
 

@@ -1,9 +1,9 @@
 <?php
 namespace Echoyl\Sa\Services;
 
-use App\Services\AdminMenuService;
-use Echoyl\Sa\Models\perm\PermLog;
-use Echoyl\Sa\Models\perm\PermUser;
+use Echoyl\Sa\Models\perm\Log;
+use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Services\dev\MenuService;
 use Illuminate\Http\Request;
 
 class AdminService
@@ -35,7 +35,7 @@ class AdminService
         return md5($str);
     }
 
-    public static function login(PermUser $user)
+    public static function login(User $user)
     {
         //session(['user'=>$user]);
         $token = $user->createToken('admin');
@@ -53,97 +53,109 @@ class AdminService
     {
         $user = self::user();
 
+        $now_router = self::getNowRouter();
+
         //$config_namespace = config('sa.namespace', []);
 
         if ($user['id'] != 1) {
             //id为1是超级管理员
             //读取用户权限信息 实时读取
-            $permUser = new PermUser();
+            $permUser = new User();
             $perms = $permUser->where(['id' => $user['id']])->select(['perms2', 'roleid'])->with(['role' => function ($q) {
                 $q->select(['id', 'perms2']);
             }])->first()->toArray();
-            //默认的命名空间
-            // $default_namespace = [
-            //     '\\Echoyl\\Sa\\Http\\Controllers\\admin',
-            //     'Echoyl\\Sa\\Http\\Controllers\\admin',
-            //     'App\\Http\\Controllers\\admin',
-            // ];
-            // if (!empty($config_namespace)) {
-            //     foreach ($config_namespace as $ns) {
-            //         $default_namespace[] = 'App\\Http\\Controllers\\' . $ns;
-            //     }
-            // }
-            //解析route
-            $action = request()->route()->action;
-            $uri = request()->route()->uri();
-
-            //d($uri,$action);
+            $as = new MenuService;
             
-            
-            //$namespace = $action['namespace'];
-            //$controller = str_replace($namespace . '\\', '', $action['controller']);
-            //d($controller,$namespace,$action);
-            //处理命名空间
-            // foreach ($default_namespace as $val) {
-            //     $namespace = str_replace($val, '', $namespace);
-            // }
-            //d($namespace);
-            //list($c, $a) = explode('Controller@', $controller);
-
-            $prefix = env('APP_PREFIX', '') . env('APP_ADMIN_PREFIX','');
-            $now_router = trim(str_replace($prefix,'',$uri),'/');
-            $now_routers = explode('/',$now_router);
-            $old_a = array_pop($now_routers);
-
-            if(isset($action['as']))
-            {
-                [$c,$a] = explode('.',$action['as']);
-                if(strpos($old_a,'{') === false)
-                {
-                    $now_routers[] = $old_a;
-                }
-            }else
-            {
-                $a = $old_a;
-            }
-            $id = request('id', request('base.id',0));
-            if ($a == 'store') {
-                //检测是 编辑还是 新增
-                if ($id) {
-                    $a = 'edit';
-                } else {
-                    $a = 'add';
-                }
-            }elseif($a == 'show') {
-                //检测是 编辑还是 新增
-                if (!$id) {
-                    $a = 'add';
-                }
-            }
-            $now_routers[] = $a;
-
-            $now_router = implode('/', $now_routers);
-            // if ($namespace) {
-            //     $now_router = implode('/', [$namespace, $now_router]);
-            // }
-            // $now_router = trim(strtolower($now_router), '\\');
-            //d($perms);
-            // $perm_obj = new PermService($perms['perms2'], $perms['role']['perms2']);
-            // $perm = $perm_obj->check_perm($now_router);
-            // d($now_router,$perms['perms2'],$perm,$action);
-            $as = new AdminMenuService;
             $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']['perms2']);
             if (!$has_perm) {
                 return false;
             }
         }
+
+        //检测菜单是否有默认请求参数
+        $ms = new MenuService;
+        [$name,$menu] = $ms->getMenuByRouter($now_router);
+        //d($menu,$now_router);
+        if($menu && $menu['id'] && $menu['other_config'])
+        {
+            $other_config = json_decode($menu['other_config'],true);
+            if($other_config && isset($other_config['defaultData']))
+            {
+                //d($other_config);
+                foreach($other_config['defaultData'] as $key=>$val)
+                {
+                    $has_request_val = request($key);
+                    //d($has_request_val,333);
+                    if($has_request_val)
+                    {
+                        if(is_array($val))
+                        {
+                            if(is_array($has_request_val))
+                            {
+                                $val = array_intersect($val,$has_request_val);
+                            }else
+                            {
+                                if(in_array($has_request_val,$val))
+                                {
+                                    $val = [$has_request_val];
+                                }
+                            }
+                        }
+                        //d($val);
+                    }
+                    request()->offsetSet($key,$val);
+                }
+            }
+        }
+
         return true;
+    }
+
+    public static function getNowRouter()
+    {
+        $action = request()->route()->action;
+        $uri = request()->route()->uri();
+        $prefix = env('APP_PREFIX', '') . env('APP_ADMIN_PREFIX','');
+        $now_router = trim(str_replace($prefix,'',$uri),'/');
+        $now_routers = explode('/',$now_router);
+        $old_a = array_pop($now_routers);
+
+        if(isset($action['as']))
+        {
+            [$c,$a] = explode('.',$action['as']);
+            if(strpos($old_a,'{') === false)
+            {
+                $now_routers[] = $old_a;
+            }
+        }else
+        {
+            $a = $old_a;
+        }
+        $id = request('id', request('base.id',0));
+        if ($a == 'store') {
+            //检测是 编辑还是 新增
+            if ($id) {
+                $a = 'edit';
+            } else {
+                $a = 'add';
+            }
+        }elseif($a == 'show') {
+            //检测是 编辑还是 新增
+            if (!$id) {
+                $a = 'add';
+            }
+        }
+        $now_routers[] = $a;
+
+        $now_router = implode('/', $now_routers);
+
+        return $now_router;
     }
 
     public static function getUsers()
     {
         $user = self::user();
-        $permUser = new PermUser();
+        $permUser = new User();
         if ($user['id'] == 1) {
             return $permUser->select('id', 'username')->where('id', '!=', 1)->get();
         } else {
@@ -178,7 +190,7 @@ class AdminService
                 'created_at' => now(),
                 'type' => $force_type ?: 'POST',
             ];
-            PermLog::insert($data);
+            Log::insert($data);
         }
         return;
     }

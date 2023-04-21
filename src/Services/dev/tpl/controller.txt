@@ -4,6 +4,10 @@ use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
 
+//customer namespace start
+$customer_namespace$
+//customer namespace end
+
 class $name$Controller extends CrudController
 {
 	$crud_config$
@@ -16,36 +20,39 @@ class $name$Controller extends CrudController
 
 	}
 	
-	public function listData(&$list)
-	{
-		/*
-		foreach($list as $key=>$val)
-		{
+	// public function listData(&$list)
+	// {
+		
+	// 	foreach($list as $key=>$val)
+	// 	{
 			
-		}
-		*/
-		return;
-	}
-
-	public function postData(&$item)
-	{
-		return;
-	}
-
+	// 	}
+		
+	// 	return;
+	// }
+	
+	
+	// public function postData(&$item)
+	// {
+	// 	return;
+	// }
+	
 	/**
 	 * 编辑数据时 检测数据合法性
 	 *
 	 * @param [type] $item
 	 * @return void
 	 */
-	public function checkPost($item)
-	{
-		if(false)
-		{
-			return ['code'=>1,'msg'=>'信息错误，请重试'];
-		}
-        return;
-	}
+	
+	// public function checkPost($item)
+	// {
+	// 	if(false)
+	// 	{
+	// 		return ['code'=>1,'msg'=>'信息错误，请重试'];
+	// 	}
+    //     return;
+	// }
+	
 
 	/**
 	 * 提交数据时检测数据合法性
@@ -54,23 +61,29 @@ class $name$Controller extends CrudController
 	 * @param [type] $id
 	 * @return void
 	 */
-	public function beforePost($data,$id = 0)
-	{
-		if(false)
-		{
-			return ['code'=>1,'msg'=>'数据错误，请重试'];
-		}
-        return;
-	}
+	
+	// public function beforePost($data,$id = 0)
+	// {
+	// 	if(false)
+	// 	{
+	// 		return ['code'=>1,'msg'=>'数据错误，请重试'];
+	// 	}
+    //     return;
+	// }
+	
+	//customer code start
+	$customer_code$
+	//customer code end
 
-	public function handleSearch()
-	{
-		$m = $this->model;
+	
+	// public function handleSearch()
+	// {
+	// 	$m = $this->model;
 
-		$search = [];
+	// 	$search = [];
 
-		return [$m,$search];
+	// 	return [$m,$search];
 
-	}
+	// }
 
 }

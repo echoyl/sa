@@ -11,20 +11,27 @@ class Category extends Base
      */
     protected $table = 'category';
 
-    public function format($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'])
+    public function format($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'],$parseData = false)
     {
         $data = self::allData($this->table)->filter(function ($item) use ($id) {
             return $item->parent_id === $id;
         })->sortByDesc('displayorder');
         $ret = [];
         foreach ($data as $val) {
-            $children = $this->format($val['id'], $fields);
-            $item = [
-                $fields['id'] => $val['id'],
-                $fields['title'] => $val['title'],
-                'parent_id' => $val['parent_id'],
-                //$fields['children'] => $this->format($val['id'], $fields),
-            ];
+            $children = $this->format($val['id'], $fields,$parseData);
+            if($parseData)
+            {
+                $item = $parseData($val);
+            }else
+            {
+                $item = [
+                    $fields['id'] => $val['id'],
+                    $fields['title'] => $val['title'],
+                    'parent_id' => $val['parent_id'],
+                    //$fields['children'] => $this->format($val['id'], $fields),
+                ];
+            }
+            
             if(!empty($children))
             {
                 $item[$fields['children']] = $children;

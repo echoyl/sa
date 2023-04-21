@@ -4,6 +4,8 @@ namespace Echoyl\Sa\Services;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use EasyWeChat\Factory;
+use EasyWeChat\MiniApp\Application;
+use EasyWeChat\OfficialAccount\Application as OfficialAccountApplication;
 use Echoyl\Sa\Models\wechat\miniprogram\Account as MiniprogramAccount;
 use Echoyl\Sa\Models\wechat\miniprogram\User as MiniprogramUser;
 use Echoyl\Sa\Models\wechat\offiaccount\Account;
@@ -115,7 +117,7 @@ class WechatService
         return $app;
     }
 
-    public static function getPayment($id)
+    public static function getPayment($id,$appid = '')
     {
         $pay = (new Pay())->where(['id'=>$id])->first();
         if(!$pay)
@@ -125,7 +127,7 @@ class WechatService
 
         $config = [
             // 必要配置
-            'app_id'             => $pay['appid'],
+            'app_id'             => $appid ? : $pay['appid'],
             'mch_id'             => $pay['mch_id'],
             'key'                => $pay['apikey'],   // API 密钥
         
@@ -169,13 +171,13 @@ class WechatService
         return $pay_log;
     }
 
-    public static function wxJsapi($pay_log,$pay_id,$title = '支付')
+    public static function wxJsapi($pay_log,$pay_id,$title = '支付',$app_id = '')
     {
         //$msg_body = '{"tran_cd":"1192","acc_mod":"01","prod_cd":"1151","biz_cd":"0000007","mcht_cd":"996180418866693","tran_dt_tm":"20200904143149","order_id":"PGC20200904143149E43505","sys_order_id":"202009040196060","tran_order_id":"10001866202009040196060","resp_cd":"00","tran_amt":"1","sett_dt":"20200609","qr_code_info":{"wx_jsapi":"{\"appId\":\"wx2421b1c4370ec43b\",\"timeStamp\":\"1599201115\",\"package\":\"prepay_id\\u003dwx04143155547501cb1eacfffa8582310000\",\"signType\":\"RSA\",\"nonceStr\":\"3d6d9afe47394464ba262cbf2e600072\",\"paySign\":\"Yyhir9cY5tRLeFJ/oGsMi47UOMgSqTzsgHr+KApJU1paeWPIaUF1aSixKHMkZxjPRwOrBKzetDQ4rqR9ZE+xVMoouhpeWLhitYBQ7iG0HtJNcsbeJNatPfX2t7xxIYYklgq15FzqZ1yLt8kB8pLlQBRvViKOB9Vq+IgwWS6RtYxZCQl6+IxL2mdTnZ2uafAGnfVX8Dl34WEVZ7bG/9c0pKnQGzF8TSMVRafY5ZnmT3d5LX892+C4LjWPKAH8SjgAjpgRvepPLUfLAoV+ChkaNouzr+43PTyrJf23KGz9omnR6+L2yeXAF8GMe6TInCqP1t86FrKIr6kUZTjD3TNM9Q\\u003d\\u003d\"}"}}';
         //return ['code'=>0,'msg'=>'','data'=>json_decode($msg_body,true)];
 
 
-        [$code,$app] = self::getPayment($pay_id);
+        [$code,$app] = self::getPayment($pay_id,$app_id);
 
         if($code)
         {
@@ -289,7 +291,7 @@ class WechatService
             ],
             'response_type' => 'array',
         ];
-        $app = Factory::officialAccount($config);
+        $app = new OfficialAccountApplication($config);
         return [0,$app];
     }
 
@@ -309,7 +311,7 @@ class WechatService
             ],
         ];
 
-        $app = Factory::miniProgram($config);
+        $app = new Application($config);
         return $app;
     }
 
@@ -472,13 +474,14 @@ class WechatService
 
         $has = $model->where(['openid'=>$original['openid'],'appid'=>$app_id])->first();
         $data = [
-            'nickname'=>$original['nickName'],
+            //'nickname'=>$original['nickName'],
             'openid'=>$original['openid'],
-            'avatar'=>$original['avatarUrl'],
-            'gender'=>$original['gender'],
-            'city'=>$original['city'],
-            'province'=>$original['province'],
-            'country'=>$original['country'],
+            'nickname'=>$original['openid'],
+            //'avatar'=>$original['avatarUrl'],
+            //'gender'=>$original['gender'],
+            //'city'=>$original['city'],
+            //'province'=>$original['province'],
+            //'country'=>$original['country'],
             'unionid'=>$original['unionid']??'',
             'last_used_at'=>now(),
             'appid'=>$app_id
@@ -603,11 +606,16 @@ class WechatService
         $pay_log = $model->where(['id'=>$pay_log_id])->first();
         if(!$pay_log)
         {
-            return [1,'订单信息错误'];
+            return [1,'订单未发起支付，不能进行退款操作'];
         }
         if($pay_log['state'] != 1)
         {
-            return [1,'订单状态错误'];
+            return [1,'订单未支付，不能进行退款操作'];
+        }
+
+        if($pay_log['refund_state'] == 1)
+        {
+            return [1,'订单已退款'];
         }
 
         [$code,$refund] = self::payRefundQuery($pay_log['sn'],$app);

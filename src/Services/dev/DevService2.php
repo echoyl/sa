@@ -4,44 +4,81 @@ namespace Echoyl\Sa\Services\dev;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
-use Echoyl\Sa\Services\dev\utils\FormItem;
-use Echoyl\Sa\Services\dev\utils\SchemaDiff;
-use Echoyl\Sa\Services\dev\utils\TableColumn;
-use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
-class DevService
+class DevService2
 {
 
     var $msg = [];
+    var $value_type = [
+        'select'=>'select',
+        'selects'=>'select',
+        'search_select'=>'debounceSelect',
+        'textarea'=>'textarea',
+        'image'=>'uploader',
+        'datetime'=>'dateTime',
+        'switch'=>'switch',
+        'cascader'=>'cascader',
+        'cascaders'=>'cascader',
+        'pca'=>'pca',
+        'tmapInput'=>'tmapInput',
+        'tinyEditor'=>'tinyEditor',
+        'price'=>'digit',
+    ];
 
     var $title_arr = [
         'created_at'=>'创建时间',
-        'updated_at'=>'最后更新时间',
-        'displayorder'=>'排序权重',
+        'updated_at'=>'最后更新时间'
     ];
 
     public $tpl_path = __DIR__.'/tpl/';
+    
 
-    public function createSchemaSql($table_name,$columns)
+    public function createModelSchema($table_name,$columns)
     {
         $table_sql = ['CREATE TABLE `la_'.$table_name.'` ('];
         $has_id = false;
-        
         //$table_sql[] = '`id`  int NOT NULL AUTO_INCREMENT ,';
         foreach($columns as $val)
         {
-            
-            if($val['name'] == 'id')
+            $field_sql = '';
+            $default_value = $val['default']??"";
+            $comment = $val['desc']??$val['title'];
+            $name = $val['name'];
+            switch($val['type'])
             {
-                $has_id = true;
+                
+                case 'int':
+                    if(!$default_value)
+                    {
+                        $default_value = 0;
+                    }
+                    if($name == 'id')
+                    {
+                        $has_id = true;
+                        $field_sql = "`{$val['name']}`  int(11) NOT NULL AUTO_INCREMENT COMMENT '{$comment}',";
+                    }else
+                    {
+                        $field_sql = "`{$val['name']}`  int(11) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}',";
+                    }
+                break;
+                case 'vachar':
+                    $field_sql = "`{$val['name']}`  varchar(255) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}',";
+                break;
+                case 'datetime':
+                    $field_sql = "`{$val['name']}`  datetime DEFAULT NULL COMMENT '{$comment}',";
+                break;
+                case 'text':
+                    $field_sql = "`{$val['name']}`  text NULL COMMENT '{$comment}',";
+                break;
+                case 'decimal':
+                    $field_sql = "`{$val['name']}`  decimal(10,2) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}',";
+                break;
             }
-            $field_sql = $this->schemaColumnSql($val);
-            $table_sql[] = $field_sql.',';
+            
+            $table_sql[] = $field_sql;
         }
         $table_sql[] = "`updated_at`  datetime DEFAULT NULL ,";
         $table_sql[] = "`created_at`  datetime DEFAULT NULL ,";
@@ -51,105 +88,13 @@ class DevService
         {
             $table_sql[] = "PRIMARY KEY (`id`))ENGINE=MyISAM;";
         }
-
-        return $table_sql;
-    }
-
-    public function schemaColumnSql($val)
-    {
-        $field_sql = '';
-        $default_value = $val['default']??"";
-        $comment = $val['desc']??$val['title'];
-        $name = $val['name'];
-        switch($val['type'])
-        {
-            case 'int':
-                if(!$default_value)
-                {
-                    $default_value = 0;
-                }
-                if($name == 'id')
-                {
-                    $field_sql = "`{$name}`  int(11) NOT NULL AUTO_INCREMENT COMMENT '{$comment}'";
-                }else
-                {
-                    $field_sql = "`{$name}`  int(11) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
-                }
-            break;
-            case 'vachar':
-                $field_sql = "`{$name}`  varchar(255) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
-            break;
-            case 'datetime':
-                $field_sql = "`{$name}`  datetime DEFAULT NULL COMMENT '{$comment}'";
-            break;
-            case 'text':
-                $field_sql = "`{$name}`  text NULL COMMENT '{$comment}'";
-            break;
-            case 'decimal':
-                $field_sql = "`{$name}`  decimal(10,2) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
-            break;
-        }
-        return $field_sql;
-    }
-
-    public function createModelSchema($table_name,$columns)
-    {
-        
-        //Schema::dropIfExists($table_name);
-        
+        Schema::dropIfExists($table_name);
         if(!Schema::hasTable($table_name))
         {
-            $table_sql = $this->createSchemaSql($table_name,$columns);
             DB::statement(implode('',$table_sql));
             $this->line('创建数据表:'.$table_name.'成功');
         }else
         {
-            $table_name = 'la_'.$table_name;
-            $dist_f = DB::getPdo()->query('desc '.$table_name);
-            $dist_field = [];
-            foreach($dist_f as $key=>$val)
-            {
-                $dist_field[$val[0]] = $val;
-            }
-            $now_fields = [];
-            $sqls = [];
-            foreach($columns as $column)
-            {
-                $field_name = $column['name'];
-                $sql = $this->schemaColumnSql($column);
-                if(isset($dist_field[$field_name]))
-                {
-                    //已存在在属性对比是否需要更新
-                    $sqls[] = " MODIFY COLUMN ".$sql;
-                }else
-                {
-                    //未存在字段则新增字段
-                    $sqls[] = " ADD COLUMN ".$sql;
-                }
-                $now_fields[$field_name] = $column;
-            }
-
-            //DROP COLUMN `table_name`;
-            $tmp = array_diff_key($dist_field,$now_fields);
-            if ( !empty($tmp) )  {
-                //多于的字段则删除
-                foreach($tmp as $key=>$column)
-                {
-                    if(!isset($this->title_arr[$key]))
-                    {
-                        //非默认字段 需要删除
-                        $sqls[] = " DROP COLUMN {$key}";
-                    }
-                    
-                }
-            }
-            $sqls = "ALTER TABLE `{$table_name}`\r".implode(",\r",$sqls).';';
-            DB::table('dev_sqllog')->insert([
-                'date'=>date("Y-m-d"),
-                'sql'=>$sqls,
-                'table_name'=>$table_name,
-            ]);
-            DB::statement($sqls);
             $this->line('数据表:'.$table_name.'已存在');
         }
         return;
@@ -158,7 +103,18 @@ class DevService
 
     public static function getPath($val, $menus,$field = 'name')
     {
-        return Utils::getPath($val, $menus,$field);
+        $alias = [$val[$field]];
+        //d($parent);
+        if ($val['parent_id']) {
+            $parent = collect($menus)->filter(function ($item) use ($val) {
+                return $item['id'] === $val['parent_id'];
+            })->first();
+            //$alias[] = $parent['alias'];
+            $alias = array_merge($alias, self::getPath($parent, $menus,$field));
+        }
+
+        return $alias;
+
     }
 
     public function line($msg)
@@ -166,23 +122,12 @@ class DevService
         $this->msg[] = $msg;
     }
 
-    public function allModel()
+    public function allData($model)
     {
         static $data = [];
         if(empty($data))
         {
-            $data = (new Model())->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
-        }
-        
-        return $data;
-    }
-
-    public function allMenu()
-    {
-        static $data = [];
-        if(empty($data))
-        {
-            $data = (new Menu())->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
+            $data = $model->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
         }
         
         return $data;
@@ -353,7 +298,6 @@ class DevService
         
         //检测文件是否已经存在 存在的话将自定义代码带入
         $customer_code = '';
-        $customer_namespace = '';
         if(file_exists($model_file_path))
         {
             $old_content = file_get_contents($model_file_path);
@@ -361,15 +305,7 @@ class DevService
             preg_match('/customer code start(.*)\/\/customer code end/s',$old_content,$match);
             if(!empty($match))
             {
-                //已存在的文件该段不做覆盖
                 $customer_code = trim($match[1]);
-            }
-
-            $match2 = [];
-            preg_match('/customer namespace start(.*)\/\/customer namespace end/s',$old_content,$match2);
-            if(!empty($match2))
-            {
-                $customer_namespace = trim($match2[1]);
             }
             //d($match,$old_content);
         }
@@ -382,7 +318,6 @@ class DevService
             '/\$use_namesapce\$/'=>implode("\r",$use_namespace),
             '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/'=>$customer_code,
-            '/\$customer_namespace\$/'=>$customer_namespace,
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -482,11 +417,7 @@ class DevService
     
                 $has_model[] = $f_model_name;
                 $all_models[$val['local_key']] = $f_model_name;
-                if(!isset($all_relations[$val['local_key']]))
-                {
-                    $all_relations[$val['local_key']] = $val['name'];
-                }
-                
+                $all_relations[$val['local_key']] = $val['name'];
 
                 if($val['is_with'])
                 {
@@ -546,12 +477,11 @@ class DevService
                 }
                 $form_data = $column['form_data']??'';
                 $form_type = $column['form_type'];
-                $default_value = $column['default']??'';
                 //['name' => 'shop_id', 'type' => 'search_select', 'default' => '0','data_name'=>'shop','label'=>'name'],
                 $d = [
                     'name' => $column['name'], 
                     'type' => $form_type, 
-                    'default' => in_array($form_type,['select','search_select','price'])?($default_value?intval($default_value):0):$default_value,
+                    'default' => in_array($form_type,['select','search_select'])?0:'',
                 ];
                 $table_menu = isset($column['table_menu']) && $column['table_menu'];
                 if($form_type == 'select')
@@ -601,22 +531,20 @@ class DevService
                     //     $_value[strval($key)] = $val;
                     // }
                     //d($valueEnum);
-                    
-                    
+                    $d['data'] = $valueEnum;
+                    $d['with'] = true;
                     $d['default'] = 1;
                     if($table_menu)
                     {
-                        $d['with'] = true;
-                        $d['data'] = $valueEnum;
                         $d['table_menu'] = true;
                     }else
                     {
-                        //continue;
+                        continue;
                     }
                 }
                 if($form_type == 'search_select')
                 {
-                    $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]);
+                    $d['data_name'] = $this->uncamelize($all_relations[$column['name']]);
                     $fieldNames = explode(',',$column['form_data']);
                     $d['label'] = $fieldNames[0];
                     if(isset($fieldNames[1]))
@@ -628,16 +556,6 @@ class DevService
                 {
                     $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                     $d['with'] = true;
-                }
-                if($form_type == 'selects')
-                {
-                    if(isset($all_models[$column['name']]))
-                    {
-                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
-                        $d['with'] = true;
-                    }
-                    
-                    
                 }
                 //省市区选择器
                 if($form_type == 'pca')
@@ -652,13 +570,15 @@ class DevService
                 $parse_columns[] = $d;
             }
         }
-    
+        
+
+
         return [$namespace_data,$crud_config,$parse_columns];
     }
 
     public function getNamespace($foreign_model,$exist_names = [])
     {
-        $foreign_model_names = array_reverse($this->getPath($foreign_model,$this->allModel()));
+        $foreign_model_names = array_reverse($this->getPath($foreign_model,$this->allData(new Model())));
 
         $foreign_model_name = ucfirst(array_pop($foreign_model_names));
 
@@ -719,6 +639,11 @@ class DevService
         return;
     }
 
+    public function uncamelize($camelCaps,$separator='_')
+    {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+    }
+
     public function getModelsTree()
     {
         $model = new Model();
@@ -738,146 +663,429 @@ class DevService
     /**
      * 生成model的某个字段的json 前端配置
      *
-     * @param [所选模型] $model
-     * @param [每个group配置] $key
+     * @param [type] $model
+     * @param [type] $key
      * @return array
      */
     public function modelColumn2JsonForm($model,$keys)
     {
+        $columns = json_decode($model['columns'],true);
+
+        $columns[] = [
+            'name'=>'created_at',
+            'title'=>'创建时间',
+            'form_type'=>'datetime'
+        ];
+
         $data = [];
+        $value_type = $this->value_type;
         $key_len = count($keys);
-        $menus = $this->allMenu();
-        $models = $this->allModel();
         foreach($keys as $row)
         {
-            $formItem = new FormItem($row,$model,$menus,$models);
-            if($formItem->data)
+            $key = $row['key'];
+            
+            if(in_array($key,['id','parent_id','created_at_s','displayorder']))
             {
-                $d = $formItem->data;
-            }else
-            {
+                $data[] = $key;
                 continue;
             }
-            if(!is_string($formItem->data))
+            
+            $column = collect($columns)->first(function($item) use($key){
+                return $item['name'] == $key;
+            });
+
+            $relation = $this->columnHasRelations($model['relations'],$key,$column?'local_key':'name');
+
+            $title = $row['title']??'';
+            $readonly = $row['readonly']??'';
+            $set_label = $row['label']??'';
+
+            $d = ['dataIndex'=>$key,'title'=>$title?:($column?$column['title']:$relation['title'])];
+
+            if($readonly)
             {
-                if($key_len == 2)
+                $d['readonly'] = true;
+            }
+
+            $form_type = $row['type']??'';
+            if($form_type)
+            {
+                $d['valueType'] = $form_type;
+            }
+
+            if(!$column)
+            {
+                //如果选择的不是数据表字段，因为可以选择关联的字段
+                if(!$relation)
                 {
-                    $d['width'] = 'md';
-                }elseif($key_len == 3)
-                {
-                    $d['width'] = 'sm';
-                }elseif($key_len > 4)
-                {
-                    $d['width'] = 'xs';
+                    //如果连关联字段都没有 那么直接跳过
+                    continue;
                 }
+                if($form_type)
+                {
+                    $fieldProps = [];
+                    if($readonly)
+                    {
+                        unset($d['readonly']);
+                        $fieldProps['readonly'] = true;
+                        $d['fieldProps'] = ['readonly'=>true];
+                    }
+                    //如果是saFormTable 表单中的table 需要读取该关联模型所对应的第一个菜单的所形成的地址，这样组件可以在页面中根据这个path获取该页面的配置参数信息
+                    if($relation['foreign_model']['menu'])
+                    {
+                        $path = array_reverse(self::getPath($relation['foreign_model']['menu'],(new Menu())->get()->toArray(),'path'));
+                        $fieldProps['path'] = implode('/',$path);
+                        $fieldProps['foreign_key'] = $relation['foreign_key'];
+                        $fieldProps['local_key'] = $relation['local_key'];
+                    }
+                    
+                    if(!empty($fieldProps))
+                    {
+                        $d['fieldProps'] = $fieldProps;
+                    }
+                }
+
+                
+
+                $data[] = $d;
+                continue;
+
+            }
+
+            if($key_len == 2)
+            {
+                $d['width'] = 'md';
+            }elseif($key_len == 3)
+            {
+                $d['width'] = 'sm';
+            }elseif($key_len > 4)
+            {
+                $d['width'] = 'xs';
+            }
+
+            $form_type = $column['form_type']??'';
+            $table_menu = $column['table_menu']??'';
+            $form_data = $column['form_data']??'';
+
+            if(isset($value_type[$form_type]))
+            {
+                $d['valueType'] = $value_type[$form_type];
             }
             
-            $data[] = $d;
-        }
-        return $data;
-    }
 
-    /**
-     * table 列表字段的解析
-     *
-     * @param [所选的模型] $model
-     * @param [列配置] $col
-     * @return void
-     */
-    public function modelColumn2JsonTable($model,$col)
-    {
-        $menus = $this->allMenu();
-        $models = $this->allModel();
-        $tableColumn = new TableColumn($col,$model,$menus,$models);
-        return $tableColumn->data;
-    }
-
-    public static function aliasRoute()
-    {
-        // Route::group(['namespace' => env('APP_NAME','')], function (){
-        //     self::createRoute(self::getMenuByParentId());
-        // });
-        self::createRoute(self::getMenuByParentId());
-        return;
-    }
-
-    public static function createRoute($menus,$prefix = [])
-    {
-        $self = new self();
-        if(!$menus)return;
-        foreach($menus as $menu)
-        {
-            //Log::channel('daily')->info('menus name:',['name'=>$menu['path'],'title'=>$menu['title']]);
-            $children = self::getMenuByParentId($menu['id']);
-            if(!empty($children))
+            if($relation && $set_label)
             {
-                self::createRoute($children,array_merge($prefix,[$menu['path']]));
-            }else
+                //如果有关联数据 并且设置了读取lable字段名称
+                $key = [$this->uncamelize($relation['name'])];
+                $key = array_merge($key,explode('.',$set_label));
+                $d['dataIndex'] = $key;
+            }
+
+            if($form_type == 'select' || $form_type == 'selects')
             {
-                if($menu['admin_model'])
+                if($relation)
                 {
-                    $model = $menu['admin_model'];
-                    $name = $model['name'];
-                    if($model['type'] == 1)
+                    $d['requestDataName'] = $column['name'].'s';
+                    if($form_data)
                     {
-                        //检测是否有namespace
-                        $model_path = array_reverse(Utils::getPath($model,$self->allModel()));
-                        $_prefix = array_merge($prefix,[$menu['path']]);
-                        if(count($model_path) > 1)
+                        [$label,$value] = explode(',',$form_data);
+                        if(!$table_menu)
                         {
-                            //默认所有路由都走这里 因为都有一个项目namespace
-                            $name = array_pop($model_path);
-
-                            //读取菜单的其它权限设置 单独的action方法独立写路由
-                            if($menu['perms'])
-                            {
-                                $perms = json_decode($menu['perms'],true);
-                            }else
-                            {
-                                $perms = false;
-                            }
-
-                            //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
-                            Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms){
-                                if($perms)
-                                {
-                                    foreach($perms as $key=>$title)
-                                    {
-                                        Route::any(implode('/',array_merge($_prefix,[$key])), ucfirst($name).'Controller@'.$key);
-                                    }
-                                }
-                                Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
-                            });
+                            $d['fieldProps'] = ['fieldNames'=>[
+                                'label'=>$label,'value'=>$value
+                            ]];
+                        }
+                    }
+                }else
+                {
+                    if($form_data)
+                    {
+                        if(strpos($form_data,'{'))
+                        {
+                            $d['fieldProps']['options'] = json_decode($form_data,true);
                         }else
                         {
-                            //Log::channel('daily')->info('createRoute:',['name'=>implode('/',$_prefix),'to'=>$name]);
-                            Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                            $d['fieldProps']['options'] = explode(',',$form_data);
+                        }
+                        if($form_type == 'selects')
+                        {
+                            $d['fieldProps']['mode'] = 'tags';
                         }
                     }
                 }
+                if($readonly)
+                {
+                    //只读的话 删除valueType 直接显示数据了
+                    unset($d['valueType']);
+                    //$d['dataIndex'] = [$relation['name'],$label];
+                }
+            }elseif($form_type == 'search_select')
+            {
+                //输入搜索select
+                if($form_data)
+                {
+                    [$label,$value] = explode(',',$form_data);
+                }
+                if($readonly)
+                {
+                    unset($d['valueType']);
+                    //$d['dataIndex'] = [$relation['name'],$label];
+                }else
+                {
+                    $d['fieldProps'] = [];
+                    if($relation && $relation['foreign_model'])
+                    {
+                        $path = array_reverse($this->getPath($relation['foreign_model'],$this->allData(new Model())));
+                        $d['fieldProps']['fetchOptions'] = implode('/',$path);
+                    }
+                    if($form_data)
+                    {
+                        $d['fieldProps']['fieldNames'] = ['label'=>$label,'value'=>$value];
+                    }
+                }
+                
+            }elseif($form_type == 'image')
+            {
+                //图片上传
+                if($form_data)
+                {
+                    $d['fieldProps'] = ['max'=>intval($form_data)];
+                }
+            }elseif($form_type == 'switch')
+            {
+                //switch开关
+                if($form_data)
+                {
+                    [$label,$value] = explode(',',$form_data);
+                    $d['fieldProps'] = [
+                        "checkedChildren"=>$value,
+                        "unCheckedChildren"=>$label,
+                        "defaultChecked"=>true
+                    ];
+                }
+            }elseif($form_type == 'cascaders')
+            {
+                //多选分类
+                $d['requestDataName'] = $column['name'].'s';
+                $d['fieldProps'] = [
+                    'placeholder'=>'请选择'.$column['title'],
+                    'multiple'=>true,
+                    'showCheckedStrategy'=>'SHOW_CHILD'
+                ];
+            }elseif($form_type == 'pca')
+            {
+                //省市区选择
+
+                //$d['requestDataName'] = $column['name'].'s';
+                if($form_data)
+                {
+                    $d['fieldProps'] = [
+                        'level'=>intval($form_data)
+                    ];
+                }
+                
             }
-            
+
+            $data[] = $d;
         }
-        return;
+
+        return $data;
     }
 
-    public static function getMenuByParentId($pid = 0)
+    public function modelColumn2JsonTable($model,$col)
     {
-        $s = new self();
-        return collect($s->allMenu())->filter(function ($item) use ($pid) {
-            if($pid)
+        $key = $col['key'];
+
+        if(is_array($key))
+        {
+            $key = $key[0];
+        }
+
+        if(in_array($key,['option','coption','created_at_s','displayorder']))
+        {
+            return $key;
+        }
+
+        $value_type = $this->value_type;
+
+        $title = $col['title']??'';
+        $columns = json_decode($model['columns'],true);
+        $column = collect($columns)->first(function($item) use($key){
+            return $item['name'] == $key;
+        });
+
+        $relation = $this->columnHasRelations($model['relations'],$key,$column?'local_key':'name');
+
+        $d = ['dataIndex'=>$key,'title'=>$title?:($column?$column['title']:($this->title_arr[$key]??''))];
+
+        //关联数据name 及 额外设置
+        $extra = $col['name']??'';
+
+        //根据每行的设置定义部分参数
+        if(isset($col['type']))
+        {
+            $d['valueType'] = $col['type'];
+            if($d['valueType'] == 'link')
             {
-                return $item['parent_id'] === $pid;
+                [$link_name] = explode('_',$key);
+                $with_relation = $this->columnHasRelations($model['relations'],$link_name,'name');
+                if($with_relation)
+                {
+                    $menu = (new Menu())->where(['admin_model_id'=>$with_relation['foreign_model_id']])->first();
+                    if($menu)
+                    {
+                        $path = self::getPath($menu,(new Menu)->get(),'path');
+                        $d['fieldProps'] = [
+                            'path'=>'/'.implode('/',array_reverse($path)),
+                            'foreign_key'=>$with_relation['foreign_key'],
+                            'local_key'=>$with_relation['local_key'],
+                        ];
+                    }
+                }
+                
+            }elseif($d['valueType'] == 'expre' && $extra)
+            {
+                $d['fieldProps'] = [
+                    'exp'=>'{{'.$extra.'}}'
+                ];
+            }
+        }
+
+        if(isset($col['can_search']) && $col['can_search'])
+        {
+
+        }else
+        {
+            $d['search'] = false;
+        }
+
+        if(isset($col['hide_in_table']) && $col['hide_in_table'])
+        {
+            $d['hideInTable'] = true;
+        }
+
+        
+
+        if($extra && $relation)
+        {
+            //有关联模型的是才会解析dataIndex 
+            $key = [$this->uncamelize($relation['name'])];
+            $d['dataIndex'] = array_merge($key,explode('.',$extra));
+        }
+
+        if(!$column)
+        {
+            //选择的是关联数据 而不是选择表中的某个字段
+            return $d;
+        }
+
+        
+
+        $form_type = $column['form_type']??'';
+        $form_data = $column['form_data']??'';
+        $table_menu = $column['table_menu']??'';
+
+        if(isset($value_type[$form_type]) && !isset($d['valueType']))
+        {
+            $d['valueType'] = $value_type[$form_type];
+        }
+
+        //搜索选项类型在table中不需要了
+        if($form_type == 'search_select')
+        {
+            unset($d['valueType']);
+        }
+        
+
+        //是switch 或者select 需要设置数据类型为enum
+        if($form_type == 'switch' && $form_data)
+        {
+            $d['valueType'] = 'select';
+            $valueEnum = collect(explode(',',$form_data))->map(function($v,$k){
+                return ['text' => $v, 'status' => $k == 0?'error':'success'];
+            });
+            // $_value = [];
+            // foreach($valueEnum as $key=>$val)
+            // {
+            //     $_value[strval($key)] = $val;
+            // }
+            $d['valueEnum'] = $valueEnum;
+        }
+
+        if($form_type == 'select' )
+        {
+            if($relation)
+            {
+                //关联的select 需要获取数据
+                $d['requestDataName'] = $column['name'].'s';
+                if($form_data && !$table_menu)
+                {
+                    //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
+                    [$label,$value] = explode(',',$form_data);
+                    $d['fieldProps'] = ['fieldNames'=>[
+                        'label'=>$label,'value'=>$value
+                    ]];
+                }
             }else
             {
-                return $item['parent_id'] === $pid && in_array($item['type'],[env('APP_NAME')]) === true;
+                //非关联的话 手动设置数据源
+                if($form_data)
+                {
+                    $d['fieldProps'] = [
+                        'options'=>json_decode($form_data,true)
+                    ];
+                }
             }
-            
-        })->toArray();
+        }
+
+        
+
+        if($form_type == 'cascaders')
+        {
+            if($relation)
+            {
+                //关联的select 需要获取数据
+                $d['requestDataName'] = $column['name'].'s';
+                // if(isset($column['form_data']))
+                // {
+                //     [$label,$value] = explode(',',$column['form_data']);
+                //     $d['fieldProps'] = ['fieldNames'=>[
+                //         'label'=>$label,'value'=>$value
+                //     ]];
+                // }
+            }else
+            {
+                //非关联的话 手动设置数据源
+                if($form_data)
+                {
+                    $d['fieldProps'] = [
+                        'options'=>json_decode($form_data,true)
+                    ];
+                }
+            }
+        }
+
+        if($form_type == 'image')
+        {
+            //图片的话 列表中只显示一张
+            $d['fieldProps'] = [
+                'max'=>1
+            ];
+        }
+
+        return $d;
     }
 
-    public static function getModelByParentId($pid = 0)
+    public function columnHasRelations($relations,$key,$key_name = 'local_key')
     {
-        return (new Model())->where(['parent_id'=>$pid])->orderBy('type','asc')->get()->toArray();
+        if(!$relations)
+        {
+            return false;
+        }
+        $key = $this->uncamelize($key);
+        return collect($relations)->first(function($item) use($key,$key_name){
+            return $item[$key_name] == $key;
+        });
     }
+
 }

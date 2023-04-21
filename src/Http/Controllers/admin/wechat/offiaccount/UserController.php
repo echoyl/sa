@@ -13,7 +13,9 @@ use Exception;
 class UserController extends CrudController
 {
 	//var $with_column = ['category'];
-
+	var $search_config = [
+		["name" => "keyword","columns" => ["nickname",'openid'],"where_type" => "like"],
+	];
 	public function __construct()
 	{
 		$this->model = new User();
@@ -23,6 +25,14 @@ class UserController extends CrudController
 		];
 
 		$this->with_column = ['account'];
+	}
+
+	public function listData(&$list)
+	{
+		foreach($list as $key=>$val)
+		{
+			$list[$key]['nickname'] = $val['nickname']?:$val['openid'];
+		}
 	}
 
 	public function postData(&$item)

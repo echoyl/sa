@@ -4,12 +4,11 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Services\AdminMenuService;
 use App\Services\HelperService;
-use Echoyl\Sa\Models\perm\PermUser;
+use Echoyl\Sa\Models\perm\User;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\CaptchaService;
-
+use Echoyl\Sa\Services\dev\MenuService;
 
 class LoginController extends Controller
 {
@@ -29,11 +28,11 @@ class LoginController extends Controller
 
         $username = $request->input('username');
         $pwd = $request->input('password');
-        $user = PermUser::where(['username'=>$username])->first();
+        $user = User::where(['username'=>$username])->first();
         if($user && $user['password'] == AdminService::pwd($pwd))
         {
             $token = AdminService::login($user);
-            $as = new AdminMenuService;
+            $as = new MenuService;
             $avatar = HelperService::uploadParse($user['avatar'], false);
             $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
             $info = [

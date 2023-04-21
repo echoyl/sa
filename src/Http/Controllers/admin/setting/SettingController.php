@@ -17,7 +17,7 @@ class SettingController extends Controller
 	
 	public function base()
     {
-		return (new SetsService)->post('base');
+		return (new SetsService)->post(env('APP_NAME','base'));
 	}
 
 }

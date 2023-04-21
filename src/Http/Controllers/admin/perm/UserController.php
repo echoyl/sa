@@ -2,11 +2,11 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
-use App\Services\AdminMenuService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\perm\PermUser;
-use Echoyl\Sa\Models\perm\PermRole;
+use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Models\perm\Role;
 use Echoyl\Sa\Services\AdminService;
+use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\PermService;
 
 class UserController extends CrudController
@@ -18,9 +18,9 @@ class UserController extends CrudController
 	var $with_count = ['logs'];
 	var $can_be_null_columns = ['desc'];
 	var $withs = [
-        ['name'=>'role','class'=>PermRole::class,'cid'=>0]
+        ['name'=>'role','class'=>Role::class,'cid'=>0]
     ];
-    public function __construct(PermUser $model)
+    public function __construct(User $model)
 	{
 		$this->model = $model;
 		$this->with_column = ['role','logs'=>function($q){
@@ -71,7 +71,7 @@ class UserController extends CrudController
 			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
 		}
 
-		$as = new AdminMenuService;
+		$as = new MenuService;
 		$item['perms'] = $as->perms();
 		//$item['perms'] = $ps->parsePerms();
 

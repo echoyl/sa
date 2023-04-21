@@ -19,5 +19,10 @@ class BaseAuth extends Authenticatable
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
     }
+
+    public function getParseColumns()
+    {
+        return [];
+    }
     
 }

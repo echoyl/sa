@@ -3,14 +3,14 @@
 namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\perm\PermLog;
+use Echoyl\Sa\Models\perm\Log;
 
 class LogController extends CrudController
 {
     //
 	var $model;
 	var $with_column = [];
-    public function __construct(PermLog $model)
+    public function __construct(Log $model)
 	{
 		$this->model = $model;
 		$this->with_column = [

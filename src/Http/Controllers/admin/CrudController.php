@@ -5,6 +5,15 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 
+/**
+ * Undocumented class
+ * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
+ * @method mixed beforePost($data,$id = 0)  提交数据前的检测数据
+ * @method mixed handleSearch() 数据列表中额外的搜索调价等
+ * @method mixed postData(&$item) 获取数据时格式化数据
+ * @method mixed checkPost($item) 检测是否可以提交数据
+ * @method mixed listData(&$list) 列表数据格式化
+ */
 class CrudController extends ApiBaseController
 {
     public $model;
@@ -19,6 +28,8 @@ class CrudController extends ApiBaseController
     public $select_columns = [];
 
     public $model_id = 0;//系统所选的模型id值
+
+    var $service;
 
     /**
      * 搜索项配置
@@ -51,9 +62,17 @@ class CrudController extends ApiBaseController
 
             if(isset($col['table_menu']) && $col['table_menu'])
             {
+                //d($search_val);
                 if($search_val != 'all')
                 {
-                    $m = $m->where($name, $search_val);
+                    if(is_array($search_val))
+                    {
+                        $m = $m->whereIn($name, $search_val);
+                    }else
+                    {
+                        $m = $m->where($name, $search_val);
+                    }
+                    
                 }
                 continue;
             }
@@ -118,7 +137,14 @@ class CrudController extends ApiBaseController
                     if (is_numeric($search_val)) {
                         $category_id = $search_val;
                     } else {
-                        $category_id = json_decode($search_val, true);
+                        $json = HelperService::json_validate($search_val);
+                        if($json)
+                        {
+                            $category_id = $json;
+                        }else
+                        {
+                            $category_id = [$search_val];
+                        }
                         $len = count($category_id);
                         if($len <= 0)
                         {
@@ -178,13 +204,21 @@ class CrudController extends ApiBaseController
                 }else
                 {
                     $search_val = request($name,'');
+                    
                     $where_type = $sc['where_type']??'=';
-                    if($where_type == 'whereBetween')
+                    if($where_type == 'whereBetween' || $where_type == 'whereIn')
                     {
+                        
                         if($search_val)
                         {
-                            $search_val = json_decode($search_val,true);
-                            $m = $m->whereBetween($columns[0],$search_val);
+                            if(is_numeric($search_val))
+                            {
+                                $search_val = [$search_val];
+                            }else
+                            {
+                                $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
+                            }
+                            $m = $m->$where_type($columns[0],$search_val);
                         }
                     }else
                     {
@@ -217,7 +251,8 @@ class CrudController extends ApiBaseController
         $m = $this->defaultSearch($m);
 
         $count = $m->count();
-        if (!empty($this->with_column)) {
+        $select_columns = request('select','');
+        if (!empty($this->with_column) && empty($select_columns)) {
             $m = $m->with($this->with_column);
         }
         if (!empty($this->with_count)) {
@@ -260,6 +295,13 @@ class CrudController extends ApiBaseController
         if(!empty($this->select_columns))
         {
             $m = $m->select($this->select_columns);
+        }else
+        {
+            
+            if(!empty($select_columns))
+            {
+                $m = $m->select($select_columns);
+            }
         }
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)
@@ -383,12 +425,15 @@ class CrudController extends ApiBaseController
                 $id = $this->model->insertGetId($data);
             }
             $ret = null;
-            if (method_exists($this, 'afterPost')) {
-                $ret = $this->afterPost($id); //数据更新或插入后的 补充操作
-            }
+            
 
             //返回插入或更新后的数据
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
+
+            if (method_exists($this, 'afterPost')) {
+                $ret = $this->afterPost($id,$new_data); //数据更新或插入后的 补充操作
+            }
+
             $this->parseData($new_data, 'decode', 'list');
             if(method_exists($this,'postData'))
             {
@@ -397,7 +442,6 @@ class CrudController extends ApiBaseController
             
             return $ret ?: $this->success($new_data);
         } else {
-            
             $this->parseData($item, 'decode');
             $this->parseWiths($item);
             if (method_exists($this, 'postData')) {
@@ -476,6 +520,8 @@ class CrudController extends ApiBaseController
 
         $parse_columns = !empty($model_parse_columns)?$model_parse_columns:$this->parse_columns;
 
+        $table_menu = [];
+
         foreach ($parse_columns as $with) {
             if(isset($with['with']))
             {
@@ -493,8 +539,13 @@ class CrudController extends ApiBaseController
             //检测是否有table_menu设置
             if(isset($with['table_menu']) && !isset($data['table_menu']))
             {
-                $data['table_menu'] = $with['data']??[];
+                $table_menu[$with['name']] = $with['data']??[];
             }
+        }
+
+        if(!empty($table_menu))
+        {
+            $data['table_menu'] = $table_menu;
         }
 
         $data['states'] = $data['states']??[
@@ -764,11 +815,23 @@ class CrudController extends ApiBaseController
                     }else
                     {
                         //特定字段名称 label value
-                        if(isset($col['data_name']) && isset($data[$col['data_name']]))
+                        if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset)
                         {
                             $d = $data[$col['data_name']];
-                            $val = ['label'=>$d[$col['label']??'title'],'value'=>$d[$id_name],$id_name=>$d[$id_name]];
+                            if(!$d)
+                            {
+                                $val = '__unset';
+                            }else
+                            {
+                                $val = ['label'=>$d[$col['label']??'title'],'value'=>$d[$id_name],$id_name=>$d[$id_name]];
+                            }
+                            
                         }
+                        if(!$val || !$isset)
+                        {
+                            $val = '__unset';
+                        }
+                        
                     }
                     break;
                 case 'password':
@@ -810,6 +873,21 @@ class CrudController extends ApiBaseController
                             $val = '__unset';
                         }
                         
+                    }
+                    break;
+                case 'json':
+                    if($encode)
+                    {
+                        if($val && !is_string($val))
+                        {  
+                            $val = json_encode($val);
+                        }
+                    }else
+                    {
+                        if($val)
+                        {  
+                            $val = json_decode($val,true);
+                        }
                     }
                     break;
                 // case 'enum':
