@@ -46,6 +46,7 @@ class FormItem
         $set_label = $config['label']??'';
         $required = $config['required']??'';
         $placeholder = $config['placeholder']??'';
+        $extra = $config['name']??'';
 
         $d = ['dataIndex'=>$key,'title'=>$title?:($schema?$schema['title']:$relation['title'])];
 
@@ -106,6 +107,18 @@ class FormItem
                 $this->data['fieldProps'] = ['placeholder'=>$placeholder];
             }
         }
+
+        if($extra && !is_string($extra))
+        {
+            if(isset($this->data['fieldProps']))
+            {
+                $this->data['fieldProps'] = array_merge($this->data['fieldProps'],$extra);
+            }else
+            {
+                $this->data['fieldProps'] = $extra;
+            }
+        }
+
         return;
     }
 

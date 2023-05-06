@@ -17,7 +17,7 @@ class AdminAuth
             return response()->json(['code'=>$code,'msg'=>$msg]);
         }
         $user = AdminService::user();
-        if($user['state'] != 'enable')
+        if($user['state'] != 1 && $user['state'] != 1)
         {
             [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM;
             return response()->json(['code'=>$code,'msg'=>'该账号已禁用']);

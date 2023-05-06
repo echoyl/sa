@@ -27,7 +27,7 @@ class CategoryController extends CrudController
 
         $this->parse_columns = [
             ['name' => 'titlepic', 'type' => 'image', 'default' => ''],
-            ['name' => 'state', 'type' => 'state', 'default' => 'disable'],
+            ['name' => 'state', 'default' => 0],
             ['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
         ];
 

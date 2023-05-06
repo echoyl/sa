@@ -71,7 +71,7 @@ class HelperService
         }
 
         return ['code'=>0,'msg'=>'','data'=>[
-            'count'=>$count,'data'=>$data
+            'count'=>$count,'list'=>$data
         ]];
     }
 	
@@ -91,7 +91,7 @@ class HelperService
         }
     }
 
-    public static function uploadParse($data,$encode = true)
+    public static function uploadParse($data,$encode = true,$params = [])
     {
         if($encode)
         {
@@ -141,12 +141,22 @@ class HelperService
                 {
                     foreach($data as $key=>$val)
                     {
-                        $data[$key]['url'] = tomedia($val['value']);
-                        // $_data[] = [
-                        //     'name'=>$val['name'],
-                        //     'url'=>tomedia($val['url']),
-                        //     'value'=>$val['url']
-                        // ];
+                        $query = !empty($params)?http_build_query($params):'';
+
+                        $media = '';
+
+                        if(isset($val['value']))
+                        {
+                            $media = tomedia($val['value'],$query?true:false);
+                        }elseif(isset($val['url']))
+                        {
+                            $media = tomedia($val['url'],$query?true:false);
+                        }
+
+                        if($media)
+                        {
+                            $data[$key]['url'] = $query?implode('?',[$media,$query]):$media;
+                        }
                     }
                     return $data;
                 }
@@ -363,4 +373,31 @@ class HelperService
         return $array;
     } 
 
+    public static function getChild($model,$parseData = false,$order_by = [],$pid = 0,$pname = 'parent_id',$max_level = 0,$level = 1)
+    {
+        $list = clone $model;
+        $list = $list->where([$pname => $pid]);
+        if(!empty($order_by))
+        {
+            foreach($order_by as $orderby)
+            {
+                $list = $list->orderBy($orderby[0],$orderby[1]);
+            }
+        }
+        $list = $list->get()->toArray();
+        foreach ($list as $key => $val) {
+            if($parseData)
+            {
+                $list[$key] = $parseData($val);
+            }
+            if($max_level == 0 || $max_level > $level)
+            {
+                $children = self::getChild($model,$parseData,$order_by,$val['id'], $pname,$max_level,$level+1);
+                if (!empty($children)) {
+                    $list[$key]['children'] = $children;
+                }
+            }
+        }
+        return $list;
+    }
 }

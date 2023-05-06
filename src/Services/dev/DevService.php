@@ -286,6 +286,9 @@ class DevService
         if($data['leixing'] == 'category')
         {
             $tpl_name = 'model2';
+        }elseif($data['leixing'] == 'auth')
+        {
+            $tpl_name = 'modelAuth';
         }
         $content = file_get_contents(implode('/',[$this->tpl_path,$tpl_name.'.txt']));
 
@@ -732,6 +735,22 @@ class DevService
                 'selectable'=>$item['type']?true:false,
             ];
         });
+        return $data;
+    }
+
+    public function getModelsFolderTree()
+    {
+        $model = (new Model())->whereIn('admin_type',['system',env('APP_NAME'),''])->where(['type'=>0]);
+        $hs = new HelperService;
+        $data = HelperService::getChild($model,function($item){
+            return [
+                'id'=>$item['id'],
+                'title'=>$item['title'],
+                'value'=>$item['id'],
+                'isLeaf'=>$item['type']?true:false,
+                //'selectable'=>$item['type']?true:false,
+            ];
+        },[['displayorder', 'desc'],['type', 'asc'],['id', 'asc']]);
         return $data;
     }
 

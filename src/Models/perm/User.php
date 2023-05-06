@@ -14,6 +14,24 @@ class User extends BaseAuth
      */
     protected $table = 'perm_user';
 
+    public function getParseColumns()
+    {
+        static $data = [];
+        if(empty($data))
+        {
+            $data = [
+			["name" => "roleid","type" => "select","default" => 0,"data" => (new Role())->get()->toArray(),'with'=>true],
+			[
+                "name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
+                    ["label" => "禁用","value" => 0],
+                    ["label" => "启用","value" => 1],
+                ],"table_menu" => true
+            ],
+		];
+        }
+        return $data;
+    }
+
     public function role()
     {
         return $this->hasOne(Role::class,'id','roleid');

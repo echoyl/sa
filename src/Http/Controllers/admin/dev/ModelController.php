@@ -20,7 +20,6 @@ class ModelController extends CrudController
         ];
 
         $this->parse_columns = [
-            //['name' => 'state', 'type' => 'state', 'default' => 'disable'],
             ['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
             ["name" => "admin_type", "type" => "select", "default" => env('APP_NAME'), "data" => [
                 ["label" => "项目", "value" => env('APP_NAME')],
@@ -50,28 +49,31 @@ class ModelController extends CrudController
         });
         $search['table_menu'] = [['value' => env('APP_NAME'), 'label' => '项目菜单'], ['value' => 'system', 'label' => '系统菜单']];
         //d($data);
-
+        $ds = new DevService;
+        $search['models'] = $ds->getModelsFolderTree();
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
     }
 
-    public function afterPost($id)
+    public function copyToFolder()
     {
-        // $data = $this->model->where(['id'=>$id])->first();
+        $id = request('id');
+        $toid = request('toid');
+        //当前模型
+        $data = $this->model->where(['id'=>$id])->first();
+        $to_folder = (new Model())->where(['id'=>$toid])->first();
+        if(!$data || !$to_folder || $to_folder['type'] != 0)
+        {
+            return $this->fail([1,'数据错误']);
+        }
 
-        // $ds = new DevService;
+        $data = $data->toArray();
+        unset($data['id']);
+        $data['parent_id'] = $to_folder['id'];
+        $data['title'] .= '-复制';
 
-        // $all = $ds->allData($this->model);
+        (new Model())->insert($data);
+        return $this->success('操作成功');
 
-        // if($data['type'] == 0)
-        // {
-        //     //文件夹类型 创建文件夹
-        //     $name = implode('/', array_reverse($ds->getPath($data,$all)));
-        //     $ds->createFolder($name,$this->path);
-        // }else
-        // {
-        //     //数据模型 需要创建数据库
-
-        // }
 
     }
 

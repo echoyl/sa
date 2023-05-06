@@ -6,7 +6,7 @@ use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 
 /**
- * Undocumented class
+ * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
  * @method mixed beforePost($data,$id = 0)  提交数据前的检测数据
  * @method mixed handleSearch() 数据列表中额外的搜索调价等
@@ -36,9 +36,7 @@ class CrudController extends ApiBaseController
      */
     public $search_config = [];
 
-    public $parse_columns = [
-        ['name' => 'state', 'type' => 'state', 'default' => 'enable'],
-    ];
+    public $parse_columns = [];
     public $withs = [];
 
     public function defaultSearch($m)
@@ -548,10 +546,6 @@ class CrudController extends ApiBaseController
             $data['table_menu'] = $table_menu;
         }
 
-        $data['states'] = $data['states']??[
-            'enable' => ['text' => '启用', 'status' => 'success'],
-            'disable' => ['text' => '禁用', 'status' => 'error'],
-        ];
         return $ret;
     }
 
@@ -622,7 +616,7 @@ class CrudController extends ApiBaseController
                         $val = '__unset';
                     }else
                     {
-                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false);
+                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,$from == 'list'?['p'=>'s']:[]);
                     }
                     break;
                 case 'cascader':

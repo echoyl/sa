@@ -21,7 +21,6 @@ class RelationController extends CrudController
         ];
 
         $this->parse_columns = [
-            //['name' => 'state', 'type' => 'state', 'default' => 'disable'],
             //['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
             //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
             

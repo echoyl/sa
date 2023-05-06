@@ -37,6 +37,15 @@ class MenuService
             ];
             if ($val['desc']) {
                 $item['data'] = json_decode($val['desc'], true);
+                if($val['open_type'])
+                {
+                    $item['data']['openType'] = $val['open_type'];
+                }
+                if($val['form_readonly'])
+                {
+                    $item['data']['formReadonly'] = true;
+                    $item['data']['readonly'] = true;
+                }
             }
             $ret[] = $item;
         }
@@ -47,7 +56,7 @@ class MenuService
     {
         static $data = [];
         if (empty($data)) {
-            $data = (new Menu())->where(['state' => 'enable'])->where([['path','!=','']])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+            $data = (new Menu())->where(['state' => 1])->where([['path','!=','']])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
         }
         return $data;
     }
@@ -85,7 +94,7 @@ class MenuService
     {
         static $data = [];
         if (empty($data)) {
-            $data = (new Menu())->where(['state' => 'enable'])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+            $data = (new Menu())->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
         }
         return $data;
     }

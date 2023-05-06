@@ -20,7 +20,6 @@ class MenuController extends CrudController
         ];
         $ds = new DevService;
         $this->parse_columns = [
-            ['name' => 'state', 'type' => 'state', 'default' => 'disable'],
             ['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
             ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
             ['name' => 'admin_model_id', 'type' => 'select', 'default' => 0,'with'=>true,'data'=>$ds->getModelsTree()],
@@ -28,6 +27,10 @@ class MenuController extends CrudController
                 ["label" => "项目", "value" => env('APP_NAME')],
                 ["label" => "系统", "value" => 'system'],
             ], "with" => true],
+            ["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
+                ["label" => "禁用","value" => 0],
+                ["label" => "启用","value" => 1],
+            ],"table_menu" => true],
         ];
 
         $this->can_be_null_columns = ['title'];
@@ -86,10 +89,11 @@ class MenuController extends CrudController
             }
             $formColumns = $json;
         }
-        $left_menu =false;
+        
         if(isset($data['table_config']))
         {
             //根据form配置生成json配置
+            $left_menu =false;
             $config = json_decode($data['table_config'],true);
             $json = [];
             $ds = new DevService;
@@ -138,7 +142,11 @@ class MenuController extends CrudController
             $other_config = json_decode($data['other_config'],true);
         }else
         {
-            $other_config = json_decode($item['other_config'],true);
+            if($id)
+            {
+                $other_config = json_decode($item['other_config'],true);
+            }
+            
         }
         if(isset($tableColumns) || isset($formColumns))
         {
@@ -148,12 +156,20 @@ class MenuController extends CrudController
                 'tableColumns'=>$desc['tableColumns']??[],
                 'formColumns'=>$desc['formColumns']??[],
             ];
+            if(isset($desc['leftMenu']))
+            {
+                $data['desc']['leftMenu'] = $desc['leftMenu'];
+            }
 
             if(isset($table_menu_key))
             {
                 $data['desc']['table_menu_key'] = $table_menu_key;
             }
-            $data['desc']['leftMenu'] = $left_menu;
+            if(isset($left_menu))
+            {
+                $data['desc']['leftMenu'] = $left_menu;
+            }
+            
             if(isset($tableColumns))
             {
                 $data['desc']['tableColumns'] = $tableColumns;

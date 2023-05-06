@@ -5,10 +5,17 @@
     "authors": [
         {
             "name": "echoyl",
-            "email": "yliang_1987@126.com"
+            "email": "inandan@126.com"
         }
     ],
-    "require": {},
+    "require": {
+        "php": "^8.0.2",
+        "guzzlehttp/guzzle": "^7.2",
+        "laravel/framework": "^9.19",
+        "laravel/sanctum": "^3.0",
+        "mews/captcha": "^3.2",
+        "league/glide-laravel": "^1.0"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {

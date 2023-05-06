@@ -267,10 +267,10 @@ class WechatService
     {
         if($account_id)
         {
-            $account = (new Account())->where(['id'=>$account_id,'state'=>'enable'])->first();
+            $account = (new Account())->where(['id'=>$account_id,'state'=>1])->first();
         }else
         {
-            $account = (new Account())->where(['state'=>'enable'])->orderBy('id','desc')->first();
+            $account = (new Account())->where(['state'=>1])->orderBy('id','desc')->first();
         }
         if(!$account)
         {
@@ -319,10 +319,10 @@ class WechatService
     {
         if($account_id)
         {
-            $account = (new MiniprogramAccount())->where(['id'=>$account_id,'state'=>'enable'])->first();
+            $account = (new MiniprogramAccount())->where(['id'=>$account_id,'state'=>1])->first();
         }else
         {
-            $account = (new MiniprogramAccount())->where(['state'=>'enable'])->orderBy('id','desc')->first();
+            $account = (new MiniprogramAccount())->where(['state'=>1])->orderBy('id','desc')->first();
         }
         if(!$account)
         {
@@ -434,7 +434,7 @@ class WechatService
             $has = $model->where(['openid'=>$user['openid'],'appid'=>$app->config->app_id])->first();
             if($has && !$has['subscribe'])
             {
-                $model->where(['openid'=>$user['openid']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+                $model->where(['openid'=>$user['openid']])->update(['subscribe'=>1,'subscribe_time'=>now()]);
             }
             return true;
         }
@@ -450,7 +450,7 @@ class WechatService
             //关注事件
             if($flag)
             {
-                $model->where(['id'=>$has_user['id']])->update(['subscribe'=>1,'subscribe_time'=>time()]);
+                $model->where(['id'=>$has_user['id']])->update(['subscribe'=>1,'subscribe_time'=>now()]);
             }else
             {
                 //取消关注
@@ -542,10 +542,13 @@ class WechatService
                 'country'=>$original['country'],
                 'unionid'=>$original['unionid']??'',
                 'subscribe'=>$original['subscribe']??0,
-                'subscribe_time'=>$original['subscribe_time']??0,
                 'created_at'=>date("Y-m-d H:i:s"),
                 'appid'=>$app_id
             ];
+            if(isset($original['subscribe_time']))
+            {
+                $data['subscribe_time'] = date("Y-m-d H:i:s",$original['subscribe_time']);
+            }
             if($original['nickname'])
             {
                 $data['nickname'] = $original['nickname'];

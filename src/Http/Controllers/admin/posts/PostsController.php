@@ -38,7 +38,7 @@ class PostsController extends CrudController
             ['name' => 'titlepic', 'type' => 'image', 'default' => ''],
             ['name' => 'pics', 'type' => 'image', 'default' => ''],
             ['name' => 'category_id', 'type' => 'selects', 'default' => [$this->cid], 'class' => Category::class],
-            ['name' => 'state', 'type' => 'state', 'default' => 'enable'],
+            ['name' => 'state', 'default' => 1],
             ['name' => 'attachment', 'type' => 'image', 'default' => ''],
         ];
 

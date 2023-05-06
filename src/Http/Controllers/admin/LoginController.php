@@ -34,7 +34,7 @@ class LoginController extends Controller
             $token = AdminService::login($user);
             $as = new MenuService;
             $avatar = HelperService::uploadParse($user['avatar'], false);
-            $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
+            $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '';
             $info = [
                 'userinfo'=>[
                     'id'=>$user['id'],
@@ -48,10 +48,12 @@ class LoginController extends Controller
                 'access_token'=>$token,
             ];
             AdminService::log($request,'登录',['id'=>$user['id']]);
+            //更新最后登录时间
+            User::where(['id'=>$user['id']])->update(['latest_login_at'=>now()]);
             return ['code'=>0,'msg'=>'登录成功，页面跳转中...','data'=>$info,'status'=>0];
         }else
         {
-            return ['code'=>1,'msg'=>'登录失败','status'=>1];
+            return ['code'=>1,'msg'=>'账号或密码错误，请重新输入','status'=>1];
         }
         
         

@@ -1,99 +1,25 @@
 <?php
 namespace Echoyl\Sa\Http\Controllers\admin\wechat\miniprogram;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\wechat\miniprogram\Account;
 use Echoyl\Sa\Models\wechat\miniprogram\User;
 
 class UserController extends CrudController
 {
-	//var $with_column = ['category'];
+	var $with_column = ["app"];
+
+	var $search_config = [
+		["name" => "appid","columns" => ["appid"],"where_type" => "="],
+		["name" => "created_at","columns" => ["last_used_at"],"where_type" => "whereBetween"],
+	];
 
     public function __construct()
 	{
 		$this->model = new User();
 
-		$this->withs = [
-            ['name' => 'account', 'data' => (new Account())->select(['id as value','appname as label'])->get()],
-        ];
+		$this->parse_columns = [];
+
+	}
+	//customer code start
 	
-		$this->with_column = ['account'];
-
-	}
-
-	public function postData(&$item)
-	{
-
-		return;
-	}
-
-	/**
-	 * 编辑数据时 检测数据合法性
-	 *
-	 * @param [type] $item
-	 * @return void
-	 */
-	public function checkPost($item)
-	{
-		if(false)
-		{
-			return ['code'=>1,'msg'=>'信息错误，请重试'];
-		}
-        return;
-	}
-
-	/**
-	 * 提交数据时检测数据合法性
-	 *
-	 * @param [type] $data
-	 * @param [type] $id
-	 * @return void
-	 */
-	public function beforePost($data,$id = 0)
-	{
-		if(false)
-		{
-			return ['code'=>1,'msg'=>'数据错误，请重试'];
-		}
-        return;
-	}
-
-	public function handleSearch()
-	{
-		$m = $this->model;
-
-		$search = [];
-
-		$nickname = request('nickname','');
-		if($nickname)
-		{
-			$m = $m->where([['nickname','like','%'.urldecode($nickname).'%']]);
-
-		}
-		
-		$startTime = request('lastStartTime','');
-		$endTime = request('lastEndTime','');
-
-		if($startTime)
-		{
-			$m = $m->where([['last_used_at','>=',$startTime]]);
-		}
-		if($endTime)
-		{
-			$m = $m->where([['last_used_at','<=',date("Y-m-d H:i:s",strtotime($endTime)+3600*24-1)]]);
-		}
-
-		$account_id = request('account_id','');
-		if($account_id)
-		{
-			$account = (new Account())->where(['id'=>$account_id])->first();
-			if($account)
-			{
-				$m = $m->where(['appid'=>$account['appid']]);
-			}
-		}
-
-		return [$m,$search];
-
-	}
-
+	//customer code end
 }

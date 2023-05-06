@@ -1,5 +1,10 @@
 <?php
 use Illuminate\Support\Facades\Route;
+Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers','prefix' => env('APP_PREFIX', '')], function () {
+
+    Route::get('img/storage/{path}', 'ImageController@show')->where('path', '.*');
+});
+
 Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('APP_PREFIX', '') . env('APP_ADMIN_PREFIX','')], function () {
 
     //默认暴露这些公用路由
@@ -91,6 +96,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     Route::post('model/createModelSchema', 'ModelController@createModelSchema');
                     Route::post('model/createModelFile', 'ModelController@createModelFile');
                     Route::post('model/createControllerFile', 'ModelController@createControllerFile');
+                    Route::post('model/copyToFolder', 'ModelController@copyToFolder');
                     Route::resource('model', 'ModelController');
                     Route::resource('relation', 'RelationController');
                 });

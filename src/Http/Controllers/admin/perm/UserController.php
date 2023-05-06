@@ -17,9 +17,6 @@ class UserController extends CrudController
 	//var $json_columns = ['perms2'];
 	var $with_count = ['logs'];
 	var $can_be_null_columns = ['desc'];
-	var $withs = [
-        ['name'=>'role','class'=>Role::class,'cid'=>0]
-    ];
     public function __construct(User $model)
 	{
 		$this->model = $model;
@@ -64,7 +61,7 @@ class UserController extends CrudController
 	{
 		$ps = new PermService();
 
-		$roles = PermRole::get();
+		$roles = Role::get();
 		$role_perms = [];
 		foreach($roles as $val)
 		{
@@ -75,17 +72,30 @@ class UserController extends CrudController
 		$item['perms'] = $as->perms();
 		//$item['perms'] = $ps->parsePerms();
 
-		$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
+		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
 		$item['role_perms'] = $role_perms;
 		$item['password'] = '';
 	}
 
-	public function beforePost(&$data)
+	public function beforePost(&$data,$id)
 	{
 		// if(isset($data['perms2']) && $data['perms2'])
 		// {
 		// 	$data['perms2'] = implode(',',$data['perms2']);
 		// }
+		if(isset($data['username']))
+		{
+			$has = $this->model->where(['username'=>$data['username']]);
+			if($id)
+			{
+				$has = $has->where([['id','!=',$id]]);
+			}
+			$has = $has->first();
+			if($has)
+			{
+				return $this->fail([1,'用户名已存在']);
+			}
+		}
 		return;
 	}
 	public function afterPost($id)

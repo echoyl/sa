@@ -10,6 +10,9 @@ class LogController extends CrudController
     //
 	var $model;
 	var $with_column = [];
+	var $search_config = [
+		["name" => "created_at","columns" => ["created_at"],"where_type" => "whereBetween"]
+	];
     public function __construct(Log $model)
 	{
 		$this->model = $model;
@@ -18,6 +21,11 @@ class LogController extends CrudController
 				$q->select(['id','username']);
 			}
 		];
+	}
+
+	public function beforePost($data, $id = 0)
+	{
+		return $this->fail([1,'操作日记不能更新']);
 	}
 
 
@@ -42,5 +50,9 @@ class LogController extends CrudController
 		return [$m,$search];
 	}
 
+	public function beforeDestroy($m)
+	{
+		return $m->where([['id','=',0]]);
+	}
     
 }

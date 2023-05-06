@@ -32,10 +32,10 @@ class IndexController extends Controller
 
             $base = request('base');
 
-            $p1 = trim($base['password']??'');
-            $p2 = trim($base['password2']??'');
+            $old_password = trim($base['old_password']??'');
+            $new_password = trim($base['new_password']??'');
 
-            if ($p2 && strlen($p2) < 6) {
+            if ($new_password && strlen($new_password) < 6) {
                 return ['code' => 1, 'msg' => '密码长度至少为6位'];
             }
 
@@ -50,9 +50,9 @@ class IndexController extends Controller
                 'avatar' => HelperService::uploadParse($base['avatar']??''),
             ];
 
-            if ($p2) {
-                if (AdminService::pwd($p1) == $uinfo['password']) {
-                    $update['password'] = AdminService::pwd($p2);
+            if ($new_password && $old_password) {
+                if (AdminService::pwd($old_password) == $uinfo['password']) {
+                    $update['password'] = AdminService::pwd($new_password);
                     $pwd = true;
                 } else {
                     $msg = '，密码未修改成功';
@@ -124,7 +124,7 @@ class IndexController extends Controller
     {
         $user = AdminService::user();
         $avatar = HelperService::uploadParse($user['avatar'], false);
-        $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '/antadmin/logo.png';
+        $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '';
 		$as = new MenuService;
         $rolename = '超级管理员';
         if($user['roleid'])

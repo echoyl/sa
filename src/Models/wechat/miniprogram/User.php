@@ -13,14 +13,39 @@ class User extends BaseAuth
      */
     protected $table = 'wechat_miniprogram_user';
 
-    public function account()
+    public function getParseColumns()
     {
-        return $this->hasOne(Account::class,'id','account_id')->select(['id','appname'])->withDefault(['appname'=>'-','id'=>0]);
+        static $data = [];
+        if(empty($data))
+        {
+            $data = [
+			["name" => "app","type" => "model","class" => Account::class],
+			["name" => "gender","type" => "select","default" => 0,"data" => [
+			["label" => "未知","value" => 0],
+			["label" => "男","value" => 1],
+			["label" => "女","value" => 2],
+		],"with" => true],
+			["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
+			["label" => "禁用","value" => 0],
+			["label" => "启用","value" => 1],
+		],"table_menu" => true],
+			["name" => "appid","type" => "select","default" => 0,"data" => (new Account())->get()->toArray(),"with" => true],
+		];
+        }
+        return $data;
     }
+
+    //relationship start
     
+    public function app()
+    {
+        return $this->hasOne(Account::class,'appid','appid');
+    }
+
     public function offiaccountUser()
     {
         return $this->hasOne(OffiaccountUser::class,'unionid','unionid');
     }
-
+    
+    //relationship end
 }

@@ -14,17 +14,23 @@ class TableColumn
     var $form_type;
     var $models;
     var $key;
+    var $model;
 
     public function __construct($config,$model,$menus,$models)
     {
         $this->config = $config;
         $this->menus = $menus;
         $this->models = $models;
+        $this->model = $model;
 
         $key = $dataIndex = $config['key'];
 
         if(is_array($key))
         {
+            if(count($key) == 1)
+            {
+                $dataIndex = $key[0];
+            }
             $key = $key[0];
         }
 
@@ -78,6 +84,18 @@ class TableColumn
         //     $key = array_merge($key,explode('.',$extra));
         //     $d['dataIndex'] = $key;
         // }
+        //如果dataIndex的数量大于1 还是要检测下key的驼峰转换
+        if(is_array($dataIndex) && count($dataIndex) > 1)
+        {
+            foreach($dataIndex as $i=>$index)
+            {
+                if($i + 1 < count($dataIndex))
+                {
+                    $dataIndex[$i] = Utils::uncamelize($index);
+                }
+            }
+            $d['dataIndex'] = $dataIndex;
+        }
 
         if(empty($can_search))
         {
@@ -114,7 +132,9 @@ class TableColumn
     {
         $d = $this->data;
         [$link_name] = explode('_',$this->key);
-        $with_relation = Utils::arrGet($this->schema['relations'],'name',Utils::uncamelize($link_name));
+        //d($this->model['relations']);
+        $with_relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($link_name));
+        //d($with_relation);
         if($with_relation)
         {
             $menu = Utils::arrGet($this->menus,'admin_model_id',$with_relation['foreign_model_id']);
@@ -123,8 +143,7 @@ class TableColumn
                 $path = Utils::getPath($menu,$this->menus,'path');
                 $d['fieldProps'] = [
                     'path'=>'/'.implode('/',array_reverse($path)),
-                    'foreign_key'=>$with_relation['foreign_key'],
-                    'local_key'=>$with_relation['local_key'],
+                    'foreign_key'=>$d['dataIndex'][count($d['dataIndex']) - 1],
                 ];
             }
         }
