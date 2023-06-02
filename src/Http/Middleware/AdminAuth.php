@@ -23,7 +23,7 @@ class AdminAuth
             return response()->json(['code'=>$code,'msg'=>'该账号已禁用']);
         }
         //添加操作日志
-        AdminService::log($request);
+        AdminService::log();
         return $next($request);
     }
 }

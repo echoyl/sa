@@ -15,6 +15,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
 
             Route::any('currentUser', 'IndexController@currentUser');
             Route::any('notice', 'IndexController@notice');
+            Route::any('clearNotice', 'IndexController@clearNotice');
             Route::any('helper/pca', 'HelperController@pca');
 
             Route::group(['namespace' => 'posts'], function () {
@@ -27,7 +28,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 Route::get('', 'IndexController@index');
                 //Route::get('index/getmenus', 'IndexController@getMenus'); //后台获取左侧菜单路由
                 Route::any('index/user', 'IndexController@user'); //用户修改信息
-                Route::any('index/logout', 'IndexController@logout'); //退出登录
+                
 
                 
 
@@ -102,7 +103,8 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 });
                 Route::resource('tool', 'ToolController');
                 
-            });    
+            });
+            Route::any('index/logout', 'IndexController@logout'); //退出登录
         });
         Route::any('login', 'LoginController@index');
         Route::get('captcha', 'LoginController@captcha');

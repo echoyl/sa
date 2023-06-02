@@ -31,6 +31,10 @@ class MenuController extends CrudController
                 ["label" => "禁用","value" => 0],
                 ["label" => "启用","value" => 1],
             ],"table_menu" => true],
+            ['name'=>'desc','type'=>'json','default'=>''],
+            ['name'=>'perms','type'=>'json','default'=>''],
+            ['name'=>'icon','type'=>'select','default'=>''],
+            ['name'=>'status','type'=>'switch','default'=>1]
         ];
 
         $this->can_be_null_columns = ['title'];
@@ -43,7 +47,7 @@ class MenuController extends CrudController
         //修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
         $this->parseWiths($search);
-        $search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
+        //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
         $search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
 
         $table_menu_id = request('table_menu_id','all');
@@ -64,6 +68,12 @@ class MenuController extends CrudController
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
     }
+
+    // public function postData(&$item)
+    // {
+    //     sleep(5);
+    //     return;
+    // }
 
     public function beforePost(&$data,$id,$item)
     {
@@ -94,13 +104,21 @@ class MenuController extends CrudController
         {
             //根据form配置生成json配置
             $left_menu =false;
+            $tool_bar_button = [];
             $config = json_decode($data['table_config'],true);
             $json = [];
             $ds = new DevService;
             foreach($config as $val)
             {
                 $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
-                $json[] = $columns;
+                if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
+                {
+                    $tool_bar_button[] = $columns;
+                }else
+                {
+                    $json[] = $columns;
+                }
+                
                 if(isset($val['table_menu']) && !empty($val['table_menu']))
                 {
                     //如果该字段设置了 table_menu
@@ -155,6 +173,7 @@ class MenuController extends CrudController
             $data['desc'] = [
                 'tableColumns'=>$desc['tableColumns']??[],
                 'formColumns'=>$desc['formColumns']??[],
+                'toolBarButton'=>$desc['toolBarButton']??[],
             ];
             if(isset($desc['leftMenu']))
             {
@@ -168,6 +187,11 @@ class MenuController extends CrudController
             if(isset($left_menu))
             {
                 $data['desc']['leftMenu'] = $left_menu;
+            }
+
+            if(isset($tool_bar_button))
+            {
+                $data['desc']['toolBarButton'] = $tool_bar_button;
             }
             
             if(isset($tableColumns))

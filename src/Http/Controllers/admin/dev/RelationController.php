@@ -10,6 +10,7 @@ class RelationController extends CrudController
 {
     public $model;
     public $model_id = 0;
+    public $displayorder = [['id','asc']];
     public function __construct(Relation $model)
     {
         $this->model = $model;
@@ -60,6 +61,17 @@ class RelationController extends CrudController
     public function postData(&$data)
     {
         //$data['columns'] = $this->getModelColumns($this->model_id);
+        if(!request()->isMethod('post'))
+        {
+            $ds = new DevService;
+            $data = array_merge($data,[
+                'columns'=>$this->getModelColumns($this->model_id),
+                'models'=>$ds->getModelsTree(),
+                'allModels'=>$this->allModels(),
+            ]);
+        }
+        
+        return;
     }
 
     public function getModelColumns($id)

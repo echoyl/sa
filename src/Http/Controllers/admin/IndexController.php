@@ -2,20 +2,17 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
-use App\Services\HelperService;
-use Echoyl\Sa\Models\perm\Role;
-use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Services\HelperService;
+use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\MenuService;
-use Echoyl\Sa\Services\PermService;
-use Illuminate\Http\Request;
+use Echoyl\Sa\Services\NoticeService;
 
-class IndexController extends Controller
+class IndexController extends ApiBaseController
 {
     //
     public $menus = [];
-
+    
     public function index()
     {
 
@@ -27,7 +24,7 @@ class IndexController extends Controller
         if (request()->isMethod('post')) {
             $uinfo = AdminService::user();
             if ($uinfo['username'] == 'test') {
-                return ['code' => 1, 'msg' => '体验账号暂时不支持修改密码'];
+                return $this->fail([1,'体验账号暂时不支持修改密码']);
             }
 
             $base = request('base');
@@ -36,7 +33,7 @@ class IndexController extends Controller
             $new_password = trim($base['new_password']??'');
 
             if ($new_password && strlen($new_password) < 6) {
-                return ['code' => 1, 'msg' => '密码长度至少为6位'];
+                return $this->fail([1,'密码长度至少为6位']);
             }
 
             $update = [];
@@ -59,100 +56,49 @@ class IndexController extends Controller
                 }
 
             }
-
-            $user = new User();
-            $user->where('id', '=', $uinfo['id'])->update($update);
-            return ['code' => 0, 'msg' => '修改成功' . $msg,'data'=>['pwd' => $pwd]];
+            AdminService::updateUserInfo($uinfo['id'],$update);
+            return $this->success(['pwd' => $pwd],[0,'修改成功' . $msg]);
 
         }
         $uinfo = AdminService::user();
         $item['username'] = $uinfo['username'];
-        return ['code' => 0, 'msg' => '', 'data' => [
+        $ret = [
             'username' => $uinfo['username'],
             'mobile' => $uinfo['mobile'],
             'desc' => $uinfo['desc'],
             'realname' => $uinfo['realname'],
             'avatar' => HelperService::uploadParse($uinfo['avatar'], false),
-        ]];
+        ];
+
+        return $this->success($ret);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        AdminService::log($request, '退出登录');
+        AdminService::log('退出登录');
         AdminService::logout();
-        return ['code' => 0, 'msg' => '退出成功'];
-    }
-
-    public function getMenus()
-    {
-        //根据权限获取相应的 界面目录 之前写在 menu.js中 现在放到后端判断返回显示
-        $menus = $this->menus;
-
-        $uinfo = AdminService::user(1);
-        if ($uinfo['id'] != 1) {
-            //非超级管理员需要检测有哪些权限
-            $_menus = [];
-            $user_perms = explode(',', $uinfo['perms2']);
-            //echo '<pre>';
-            //var_dump($user_perms);exit;
-            $perm_obj = new PermService($uinfo['perms2']);
-            $all_perms = $perm_obj->allPerms();
-            $ups = [];
-            foreach ($user_perms as $val) {
-                $up = explode(".", $val);
-                $ups[$up[0]][] = $up;
-            }
-            //var_dump($ups);exit;
-            foreach ($menus as $menu) {
-                if (!isset($all_perms[$menu['name']])) {
-                    //权限中没有此类表示不需要权限 直接放出
-                    $_menus[] = $menu;
-                } else {
-                    if (isset($ups[$menu['name']])) {
-                        //存在此类 则放出来
-                        $_menus[] = $menu;
-                    }
-                }
-
-            }
-            $menus = $_menus;
-        }
-        return ['code' => 0, 'msg' => '', 'data' => $menus];
+        return $this->success('退出成功');
+        //return ['code' => 0, 'msg' => '退出成功'];
     }
 
     public function currentUser()
     {
         $user = AdminService::user();
-        $avatar = HelperService::uploadParse($user['avatar'], false);
-        $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '';
-		$as = new MenuService;
-        $rolename = '超级管理员';
-        if($user['roleid'])
-        {
-            $role = (new Role())->where(['id'=>$user['roleid']])->first();
-            if($role)
-            {
-                $rolename = $role['title'];
-            }
-        }
-        $info = [
-            'id' => $user['id'],
-            'username' => $user['username'],
-            'realname'=>$user['realname'],
-            'roleid' => $user['roleid'],
-            'rolename'=>$rolename,
-            'name' => $user['username'],
-            'avatar' => $avatar,
-            'permission' => $user['perms2'],
-			'menuData'=>$as->get(),
-        ];
-
-        return ['code' => 0, 'msg' => '', 'data' => $info];
-
+        
+        return $this->success(AdminService::parseUser($user));
     }
     public function notice()
     {
-        return ['code' => 0, 'success' => true, 'msg' => '', 'data' => []];
+        $data = NoticeService::get();
+        return $this->success($data);
+    }
+
+    public function clearNotice()
+    {
+        $id = request('id');
+        $type = request('type');
+        NoticeService::clear($id,$type);
+        return $this->success('操作成功');
     }
 
 }

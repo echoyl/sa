@@ -1,22 +1,27 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 
+use Illuminate\Support\Arr;
+
 class FormItem
 {
     var $data = false;
     var $config;
     var $schema;
     var $relation;
+    var $model;
     var $readonly = false;
     var $menus;
     var $form_type;
     var $models;
+    var $props;//config中的props; 属性集中到这个字段中
 
     public function __construct($config,$model,$menus,$models)
     {
         $this->config = $config;
         $this->menus = $menus;
         $this->models = $models;
+        $this->model = $model;
 
         $key = $config['key'];
 
@@ -40,13 +45,22 @@ class FormItem
         {
             return;
         }
-
+        $props = $config['props']??'';
+        $this->props = $props;
+        $p_title = $props['title']??'';
         $title = $config['title']??'';
+        $title = $p_title?:$title;
+
+        $fieldProps = $props['fieldProps']??'';
+        $formItemProps = $props['formItemProps']??'';
+
+        //$title = $config['title']??'';
         $readonly = $config['readonly']??'';
+        $hidden = $config['hidden']??'';//是否隐藏
         $set_label = $config['label']??'';
         $required = $config['required']??'';
         $placeholder = $config['placeholder']??'';
-        $extra = $config['name']??'';
+        //$extra = $config['name']??'';
 
         $d = ['dataIndex'=>$key,'title'=>$title?:($schema?$schema['title']:$relation['title'])];
 
@@ -79,17 +93,24 @@ class FormItem
             $key = array_merge($key,explode('.',$set_label));
             $d['dataIndex'] = $key;
         }
-
+        $_formItemProps = [];
         if($required)
         {
-            $d['formItemProps'] = [
-                'rules'=>[
-                    [
-                        "required"=>true,
-                    ]
+            $_formItemProps['rules'] = [
+                [
+                    "required"=>true,
                 ]
-            ];
+                ];
         }
+        if($hidden)
+        {
+            $_formItemProps['hidden'] = true;
+        }
+        if(!empty($_formItemProps))
+        {
+            $d['formItemProps'] = $_formItemProps;
+        }
+        
         $this->data = $d;
 
         if($form_type && method_exists(self::class,$form_type))
@@ -108,17 +129,73 @@ class FormItem
             }
         }
 
-        if($extra && !is_string($extra))
+        if($fieldProps && !is_string($fieldProps))
         {
             if(isset($this->data['fieldProps']))
             {
-                $this->data['fieldProps'] = array_merge($this->data['fieldProps'],$extra);
+                
+                $this->data['fieldProps'] = array_merge($fieldProps,$this->data['fieldProps']);
             }else
             {
-                $this->data['fieldProps'] = $extra;
+                $this->data['fieldProps'] = $fieldProps;
             }
         }
 
+        if($formItemProps && !is_string($formItemProps))
+        {
+            if(isset($this->data['formItemProps']))
+            {
+                
+                $this->data['formItemProps'] = array_merge($formItemProps,$this->data['formItemProps']);
+            }else
+            {
+                $this->data['formItemProps'] = $formItemProps;
+            }
+        }
+
+        if(isset($props['tooltip']))
+        {
+            $this->data['tooltip'] = $props['tooltip'];
+        }
+
+        return;
+    }
+
+    /**
+     * 自定义列
+     * 将items 的值传入fieldProps
+     * 
+     * @return void
+     */
+    public function customerColumn()
+    {
+        $props = $this->props;
+        if(!$props || !isset($props['items']) || !$props['items'])return;
+        $items = $props['items'];
+
+        //检测是否有modalTable 有的话通过关联数据设置属性值
+        foreach($items as $key=>$item)
+        {
+            $action = Arr::get($item,'action');
+            if($action == 'modalTable')
+            {
+                $fieldProps = [];
+                $model = Arr::get($item,'modal.model');
+                $relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model));
+                if($relation['foreign_model']['menu'])
+                {
+                    $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                    $fieldProps['path'] = implode('/',$path);
+                    $fieldProps['foreign_key'] = $relation['foreign_key'];
+                    $fieldProps['local_key'] = $relation['local_key'];
+                    $fieldProps['name'] = $relation['title'];
+                    $item['fieldProps'] = $fieldProps;
+                }
+                $items[$key] = $item;
+            }
+        }
+        $this->data['readonly'] = true;
+        $this->data['fieldProps'] = ['items'=>$items];
         return;
     }
 
@@ -139,11 +216,42 @@ class FormItem
             $fieldProps['path'] = implode('/',$path);
             $fieldProps['foreign_key'] = $relation['foreign_key'];
             $fieldProps['local_key'] = $relation['local_key'];
+            $fieldProps['name'] = $d['title'];
+            unset($d['title']);
         }
         
         if(!empty($fieldProps))
         {
             $d['fieldProps'] = $fieldProps;
+        }
+        $this->data = $d;
+        return;
+    }
+
+    public function modalSelect()
+    {
+        $d = $this->data;
+        $relation = $this->relation;
+        if($this->readonly)
+        {
+            //unset($d['valueType']);
+            //$d['dataIndex'] = [$relation['name'],$label];
+        }else
+        {
+            $d['fieldProps'] = [];
+            if($relation && $relation['foreign_model'])
+            {
+                //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
+                if($relation['foreign_model']['menu'])
+                {
+                    $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                    $d['fieldProps'] = [
+                        'url'=>implode('/',$path),
+                        'name'=>$relation['name']
+                    ];
+                }
+                
+            }
         }
         $this->data = $d;
         return;
@@ -253,11 +361,13 @@ class FormItem
         //switch开关
         if($form_data)
         {
+            $default = $this->schema['default']??1;
+            //d($default,$this->schema);
             [$label,$value] = explode(',',$form_data);
             $this->data['fieldProps'] = [
                 "checkedChildren"=>$value,
                 "unCheckedChildren"=>$label,
-                "defaultChecked"=>true
+                "defaultChecked"=>$default?true:false
             ];
             
         }
@@ -288,5 +398,10 @@ class FormItem
                 'level'=>intval($form_data)
             ];
         }
+    }
+
+    public function datetime()
+    {
+        
     }
 }

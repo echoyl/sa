@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Support\Arr;
 
 class TableColumn
 {
@@ -15,6 +16,7 @@ class TableColumn
     var $models;
     var $key;
     var $model;
+    var $props;//config中的props; 属性集中到这个字段中
 
     public function __construct($config,$model,$menus,$models)
     {
@@ -23,7 +25,7 @@ class TableColumn
         $this->models = $models;
         $this->model = $model;
 
-        $key = $dataIndex = $config['key'];
+        $key = $dataIndex = $config['key']??'';
 
         if(is_array($key))
         {
@@ -49,16 +51,42 @@ class TableColumn
         $relation = Utils::arrGet($model['relations'],$schema?'local_key':'name',Utils::uncamelize($key));
         $this->relation = $relation;
         
-
+        //关联数据name 及 额外设置 //后面将extra相当于fieldProps 转移至props.fieldProps中 兼容之前的设置
+        $props = $config['props']??'';
+        $this->props = $props;
+        $p_title = $props['title']??'';
         $title = $config['title']??'';
-        //关联数据name 及 额外设置
-        $extra = $config['name']??'';
+        $title = $p_title?:$title;
+        //$extra = $config['name']??'';
+        $fieldProps = $props['fieldProps']??'';
+        $formItemProps = $props['formItemProps']??'';
+
         //是否出现在搜索栏
         $can_search = $config['can_search']??'';
         //是否在列表中隐藏
         $hide_in_table = $config['hide_in_table']??'';
+        
+        //是否设定列宽
+        $width = $props['width']??'';
+        //$width = $config['width']??$p_width;
+        $relation_title = '';
+        if($relation && is_array($dataIndex))
+        {
+            $_relation_title = [$relation['title']];
+            $foreign_model_columns = json_decode($relation['foreign_model']['columns'],true);
+            $field = Utils::arrGet($foreign_model_columns,'name',$dataIndex[1]);
+            if($field && $field['title'])
+            {
+                $_relation_title[] = $field['title'];
+            }
+            $relation_title = implode(' - ',$_relation_title);
+        }
 
-        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation?$relation['title']:Utils::$title_arr[$key]??''))];
+        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation_title?:Utils::$title_arr[$key]??''))];
+        if($width)
+        {
+            $d['width'] = is_numeric($width)?intval($width):$width;
+        }
 
         $form_type = $config['type']??'';
         if($form_type)
@@ -114,15 +142,19 @@ class TableColumn
             $this->$form_type();
         }
 
-        if($extra && !is_string($extra))
+        if($fieldProps && !is_string($fieldProps))
         {
             if(isset($this->data['fieldProps']))
             {
-                $this->data['fieldProps'] = array_merge($this->data['fieldProps'],$extra);
+                $this->data['fieldProps'] = array_merge($this->data['fieldProps'],$fieldProps);
             }else
             {
-                $this->data['fieldProps'] = $extra;
+                $this->data['fieldProps'] = $fieldProps;
             }
+        }
+        if($formItemProps && !is_string($formItemProps))
+        {
+            $this->data['formItemProps'] = $formItemProps;
         }
 
         return;
@@ -141,9 +173,19 @@ class TableColumn
             if($menu)
             {
                 $path = Utils::getPath($menu,$this->menus,'path');
+                if(is_array($d['dataIndex']))
+                {
+                    $foreign_key = $d['dataIndex'][count($d['dataIndex']) - 1];
+                    $local_key = '';
+                }else
+                {
+                    $foreign_key = $with_relation['foreign_key'];
+                    $local_key = 'id';
+                }
                 $d['fieldProps'] = [
                     'path'=>'/'.implode('/',array_reverse($path)),
-                    'foreign_key'=>$d['dataIndex'][count($d['dataIndex']) - 1],
+                    'foreign_key'=>$foreign_key,
+                    'local_key'=>$local_key,
                 ];
             }
         }
@@ -151,17 +193,56 @@ class TableColumn
         return;
     }
 
-     public function expre()
-     {
-        // $extra = $this->config['name']??'';
-        // if($extra)
-        // {
-        //     $this->data['fieldProps'] = [
-        //         'exp'=>'{{'.$extra.'}}'
-        //     ];
-        // }
+    public function expre()
+    {
+    // $extra = $this->config['name']??'';
+    // if($extra)
+    // {
+    //     $this->data['fieldProps'] = [
+    //         'exp'=>'{{'.$extra.'}}'
+    //     ];
+    // }
         return;
-     }
+    }
+
+    /**
+     * 自定义列
+     * 将items 的值传入fieldProps
+     * 
+     * @return void
+     */
+    public function customerColumn()
+    {
+        $props = $this->props;
+        if(!$props || !isset($props['items']) || !$props['items'])return;
+        $items = $props['items'];
+
+        //检测是否有modalTable 有的话通过关联数据设置属性值
+        foreach($items as $key=>$item)
+        {
+            $action = Arr::get($item,'action');
+            if($action == 'modalTable')
+            {
+                $fieldProps = [];
+                $model = Arr::get($item,'modal.model');
+                $relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model));
+                if($relation['foreign_model']['menu'])
+                {
+                    $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                    $fieldProps['path'] = implode('/',$path);
+                    $fieldProps['foreign_key'] = $relation['foreign_key'];
+                    $fieldProps['local_key'] = $relation['local_key'];
+                    $fieldProps['name'] = $relation['title'];
+                    $item['fieldProps'] = $fieldProps;
+                }
+                $items[$key] = $item;
+            }
+        }
+        $this->data['readonly'] = true;
+        $this->data['fieldProps'] = ['items'=>$items];
+        return;
+    }
+
 
     public function select()
     {

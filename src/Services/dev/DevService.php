@@ -76,6 +76,13 @@ class DevService
                     $field_sql = "`{$name}`  int(11) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
                 }
             break;
+            case 'bigint':
+                if(!$default_value)
+                {
+                    $default_value = 0;
+                }
+                $field_sql = "`{$name}`  bigint NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
+            break;
             case 'vachar':
                 $field_sql = "`{$name}`  varchar(255) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
             break;
@@ -307,7 +314,7 @@ class DevService
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
             '/\$relationship\$/'=>implode("\r",$tpl),
-            '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
+            '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,4),
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -606,7 +613,7 @@ class DevService
                     //d($valueEnum);
                     
                     
-                    $d['default'] = 1;
+                    $d['default'] = $default_value?1:0;
                     if($table_menu)
                     {
                         $d['with'] = true;
@@ -824,6 +831,7 @@ class DevService
     {
         $self = new self();
         if(!$menus)return;
+        //d($menus);
         foreach($menus as $menu)
         {
             //Log::channel('daily')->info('menus name:',['name'=>$menu['path'],'title'=>$menu['title']]);

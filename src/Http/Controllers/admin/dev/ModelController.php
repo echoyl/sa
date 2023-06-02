@@ -25,6 +25,7 @@ class ModelController extends CrudController
                 ["label" => "项目", "value" => env('APP_NAME')],
                 ["label" => "系统", "value" => 'system'],
             ], "with" => true],
+            ['name'=>'columns','type'=>'json','default'=>'']
             //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
         ];
     }
@@ -36,7 +37,7 @@ class ModelController extends CrudController
         $this->parseWiths($search);
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
 
-        $table_menu_id = request('table_menu_id', 'all');
+        $table_menu_id = request('admin_type', 'all');
         if ($table_menu_id == 'all') {
             $types = ['system', env('APP_NAME'), ''];
         } else {
@@ -47,7 +48,7 @@ class ModelController extends CrudController
             $this->parseData($item, 'decode', 'list');
             return $item;
         });
-        $search['table_menu'] = [['value' => env('APP_NAME'), 'label' => '项目菜单'], ['value' => 'system', 'label' => '系统菜单']];
+        $search['table_menu'] = ['admin_type'=>[['value' => env('APP_NAME'), 'label' => '项目菜单'], ['value' => 'system', 'label' => '系统菜单']]];
         //d($data);
         $ds = new DevService;
         $search['models'] = $ds->getModelsFolderTree();
@@ -70,6 +71,7 @@ class ModelController extends CrudController
         unset($data['id']);
         $data['parent_id'] = $to_folder['id'];
         $data['title'] .= '-复制';
+        $data['admin_type'] = $to_folder['admin_type'];
 
         (new Model())->insert($data);
         return $this->success('操作成功');

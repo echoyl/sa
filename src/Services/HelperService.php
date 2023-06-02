@@ -400,4 +400,17 @@ class HelperService
         }
         return $list;
     }
+
+    public static function arrayResetKey($arr = [],$key = 'id')
+    {
+        $data = [];
+        foreach($arr as $val)
+        {
+            if(isset($val[$key]))
+            {
+                $data[$val[$key]] = $val;
+            }
+        }
+        return $data;
+    }
 }

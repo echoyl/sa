@@ -8,7 +8,7 @@ use Echoyl\Sa\Services\HelperService;
 /**
  * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
- * @method mixed beforePost($data,$id = 0)  提交数据前的检测数据
+ * @method mixed beforePost(&$data,$id = 0)  提交数据前的检测数据
  * @method mixed handleSearch() 数据列表中额外的搜索调价等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
@@ -30,6 +30,8 @@ class CrudController extends ApiBaseController
     public $model_id = 0;//系统所选的模型id值
 
     var $service;
+    var $action_type = '';//操作类型 add edit 
+    var $is_post = false;
 
     /**
      * 搜索项配置
@@ -43,8 +45,13 @@ class CrudController extends ApiBaseController
     {
         $title = request('title', '');
         if ($title) {
-            $m = $m->where([['title', 'like', '%' . urldecode($title) . '%']]);
-
+            $has_customer_search = collect($this->search_config)->first(function($item){
+                return $item['name'] == 'title';
+            });
+            if(!$has_customer_search)
+            {
+                $m = $m->where([['title', 'like', '%' . urldecode($title) . '%']]);
+            }
         }
 
         $model_parse_columns = $this->getParseColumns();
@@ -329,7 +336,12 @@ class CrudController extends ApiBaseController
 
     public function post()
     {
+        if (request()->isMethod('post'))
+        {
+            $this->is_post = true;
+        }
         //sleep(10);
+
         $id = request('id', 0);
         $id = $id ?: request('base.id', 0);
         $m = $this->model;
@@ -341,6 +353,7 @@ class CrudController extends ApiBaseController
             $item = $m->where(['id' => $id])->first();
 
             if (!empty($item)) {
+                $this->action_type = 'edit';
                 $item = $item->toArray();
                 if (method_exists($this, 'checkPost')) {
                     $ret = $this->checkPost($item, $id); //编辑数据检测
@@ -349,11 +362,13 @@ class CrudController extends ApiBaseController
                     }
                 }
             } else {
+                $this->action_type = 'add';
                 $item = $this->default_post; //数据的默认值
                 $item['created_at'] = now()->toDateTimeString();
             }
         }else
         {
+            $this->action_type = 'edit';
             if (method_exists($this, 'beforeMorePost')) {
                 $ret = $this->beforeMorePost($id); //批量操作检测所有数据id值
                 if ($ret) {
@@ -363,7 +378,7 @@ class CrudController extends ApiBaseController
         }
         $type = request('actype');
 
-        if (request()->isMethod('post')) {
+        if ($this->is_post) {
             switch ($type) {
                 case 'status':
                     $name = request('field', 'status');
@@ -872,15 +887,30 @@ class CrudController extends ApiBaseController
                 case 'json':
                     if($encode)
                     {
-                        if($val && !is_string($val))
+                        if($val)
                         {  
-                            $val = json_encode($val);
+                            if(!is_string($val))
+                            {
+                                $val = json_encode($val);
+                            }else
+                            {
+                                if($val == '{}')
+                                {
+                                    $val = '';
+                                }
+                            }
                         }
                     }else
                     {
                         if($val)
                         {  
-                            $val = json_decode($val,true);
+                            if($val == '{}')
+                            {
+                                $val = '__unset';
+                            }else
+                            {
+                                $val = json_decode($val,true);
+                            }
                         }
                     }
                     break;

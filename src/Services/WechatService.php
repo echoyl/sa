@@ -226,7 +226,7 @@ class WechatService
         
         if(is_array($result) && isset($result['errcode']))
         {
-            Log::channel('wechatOffiaccount')->info('createWxaQrcode:',$result);
+            Log::channel('daily')->info('wechat createWxaQrcode:',$result);
             return [1,$result['errmsg']];
         }
 
@@ -284,12 +284,12 @@ class WechatService
             'app_id' => $account['appid'],
             'secret' => $account['secret'],
             'token' => $account['token'],
-            'aes_key' => $account['encodingaeskey'],
+            //'aes_key' => $account['encodingaeskey'],
             'oauth' => [
                 'scopes'   => $params['scopes']??['snsapi_userinfo'],
                 'callback' => '/'.env('APP_PREFIX','').'wx/auth',
             ],
-            'response_type' => 'array',
+            //'response_type' => 'array',
         ];
         $app = new OfficialAccountApplication($config);
         return [0,$app];
@@ -441,10 +441,21 @@ class WechatService
         return;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param [type] $openid
+     * @param boolean $flag
+     * @param boolean $user
+     * @param \EasyWeChat\OfficialAccount\Application $app
+     * @return void
+     */
     public static function subscribe($openid,$flag = true,$user = false,$app)
     {
         $model = new User();
-        $has_user = $model->where(['openid'=>$openid,'appid'=>$app->config->app_id])->first();
+        $config = $app->getConfig();
+        $app_id = $config->get('app_id');
+        $has_user = $model->where(['openid'=>$openid,'appid'=>$app_id])->first();
         if($has_user)
         {
             //关注事件
@@ -457,7 +468,7 @@ class WechatService
                 $model->where(['id'=>$has_user['id']])->update(['subscribe'=>0]);
             }
         }else{
-            self::offiaccountUser($user,$app->config->app_id);
+            self::offiaccountUser($user,$app_id);
         }
         return;
         
@@ -489,10 +500,11 @@ class WechatService
         if($has)
         {
             //更新 - 更新的话只更新最后使用时间了
-            $update = [
-                'last_used_at'=>now(),
-            ];
-            $model->where(['id'=>$has['id']])->update($update);
+            // $update = [
+            //     'last_used_at'=>now(),
+            // ];
+            unset($data['nickname']);
+            $model->where(['id'=>$has['id']])->update($data);
             $id = $has['id'];
         }else
         {
@@ -529,6 +541,24 @@ class WechatService
         return;
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param [type] $openid
+     * @param \EasyWeChat\OfficialAccount\Application $app
+     * @return void
+     */
+    public static function getOffiaccountUser($openid,$app)
+    {
+        $api = $app->getClient();
+
+        $response = $api->get('/cgi-bin/user/info', [
+            'openid'=>$openid
+        ]);
+
+        return $response->toArray();
+    }
+
     public static function offiaccountUser($original,$app_id = '')
     {
         $model = new User();
@@ -547,12 +577,9 @@ class WechatService
             ];
             if(isset($original['subscribe_time']))
             {
-                $data['subscribe_time'] = date("Y-m-d H:i:s",$original['subscribe_time']);
+                $data['subscribe_at'] = date("Y-m-d H:i:s",$original['subscribe_time']);
             }
-            if($original['nickname'])
-            {
-                $data['nickname'] = $original['nickname'];
-            }
+            $data['nickname'] = $original['nickname']?:$original['openid'];
             if($original['headimgurl'])
             {
                 $data['avatar'] = $original['headimgurl'];
@@ -583,8 +610,20 @@ class WechatService
      */
     public static function sendMessage($data,$app)
     {
-        $ret = $app->template_message->send($data);
-        Log::channel('wechatOffiaccount')->info('template_message:',$ret);
+        //$ret = $app->template_message->send($data);
+
+        $api = $app->getClient();
+
+        foreach($data['data'] as $key=>$val)
+        {
+            $data['data'][$key] = ['value'=>$val];
+        }
+
+        $response = $api->postJson('/cgi-bin/message/template/send', $data);
+
+        $ret = $response->toArray();
+
+        Log::channel('daily')->info('wechat template_message:',$ret);
         return;
     }
     /**
@@ -637,7 +676,7 @@ class WechatService
         $rf = $pay_log['sn'].'TK'.rand(10,99);
         $result = $app->refund->byOutTradeNumber($pay_log['sn'],$rf,$pay_log['money'],$tran_amt);
 
-        Log::channel('wechatOffiaccount')->info('tuikuan_result:',$result);
+        Log::channel('daily')->info('wechat tuikuan_result:',$result);
         if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK' && $result['result_code'] == 'SUCCESS')
         {
             $model->where(['id'=>$pay_log['id']])->update([
@@ -658,7 +697,7 @@ class WechatService
     public static function payRefundQuery($sn,$app)
     {
         $result = $app->refund->queryByOutTradeNumber($sn);
-        Log::channel('wechatOffiaccount')->info('tuikuan_query_result:',$result);
+        Log::channel('daily')->info('wechat tuikuan_query_result:',$result);
         if($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK' && $result['result_code'] == 'SUCCESS')
         {
             return [0,$result];

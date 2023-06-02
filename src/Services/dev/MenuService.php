@@ -19,10 +19,24 @@ class MenuService
         'destroy' => '删除',
     ];
 
-    public function get($id = 0)
+    /**
+     * 获取后台菜单信息
+     *
+     * @param integer $id
+     * @param boolean | array $auth_ids
+     * @return void
+     */
+    public function get($id = 0,$auth_ids = false)
     {
-        $data = $this->getAll()->filter(function ($item) use ($id) {
-            return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
+        $data = $this->getAll()->filter(function ($item) use ($id,$auth_ids) {
+            if($auth_ids)
+            {
+                return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true && in_array($item->id,$auth_ids) === true;
+            }else
+            {
+                return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
+            }
+            
         });
         $ret = [];
         foreach ($data as $val) {
@@ -31,10 +45,15 @@ class MenuService
                 'path' => $val['path'],
                 'icon' => $val['icon'],
                 "access" => 'routeFilter',
-                'routes' => $this->get($val['id']),
+                'routes' => $this->get($val['id'],$auth_ids),
                 'data' => (new stdClass),
                 'page_type'=>$val['page_type']
             ];
+            if($val['status'] == 0)
+            {
+                //将菜单隐藏
+                $item['hideInMenu'] = true;
+            }
             if ($val['desc']) {
                 $item['data'] = json_decode($val['desc'], true);
                 if($val['open_type'])
@@ -43,8 +62,14 @@ class MenuService
                 }
                 if($val['form_readonly'])
                 {
-                    $item['data']['formReadonly'] = true;
                     $item['data']['readonly'] = true;
+                }
+                if($val['editable'])
+                {
+                    $item['data']['editable'] = true;
+                }else
+                {
+                    $item['data']['editable'] = false;
                 }
             }
             $ret[] = $item;
@@ -56,7 +81,7 @@ class MenuService
     {
         static $data = [];
         if (empty($data)) {
-            $data = (new Menu())->where(['state' => 1])->where([['path','!=','']])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+            $data = (new Menu())->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
         }
         return $data;
     }
@@ -158,14 +183,12 @@ class MenuService
         $role_perms = explode(',', $role_perms);
         //获取角色权限和用户权限的交集
         $perms = array_intersect($role_perms, $perms);
-
         if (empty($perms)) {
             return false;
         }
 
         //通过路由找到 admin menu 数据
         [$name,$menu] = $this->getMenuByRouter($router);
-        //d($name,$menu);
         //d(implode('.',[$menu['id'],$name]),$perms);
         if(in_array(implode('.',[$menu['id'],$name]),$perms))
         {
@@ -183,7 +206,6 @@ class MenuService
         $keys = array_keys($this->basePerms);
 
         $r = explode('/',$router);
-        
         $name = array_pop($r);
         $posts_child = $name;
         //d($router);
@@ -211,7 +233,6 @@ class MenuService
             }
             
         }
-
         $menu = (new Menu())->where(['router'=>$router])->first();
         //如果直接指定了路由
         if($menu)
@@ -228,27 +249,64 @@ class MenuService
         }
         //d($r);
 
-        $m = (new Menu())->where(['path'=>$r[0],'type'=>env('APP_NAME')]);
+        $m = (new Menu())->where(['path'=>$r[0]])->whereIn('type',[env('APP_NAME'),'system']);
+        //d(['path'=>$r[0],'type'=>env('APP_NAME')]);
         //这里不知道怎么回事只做到了 3层菜单模式 应该写一个递归 无限级菜单读取
         if(isset($r[1]))
         {
             array_shift($r);
-            //d($r);
-            $m = $m->whereHas('parent',function($q) use($r){
-                $q->where(['path'=>$r[0]]);
-                if(isset($r[1]))
-                {
-                    array_shift($r);
-                    $q->whereHas('parent',function($query) use($r){
-                        $query->where(['path'=>$r[0]]);
-                    });
-                }
-            });
+            $m = $this->searchParent($m,$r);
+            // $m = $m->whereHas('parent',function($q) use($r){
+            //     $q->where(['path'=>$r[0]]);
+            //     if(isset($r[1]))
+            //     {
+            //         array_shift($r);
+            //         $q->whereHas('parent',function($query) use($r){
+            //             $query->where(['path'=>$r[0]]);
+            //         });
+            //     }
+            // });
             
         }
         $menu = $m->first();
         //d($name,$menu);
         return [$name,$menu?:['id'=>0]];
+    }
+
+    public function searchParent($query,$path)
+    {
+        $query->whereHas('parent',function($q) use($path){
+            $q->where(['path'=>$path[0]])->whereIn('type',[env('APP_NAME'),'system']);
+            if(isset($path[1]))
+            {
+                array_shift($path);
+                $q = $this->searchParent($q,$path);
+            }
+        });
+        return $query;
+    }
+
+    public function getParentId($id)
+    {
+        $item = $this->getAll2()->first(function ($item) use ($id) {
+            return $item->id == $id;
+        });
+        if($item)
+        {
+            $this_id = $item['id'];
+            $parent_id = $this->getParentId($item['parent_id']);
+            if($parent_id)
+            {
+                $parent_id[] = $this_id;
+                return $parent_id;
+            }else
+            {
+                return [$this_id];
+            }
+        }else
+        {
+            return false;
+        }
     }
     
 }

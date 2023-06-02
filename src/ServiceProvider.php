@@ -3,6 +3,8 @@
 namespace Echoyl\Sa;
 
 use Echoyl\Sa\Console\Commands\SaCommand;
+use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
+use Echoyl\Sa\Constracts\SaServiceInterface;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 
 class ServiceProvider extends LaravelServiceProvider
@@ -15,6 +17,8 @@ class ServiceProvider extends LaravelServiceProvider
     public function register()
     {
         //
+        $this->app->bind(SaAdminAppServiceInterface::class,config('sa.adminAppService'));
+        $this->app->bind(SaServiceInterface::class,config('sa.service'));
     }
 
     /**
