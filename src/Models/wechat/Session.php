@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Echoyl\Sa\Models\wechat;
 
 use Echoyl\Sa\Models\Base;
 

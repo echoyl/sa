@@ -7,6 +7,7 @@ use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\NoticeService;
+use Echoyl\Sa\Services\SetsService;
 
 class IndexController extends ApiBaseController
 {
@@ -87,6 +88,17 @@ class IndexController extends ApiBaseController
         
         return $this->success(AdminService::parseUser($user));
     }
+
+    public function setting()
+    {
+        $ss = new SetsService();
+        $setting = $ss->getSet(implode('_',[env('APP_NAME','base'),'setting']));
+        HelperService::deImagesOne($setting,['logo','favicons']);
+        $setting['logo'] = $setting['logo']['url'];
+        $setting['favicons'] = [$setting['favicons']['url']];
+        return $this->success($setting);
+    }
+
     public function notice()
     {
         $data = NoticeService::get();
@@ -99,6 +111,13 @@ class IndexController extends ApiBaseController
         $type = request('type');
         NoticeService::clear($id,$type);
         return $this->success('操作成功');
+    }
+
+    public function workplace()
+    {
+        $chartData = $this->service->chartData();
+        $cards = $this->service->cards();
+        return $this->success(['charts'=>$chartData,'cards'=>$cards]);
     }
 
 }

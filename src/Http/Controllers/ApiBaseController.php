@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Http\Controllers;
 
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
+use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Helpers\ApiResponse;
 use Echoyl\Sa\Helpers\VerifyRequestInput;
 

@@ -541,7 +541,19 @@ class CrudController extends ApiBaseController
                 $name = $with['name'] . 's';
                 if(isset($with['class']))
                 {
-                    $data[$name] = (new $with['class'])->format($with['cid']??0);
+                    $_m = new $with['class'];
+                    if($with['type'] == 'select_columns')
+                    {
+                        //这里只获取一层数据因为一般的模型都没有继承category模型 没有format方法
+                        if($with['columns'])
+                        {
+                            $_m = $_m->select($with['columns']);
+                        }
+                        $data[$name] = $_m->get()->toArray();
+                    }else
+                    {
+                        $data[$name] = $_m->format($with['cid']??0);
+                    }
                 }elseif(isset($with['data']))
                 {
                     $data[$name] = $with['data'];

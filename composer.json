@@ -28,5 +28,8 @@
                 "Echoyl\\Sa\\ServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "symfony/var-exporter": "^6.3"
     }
 }

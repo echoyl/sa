@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\Sets;
 
 class SetsService
 {
+    var $model;
     public function __construct($model = null)
 	{
         if(!$model)

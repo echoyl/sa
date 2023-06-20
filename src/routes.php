@@ -9,32 +9,26 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
 
     //默认暴露这些公用路由
     Route::middleware('api')->group(function () {
-
+        Route::get('setting', 'IndexController@setting');
         Route::middleware(['echoyl.remember', 'auth:sanctum', 'echoyl.sa'])->group(function () {
 
 
             Route::any('currentUser', 'IndexController@currentUser');
             Route::any('notice', 'IndexController@notice');
             Route::any('clearNotice', 'IndexController@clearNotice');
+            Route::any('index/workplace', 'IndexController@workplace');
             Route::any('helper/pca', 'HelperController@pca');
+            Route::any('index/user', 'IndexController@user'); //用户修改信息
 
-            Route::group(['namespace' => 'posts'], function () {
-                Route::resource('category', 'CategoryController'); //通用分类
-            });
+            // Route::group(['namespace' => 'posts'], function () {
+            //     Route::resource('category', 'CategoryController'); //通用分类
+            // });
             //需要检测权限的路由
             Route::middleware(['echoyl.permcheck'])->group(function () {
 
                 //系统通用路由
                 Route::get('', 'IndexController@index');
                 //Route::get('index/getmenus', 'IndexController@getMenus'); //后台获取左侧菜单路由
-                Route::any('index/user', 'IndexController@user'); //用户修改信息
-                
-
-                
-
-                // Route::any('attachment/addGroup', 'AttachmentController@addGroup'); //图片管理列表路由
-                // Route::any('attachment/delGroup', 'AttachmentController@delGroup'); //图片管理列表路由
-                // Route::resource('attachment', 'AttachmentController'); //图片管理列表路由
 
                 //Route::resource('category', 'CategoryController'); //通用分类
                 //Route::resource('posts', 'PostsController'); //内容Posts模块
@@ -56,7 +50,14 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     Route::resource('user', 'UserController');
                     Route::resource('log', 'LogController');
                 });
+
+                Route::group(['namespace' => 'workflow', 'prefix' => 'workflow'], function () {
+                    Route::resource('workflow', 'WorkflowController');
+                    Route::resource('node', 'NodeController');
+                });
+
                 Route::group(['namespace' => 'setting', 'prefix' => 'setting'], function () {
+                    Route::any('setting', 'SettingController@setting');//平台配置
                     Route::any('base', 'SettingController@base');
                     Route::any('web', 'SettingController@web');
                 });

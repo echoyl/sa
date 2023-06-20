@@ -34,7 +34,10 @@ class MenuController extends CrudController
             ['name'=>'desc','type'=>'json','default'=>''],
             ['name'=>'perms','type'=>'json','default'=>''],
             ['name'=>'icon','type'=>'select','default'=>''],
-            ['name'=>'status','type'=>'switch','default'=>1]
+            ['name'=>'status','type'=>'switch','default'=>1],
+            ['name'=>'form_config','type'=>'json','default'=>''],
+            ['name'=>'other_config','type'=>'json','default'=>''],
+            ['name'=>'table_config','type'=>'json','default'=>''],
         ];
 
         $this->can_be_null_columns = ['title'];
@@ -80,7 +83,7 @@ class MenuController extends CrudController
         if(isset($data['form_config']))
         {
             //根据form配置生成json配置
-            $config = json_decode($data['form_config'],true);
+            $config = $data['form_config'];
             $json = [];
             $ds = new DevService;
             foreach($config as $val)
@@ -105,7 +108,7 @@ class MenuController extends CrudController
             //根据form配置生成json配置
             $left_menu =false;
             $tool_bar_button = [];
-            $config = json_decode($data['table_config'],true);
+            $config = $data['table_config'];
             $json = [];
             $ds = new DevService;
             foreach($config as $val)
@@ -157,12 +160,12 @@ class MenuController extends CrudController
         }
         if(isset($data['other_config']) && $data['other_config'])
         {
-            $other_config = json_decode($data['other_config'],true);
+            $other_config = $data['other_config'];
         }else
         {
             if($id)
             {
-                $other_config = json_decode($item['other_config'],true);
+                $other_config = $item['other_config'];
             }
             
         }

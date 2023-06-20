@@ -1,5 +1,8 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
+
+use Echoyl\Sa\Models\dev\Model;
+
 class Utils
 {
 
@@ -10,6 +13,7 @@ class Utils
         'textarea'=>'textarea',
         'image'=>'uploader',
         'datetime'=>'dateTime',
+        'date'=>'date',
         'switch'=>'switch',
         'cascader'=>'cascader',
         'cascaders'=>'cascader',
@@ -22,7 +26,8 @@ class Utils
 
     public static $title_arr = [
         'created_at'=>'创建时间',
-        'updated_at'=>'最后更新时间'
+        'updated_at'=>'最后更新时间',
+        'displayorder'=>'排序权重',
     ];
 
     public static function uncamelize($camelCaps,$separator='_')
@@ -52,5 +57,91 @@ class Utils
         return collect($arr)->first(function($item) use($value,$key){
             return $item[$key] == $value;
         });
+    }
+
+    public static function toTree($fields)
+    {
+        $data = ['columns'=>[],'models'=>[]];
+        foreach($fields as $field)
+        {
+            //检测字段是数字，外联模型，字段名称
+            $length = count($field);
+            if($length == 1)
+            {
+                //当前模型字段
+                $data['columns'][] = $field[0];
+            }elseif($length == 2)
+            {
+                if(!isset($data['models'][$field[0]]))
+                {
+                    $data['models'][$field[0]] = ['columns'=>[],'models'=>[]];
+                }
+                if($field[1])
+                {
+                    $data['models'][$field[0]]['columns'][] = $field[1];
+                }
+            }elseif($length > 2)
+            {
+                $first_field = array_shift($field);
+                if(!isset($data['models'][$first_field]))
+                {
+                    $data['models'][$first_field] = ['columns'=>[],'models'=>[]];
+                }
+                $data['models'][$first_field] = array_merge($data['models'][$first_field],self::toTree([$field]));
+            }
+        }
+        return $data;
+    }
+    public static function withTree($trees,$indent = 0,$i = 0)
+    {
+        if(empty($trees))
+        {
+            return '';
+        }
+        $data = [];
+        $replace = [];
+        $search = [];
+        $j = 0;
+        foreach($trees as $name=>$tree)
+        {
+            if(is_numeric($name))
+            {
+                $model = (new Model())->where(['id'=>$name])->first();
+                if(!$model)
+                {
+                    return '';
+                }
+                $name = $model['name'];
+            }
+            if(!empty($tree['models']))
+            {
+                $replace[] = self::withTree($tree['models'],$indent + 1,$i+1);
+                $sear = 'sear_'.$j;
+                $search[] = $sear;
+                $inner_with = '->with('.$sear.')';
+                // d($inner_with);
+            }else
+            {
+                $inner_with = '';
+            }
+            if(!empty($tree['columns']))
+            {
+                $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($tree['columns']).')'.$inner_with.';}@endphp';
+            }else
+            {
+                if($inner_with)
+                {
+                    $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$inner_with.';}@endphp';
+                }else
+                {
+                    $data[] = $name;
+                }
+            }
+            $j++;
+        }
+        
+        $ret = Dev::export($data,$indent);
+        $ret = str_replace($search,$replace,$ret);
+        return $ret;
     }
 }

@@ -6,17 +6,12 @@ $use_namesapce$
 //customer namespace start
 $customer_namespace$
 //customer namespace end
-
 class $name$Controller extends CrudController
 {
-	$crud_config$
-
     public function __construct()
 	{
+		$crud_config$
 		$this->model = new $modelname$();
-
-		$this->parse_columns = $parse_columns$;
-
 	}
 	//customer code start
 	$customer_code$

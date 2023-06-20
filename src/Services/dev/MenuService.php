@@ -46,7 +46,8 @@ class MenuService
                 'icon' => $val['icon'],
                 "access" => 'routeFilter',
                 'routes' => $this->get($val['id'],$auth_ids),
-                'data' => (new stdClass),
+                //'data' => (new stdClass),
+                'data'=>[],
                 'page_type'=>$val['page_type']
             ];
             if($val['status'] == 0)
@@ -56,22 +57,14 @@ class MenuService
             }
             if ($val['desc']) {
                 $item['data'] = json_decode($val['desc'], true);
-                if($val['open_type'])
-                {
-                    $item['data']['openType'] = $val['open_type'];
-                }
-                if($val['form_readonly'])
-                {
-                    $item['data']['readonly'] = true;
-                }
-                if($val['editable'])
-                {
-                    $item['data']['editable'] = true;
-                }else
-                {
-                    $item['data']['editable'] = false;
-                }
             }
+            if($val['open_type'])
+            {
+                $item['data']['openType'] = $val['open_type'];
+            }
+            $item['data']['addable'] = $val['addable']?true:false;
+            $item['data']['editable'] = $val['editable']?true:false;
+            $item['data']['deleteable'] = $val['deleteable']?true:false;
             $ret[] = $item;
         }
         return $ret;

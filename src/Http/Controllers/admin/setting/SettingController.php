@@ -20,4 +20,9 @@ class SettingController extends Controller
 		return (new SetsService)->post(env('APP_NAME','base'));
 	}
 
+
+	public function setting()
+    {
+		return (new SetsService)->post(implode('_',[env('APP_NAME','base'),'setting']));
+	}
 }

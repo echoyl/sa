@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services\dev;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\FormItem;
 use Echoyl\Sa\Services\dev\utils\SchemaDiff;
 use Echoyl\Sa\Services\dev\utils\TableColumn;
@@ -18,12 +19,6 @@ class DevService
 {
 
     var $msg = [];
-
-    var $title_arr = [
-        'created_at'=>'创建时间',
-        'updated_at'=>'最后更新时间',
-        'displayorder'=>'排序权重',
-    ];
 
     public $tpl_path = __DIR__.'/tpl/';
 
@@ -61,6 +56,7 @@ class DevService
         $default_value = $val['default']??"";
         $comment = $val['desc']??$val['title'];
         $name = $val['name'];
+        $length = $val['length']??0;
         switch($val['type'])
         {
             case 'int':
@@ -84,7 +80,11 @@ class DevService
                 $field_sql = "`{$name}`  bigint NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
             break;
             case 'vachar':
-                $field_sql = "`{$name}`  varchar(255) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
+                $length = $length?:255;
+                $field_sql = "`{$name}`  varchar({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
+            break;
+            case 'date':
+                $field_sql = "`{$name}`  date DEFAULT NULL COMMENT '{$comment}'";
             break;
             case 'datetime':
                 $field_sql = "`{$name}`  datetime DEFAULT NULL COMMENT '{$comment}'";
@@ -142,7 +142,7 @@ class DevService
                 //多于的字段则删除
                 foreach($tmp as $key=>$column)
                 {
-                    if(!isset($this->title_arr[$key]))
+                    if(!isset(Utils::$title_arr[$key]))
                     {
                         //非默认字段 需要删除
                         $sqls[] = " DROP COLUMN {$key}";
@@ -308,13 +308,32 @@ class DevService
     
         //d($use_namespace,$tpl);
 
+    $columns_function = 'public function getParseColumns()
+    {
+        static $data = [];
+        if(empty($data))
+        {
+            $data = $parse_columns$;
+        }
+        return $data;
+    }';
+
+        if(!empty($parse_columns))
+        {
+            //$parse_columns = preg_replace(['/\$parse_columns\$/'],HelperService::format_var_export($parse_columns,4),$columns_function);
+            $parse_columns = preg_replace(['/\$parse_columns\$/'],Dev::export($parse_columns,3),$columns_function);
+        }else
+        {
+            $parse_columns = '';
+        }
+
         $replace_arr = [
             '/\$use_namespace\$/'=> implode("\r",$use_namespace),
             '/\$namespace\$/'=>$namespace,
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
             '/\$relationship\$/'=>implode("\r",$tpl),
-            '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,4),
+            '/\$parse_columns\$/'=>$parse_columns,
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -388,9 +407,9 @@ class DevService
             '/\$namespace\$/'=>$namespace,
             '/\$modelname\$/'=>$name,
             '/\$name\$/'=>$name,
-            '/\$crud_config\$/'=>implode("\r\t",$crud_config),
+            '/\$crud_config\$/'=>implode("\r\t\t",$crud_config),
             '/\$use_namesapce\$/'=>implode("\r",$use_namespace),
-            '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
+            //'/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/'=>$customer_code,
             '/\$customer_namespace\$/'=>$customer_namespace,
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
@@ -418,7 +437,7 @@ class DevService
         $crud_config = [];
         $with_sum = $with_count = $with_columns = $search_config = [];//配置处理好后 直接返回代码了
 
-        $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel'])->get()->toArray();
+        $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel.relations'])->get()->toArray();
 
         //循环检测列中支持搜索的字段
         $columns = $model['search_columns']?json_decode($model['search_columns'],true):[];
@@ -433,10 +452,11 @@ class DevService
         $all_models = [$model['name']=>$model['name']];
         $all_relations = [];
         
+        $with_columns_search = $with_columns_replace = [];
         if(!empty($relations))
         {
             $useModelArr = [];//使用过的模型数据
-            foreach($relations as $val)
+            foreach($relations as $key=>$val)
             {
                 
     
@@ -502,7 +522,47 @@ class DevService
                 {
                     if(in_array($val['type'],['one','many']))
                     {
-                        $with_columns[] = $val['name'];
+                        //关联模型的字段
+                        
+                        // $foreign_model_columns = array_merge($default_fields,collect(json_decode($foreign_model['columns'],true))->pluck('name')->toArray());
+                        // //关联模型的关联模型
+                        //$foreign_model_relations = $foreign_model['relations'];
+                        //检测是否填写了需要关联模型的字段
+                        if($val['select_columns'])
+                        {
+                            //解析字段
+                            $fields = collect(explode(',',$val['select_columns']))->map(function($v){
+                                return explode('-',$v);
+                            })->sort(function($a,$b){
+                                return count($a) < count($b);
+                            })->toArray();
+                            $with_tree = Utils::toTree($fields);
+                            $select_columns = $with_tree['columns'];
+                            $inner_with = Utils::withTree($with_tree['models'],3);
+                            if($inner_with)
+                            {
+                                $with_columns_replace[] = $inner_with;
+                                $sear = 'sear_'.$key;
+                                $with_columns_search[] = $sear;
+                                $inner_with = '->with('.$sear.')';
+                            }
+                            if(!empty($select_columns))
+                            {
+                                $with_columns[$val['name']] = '@phpfunction($query){$query->select('.json_encode($select_columns).')'.$inner_with.';}@endphp';
+                            }else
+                            {
+                                if($inner_with)
+                                {
+                                    $with_columns[$val['name']] = '@phpfunction($query){$query'.$inner_with.';}@endphp';
+                                }
+                            }
+                            //d($with_columns[$val['name']]);
+                        }else
+                        {
+                            //未填写表示全部
+                            $with_columns[] = $val['name'];
+                        }
+                        
                     }
                     
                     if($val['type'] == 'one')
@@ -517,6 +577,18 @@ class DevService
                     }
                 }
 
+                if($val['is_with_in_page'])
+                {
+                    //1对1时候 还需要关联对接 转换关联数据
+                    $parse_columns[] = [
+                        'name'=>$val['name'],
+                        'type'=>'select_columns',
+                        'class'=>'@php'.$f_model_name.'::class@endphp',
+                        'with'=>true,
+                        'columns'=>$val['in_page_select_columns']?explode(',',$val['in_page_select_columns']):[]
+                    ];
+
+                }
                 
 
             }
@@ -524,20 +596,20 @@ class DevService
 
         if(!empty($with_columns))
         {
-            $crud_config[] = 'var $with_column = '.(json_encode($with_columns)).';';
+            $crud_config[] = str_replace($with_columns_search,$with_columns_replace,'$this->with_column = '.(Dev::export($with_columns,2)).';');
         }
         if(!empty($search_config))
         {
-            $crud_config[] = 'var $search_config = '.(HelperService::format_var_export($search_config,2)).';';
+            $crud_config[] = '$this->search_config = '.(Dev::export($search_config,2)).';';
         }
         if(!empty($with_sum))
         {
             //d(json_encode($with_sum));
-            $crud_config[] = 'var $with_sum = '.(HelperService::format_var_export($with_sum,2)).';';
+            $crud_config[] = '$this->with_sum = '.(Dev::export($with_sum,2)).';';
         }
         if(!empty($with_count))
         {
-            $crud_config[] = 'var $with_count = '.(json_encode($with_count)).';';
+            $crud_config[] = '$this->with_count = '.(json_encode($with_count)).';';
         }
 
 

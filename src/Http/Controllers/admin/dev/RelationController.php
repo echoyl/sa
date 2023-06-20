@@ -27,6 +27,8 @@ class RelationController extends CrudController
             
             ['name' => 'search_columns', 'type' => 'selects', 'default' => ''],
             ['name' => 'with_sum', 'type' => 'selects', 'default' => ''],
+            ['name' => 'select_columns', 'type' => 'selects', 'default' => ''],
+            ['name' => 'in_page_select_columns', 'type' => 'selects', 'default' => ''],
         ];
 
     }
@@ -92,12 +94,15 @@ class RelationController extends CrudController
     {
         $model = new Model();
         $data = [];
-        $list = $model->where(['type'=>1])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
+        $list = $model->where(['type'=>1])->with(['relations'=>function($query){
+            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
+        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
         foreach($list as $val)
         {
             $data[] = [
                 'id'=>$val['id'],
                 'columns'=>$val['columns']?json_decode($val['columns'],true):[],
+                'relations'=>$val['relations']?:[]
             ];
         }
         return $data;

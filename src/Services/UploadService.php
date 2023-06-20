@@ -12,7 +12,7 @@ class UploadService
         'rar', 'doc', 'xls', 'ppt', 'zip', 'pdf', 'xlsx','bin'
     ];
     public $image_ext_arr = [
-        'jpg', 'jpeg', 'png', 'gif',
+        'jpg', 'jpeg', 'png', 'gif','ico'
     ];
 
     public function store(Request $request, $formname = 'file', $type = 0, $insert_db = false,$toSize = false)

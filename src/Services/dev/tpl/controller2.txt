@@ -1,42 +1,24 @@
 <?php
 namespace App\Http\Controllers\admin$namespace$;
-use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Http\Controllers\admin\CategoryController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
-
 //customer namespace start
 $customer_namespace$
 //customer namespace end
-
-class $name$Controller extends CrudController
+class $name$Controller extends CategoryController
 {
-	$crud_config$
 	public $cid = 0;
     public function __construct()
 	{
+		$crud_config$
 		$this->model = new $modelname$();
-
 		$post_parent_id = request('parent_id', 0);
         $this->default_post = [
             'parent_id' => $post_parent_id ?: $this->cid,
             'displayorder' => 0,
         ];
-
-		$this->parse_columns = $parse_columns$;
-
 	}
-
-	public function index()
-    {
-        //修改获取分类模式 直接递归 查询数据库获取数据
-		$search = [];
-        $this->parseWiths($search);
-        return ['success' => true, 'msg' => '', 'data' => $this->model->getChild($this->cid,[],function($val){
-			$this->parseData($val, 'decode', 'list');
-			return $val;
-		}), 'search' => $search];
-    }
-	
 	//customer code start
 	$customer_code$
 	//customer code end

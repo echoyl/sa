@@ -91,30 +91,87 @@ class HelperService
         }
     }
 
+    public static function enImages($data, $keys = [])
+    {
+        return self::parseImages($data, $keys);
+    }
+    /**
+     * Undocumented function
+     *
+     * @param array $data 数据
+     * @param array $keys 需要转化为图片的键值
+     * @param boolean $fill_empty 是否自动填充 空白数据
+     * @return void
+     */
+    public static function deImages(&$data, $keys = [], $fill_empty = false)
+    {
+        $data = self::parseImages($data, $keys, false);
+        if ($fill_empty) {
+            foreach ($keys as $key) {
+                if (!isset($data[$key]) || empty($data[$key])) {
+                    $data[$key] = [['url' => '']];
+                }
+            }
+        }
+        return $data;
+    }
+
+    public static function deImagesArr(&$data, $keys = [])
+    {
+        $data = self::parseImages($data, $keys, false);
+        foreach ($keys as $key) {
+            if (!isset($data[$key]) || empty($data[$key])) {
+                $data[$key] = [];
+            }else
+            {
+                $ret = [];
+                foreach($data[$key] as $val)
+                {
+                    $ret[] = $val['url'];
+                }
+                $data[$key] = $ret;
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * 网站显示图片 直接返回图片url
+     *
+     * @param [type] $data
+     * @param array $keys
+     * @param boolean $fill_empty 默认返回空值
+     * @return void
+     */
+    public static function deImagesOne(&$data, $keys = [], $fill_empty = true,$params = [])
+    {
+        $data = self::parseImages($data, $keys, false,$params);
+        if ($fill_empty) {
+            foreach ($keys as $key) {
+                if (!isset($data[$key]) || empty($data[$key]) || !is_array($data[$key])) {
+                    $data[$key] = ['url' => '', 'name' => ''];
+                } else {
+                    $data[$key] = $data[$key][0]??['url' => '', 'name' => ''];
+                }
+            }
+        }
+        return $data;
+    }
+
+    public static function parseImages($data, $keys = [], $encode = true,$params = [])
+    {
+        foreach ($keys as $key) {
+            if (isset($data[$key])) {
+                $data[$key] = self::uploadParse($data[$key], $encode,$params);
+            }
+        }
+        return $data;
+    }
+
     public static function uploadParse($data,$encode = true,$params = [])
     {
         if($encode)
         {
-            // $_data = [];
-            // if(is_array($data))
-            // {
-            //     foreach($data as $item)
-            //     {
-            //         if(isset($item['response']))
-            //         {
-            //             $url = $item['response']['data']['value'];
-            //         }else
-            //         {
-            //             $url = $item['value'];
-            //         }
-            //         $_data[] = [
-            //             'name'=>$item['name'],
-            //             'url'=>$url
-            //         ];
-            //     }
-            // }
-            
-            //return json_encode($data);
             if (is_array($data) && !empty($data)) {
                 $_data = [];
                 foreach ($data as $item) {
@@ -136,7 +193,7 @@ class HelperService
             $_data = [];
             if($data)
             {
-                $data = json_decode($data,'true');
+                $data = is_string($data)? json_decode($data, 'true'):$data;
                 if(is_array($data))
                 {
                     foreach($data as $key=>$val)
@@ -331,7 +388,7 @@ class HelperService
             $string = $data;
         }else
         {
-            $data = self::arrayrecursive($data, 'urlencode', true); 
+            $data = self::arrayrecursive($data, 'urlencode', true);
             $string = json_encode($data); 
             $string = urldecode($string); 
         }

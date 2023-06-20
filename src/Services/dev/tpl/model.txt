@@ -12,15 +12,7 @@ class $name$ extends Base
      */
     protected $table = '$table_name$';
 
-    public function getParseColumns()
-    {
-        static $data = [];
-        if(empty($data))
-        {
-            $data = $parse_columns$;
-        }
-        return $data;
-    }
+    $parse_columns$
 
     //relationship start
     $relationship$
