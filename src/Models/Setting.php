@@ -2,14 +2,14 @@
 
 namespace Echoyl\Sa\Models;
 
-class Sets extends Base
+class Setting extends Base
 {
     /**
      * 与模型关联的数据表
      *
      * @var string
      */
-    protected $table = 'sets';
+    protected $table = 'setting';
     public $timestamps = false;
 
     

@@ -94,6 +94,8 @@ class IndexController extends ApiBaseController
         $ss = new SetsService();
         $setting = $ss->getSet(implode('_',[env('APP_NAME','base'),'setting']));
         HelperService::deImagesOne($setting,['logo','favicons']);
+        $setting['title'] = $setting['title']??'Deadmin';
+        $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
         $setting['logo'] = $setting['logo']['url'];
         $setting['favicons'] = [$setting['favicons']['url']];
         return $this->success($setting);

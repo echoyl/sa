@@ -1,7 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services;
 
-use Echoyl\Sa\Models\Sets;
+use Echoyl\Sa\Models\Setting;
 
 class SetsService
 {
@@ -10,7 +10,7 @@ class SetsService
 	{
         if(!$model)
         {
-            $this->model = new Sets();
+            $this->model = new Setting();
         }else
         {
             $this->model = $model;

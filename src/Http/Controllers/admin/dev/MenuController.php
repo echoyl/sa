@@ -102,7 +102,7 @@ class MenuController extends CrudController
             }
             $formColumns = $json;
         }
-        
+        $ds = new DevService;
         if(isset($data['table_config']))
         {
             //根据form配置生成json配置
@@ -110,7 +110,7 @@ class MenuController extends CrudController
             $tool_bar_button = [];
             $config = $data['table_config'];
             $json = [];
-            $ds = new DevService;
+            
             foreach($config as $val)
             {
                 $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
@@ -163,13 +163,13 @@ class MenuController extends CrudController
             $other_config = $data['other_config'];
         }else
         {
-            if($id)
+            if($id && $item['other_config'])
             {
                 $other_config = $item['other_config'];
             }
             
         }
-        if(isset($tableColumns) || isset($formColumns))
+        if(isset($tableColumns) || isset($formColumns) || isset($other_config))
         {
             $desc = json_decode($item['desc'],true);
 

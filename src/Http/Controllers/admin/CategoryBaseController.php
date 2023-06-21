@@ -4,7 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\Category;
 
-class CategoryController extends CrudController
+class CategoryBaseController extends CrudController
 {
     //
 	var $model;

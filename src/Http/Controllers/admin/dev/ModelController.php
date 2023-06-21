@@ -49,7 +49,7 @@ class ModelController extends CrudController
             $this->parseData($item, 'decode', 'list');
             return $item;
         });
-        $search['table_menu'] = ['admin_type'=>[['value' => env('APP_NAME'), 'label' => '项目菜单'], ['value' => 'system', 'label' => '系统菜单']]];
+        $search['table_menu'] = ['admin_type'=>[['value' => env('APP_NAME'), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
         //d($data);
         $ds = new DevService;
         $search['models'] = $ds->getModelsFolderTree();

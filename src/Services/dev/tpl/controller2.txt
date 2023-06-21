@@ -1,12 +1,12 @@
 <?php
 namespace App\Http\Controllers\admin$namespace$;
-use Echoyl\Sa\Http\Controllers\admin\CategoryController;
+use Echoyl\Sa\Http\Controllers\admin\CategoryBaseController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
 //customer namespace start
 $customer_namespace$
 //customer namespace end
-class $name$Controller extends CategoryController
+class $name$Controller extends CategoryBaseController
 {
 	public $cid = 0;
     public function __construct()

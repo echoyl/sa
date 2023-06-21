@@ -14,7 +14,8 @@
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.0",
         "mews/captcha": "^3.2",
-        "league/glide-laravel": "^1.0"
+        "league/glide-laravel": "^1.0",
+        "symfony/var-exporter": "^6.3"
     },
     "license": "MIT",
     "autoload": {

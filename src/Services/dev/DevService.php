@@ -899,6 +899,12 @@ class DevService
         return;
     }
 
+    public static function aliasRouteSystem()
+    {
+        self::createRoute(self::getMenuByParentId(0,'system'));
+        return;
+    }
+
     public static function createRoute($menus,$prefix = [])
     {
         $self = new self();
@@ -936,21 +942,42 @@ class DevService
                                 $perms = false;
                             }
 
-                            //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
-                            Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms){
-                                if($perms)
-                                {
-                                    foreach($perms as $key=>$title)
+                            if($menu['page_type'] == 'form')
+                            {
+                                //如果是form直接指向控制器方法
+                                $key = $menu['path'];
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$key){
+                                    Route::any(implode('/',$_prefix), ucfirst($name).'Controller@'.$key);
+                                });
+                            }else
+                            {
+                                //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms){
+                                    if($perms)
                                     {
-                                        Route::any(implode('/',array_merge($_prefix,[$key])), ucfirst($name).'Controller@'.$key);
+                                        foreach($perms as $key=>$title)
+                                        {
+                                            Route::any(implode('/',array_merge($_prefix,[$key])), ucfirst($name).'Controller@'.$key);
+                                        }
                                     }
-                                }
-                                Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
-                            });
+                                    Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                                });
+                            }
+
+                            
                         }else
                         {
-                            //Log::channel('daily')->info('createRoute:',['name'=>implode('/',$_prefix),'to'=>$name]);
-                            Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                            if($menu['page_type'] == 'form')
+                            {
+                                //如果是form直接指向控制器方法
+                                $key = $menu['path'];
+                                Route::any(implode('/',$_prefix), ucfirst($name).'Controller@'.$key);
+                            }else
+                            {
+                                //Log::channel('daily')->info('createRoute:',['name'=>implode('/',$_prefix),'to'=>$name]);
+                                Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                            }
+                            
                         }
                     }
                 }
@@ -960,16 +987,18 @@ class DevService
         return;
     }
 
-    public static function getMenuByParentId($pid = 0)
+    public static function getMenuByParentId($pid = 0,$type = '')
     {
         $s = new self();
-        return collect($s->allMenu())->filter(function ($item) use ($pid) {
+        $type = $type?:env('APP_NAME');
+        return collect($s->allMenu())->filter(function ($item) use ($pid,$type) {
             if($pid)
             {
+                //有id的话 读取父级id 不在现在菜单类型
                 return $item['parent_id'] === $pid;
             }else
             {
-                return $item['parent_id'] === $pid && in_array($item['type'],[env('APP_NAME')]) === true;
+                return $item['parent_id'] === $pid && in_array($item['type'],[$type]) === true;
             }
             
         })->toArray();
