@@ -1,12 +1,14 @@
 <?php
 
-namespace Echoyl\Sa\Http\Controllers\admin\menu;
+namespace Echoyl\Sa\Http\Controllers\admin\web;
 
-use Echoyl\Sa\Models\menu\Menu;
+use Echoyl\Sa\Models\web\Menu;
 use Echoyl\Sa\Services\WebsiteService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\Category;
+use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\Posts;
+use Echoyl\Sa\Services\dev\DevService;
 
 class MenuController extends CrudController
 {
@@ -69,7 +71,8 @@ class MenuController extends CrudController
         $ws = new WebsiteService;
         $data['spec_arr'] = $ws->spec_arr;
         $data['modules'] = $ws->modules;
-
+        $ds = new DevService;
+        $data['admin_model_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
         if ($data['id']) {
 
             $data['content_id'] = $ws->menuContent($data);
@@ -119,5 +122,39 @@ class MenuController extends CrudController
         $data['type'] = env('APP_NAME');
 
         return;
+    }
+
+    public function category()
+    {
+        $admin_model_id = request('admin_model_id');
+        //找到改模型文件夹下面的category 模型
+        //$namespace = 'App\Models\jianfuguanjia\anli';
+
+        $prefix = 'App\Models';
+
+        $model_data = (new Model())->where(['id'=>$admin_model_id])->first();
+
+        if(!$model_data)
+        {
+            return $this->fail([1,'信息错误，请先选择关联模型']);
+        }
+
+        $ds = new DevService;
+
+        $namespace = array_reverse($ds->getPath($model_data->toArray(),$ds->allModel()));
+
+        array_unshift($namespace,$prefix);
+
+        $namespace[] = 'Category';
+        $category_class = implode('\\',$namespace);
+        if(!class_exists($category_class))
+        {
+            return $this->fail([1,'请先创建 '.$model_data['title'].' 下方的Category模型']);
+        }
+
+        $model = new $category_class;
+
+        $data = $model->getChild();
+        return $this->success($data);
     }
 }

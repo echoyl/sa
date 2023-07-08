@@ -25,7 +25,16 @@ class TableColumn
         $this->models = $models;
         $this->model = $model;
 
+        //关联数据name 及 额外设置 //后面将extra相当于fieldProps 转移至props.fieldProps中 兼容之前的设置
+        $props = $config['props']??'';
+        $this->props = $props;
+
         $key = $dataIndex = $config['key']??'';
+
+        if(isset($props['dataIndex']) && $props['dataIndex'])
+        {
+            $key = $dataIndex = $props['dataIndex'];
+        }
 
         if(is_array($key))
         {
@@ -51,9 +60,7 @@ class TableColumn
         $relation = Utils::arrGet($model['relations'],$schema?'local_key':'name',Utils::uncamelize($key));
         $this->relation = $relation;
         
-        //关联数据name 及 额外设置 //后面将extra相当于fieldProps 转移至props.fieldProps中 兼容之前的设置
-        $props = $config['props']??'';
-        $this->props = $props;
+        
         $p_title = $props['title']??'';
         $title = $config['title']??'';
         $title = $p_title?:$title;
@@ -61,6 +68,10 @@ class TableColumn
         $fieldProps = $props['fieldProps']??'';
         $formItemProps = $props['formItemProps']??'';
 
+        //tooltip提示
+        $tooltip = $props['tooltip']??'';
+        //是否排序
+        $sort = $config['sort']??'';
         //是否出现在搜索栏
         $can_search = $config['can_search']??'';
         //是否在列表中隐藏
@@ -133,6 +144,16 @@ class TableColumn
         if(!empty($hide_in_table))
         {
             $d['hideInTable'] = true;
+        }
+
+        if(!empty($tooltip))
+        {
+            $d['tooltip'] = $tooltip;
+        }
+
+        if(!empty($sort))
+        {
+            $d['sort'] = true;
         }
 
         $this->data = $d;
@@ -307,7 +328,15 @@ class TableColumn
                 return ['text' => $v, 'status' => $k == 0?'error':'success'];
             });
             $this->data['valueEnum'] = $valueEnum;
+        }else
+        {
+            //未设置switch的文本 默认设置文本
+            $this->data['valueEnum'] = [
+                ['text' => '关', 'status' => 'error'],
+                ['text' => '开', 'status' => 'success']
+            ];
         }
+        //列表显示 需要设置类型为 select
         $this->data['valueType'] = 'select';
         return;
     }

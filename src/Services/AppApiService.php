@@ -13,6 +13,7 @@ class AppApiService implements SaServiceInterface
     public function baseSet($name = '')
     {
         $ss = new SetsService();
+        $this->app_name = implode('_',[env('APP_NAME','base'),'base']);
         return $ss->get(implode('.',[$this->app_name,$name]));
     }
 
@@ -25,6 +26,11 @@ class AppApiService implements SaServiceInterface
         $key = $type == 'user'?'user_miniprogram_account_id':'merch_miniprogram_account_id';
         //$id = $ss->get('base.'.$key);
         $id = $this->baseSet($key);
+
+        if(is_array($id))
+        {
+            $id = $id['id'];
+        }
 
         return WechatService::getMiniprogramAccountConfig($id);
     }
@@ -43,7 +49,13 @@ class AppApiService implements SaServiceInterface
     public function wechatOffiaccountApp()
     {
         $ss = new SetsService();
-        $id = $ss->get('base.offiaccount_account_id');
+        $id = $this->baseSet('offiaccount_account_id');
+
+        if(is_array($id))
+        {
+            $id = $id['id'];
+        }
+
         return WechatService::getOffiaccount($id);
     }
 

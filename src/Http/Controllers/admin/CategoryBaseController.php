@@ -26,10 +26,22 @@ class CategoryBaseController extends CrudController
 		//return ['code'=>0,'msg'=>'','data'=>$this->model->getChild($this->cid)];	
 		$search = [];
         $this->parseWiths($search);
+		$displayorder = [];
+		$sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
+        if (request('sort')) {
+            //添加排序检测
+            $sort = json_decode(request('sort'), true);
+            if (!empty($sort)) {
+                foreach ($sort as $skey => $sval) {
+					$displayorder[] = [$skey,$sort_type[$sval] ?? 'desc'];
+                }
+            }
+        }
+
 		$data = $this->model->getChild($this->cid,[],function($val){
 			$this->parseData($val, 'decode', 'list');
 			return $val;
-		});
+		},0,1,$displayorder);
 		return $this->list($data,count($data),$search);
 	}
 

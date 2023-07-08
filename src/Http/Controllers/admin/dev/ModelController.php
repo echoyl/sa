@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin\dev;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Models\dev\model\Relation;
 
 class ModelController extends CrudController
 {
@@ -61,7 +62,7 @@ class ModelController extends CrudController
         $id = request('id');
         $toid = request('toid');
         //当前模型
-        $data = $this->model->where(['id'=>$id])->first();
+        $data = $this->model->where(['id'=>$id])->with(['relations'])->first();
         $to_folder = (new Model())->where(['id'=>$toid])->first();
         if(!$data || !$to_folder || $to_folder['type'] != 0)
         {
@@ -69,12 +70,22 @@ class ModelController extends CrudController
         }
 
         $data = $data->toArray();
-        unset($data['id']);
+        $relations = $data['relations'];
+        unset($data['id'],$data['relations']);
         $data['parent_id'] = $to_folder['id'];
         $data['title'] .= '-复制';
         $data['admin_type'] = $to_folder['admin_type'];
 
-        (new Model())->insert($data);
+        $new_model_id = (new Model())->insertGetId($data);
+
+        //将该模型下的关联信息也复制进去
+        foreach($relations as $val)
+        {
+            unset($val['id']);
+            $val['model_id'] = $new_model_id;
+            (new Relation())->insert($val);
+        }
+
         return $this->success('操作成功');
 
 

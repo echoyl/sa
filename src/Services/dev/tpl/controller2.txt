@@ -11,6 +11,7 @@ class $name$Controller extends CategoryBaseController
 	public $cid = 0;
     public function __construct()
 	{
+		parent::__construct();
 		$crud_config$
 		$this->model = new $modelname$();
 		$post_parent_id = request('parent_id', 0);

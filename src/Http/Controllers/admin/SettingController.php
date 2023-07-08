@@ -17,16 +17,16 @@ class SettingController extends ApiBaseController
 	
 	public function base()
     {
-		return (new SetsService)->post(env('APP_NAME','base'));
+		return (new SetsService)->post(implode('_',[env('APP_NAME','base'),'base']));
 	}
 
 	public function web()
     {
-		return (new SetsService)->post(implode('_',[env('APP_NAME','base'),'web']));
+		return (new SetsService)->post(implode('_',[env('APP_NAME','web'),'web']));
 	}
 
 	public function setting()
     {
-		return (new SetsService)->post(implode('_',[env('APP_NAME','base'),'setting']));
+		return (new SetsService)->post(implode('_',[env('APP_NAME','setting'),'setting']));
 	}
 }

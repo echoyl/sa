@@ -199,9 +199,10 @@ class DevService
      * 生成模型关系的use namespace 和 代码定义部分
      *
      * @param [type] $model
+     * @param [array] $has_model 使用过的模型数据
      * @return void
      */
-    public function createModelRelation($model)
+    public function createModelRelation($model,$useModelArr = [])
     {
         $model_id = $model['id'];
         $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel'])->get()->toArray();
@@ -219,7 +220,7 @@ class DevService
     }";
         
         $has_model = [ucfirst($model['name'])];
-        $useModelArr = [];//使用过的模型数据
+        //$useModelArr = [];//使用过的模型数据
         foreach($relations as $val)
         {
             if(!in_array($val['type'],['one','many']))
@@ -301,8 +302,8 @@ class DevService
 
         $this->line('开始生成model文件：');
 
-        [$use_namespace,$crud_config,$parse_columns] = $this->createControllerRelation($data);
-        [$use_namespace2,$tpl] = $this->createModelRelation($data);
+        [$use_namespace,$crud_config,$parse_columns,$useModelArr] = $this->createControllerRelation($data);
+        [$use_namespace2,$tpl] = $this->createModelRelation($data,$useModelArr);
         
         $use_namespace = array_unique(array_merge($use_namespace,$use_namespace2));
     
@@ -381,7 +382,8 @@ class DevService
         $use_namespace = $parse_columns = [];
         
         //检测文件是否已经存在 存在的话将自定义代码带入
-        $customer_code = '';
+        $customer_code = '';//自定义代码
+        $customer_construct = '';//自定义构造函数代码
         $customer_namespace = '';
         if(file_exists($model_file_path))
         {
@@ -392,6 +394,14 @@ class DevService
             {
                 //已存在的文件该段不做覆盖
                 $customer_code = trim($match[1]);
+            }
+
+            $match1 = [];
+            preg_match('/customer construct start(.*)\/\/customer construct end/s',$old_content,$match1);
+            if(!empty($match1))
+            {
+                //已存在的文件该段不做覆盖
+                $customer_construct = trim($match1[1]);
             }
 
             $match2 = [];
@@ -411,7 +421,9 @@ class DevService
             '/\$use_namesapce\$/'=>implode("\r",$use_namespace),
             //'/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/'=>$customer_code,
+            '/\$customer_construct\$/'=>$customer_construct,
             '/\$customer_namespace\$/'=>$customer_namespace,
+            '/\$app_name\$/'=>env('APP_NAME',''),
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -453,9 +465,9 @@ class DevService
         $all_relations = [];
         
         $with_columns_search = $with_columns_replace = [];
+        $useModelArr = [];//使用过的模型数据
         if(!empty($relations))
         {
-            $useModelArr = [];//使用过的模型数据
             foreach($relations as $key=>$val)
             {
                 
@@ -646,7 +658,8 @@ class DevService
                         if($table_menu && $form_data)
                         {
                             [$label,$value] = explode(',',$form_data);
-                            $d['data'] = "@php(new ".$all_models[$column['name']]."())->select(['{$label} as label','{$value} as value'])->get()->toArray()@endphp";
+                            $data_select = ["{$label} as label","{$value} as value"];
+                            $d['data'] = '@php(new '.$all_models[$column['name']].'())->select('.json_encode($data_select).')->get()->toArray()@endphp';
                         }else
                         {
                             $d['data'] = "@php(new ".$all_models[$column['name']]."())->get()->toArray()@endphp";
@@ -671,12 +684,17 @@ class DevService
                         $d['table_menu'] = true;
                     }
                 }
-                if($form_type == 'switch'  && $form_data)
+                if($form_type == 'switch')
                 {
                     //switch 也支持 table_menu
-                    $valueEnum = collect(explode(',',$form_data))->map(function($v,$k){
-                        return ['label'=>$v,'value'=>$k];
-                    })->toArray();
+                    $valueEnum = [];
+                    if($form_data)
+                    {
+                        $valueEnum = collect(explode(',',$form_data))->map(function($v,$k){
+                            return ['label'=>$v,'value'=>$k];
+                        })->toArray();
+                    }
+                   
                     // $_value = [];
                     // foreach($valueEnum as $key=>$val)
                     // {
@@ -686,7 +704,7 @@ class DevService
                     
                     
                     $d['default'] = $default_value?1:0;
-                    if($table_menu)
+                    if($table_menu && !empty($valueEnum))
                     {
                         $d['with'] = true;
                         $d['data'] = $valueEnum;
@@ -735,7 +753,7 @@ class DevService
             }
         }
     
-        return [$namespace_data,$crud_config,$parse_columns];
+        return [$namespace_data,$crud_config,$parse_columns,$useModelArr];
     }
 
     public function getNamespace($foreign_model,$exist_names = [])
@@ -801,26 +819,44 @@ class DevService
         return;
     }
 
-    public function getModelsTree()
+    public function getModelsTree($admin_type = '',$all_selectable = false)
     {
         $model = new Model();
-        $data = $model->getChild(0,['system',env('APP_NAME'),''],function($item){
+        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $data = $model->getChild(0,$types,function($item) use($all_selectable){
             
             return [
                 'id'=>$item['id'],
                 'title'=>$item['title'],
                 'value'=>$item['id'],
                 'isLeaf'=>$item['type']?true:false,
-                'selectable'=>$item['type']?true:false,
+                'selectable'=>$item['type'] || $all_selectable ? true:false,
             ];
         });
         return $data;
     }
 
-    public function getModelsFolderTree()
+    public function getMenusTree($admin_type = '',$all_selectable = false)
     {
-        $model = (new Model())->whereIn('admin_type',['system',env('APP_NAME'),''])->where(['type'=>0]);
-        $hs = new HelperService;
+        $model = new Menu();
+        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $data = $model->getChild(0,$types,function($item) use($all_selectable){
+            
+            return [
+                'id'=>$item['id'],
+                'title'=>$item['title'],
+                'value'=>$item['id'],
+                'isLeaf'=>true,
+                'selectable'=>true,
+            ];
+        });
+        return $data;
+    }
+
+    public function getModelsFolderTree($admin_type = '')
+    {
+        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $model = (new Model())->whereIn('admin_type',$types)->where(['type'=>0]);
         $data = HelperService::getChild($model,function($item){
             return [
                 'id'=>$item['id'],

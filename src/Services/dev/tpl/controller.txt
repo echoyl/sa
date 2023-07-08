@@ -6,12 +6,19 @@ $use_namesapce$
 //customer namespace start
 $customer_namespace$
 //customer namespace end
+/**
+ * @property \App\Services\$app_name$\AdminAppService $service
+ */
 class $name$Controller extends CrudController
 {
     public function __construct()
 	{
+		parent::__construct();
 		$crud_config$
 		$this->model = new $modelname$();
+		//customer construct start
+		$customer_construct$
+		//customer construct end
 	}
 	//customer code start
 	$customer_code$

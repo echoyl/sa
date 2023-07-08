@@ -13,8 +13,7 @@ class WebsiteService
         ['id' => 'link', 'title' => '外链'],
         ['id' => 'page', 'title' => '单页'],
         ['id' => 'post', 'title' => '内容','url'=>['category'=>'category','posts'=>'posts/posts'],'type'=>'content'],
-        ['id' => 'menu', 'title' => '菜单'],
-        ['id' => 'project', 'title' => '项目','url'=>['category'=>'banlvit/project/category','posts'=>'banlvit/project/posts'],'type'=>'content'],
+        ['id' => 'menu', 'title' => '菜单']
     ];
 
     public $modulesModel = [
@@ -186,10 +185,11 @@ class WebsiteService
     public function webset()
     {
         $setservice = new SetsService();
-
-        $data = $setservice->get('web');
+        $key = implode('_',[env('APP_NAME','web'),'web']);
+        $data = $setservice->get($key);
         //d($data);
-        HelperService::deImages($data, ['logo', 'logo2','brand_image', 'qrcode'], true);
+        HelperService::deImagesOne($data, ['logo', 'logo2','brand_image', 'qrcode'], true);
+        //HelperService::deImages($data, ['logo', 'logo2','brand_image', 'qrcode'], true);
         return $data;
     }
 

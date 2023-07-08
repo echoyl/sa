@@ -30,14 +30,20 @@ class SetsService
     {
         $item = $this->model->where(['key'=>$key])->first();
 
+        //新增自动检测字段是否是图片 及 配置 类型
+
+
 		if(request()->isMethod('post'))
 		{
 			$post_data = filterEmpty(request('base'));
 
-            if(isset($post_data['qrcode']))
-            {
-                $post_data['qrcode'] = HelperService::uploadParse($post_data['qrcode'],true);
-            }
+            // $img_fields = HelperService::getImageFields($post_data);
+            
+            // if(!empty($img_fields))
+            // {
+            //     $post_data = HelperService::parseImages($post_data,$img_fields);
+            // }
+            //d($post_data);
 
 			$data = [
 				'key'=>$key,
@@ -57,10 +63,15 @@ class SetsService
 			if($item && $item['value'])
 			{
 				$data = json_decode($item['value'],true);
-                if(isset($data['qrcode']))
+                $img_fields = HelperService::getImageFields($data);
+
+                if(!empty($img_fields))
                 {
-                    $data['qrcode'] = HelperService::uploadParse($data['qrcode'],false);
+                    HelperService::parseImages($data,$img_fields,false);
                 }
+
+                HelperService::deImagesFromConfig($data);
+
 			}else
 			{
 				$data = [];

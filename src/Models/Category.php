@@ -116,9 +116,14 @@ class Category extends Base
      * @param [int] $cid
      * @return array
      */
-    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1)
+    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['displayorder','desc'],['id','asc']])
     {
-        $list = $this->where(['parent_id' => $cid])->where($where)->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
+        $list = $this->where(['parent_id' => $cid])->where($where);
+        foreach($displayorder as $dis)
+        {
+            $list = $list->orderBy($dis[0],$dis[1]);
+        }
+        $list = $list->get()->toArray();
         foreach ($list as $key => $val) {
             if($parseData)
             {
@@ -126,7 +131,7 @@ class Category extends Base
             }
             if($max_level == 0 || $max_level > $level)
             {
-                $children = $this->getChild($val['id'], $where,$parseData,$max_level,$level+1);
+                $children = $this->getChild($val['id'], $where,$parseData,$max_level,$level+1,$displayorder);
                 if (!empty($children)) {
                     $list[$key]['children'] = $children;
                 }

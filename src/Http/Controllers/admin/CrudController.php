@@ -2,6 +2,7 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
+use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 
@@ -13,6 +14,7 @@ use Echoyl\Sa\Services\HelperService;
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
  * @method mixed listData(&$list) 列表数据格式化
+ * @property \App\Services\AdminAppService $service
  */
 class CrudController extends ApiBaseController
 {
@@ -222,6 +224,16 @@ class CrudController extends ApiBaseController
                             }else
                             {
                                 $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
+                                if($where_type == 'whereBetween')
+                                {
+                                    //检测是否是日期
+                                    $d = DateTime::createFromFormat("Y-m-d",$search_val[1]);
+                                    if($d && $d->format('Y-m-d') === $search_val[1])
+                                    {
+                                        //是日期 自动追加至当天最后一秒
+                                        $search_val[1] .= ' 23:59:59';
+                                    }
+                                }
                             }
                             $m = $m->$where_type($columns[0],$search_val);
                         }
@@ -455,6 +467,7 @@ class CrudController extends ApiBaseController
             
             return $ret ?: $this->success($new_data);
         } else {
+            
             $this->parseData($item, 'decode');
             $this->parseWiths($item);
             if (method_exists($this, 'postData')) {
@@ -599,7 +612,6 @@ class CrudController extends ApiBaseController
         $model_parse_columns = $this->getParseColumns();
 
         $parse_columns = !empty($parse_columns)?$parse_columns:(!empty($model_parse_columns)?$model_parse_columns:$this->parse_columns);
-
         foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
@@ -811,6 +823,9 @@ class CrudController extends ApiBaseController
                         if($isset)
                         {
                             $val = floatval($val / 100);
+                        }else
+                        {
+                            $val = '__unset';
                         }
                     }
                     break;
@@ -829,7 +844,7 @@ class CrudController extends ApiBaseController
                     $id_name = $col['value']??'id';
                     if($encode)
                     {
-                        if($isset && $val)
+                        if($isset && $val && isset($val[$id_name]))
                         {
                             $val = $val[$id_name];
                         }
@@ -924,6 +939,26 @@ class CrudController extends ApiBaseController
                                 $val = json_decode($val,true);
                             }
                         }
+                    }
+                    break;
+                case 'date':
+                case 'datetime':
+                    if(!$val)
+                    {
+                        $val = '__unset';
+                    }
+                    if($encode)
+                    {
+
+                    }else
+                    {
+                        
+                    }
+                    break;
+                case 'select_columns':
+                    if($encode)
+                    {
+                        $val = '__unset';
                     }
                     break;
                 // case 'enum':

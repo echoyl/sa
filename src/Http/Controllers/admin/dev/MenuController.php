@@ -40,7 +40,7 @@ class MenuController extends CrudController
             ['name'=>'table_config','type'=>'json','default'=>''],
         ];
 
-        $this->can_be_null_columns = ['title'];
+        $this->can_be_null_columns = ['title','admin_model_id'];
 
         $this->with_column = ['adminModel.relations.foreignModel.menu'];
     }
@@ -67,8 +67,34 @@ class MenuController extends CrudController
             return $item;
         });
         //d($data);
-
+        $ds = new DevService;
+        $search['menus'] = $ds->getMenusTree();
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
+
+    }
+
+    public function copyTo()
+    {
+        $id = request('id');
+        $toid = request('toid');
+        //当前菜单
+        $data = $this->model->where(['id'=>$id])->first();
+        $to = $this->model->where(['id'=>$toid])->first();
+        if(!$data || !$to)
+        {
+            return $this->fail([1,'数据错误']);
+        }
+
+        $data = $data->toArray();
+        unset($data['id']);
+        $data['parent_id'] = $to['id'];
+        $data['title'] .= '-复制';
+        $data['type'] = $to['type'];
+
+        $this->model->insert($data);
+
+        return $this->success('操作成功');
+
 
     }
 
@@ -78,150 +104,194 @@ class MenuController extends CrudController
     //     return;
     // }
 
-    public function beforePost(&$data,$id,$item)
+    protected function getItem($name = 'table_config')
     {
-        if(isset($data['form_config']))
+        
+        $config = request('base.'.$name);
+        $item = $this->model->where(['id'=>request('base.id')])->with($this->with_column)->first();
+        if(!$config || !$item)
         {
-            //根据form配置生成json配置
-            $config = $data['form_config'];
-            $json = [];
-            $ds = new DevService;
-            foreach($config as $val)
-            {
-                $keys = $val['columns'];
-                $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
-                if(count($keys) > 1)
-                {
-                    //form group
-                    $json[] = ['valueType'=>'group','columns'=>$columns];
-                }else
-                {
-                    //单个form item
-                    $json[] = array_shift($columns);
-                }
-            }
-            $formColumns = $json;
+            return $this->fail([1,'请先提交数据']);
         }
-        $ds = new DevService;
-        if(isset($data['table_config']))
+        $item = $item->toArray();
+
+        return ['config'=>$config,'item'=>$item];
+    }
+
+    /**
+     * 列表配置信息
+     *
+     * @return void
+     */
+    public function tableConfig()
+    {
+        $item_data = $this->getItem();
+
+        if(!is_array($item_data))
         {
-            //根据form配置生成json配置
-            $left_menu =false;
-            $tool_bar_button = [];
-            $config = $data['table_config'];
-            $json = [];
-            
-            foreach($config as $val)
+            return $item_data;
+        }
+
+        $item = $item_data['item'];
+        $config = $item_data['config'];
+
+        $ds = new DevService;
+
+        //根据form配置生成json配置
+        $left_menu = false;
+        $tool_bar_button = [];
+        $json = [];
+        
+        foreach($config as $val)
+        {
+            $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
+            if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
-                $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
-                if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
+                $tool_bar_button[] = $columns;
+            }else
+            {
+                $json[] = $columns;
+            }
+            
+            if(isset($val['table_menu']) && !empty($val['table_menu']))
+            {
+                //如果该字段设置了 table_menu
+                $key = $val['key'];
+                if(is_array($key))
                 {
-                    $tool_bar_button[] = $columns;
-                }else
+                    $key = $key[0];
+                }
+                $table_menu_key = $key;
+            }
+
+            if(isset($val['left_menu']) && !empty($val['left_menu']))
+            {
+                //设置左侧菜单 配置
+                $key = $val['key'];
+                if(is_array($key))
                 {
-                    $json[] = $columns;
+                    $key = $key[0];
                 }
                 
-                if(isset($val['table_menu']) && !empty($val['table_menu']))
+                $left_menu = [
+                    'name'=>$key.'s',//读取值的复数
+                    'url_name'=>$key,
+                    'title'=>$columns['title'],
+                ];
+                if(isset($val['left_menu_field']) && $val['left_menu_field'])
                 {
-                    //如果该字段设置了 table_menu
-                    $key = $val['key'];
-                    if(is_array($key))
-                    {
-                        $key = $key[0];
-                    }
-                    $table_menu_key = $key;
+                    [$label,$value] = explode(',',$val['left_menu_field']);
+                    $left_menu['field'] = ['title'=>$label,'key'=>$value];
                 }
-
-                if(isset($val['left_menu']) && !empty($val['left_menu']))
-                {
-                    //设置左侧菜单 配置
-                    $key = $val['key'];
-                    if(is_array($key))
-                    {
-                        $key = $key[0];
-                    }
-                    
-                    $left_menu = [
-                        'name'=>$key.'s',//读取值的复数
-                        'url_name'=>$key,
-                        'title'=>$columns['title'],
-                    ];
-                    if(isset($val['left_menu_field']) && $val['left_menu_field'])
-                    {
-                        [$label,$value] = explode(',',$val['left_menu_field']);
-                        $left_menu['field'] = ['title'=>$label,'key'=>$value];
-                    }
-                }
-
             }
-            
-            $tableColumns = $json;
+
         }
-        if(isset($data['other_config']) && $data['other_config'])
-        {
-            $other_config = $data['other_config'];
-        }else
-        {
-            if($id && $item['other_config'])
-            {
-                $other_config = $item['other_config'];
-            }
-            
-        }
-        if(isset($tableColumns) || isset($formColumns) || isset($other_config))
-        {
-            $desc = json_decode($item['desc'],true);
-
-            $data['desc'] = [
-                'tableColumns'=>$desc['tableColumns']??[],
-                'formColumns'=>$desc['formColumns']??[],
-                'toolBarButton'=>$desc['toolBarButton']??[],
-            ];
-            if(isset($desc['leftMenu']))
-            {
-                $data['desc']['leftMenu'] = $desc['leftMenu'];
-            }
-
-            if(isset($table_menu_key))
-            {
-                $data['desc']['table_menu_key'] = $table_menu_key;
-            }
-            if(isset($left_menu))
-            {
-                $data['desc']['leftMenu'] = $left_menu;
-            }
-
-            if(isset($tool_bar_button))
-            {
-                $data['desc']['toolBarButton'] = $tool_bar_button;
-            }
-            
-            if(isset($tableColumns))
-            {
-                $data['desc']['tableColumns'] = $tableColumns;
-            }
-            if(isset($formColumns))
-            {
-                $data['desc']['formColumns'] = $formColumns;
-            }
-            // if($item['admin_model'])
-            // {
-            //     $path = array_reverse($ds->getPath($item['admin_model'],$ds->allModel()));
-            //     $data['desc']['url'] = implode('/',$path);
-            // }
-
-            //所有请求使用菜单的path路径
-            $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
-            $data['desc']['url'] = implode('/',$path);
-
-            if(isset($other_config))
-            {
-                $data['desc'] = array_merge($data['desc'],$other_config);
-            }
-            $data['desc'] = json_encode($data['desc']);
-        }
-    
         
+        $tableColumns = $json;
+
+        $desc = json_decode($item['desc'],true);
+
+        //左侧菜单
+        $desc['leftMenu'] = $left_menu;
+
+        //table tab切换
+        if(isset($table_menu_key))
+        {
+            $desc['table_menu_key'] = $table_menu_key;
+        }
+
+        //工具菜单
+        $desc['toolBarButton'] = $tool_bar_button;
+        
+        $desc['tableColumns'] = $tableColumns;
+
+        return $this->updateDesc($desc,$item,['table_config'=>json_encode($config)]);
+
+    }
+
+    /**
+     * 表单配置信息
+     *
+     * @return void
+     */
+    public function formConfig()
+    {
+        $item_data = $this->getItem('form_config');
+
+        if(!is_array($item_data))
+        {
+            return $item_data;
+        }
+
+        $item = $item_data['item'];
+        $config = $item_data['config'];
+
+        //根据form配置生成json配置
+        $json = [];
+        $ds = new DevService;
+        foreach($config as $val)
+        {
+            $keys = $val['columns'];
+            $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
+            if(count($keys) > 1)
+            {
+                //form group
+                $json[] = ['valueType'=>'group','columns'=>$columns];
+            }else
+            {
+                //单个form item
+                $json[] = array_shift($columns);
+            }
+        }
+        $formColumns = $json;
+        $desc = json_decode($item['desc'],true);
+        $desc['formColumns'] = $formColumns;
+        
+        return $this->updateDesc($desc,$item,['form_config'=>json_encode($config)]);
+
+    }
+
+    /**
+     * 额外配置信息
+     *
+     * @return void
+     */
+    public function otherConfig()
+    {
+        $item_data = $this->getItem('other_config');
+
+        if(!is_array($item_data))
+        {
+            return $item_data;
+        }
+
+        $item = $item_data['item'];
+        $config = $item_data['config'];
+        $desc = json_decode($item['desc'],true);
+
+        //这里需要 合并之前的配置 将生成的配置都保留 其它全部删除 然后合并现有的other 配置
+        $_desc = [];
+        $keep_column = ['formColumns','toolBarButton','leftMenu','table_menu_key','tableColumns'];
+        foreach($keep_column as $kc)
+        {
+            if(isset($desc[$kc]))
+            {
+                $_desc[$kc] = $desc[$kc];
+            }
+        }
+        $desc = array_merge($_desc,$config);
+
+        return $this->updateDesc($desc,$item,['other_config'=>json_encode($config)]);
+    }
+
+    protected function updateDesc($desc,$item,$data = [])
+    {
+        $ds = new DevService;
+        //所请求使用菜单的path路径
+        $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
+        $desc['url'] = implode('/',$path);
+        $data['desc'] = json_encode($desc);
+        $this->model->where(['id'=>$item['id']])->update($data);
+        return $this->success('操作成功');
     }
 }

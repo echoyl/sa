@@ -39,6 +39,79 @@ class HelperService
         return $_pics;
     }
 
+    /**
+     * 获取数据是 配置类型的字段 名
+     *
+     * @param [type] $data
+     * @return void | array
+     */
+    public static function getConfigFields($data)
+    {
+        if(empty($data))
+        {
+            return [];
+        }
+        $fields = [];
+        foreach($data as $key=>$val)
+        {
+            if(isset($val['config']))
+            {
+                $fields[] = $key;
+            }
+        }
+        return $fields;
+    }
+
+    /**
+     * 将配置类型的数据中的图片类型解析
+     *
+     * @param [type] $data
+     * @return void
+     */
+    public static function deImagesFromConfig(&$data)
+    {
+        $fields = self::getConfigFields($data);
+        
+        if(!empty($fields))
+        {
+            foreach($fields as $f)
+            {
+                $img_fields = self::getImageFields($data[$f]['value']);
+                if(!empty($img_fields))
+                {
+                    $data[$f]['value'] = self::parseImages($data[$f]['value'],$img_fields,false);
+                }
+            }
+        }
+        return;
+    }
+
+    /**
+     * 检测数据里面哪些字段是图片类型
+     *
+     * @param [type] $data
+     * @return void | array
+     */
+    public static function getImageFields($data)
+    {
+        if(empty($data))
+        {
+            return [];
+        }
+        $fields = [];
+        foreach($data as $key=>$val)
+        {
+            if(is_array($val) && !empty($val))
+            {
+                if(isset($val[0]['value']) && isset($val[0]['uid']))
+                {
+                    $fields[] = $key;
+                }
+            }
+        }
+        return $fields;
+    }
+
     public static function userContent($content)
     {
         if(is_array($content))
@@ -158,7 +231,7 @@ class HelperService
         return $data;
     }
 
-    public static function parseImages($data, $keys = [], $encode = true,$params = [])
+    public static function parseImages(&$data, $keys = [], $encode = true,$params = [])
     {
         foreach ($keys as $key) {
             if (isset($data[$key])) {

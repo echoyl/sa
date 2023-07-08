@@ -114,22 +114,7 @@ class WorkFlowService
         foreach($condition as $where)
         {
             [$field,$type,$val] = $where;
-            if(strpos($val,'.') !== false)
-            {
-                //读取数据内容
-                $fields = explode('.',$val);
-                $val_data = $this->data;
-                foreach($fields as $v)
-                {
-                    if(!$v)
-                    {
-                        continue;
-                    }
-                    $val_data = $val_data[$v];
-                }
-                $val = $val_data;
-            }
-            $model = $model->where([[$field,$type,$val]]);
+            $model = $model->where([[$field,$type,$this->getDataByField($val)]]);
         }
         $user_ids = $model->get()->pluck('id')->toArray();
 
@@ -262,7 +247,7 @@ class WorkFlowService
      *
      * @return void
      */
-    public function doingNode()
+    public function doingNode($action_url = '')
     {
         $data = $this->logModel->where([
             'model_id'=>$this->data['id'],
@@ -286,11 +271,14 @@ class WorkFlowService
         {
             foreach($actions as $key=>$action)
             {
-                $btn = ['text'=>$action['title'],'type'=>'primary'];
+                $btn = ['text'=>$action['title'],'type'=>'primary','size'=>'small'];
                 if(count($actions) > 1 && $action['to'] == 0)
                 {
                     //数量大于1 那么to = 0 就是拒绝 按钮红色
-                    $btn['danger'] = true;
+                    if(!isset($action['color']))
+                    {
+                        $btn['danger'] = true;
+                    }
                 }
                 $item = [
                     'domtype'=>'button',
@@ -301,7 +289,7 @@ class WorkFlowService
                         'msg'=>'是否确定'.$action['title'].'？'
                     ],
                     'request'=>[
-                        'url'=>'diaobo/diaobo/action',
+                        'url'=>$action_url,
                         'data'=>[
                             'key'=>$action['key'],
                         ]
@@ -354,9 +342,9 @@ class WorkFlowService
             'action'=>$action['key'],
         ];
 
-        $to = $action['to'];
+        $downstream = $this->getNodeByTo($action['to']);
 
-        if($to == 0)
+        if($downstream === 0)
         {
             //结束流程
             
@@ -364,8 +352,7 @@ class WorkFlowService
             $this->end();
             return [0,'操作成功'];
         }
-
-        $downstream = $this->getNodeById($to);
+        
         if(!$downstream)
         {
             return [1,'无该操作，请联系管理员设置'];
@@ -422,9 +409,102 @@ class WorkFlowService
         return true;
     }
 
-    public function getNodeById($id)
+    public function getDataByField($val,$isField = false)
+    {
+        if(strpos($val,'.') !== false || $isField)
+        {
+            //读取数据内容
+            $fields = explode('.',$val);
+            $val_data = $this->data;
+            foreach($fields as $v)
+            {
+                if(!$v)
+                {
+                    continue;
+                }
+                $val_data = $val_data[$v];
+            }
+            $val = $val_data;
+        }
+        return $val;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param [type] $val1
+     * @param [type] $val2
+     * @param [type] $op
+     * @return void
+     */
+    public function op($val1,$val2,$op)
+    {
+        switch($op)
+        {
+            case '<':
+                return $val1 < $val2;
+            break;
+            case '>':
+                return $val1 > $val2;
+            break;
+            case '<=':
+                return $val1 <= $val2;
+            break;
+            case '>=':
+                return $val1 >= $val2;
+            break;
+            case '=':
+                return $val1 == $val2;
+            break;
+            default:
+                return false;
+        }
+    }   
+
+    public function getNodeByTo($to)
     {
         $model = new Node();
+        $node = $id = false;
+        if(is_numeric($to))
+        {
+            //如果是id 直接读取该节点
+            $id = $to;
+            
+        }elseif(is_array($to))
+        {
+            //获取下个节点需要更新每个条件来判断
+            foreach($to as $t)
+            {
+                //d($t['condition']);
+                if(!isset($t['condition']) || empty($t['condition']))
+                {
+                    continue;
+                }
+                $ok = true;
+                foreach($t['condition'] as $where)
+                {
+                    [$field,$type,$val] = $where;
+                    $model_val = $this->getDataByField($field,true);
+                    $condition_val = $this->getDataByField($val);
+                    if(!$this->op($model_val,$condition_val,$type))
+                    {
+                        //条件成立是and 全部条件成立
+                        $ok = false;
+                    }
+                }
+                if($ok)
+                {
+                    $id = $t['to'];
+                    break;
+                }
+            }
+        }
+
+        if($id == 0)
+        {
+            return 0;
+        }
+
         $node = $model->where(['id'=>$id])->first();
 
         if(!$node)
@@ -452,6 +532,40 @@ class WorkFlowService
 
         $this->logModel->insert($down_log);
         return;
+    }
+
+    /**
+     * 检测流程是否已结束
+     *
+     * @return boolean
+     */
+    public function isEnd()
+    {
+        $has = $this->logModel->where([
+            'workflow_id'=>$this->workflow['id'],
+            'model_id'=>$this->data['id'],
+            'action'=>'end'
+        ])->first();
+        return $has ? true:false;
+    }
+
+    /**
+     * 获取流程的结果 即获取结束log的前面一条记录信息
+     *
+     * @return void
+     */
+    public function result()
+    {
+        $is_end = $this->isEnd();
+        if(!$is_end)
+        {
+            //流程未结束 无结果
+            return false;
+        }
+
+        $data = $this->logModel->where(['model_id'=>$this->data['id'],'workflow_id'=>$this->workflow['id']])->where([['action','!=','end']])->orderBy('id','desc')->first()->toArray();
+
+        return $data;
     }
 
 }

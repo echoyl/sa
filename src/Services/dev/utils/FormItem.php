@@ -228,6 +228,12 @@ class FormItem
         return;
     }
 
+    /**
+     * 弹出层table选择器
+     * 多选数据结构必须是1对多
+     * 单选 1对1 
+     * @return void
+     */
     public function modalSelect()
     {
         $d = $this->data;
@@ -239,17 +245,20 @@ class FormItem
         }else
         {
             $d['fieldProps'] = [];
+            $fieldProps = $this->props['fieldProps']??'';
+            $set_url = $fieldProps['url']??'';
+            //如果没有自定义url 才自动查找菜单路径
             if($relation && $relation['foreign_model'])
             {
                 //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
-                if($relation['foreign_model']['menu'])
+                $d['fieldProps']['name'] = $relation['name'];
+                if($relation['foreign_model']['menu'] && !$set_url)
                 {
+                    //如果关联模型 也关联了菜单 直接使用第一个匹配的这个菜单的url地址
                     $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
-                    $d['fieldProps'] = [
-                        'url'=>implode('/',$path),
-                        'name'=>$relation['name']
-                    ];
+                    $d['fieldProps']['url'] = implode('/',$path);
                 }
+                //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
                 
             }
         }
