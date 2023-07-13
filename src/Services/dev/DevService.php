@@ -10,6 +10,7 @@ use Echoyl\Sa\Services\dev\utils\SchemaDiff;
 use Echoyl\Sa\Services\dev\utils\TableColumn;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,11 @@ class DevService
     var $msg = [];
 
     public $tpl_path = __DIR__.'/tpl/';
+
+    public static function appname()
+    {
+        return env('APP_NAME','');
+    }
 
     public function createSchemaSql($table_name,$columns)
     {
@@ -99,9 +105,16 @@ class DevService
         return $field_sql;
     }
 
-    public function createModelSchema($table_name,$columns)
+    public function createModelSchema($model)
     {
-        
+        $all = $this->allModel(true);
+
+        $table_name = implode('_', array_reverse(DevService::getPath($model, $all)));
+
+        $columns = [];
+        if ($model['columns']) {
+            $columns = json_decode($model['columns'], true);
+        }
         //Schema::dropIfExists($table_name);
         
         if(!Schema::hasTable($table_name))
@@ -165,7 +178,21 @@ class DevService
 
     public static function getPath($val, $menus,$field = 'name')
     {
-        return Utils::getPath($val, $menus,$field);
+        $path = Utils::getPath($val, $menus,$field);
+        //Log::channel('daily')->info('getPath:',['path'=>$path,'val'=>$val]);
+        $pl = count($path);
+        //加一个判断如果最后一个不是项目名称就自动追加name 限于获取模型的路径
+        $type = Arr::get($val,'admin_type','');
+        
+        if(isset($val['admin_type']) && $type != 'system' && $pl > 0)
+        {
+            $app_name = self::appname();
+            if($path[$pl-1] != $app_name)
+            {
+                $path[] = $app_name;
+            }
+        }
+        return $path;
     }
 
     public function line($msg)
@@ -173,10 +200,16 @@ class DevService
         $this->msg[] = $msg;
     }
 
-    public function allModel()
+    /**
+     * 获取所有模型 
+     *
+     * @param boolean $flush 如果为true表示重新获取最新数据
+     * @return void
+     */
+    public function allModel($flush = false)
     {
         static $data = [];
-        if(empty($data))
+        if(empty($data) || $flush)
         {
             $data = (new Model())->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
         }
@@ -184,10 +217,11 @@ class DevService
         return $data;
     }
 
-    public function allMenu()
+    public function allMenu($flush = false)
     {
+        
         static $data = [];
-        if(empty($data))
+        if((empty($data) || $flush) && Schema::hasTable('dev_menu'))
         {
             $data = (new Menu())->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
         }
@@ -216,7 +250,7 @@ class DevService
         $hasone_tpl ="
     public function _name()
     {
-        return \$this->has_type(_modelName::class,'_foreignKey','_localKey');
+        return \$this->has_type(_modelName::class,'_foreignKey','_localKey')_withDefault;
     }";
         
         $has_model = [ucfirst($model['name'])];
@@ -249,7 +283,17 @@ class DevService
                     $foreign_model_name = $f_model_name;
                     $namespace_data[] = $namespace.';';
                 }
-                
+            }
+
+            //读取with_default
+            $with_default = '';
+            if($val['with_default'])
+            {
+                $with_default = json_decode($val['with_default'],true);
+                if(!empty($with_default))
+                {
+                    $with_default = '->withDefault('.Dev::export($with_default,2).')';
+                }
             }
 
             $hasone_data[] = str_replace([
@@ -257,13 +301,15 @@ class DevService
                 '_modelName',
                 '_foreignKey',
                 '_localKey',
-                '_type'
+                '_type',
+                '_withDefault'
             ],[
                 $val['name'],
                 $foreign_model_name,
                 $val['foreign_key'],
                 $val['local_key'],
-                ucfirst($val['type'])
+                ucfirst($val['type']),
+                $with_default
             ],$hasone_tpl);
         }
         return [$namespace_data,$hasone_data];
@@ -272,12 +318,16 @@ class DevService
     /**
      * 生成模型文件
      *
-     * @param [array] $names 文件的路径数组
      * @param [object] $data 模型的数据信息
      * @return void
      */
-    public function createModelFile($names,$data)
+    public function createModelFile($data)
     {
+        $all = $this->allModel();
+
+        $names = array_reverse(self::getPath($data, $all));
+        //d($names);
+
         $table_name = implode('_',$names);
         $name = ucfirst(array_pop($names));
         
@@ -352,8 +402,12 @@ class DevService
         return;
     }
 
-    public function createControllerFile($names,$data)
+    public function createControllerFile($data)
     {
+        $all = $this->allModel();
+
+        $names = array_reverse(self::getPath($data, $all));
+
         $name = ucfirst(array_pop($names));
 
         $namespace = '';
@@ -758,7 +812,7 @@ class DevService
 
     public function getNamespace($foreign_model,$exist_names = [])
     {
-        $foreign_model_names = array_reverse($this->getPath($foreign_model,$this->allModel()));
+        $foreign_model_names = array_reverse(self::getPath($foreign_model,$this->allModel()));
 
         $foreign_model_name = ucfirst(array_pop($foreign_model_names));
 
@@ -821,8 +875,35 @@ class DevService
 
     public function getModelsTree($admin_type = '',$all_selectable = false)
     {
+        if($admin_type)
+        {
+            return $this->getModelsTreeData($admin_type,$all_selectable);
+        }else
+        {
+            //获取全部的话 将系统模型归类到一起
+            $system = $this->getModelsTreeData(['system'],$all_selectable);
+            $app = $this->getModelsTreeData([self::appname()],$all_selectable);
+            return array_merge($app,[[
+                'id'=>0,
+                'title'=>'系统相关',
+                'value'=>0,
+                'isLeaf'=>false,
+                'selectable'=>false,
+                'children'=>$system
+            ]]);
+        }
+    }
+    /**
+     * 获取模型返回树形格式
+     *
+     * @param string $admin_type
+     * @param boolean $all_selectable
+     * @return void
+     */
+    public function getModelsTreeData($admin_type = '',$all_selectable = false)
+    {
         $model = new Model();
-        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $types = $admin_type?:['system',self::appname(),''];
         $data = $model->getChild(0,$types,function($item) use($all_selectable){
             
             return [
@@ -962,7 +1043,7 @@ class DevService
                     if($model['type'] == 1)
                     {
                         //检测是否有namespace
-                        $model_path = array_reverse(Utils::getPath($model,$self->allModel()));
+                        $model_path = array_reverse(self::getPath($model,$self->allModel()));
                         $_prefix = array_merge($prefix,[$menu['path']]);
                         if(count($model_path) > 1)
                         {

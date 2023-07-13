@@ -31,12 +31,15 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 DevService::aliasRouteSystem();
                 //开发工具使用
                 Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
+                    Route::any('setting', 'SettingController@setting');
+
                     Route::post('menu/copyTo', 'MenuController@copyTo');
                     Route::post('menu/tableConfig', 'MenuController@tableConfig');
                     Route::post('menu/formConfig', 'MenuController@formConfig');
                     Route::post('menu/otherConfig', 'MenuController@otherConfig');
 
                     Route::resource('menu', 'MenuController');
+                    Route::post('model/quickCreate', 'ModelController@quickCreate');
                     Route::post('model/createModelSchema', 'ModelController@createModelSchema');
                     Route::post('model/createModelFile', 'ModelController@createModelFile');
                     Route::post('model/createControllerFile', 'ModelController@createControllerFile');

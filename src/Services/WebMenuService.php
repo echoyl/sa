@@ -5,6 +5,8 @@ use Echoyl\Sa\Models\web\Menu;
 use App\Services\WeburlService;
 use Echoyl\Sa\Services\SetsService;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+
 class WebMenuService
 {
 
@@ -434,7 +436,7 @@ class WebMenuService
     {
 
         static $all = [];
-        if (empty($all)) {
+        if (empty($all) && Schema::hasTable('menu')) {
             $all = Menu::where(['state' => '1','type'=>env('APP_NAME')])->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
         }
         return $all;

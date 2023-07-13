@@ -1,0 +1,23 @@
+<?php
+namespace Echoyl\Sa\Services\dev\utils;
+
+class Creator
+{
+
+
+    public static $default_post_columns = '[{"title":"id","name":"id","type":"int"},{"title":"标题","name":"title","type":"vachar"},{"title":"分类","name":"category_id","type":"vachar","form_type":"cascaders"},{"title":"_分类","name":"_category_id","type":"vachar","default":"250"},{"title":"图片","name":"titlepic","type":"vachar","form_type":"image","form_data":1},{"title":"图集","name":"pics","type":"text","form_type":"image","form_data":9},{"title":"描述","name":"desc","type":"vachar","form_type":"textarea"},{"title":"内容","name":"content","type":"text","form_type":"tinyEditor"},{"title":"其它属性","name":"specs","type":"text","form_type":"json"},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"form_data":"禁用,启用","table_menu":true}]';
+    public static $default_category_columns = '[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"vachar"},{"title":"父级Id","name":"parent_id","type":"int","desc":null},{"title":"图片","name":"titlepic","type":"vachar","form_type":"image","form_data":1},{"title":"状态","name":"state","type":"int","form_type":"switch","form_data":"禁用,启用","default":"1"}]';
+
+    public static $menu_category = [
+        'desc'=>'{"formColumns":["id",{"valueType":"group","columns":[{"dataIndex":"title","title":"名称","width":"md"},"displayorder"]},{"dataIndex":"titlepic","title":"图片","valueType":"uploader","fieldProps":{"max":1}},{"dataIndex":"state","title":"状态","valueType":"switch","fieldProps":{"checkedChildren":"启用","unCheckedChildren":"禁用","defaultChecked":true}}],"toolBarButton":[],"leftMenu":false,"tableColumns":[{"dataIndex":"id","title":"id","search":false},{"dataIndex":"title","title":"名称","search":false},{"dataIndex":"titlepic","title":"图片","valueType":"uploader","search":false,"fieldProps":{"max":1}},"displayorder",{"dataIndex":"state","title":"状态","valueType":"select","search":false,"valueEnum":[{"text":"禁用","status":"error"},{"text":"启用","status":"success"}]},"coption"],"level":2,"url":"news/category"}',
+        'form_config'=>'[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"title"},{"key":"displayorder"}]},{"columns":[{"key":"titlepic"}]},{"columns":[{"key":"state"}]}]',
+        'table_config'=>'[{"key":"id"},{"key":"title"},{"key":"titlepic"},{"key":"displayorder"},{"key":"state"},{"key":"coption"}]',
+        'other_config'=>'{"level":2}'
+    ];
+
+    public static $menu_posts = [
+        'desc'=>'{"leftMenu":false,"toolBarButton":[],"tableColumns":[{"dataIndex":"id","title":"id","search":false},{"dataIndex":"title","title":"标题"},{"dataIndex":"category_id","title":"分类","valueType":"cascader","search":false,"requestDataName":"category_ids"},{"dataIndex":"titlepic","title":"图片","valueType":"uploader","search":false,"fieldProps":{"max":1}},{"dataIndex":"created_at","title":"创建时间","search":false,"sort":true},"displayorder",{"dataIndex":"state","title":"状态","valueType":"select","search":false,"valueEnum":[{"text":"禁用","status":"error"},{"text":"启用","status":"success"}]},"option"],"url":"news/news","formColumns":["id",{"dataIndex":"title","title":"标题"},{"valueType":"group","columns":[{"dataIndex":"category_id","title":"分类","valueType":"cascader","requestDataName":"category_ids","fieldProps":{"placeholder":"请选择分类","multiple":true,"showCheckedStrategy":"SHOW_CHILD"},"width":"md"},{"dataIndex":"created_at","title":"创建时间","valueType":"dateTime","width":"md"}]},{"dataIndex":"titlepic","title":"图片","valueType":"uploader","fieldProps":{"max":1}},{"dataIndex":"pics","title":"图集","valueType":"uploader","fieldProps":{"max":9}},{"dataIndex":"desc","title":"描述","valueType":"textarea"},{"dataIndex":"content","title":"内容","valueType":"tinyEditor"},{"dataIndex":"specs","title":"其它属性","valueType":"jsonForm"},{"valueType":"group","columns":[{"dataIndex":"state","title":"状态","valueType":"switch","fieldProps":{"checkedChildren":"启用","unCheckedChildren":"禁用","defaultChecked":true},"width":"md"},"displayorder"]}],"table_menu_key":"state"}',    
+        'form_config'=>'[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"title"}]},{"columns":[{"key":"category_id"},{"key":"created_at"}]},{"columns":[{"key":"titlepic"}]},{"columns":[{"key":"pics"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"content"}]},{"columns":[{"key":"specs","type":"jsonForm"}]},{"columns":[{"key":"state"},{"key":"displayorder"}]}]',
+        'table_config'=>'[{"key":"id"},{"key":"title","can_search":[1]},{"key":"category_id"},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
+    ];
+}

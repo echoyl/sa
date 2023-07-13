@@ -37,7 +37,11 @@ class Utils
 
     public static function getPath($val, $menus,$field = 'name')
     {
-        $alias = [$val[$field]];
+        if(!$val)
+        {
+            return [];
+        }
+        $alias = isset($val[$field])?[$val[$field]]:[];
         //d($parent);
         if ($val['parent_id']) {
             $parent = collect($menus)->filter(function ($item) use ($val) {

@@ -18,6 +18,25 @@ class Model extends Category
         return $this->hasOne(self::class, 'id', 'parent_id');
     }
 
+    public function getParseColumns()
+    {
+        static $data = [];
+        if(empty($data))
+        {
+            $data = [
+                ['name' => 'parent_id', 'type' => '', 'default' => 0],
+                ["name" => "admin_type", "type" => "select", "default" => env('APP_NAME'), "data" => [
+                    ["label" => "项目", "value" => env('APP_NAME')],
+                    ["label" => "系统", "value" => 'system'],
+                ], "with" => true],
+                ['name'=>'columns','type'=>'json','default'=>''],
+                ['name'=>'search_columns','type'=>'json','default'=>'{}'],
+                //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
+            ];
+        }
+        return $data;
+    }
+
     public function getChild($cid = 0, $whereIn = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['type','asc'],['id','asc']])
     {
         $list = $this->where(['parent_id' => $cid])->whereIn('admin_type',$whereIn);

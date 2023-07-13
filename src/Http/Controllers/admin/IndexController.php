@@ -8,7 +8,11 @@ use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\NoticeService;
 use Echoyl\Sa\Services\SetsService;
+use Illuminate\Support\Arr;
 
+/**
+ * @property \Echoyl\Sa\Services\AdminAppService $service
+ */
 class IndexController extends ApiBaseController
 {
     //
@@ -96,8 +100,9 @@ class IndexController extends ApiBaseController
         HelperService::deImagesOne($setting,['logo','favicons']);
         $setting['title'] = $setting['title']??'Deadmin';
         $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
-        $setting['logo'] = $setting['logo']['url'];
+        $setting['logo'] = $setting['logo']['url']?:false;
         $setting['favicons'] = [$setting['favicons']['url']];
+        $setting['dev'] = Arr::get($setting,'dev',true);
         return $this->success($setting);
     }
 

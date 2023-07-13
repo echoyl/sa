@@ -35,9 +35,12 @@ class ServiceProvider extends LaravelServiceProvider
         $this->publishes([
             __DIR__.'/../config/sa.php' => config_path('sa.php'),
         ],'config');
+        $this->publishes([
+            __DIR__.'/../database/schema/mysql-schema.dump' => database_path('schema/mysql-schema.dump'),
+        ],'config');
 
         //数据迁移
-        //$this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        //$this->loadMigrationsFrom(__DIR__.'/../database/schema');
 
         if ($this->app->runningInConsole()) {
             $this->commands([

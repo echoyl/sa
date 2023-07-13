@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Services\dev\utils\Utils;
 
 class MenuController extends CrudController
 {
@@ -22,6 +23,7 @@ class MenuController extends CrudController
         $this->parse_columns = [
             ['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
             ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
+            ['name' => 'admin_model', 'type' => 'model', 'default' => '','class'=>Model::class],
             ['name' => 'admin_model_id', 'type' => 'select', 'default' => 0,'with'=>true,'data'=>$ds->getModelsTree()],
             ["name" => "type", "type" => "select", "default" => 'system', "data" => [
                 ["label" => "项目", "value" => env('APP_NAME')],
@@ -71,6 +73,16 @@ class MenuController extends CrudController
         $search['menus'] = $ds->getMenusTree();
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
+    }
+
+    public function postData(&$item)
+    {
+        if(isset($item['admin_model']) && isset($item['admin_model']['columns']))
+        {
+            $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'],array_values(collect(Utils::$title_arr)->map(function($v,$k){
+                return ['title'=>$v,'name'=>$k];
+            })->toArray()));
+        }
     }
 
     public function copyTo()

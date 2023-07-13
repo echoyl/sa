@@ -29,6 +29,7 @@ class RelationController extends CrudController
             ['name' => 'with_sum', 'type' => 'selects', 'default' => ''],
             ['name' => 'select_columns', 'type' => 'selects', 'default' => ''],
             ['name' => 'in_page_select_columns', 'type' => 'selects', 'default' => ''],
+            ['name' => 'with_default', 'type' => 'json', 'default' => ''],
         ];
 
     }

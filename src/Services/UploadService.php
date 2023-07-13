@@ -297,7 +297,7 @@ class UploadService
 
         $img = Image::make($qrbg);
 
-        $img->insert(Image::make($qrcode), 'top-left', 34, 106)->text('168批个车网通讯录', 107, 42, function ($font) {
+        $img->insert(Image::make($qrcode), 'top-left', 34, 106)->text('text', 107, 42, function ($font) {
             $font->file(public_path('font/msyhbd.ttc'));
             $font->color('#333333');
             $font->size(18);
