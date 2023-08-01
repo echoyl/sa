@@ -25,6 +25,14 @@ class FormItem
 
         $key = $config['key'];
 
+        $props = $config['props']??'';
+        $this->props = $props;
+
+        if(isset($props['dataIndex']) && $props['dataIndex'])
+        {
+            $key = $props['dataIndex'];
+        }
+
         if(in_array($key,['id','parent_id','created_at_s','displayorder']))
         {
             $this->data = $key;
@@ -45,8 +53,6 @@ class FormItem
         {
             return;
         }
-        $props = $config['props']??'';
-        $this->props = $props;
         $p_title = $props['title']??'';
         $title = $config['title']??'';
         $title = $p_title?:$title;
@@ -275,16 +281,24 @@ class FormItem
         if($this->relation)
         {
             $d['requestDataName'] = $this->schema['name'].'s';
+            $label = $value = '';
             if($form_data)
             {
                 [$label,$value] = explode(',',$form_data);
-                if(!$table_menu)
+            }else
+            {
+                if($this->schema['form_type'] == 'select')
                 {
-                    $d['fieldProps'] = ['fieldNames'=>[
-                        'label'=>$label,'value'=>$value
-                    ]];
+                    $label = 'title';
+                    $value = 'id';
                 }
                 
+            }
+            if(!$table_menu && $label)
+            {
+                $d['fieldProps'] = ['fieldNames'=>[
+                    'label'=>$label,'value'=>$value
+                ]];
             }
             if($this->schema['form_type'] == 'selects')
             {
@@ -390,9 +404,12 @@ class FormItem
         $this->data['requestDataName'] = $this->schema['name'].'s';
         $this->data['fieldProps'] = [
             'placeholder'=>'请选择'.$this->schema['title'],
-            'multiple'=>true,
             'showCheckedStrategy'=>'SHOW_CHILD'
         ];
+        if($this->schema['form_type'] == 'cascaders')
+        {
+            $this->data['fieldProps']['multiple'] = true;
+        }
         return;
     }
 

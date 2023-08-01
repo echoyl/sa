@@ -21,7 +21,10 @@
     "autoload": {
         "psr-4": {
             "Echoyl\\Sa\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helpers/functions.php"
+        ]
     },
     "extra": {
         "laravel": {

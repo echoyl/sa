@@ -8,7 +8,11 @@ use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Creator;
+use Echoyl\Sa\Services\dev\utils\Dev;
+use Echoyl\Sa\Services\dev\utils\Dump;
+use Echoyl\Sa\Services\dev\utils\MySQLDump;
 use Echoyl\Sa\Services\dev\utils\Utils;
+use mysqli;
 
 class ModelController extends CrudController
 {
@@ -92,6 +96,23 @@ class ModelController extends CrudController
             $model_id = $this->model->insertGetId($model_data);
         }else
         {
+            //更新
+            $this->model->where(['id'=>$model_has['id']])->update($model_data);
+            $model_id = $model_has['id'];
+        }
+        return $model_id;
+    }
+    public function checkHasMenu($model_data)
+    {
+        $model = new Menu();
+        $model_has = $model->where(['path'=>$model_data['path'],'parent_id'=>$model_data['parent_id'],'type'=>$model_data['type']])->first();
+        if(!$model_has)
+        {
+            $model_id = $model->insertGetId($model_data);
+        }else
+        {
+            //更新
+            $model->where(['id'=>$model_has['id']])->update($model_data);
             $model_id = $model_has['id'];
         }
         return $model_id;
@@ -120,13 +141,28 @@ class ModelController extends CrudController
         //1.列表
         $model_to = $this->model->where(['id'=>$model_to_id])->first();
         $model_to_id = $model_to?$model_to['id']:0; 
+
+        $category_level = request('category_level',1);
+        $category_type = request('category_type','single');
+        $type = '';
+        $relation_type = 'cascaders';
+        if($category_level > 1)
+        {
+            $type = $category_type == 'single'?'cascader':'cascaders';
+            $relation_type = $category_type == 'single'?'cascader':'cascaders';
+        }else
+        {
+            $type = $category_type == 'single'?'select':'selects';
+            $relation_type = $category_type == 'single'?'one':'cascaders';
+        }
+
         $model_data = [
             'title'=>$title,
             'name'=>$name,
             'admin_type'=>$appname,
             'type'=>1,
             'leixing'=>'normal',
-            'columns'=>Creator::$default_post_columns,
+            'columns'=>Creator::postsColumns($type),
             'parent_id'=>$model_to_id
         ];
         
@@ -164,7 +200,7 @@ class ModelController extends CrudController
             'model_id'=>$model_id,
             'title'=>'分类',
             'name'=>'category',
-            'type'=>'cascaders',
+            'type'=>$relation_type,
             'foreign_model_id'=>$model_category_id,
             'foreign_key'=>'id',
             'local_key'=>'category_id',
@@ -172,9 +208,13 @@ class ModelController extends CrudController
             'updated_at'=>now(),
             'is_with'=>1
         ];
-        if(!(new Relation())->where(['model_id'=>$model_id,'foreign_model_id'=>$model_category_id])->first())
+        $has_relation = (new Relation())->where(['model_id'=>$model_id,'foreign_model_id'=>$model_category_id])->first();
+        if(!$has_relation)
         {
             (new Relation())->insert($relation);
+        }else
+        {
+            (new Relation())->where(['id'=>$has_relation['id']])->update($relation);
         }
         //4.1生成model文件
         
@@ -195,8 +235,7 @@ class ModelController extends CrudController
             'state'=>1,
             'type'=>$appname
         ];
-        $menuModel = new Menu();
-        $big_menu_id = $menuModel->insertGetId($big_menu);
+        $big_menu_id = $this->checkHasMenu($big_menu);
         //5.3分类菜单
         $category_menu = array_merge([
             'title'=>'分类',
@@ -208,7 +247,7 @@ class ModelController extends CrudController
             'page_type'=>'category',
             'open_type'=>'drawer',
             'admin_model_id'=>$model_category_id,
-        ],Creator::$menu_category);
+        ],Creator::menuCategory($category_level));
         //5.2列表
         $menu = array_merge([
             'title'=>'列表',
@@ -221,25 +260,62 @@ class ModelController extends CrudController
             'open_type'=>'drawer',
             'admin_model_id'=>$model_id
         ],Creator::$menu_posts);
-        $menu_category_id = $menuModel->insertGetId($category_menu);
-        $menu_id = $menuModel->insertGetId($menu);
+        $menu_category_id = $this->checkHasMenu($category_menu);
+        $menu_id = $this->checkHasMenu($menu);
         
         //5.4生成菜单的配置信息 desc
         //所请求使用菜单的path路径
-        $menu = $menuModel->where(['id'=>$menu_id])->first();
-        $path = array_reverse(DevService::getPath($menu,$ds->allMenu(true),'path'));
-        $desc = json_decode($menu['desc'],true);
-        $desc['url'] = implode('/',$path);
-        $menuModel->where(['id'=>$menu_id])->update(['desc'=>json_encode($desc)]);
-        
-        $menu = $menuModel->where(['id'=>$menu_category_id])->first();
-        $path = array_reverse(DevService::getPath($menu,$ds->allMenu(),'path'));
-        $desc = json_decode($menu['desc'],true);
-        $desc['url'] = implode('/',$path);
-        $menuModel->where(['id'=>$menu_category_id])->update(['desc'=>json_encode($desc)]);
-
-
+        $this->updateMenuDesc($menu_id);
+        $this->updateMenuDesc($menu_category_id);
         return $this->success('操作成功');
+    }
+
+    public function updateMenuDesc($menu_id)
+    {
+        $ds = new DevService;
+        $ds->allMenu(true);
+        $ds->allModel(true);
+        $mc = new MenuController(new Menu());
+        $mc->tableConfig($menu_id);
+        $mc->formConfig($menu_id);
+        $mc->otherConfig($menu_id);
+        return;
+    }
+
+    /**
+     * 导出开发配置sql文件 直接在服务器中运行更新
+     *
+     * @return void
+     */
+    public function export()
+    {
+        //导出dev_menu表
+        $appname = DevService::appname();
+        $filename = 'update.sql';
+        $file = storage_path('app/public/'.$filename);
+        //file_put_contents($file,'');
+        $check = request('check');
+        $export_table = [
+            ['dev_menu',''],
+            ['dev_model',''],
+            ['dev_model_relation',''],
+        ];
+        if(!in_array('all',$check))
+        {
+            $export_table[0][1] = "type = 'system' or type = '{$appname}'";
+            $export_table[1][1] = "admin_type = 'system' or admin_type = '{$appname}'";
+            $model_ids = (new Model())->whereIn('admin_type',['system',$appname])->pluck('id')->toArray();
+            $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
+        }
+        $c = new Dump;
+        foreach($export_table as $tb)
+        {
+            $c = $c->exportTable($tb[0],$tb[1],$check);
+        }
+        $c = $c->dumpToFile($file);
+
+        //return $this->success();
+        return $this->success(['url'=>tomedia($filename),'download'=>$filename]);
     }
 
     /**

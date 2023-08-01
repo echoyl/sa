@@ -12,7 +12,32 @@ class Role extends Base
      * @var string
      */
     protected $table = 'perm_role';
-
+    public function getParseColumns()
+    {
+        static $data = [];
+        if(empty($data))
+        {
+            $data = [
+			    [
+			        'name' => 'state',
+			        'type' => 'switch',
+			        'default' => 0,
+			        'with' => true,
+			        'data' => [
+			            [
+			                'label' => '禁用',
+			                'value' => 0,
+			            ],
+			            [
+			                'label' => '启用',
+			                'value' => 1,
+			            ],
+			        ],
+			    ],
+			];
+        }
+        return $data;
+    }
 
     public function format($id = 0,$fields = ['id'=>'value','title'=>'label','children'=>'children'])
     {

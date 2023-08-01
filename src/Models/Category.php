@@ -63,16 +63,18 @@ class Category extends Base
     }
     public function parentInfo($id)
     {
-        static $par = [];
-        $data = $this->find($id);
+        $par = [];
+        $all = self::allData($this->table);
+        $data = collect($all)->first(function($val) use($id){
+            return $val['id'] == $id;
+        });
         if ($data) {
             $par[] = ['id' => $data['id'], 'title' => $data['title']];
             if ($data['parent_id'] != 0) {
-                $this->parentInfo($data['parent_id']);
+                $par = array_merge($par,$this->parentInfo($data['parent_id']));
             }
         }
-
-        return array_reverse($par);
+        return $par;
     }
     public function childrenIds($id, $self = true)
     {

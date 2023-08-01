@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
+use Echoyl\Sa\Services\WebMenuService;
 
 /**
  * 后台crud基础类 都走这个
@@ -402,11 +403,18 @@ class CrudController extends ApiBaseController
                     $data = [$name => $val];
                     break;
                 case 'state':
-                    $val = request('state');
+                    $val = request('state',0);
                     $data = ['state' => $val];
                     //批量操作
                     $this->parseData($data, 'encode', 'update');
-                    $this->model->whereIn('id',$id)->update($data);
+                    if(is_array($id))
+                    {
+                        $this->model->whereIn('id',$id)->update($data);
+                    }else
+                    {
+                        $this->model->where('id',$id)->update($data);
+                    }
+                    
                     return $this->success();
                     break;
                 case 'displayorder':
@@ -655,7 +663,7 @@ class CrudController extends ApiBaseController
                         $val = '__unset';
                     }else
                     {
-                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,$from == 'list'?['p'=>'s']:[]);
+                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,['p'=>'s']);
                     }
                     break;
                 case 'cascader':
@@ -938,6 +946,8 @@ class CrudController extends ApiBaseController
                             {
                                 $val = json_decode($val,true);
                             }
+                        }else{
+                            $val = '__unset';
                         }
                     }
                     break;
@@ -961,6 +971,18 @@ class CrudController extends ApiBaseController
                         $val = '__unset';
                     }
                     break;
+                case 'config':
+                    if($encode)
+                    {
+
+                    }else
+                    {
+                        if($val)
+                        {
+                            $wms = new WebMenuService;
+                            $val = $wms->getSpecs($val,true);
+                        }
+                    }
                 // case 'enum':
                 //     if($from == 'list' && $isset)
                 //     {

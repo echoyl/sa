@@ -3,6 +3,8 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\web\Menu;
 use App\Services\WeburlService;
+use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -221,8 +223,13 @@ class WebMenuService
 
             //获取banner 往上推
             $menu['banner'] = $this->getBanner($menu);
-            $menu['specs'] = $menu['specs']?json_decode($menu['specs'],true):[];
-            $menu['specs'] = $this->getSpecs($menu['specs']??'');
+            if($menu['specs'] && !is_array($menu['specs']))
+            {
+                $menu['specs'] = $menu['specs']?json_decode($menu['specs'],true):[];
+                $menu['specs'] = $this->getSpecs($menu['specs']??'');
+            }
+            
+            
         }
         
 
@@ -290,15 +297,15 @@ class WebMenuService
      */
     public function getAll($index_name = '')
     {
-        static $menus = [];
+        static $data = [];
+        $key = $index_name?:'noindex';
 
-        if (!empty($menus)) {
-            return $menus;
+        if (isset($data[$key]) && !empty($data[$key])) {
+            return $data[$key];
         }
         $menu = $this->getMenu(true);
         $selected = $menu ? $menu['id'] : 0;
         $list = self::format(0, self::all());
-        
 
         if ($index_name) {
             $index_menu = [
@@ -314,13 +321,18 @@ class WebMenuService
                 'top' => 1,
                 'bottom' => 1,
                 'children' => [],
+                'content'=>'',
+                'path'=>''
             ];
             array_unshift($list, $index_menu);
         }
-
+        
         $list = self::selected($list, $selected); //选中菜单
+        //d($list['selected'],$list['data'][3]);
         //d($list);
-        return $list['data'];
+        //return $list['data'];
+        $data[$key] = $list['data'];
+        return $data[$key];
     }
 
     public static function selected($list, $mid, $top_selected = false)
@@ -330,17 +342,24 @@ class WebMenuService
         $cid = request('cid', -1);
         foreach ($list as $key => $val) {
             $real_select = false;
-            if (isset($val['cid'])) {
+
+            //如果菜单被选中
+            if ($val['id'] == $mid) {
+                $val['selected'] = 1;
+                $selected = true;
+                $real_select = true;
+            }
+
+            //如果菜单已被选中 那么就不用再检测分类是否选中了
+            if (isset($val['cid']) && !$real_select) {
                 //如果是数据列表类型 数据分类下面的分类id相等 或者默认使第一个分类被选中
-                if ($cid == $val['cid'] || ($key == 0 && $cid == -1 && $top_selected)) {
-                    $val['selected'] = 1;
-                    $selected = true;
-                }
-            } else {
-                if ($val['id'] == $mid) {
-                    $val['selected'] = 1;
-                    $selected = true;
-                    $real_select = true;
+                //只有父级菜选中后 分类菜单才会选中
+                if($top_selected)
+                {
+                    if ($cid == $val['cid'] || ($key == 0 && $cid == -1)) {
+                        $val['selected'] = 1;
+                        $selected = true;
+                    }
                 }
             }
 
@@ -448,43 +467,83 @@ class WebMenuService
             return $item['parent_id'] === $id;
         })->sortByDesc('displayorder');
         $ret = [];
-        $ws = new WebsiteService;
+        $ms = new WebMenuService;
         foreach ($data as $val) {
             if ($alias) {
                 $val['alias'] = $alias . '/' . $val['alias'];
             }
             $val['href'] = self::parseHref($val);
             $val['parsedBanner'] = HelperService::uploadParse($val['banner'],false);
+            $val['parsedPics'] = HelperService::uploadParse($val['pics'],false);
             $val['selected'] = 0;
-            // if($val['category_id'])
-            // {
-            //     $val['cid'] = $val['category_id'];
-            // }
+            if(isset($val['specs']))
+            {
+                $val['specs'] = $val['specs']?json_decode($val['specs'],true):[];
+                $val['specs'] = $ms->getSpecs($val['specs']??'');
+            }else
+            {
+                $val['specs'] = [];
+            }
+            $val['category'] = false;
+            if(isset($val['category_id']) && $val['category_id'])
+            {
+                //将关联的分类信息读入
+                if($val['admin_model'])
+                {
+                    $model = self::getModel($val['admin_model'],'category');
+                    if($model)
+                    {
+                        $c = $model->where(['id'=>$val['category_id'],'state'=>1])->first();
+                        if($c)
+                        {
+                            $c = $c->toArray();
+                            HelperService::deImages($c,['titlepic']);
+                            $val['category'] = $c;
+                        }
+                        
+                    }
+                }
+                $val['cid'] = $val['category_id'];
+            }
             //$val['cid'] = $val['category_id'];
             //获取子菜单逻辑 如果是内容模块且是列表类型,并且没有子菜单的情况下，那么读取相应的模型的分类数据
             $val['children'] = self::format($val['id'], $s, $val['alias']);
             if (empty($val['children'])) {
-                if($val['module'] == 'fuwu')
-                {
-                    $val['children'] = self::postsToMenu((new $ws->modulesModel[$val['module']][0])->where(['state'=>'1','category_id'=>$val['category_id']])->orderBy('displayorder','desc')->orderBy('id','desc')->get(),$val);
-                }else
-                {
-                    $val['children'] = self::getModuleCategory($val);
-                }
+                $val['children'] = self::getModuleCategory($val);
+                //如果是内容转菜单
+                //$val['children'] = self::postsToMenu((new $ws->modulesModel[$val['module']][0])->where(['state'=>'1','category_id'=>$val['category_id']])->orderBy('displayorder','desc')->orderBy('id','desc')->get(),$val);
                 
-            }else
-            {
-                //如果显示子分类
-                if($val['category_all'] && $val['module'] == 'fuwu')
-                {
-                    $children = self::postsToMenu((new $ws->modulesModel[$val['module']][0])->where(['state'=>'1','category_id'=>$val['category_id']])->orderBy('displayorder','desc')->orderBy('id','desc')->get(),$val);
-                    $val['children'] = array_merge($children,$val['children']);
-                }
             }
 
             $ret[] = $val;
         }
         return $ret;
+    }
+
+    /**
+     * 根据菜单关联的模型 获取 模型实例
+     */
+    public static function getModel($admin_model,$type = 'post')
+    {
+        $ds = new DevService;
+        $namespace = $ds->getNamespace($admin_model);//这个是选中的模型
+        
+        if($type == 'category')
+        {
+            $namespaces = explode("\\",$namespace[2]);
+            array_pop($namespaces);
+            $namespaces[] = $admin_model['name'];
+            $namespaces[] = 'Category';
+            $classname = implode("\\",$namespaces);
+        }else
+        {
+            $classname = $namespace[2];
+        }
+        if(class_exists($classname))
+        {
+            return new $classname;
+        }
+        return false;
     }
 
     public static function getModuleCategory($val, $cid = false)
@@ -493,12 +552,19 @@ class WebMenuService
         $ws = new WebsiteService;
         $child_count = Menu::where(['parent_id' => $val['id']])->count();
         $children = [];
-        if (!$child_count && isset($ws->modulesModel[$val['module']]) && $val['pagetype'] == 'list' && $val['category_all']) {
-            $children = self::categoryToMenu((new $ws->modulesModel[$val['module']][1])->getChild($val['category_id'], ['state' => '1']), $val, $cid);
+        if (!$child_count && $val['admin_model'] && $val['pagetype'] == 'list' && $val['category_all']) {
+            $model = self::getModel($val['admin_model'],'category');
+            if($model)
+            {
+                $children = self::categoryToMenu($model->getChild($val['category_id'], ['state' => '1']), $val, $cid);
+            }
         }
         return $children;
     }
 
+    /**
+     * 文章内容转化成菜单
+     */
     public static function postsToMenu($list,$menu)
     {
         $data = [];
@@ -533,8 +599,8 @@ class WebMenuService
             'href' => self::parseHref($menu) . '/' . $category['id'],
             'titlepic'=>$category['titlepic'],
             'title' => $category['title'],
-            'icon'=>$category['icon'],
-            'desc' => $category['desc'],
+            'icon'=>$category['icon']??'',
+            'desc' => $category['desc']??'',
             'category'=>$category,
             'selected' => 0,
             'top' => 1,
@@ -688,7 +754,7 @@ class WebMenuService
                 }
                 
             }
-            if(isset($val['valueType']) && $val['valueType'] == 'formList')
+            if(isset($val['valueType']) && ($val['valueType'] == 'formList' || $val['valueType'] == 'saFormList'))
             {
                 if(isset($val['columns']) && !empty($val['columns']) && isset($values[$key]))
                 {
@@ -709,5 +775,11 @@ class WebMenuService
         }
         return $values;
     }
+
+    // public static function aliasTpl($menu)
+    // {
+    //     $path = Utils::getPath($menu, self::all(),'alias');
+    //     return array_reverse($path);
+    // }
 
 }

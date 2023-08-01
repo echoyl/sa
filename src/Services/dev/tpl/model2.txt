@@ -2,7 +2,9 @@
 namespace App\Models$namespace$;
 $use_namespace$
 use Echoyl\Sa\Models\Category as SaCategory;
-
+//customer namespace start
+$customer_namespace$
+//customer namespace end
 class $name$ extends SaCategory
 {
     /**
@@ -18,4 +20,8 @@ class $name$ extends SaCategory
     $relationship$
     
     //relationship end
+
+    //customer code start
+	$customer_code$
+	//customer code end
 }

@@ -3,7 +3,10 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\perm\Log;
 use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\MenuService;
+use Echoyl\Sa\Services\dev\utils\Utils;
+use Illuminate\Support\Arr;
 
 class AdminService
 {
@@ -18,9 +21,9 @@ class AdminService
         }
     }
 
-    public static function isSuper()
+    public static function isSuper($user = false)
     {
-        $user = self::user();
+        $user = $user?:self::user();
         return $user && $user['id'] == 1;
     }
 
@@ -75,6 +78,7 @@ class AdminService
             $info = [
                 'userinfo'=>self::parseUser($user),
                 'access_token'=>$token,
+                'setting'=>self::setting(AdminService::isSuper($user)),
             ];
             self::log('登录',['id'=>$user['id']]);
             //更新最后登录时间
@@ -82,6 +86,30 @@ class AdminService
             return $info;
         }
         return false;
+    }
+
+    public static function setting($is_super = false)
+    {
+        $ss = new SetsService();
+        $setting = $ss->getSet(implode('_',[env('APP_NAME','base'),'setting']));
+
+        if(isset($setting['theme']))
+        {
+            $theme = $setting['theme'];
+            unset($setting['theme']);
+            $setting = array_merge($theme,$setting);
+        }
+
+        HelperService::deImagesOne($setting,['logo','favicons']);
+        $setting['title'] = $setting['title']??'Deadmin';
+        $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
+        $setting['logo'] = $setting['logo']['url']?:false;
+        $setting['favicons'] = [$setting['favicons']['url']];
+        $dev = Arr::get($setting,'dev',true);
+        $is_super = $is_super?:AdminService::isSuper();
+        $setting['dev'] = $dev && $is_super;
+        $setting['lang'] = Arr::get($setting,'lang',true);
+        return $setting;
     }
 
     public static function parseUser($user)
@@ -247,6 +275,25 @@ class AdminService
         }
     }
 
+    public static function getRouterName()
+    {
+        $now_router = self::getNowRouter();
+        $ms = new MenuService();
+        [$name,$menu] = $ms->getMenuByRouter($now_router);
+        if(!$menu['id'])
+        {
+            return '';
+        }
+        $ds = new DevService;
+        $path = array_reverse(Utils::getPath($menu,$ds->allMenu(),'title'));
+        
+        $name = $ms->basePerms[$name]??'';
+        $path[] = $name;
+
+        return implode(' - ',$path);
+
+    }
+
     public static function log($force_type = false, $data = [])
     {
         if (!empty($data)) {
@@ -257,7 +304,9 @@ class AdminService
         if (!$admin) {
             return;
         }
-        if (request()->isMethod('post') || $force_type) {
+
+        $method = request()->method();
+        if (in_array($method,['POST','DELETE']) || $force_type) {
             //只记录post的日志
             //屏蔽敏感数据
             $rq = request()->all();
@@ -266,13 +315,21 @@ class AdminService
             }
             $log_data = self::logParse($rq);
 
+            if($force_type)
+            {
+                $type = $force_type;
+            }else
+            {
+                $type = self::getRouterName();
+            }
+
             $data = [
                 'user_id' => $admin['id'],
-                'url' => request()->fullUrl(),
+                'url' => implode(':',[$method,request()->fullUrl()]),
                 'request' => json_encode($log_data),
                 'ip' => request()->ip(),
                 'created_at' => now(),
-                'type' => $force_type ?: 'POST',
+                'type' => $type ?: '',
             ];
             Log::insert($data);
         }

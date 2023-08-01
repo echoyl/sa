@@ -30,6 +30,7 @@ class RelationController extends CrudController
             ['name' => 'select_columns', 'type' => 'selects', 'default' => ''],
             ['name' => 'in_page_select_columns', 'type' => 'selects', 'default' => ''],
             ['name' => 'with_default', 'type' => 'json', 'default' => ''],
+            ['name' => 'filter', 'type' => 'json', 'default' => ''],
         ];
 
     }

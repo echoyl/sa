@@ -33,13 +33,13 @@ class MenuController extends CrudController
                 ["label" => "禁用","value" => 0],
                 ["label" => "启用","value" => 1],
             ],"table_menu" => true],
-            ['name'=>'desc','type'=>'json','default'=>''],
-            ['name'=>'perms','type'=>'json','default'=>''],
+            ['name'=>'desc','type'=>'json','default'=>'{}'],
+            ['name'=>'perms','type'=>'json','default'=>'{}'],
             ['name'=>'icon','type'=>'select','default'=>''],
             ['name'=>'status','type'=>'switch','default'=>1],
-            ['name'=>'form_config','type'=>'json','default'=>''],
-            ['name'=>'other_config','type'=>'json','default'=>''],
-            ['name'=>'table_config','type'=>'json','default'=>''],
+            ['name'=>'form_config','type'=>'json','default'=>'{}'],
+            ['name'=>'other_config','type'=>'json','default'=>'{}'],
+            ['name'=>'table_config','type'=>'json','default'=>'{}'],
         ];
 
         $this->can_be_null_columns = ['title','admin_model_id'];
@@ -116,16 +116,20 @@ class MenuController extends CrudController
     //     return;
     // }
 
-    protected function getItem($name = 'table_config')
-    {
-        
+    protected function getItem($name = 'table_config',$id = 0)
+    {   
+        $id = request('base.id',$id);
         $config = request('base.'.$name);
-        $item = $this->model->where(['id'=>request('base.id')])->with($this->with_column)->first();
-        if(!$config || !$item)
+        $item = $this->model->where(['id'=>$id])->with($this->with_column)->first();
+        if(!$item)
         {
             return $this->fail([1,'请先提交数据']);
         }
         $item = $item->toArray();
+        if(!$config)
+        {
+            $config = $item[$name]?json_decode($item[$name],true):[];
+        }
 
         return ['config'=>$config,'item'=>$item];
     }
@@ -135,9 +139,9 @@ class MenuController extends CrudController
      *
      * @return void
      */
-    public function tableConfig()
+    public function tableConfig($id = 0)
     {
-        $item_data = $this->getItem();
+        $item_data = $this->getItem('table_config',$id);
 
         if(!is_array($item_data))
         {
@@ -226,9 +230,9 @@ class MenuController extends CrudController
      *
      * @return void
      */
-    public function formConfig()
+    public function formConfig($id = 0)
     {
-        $item_data = $this->getItem('form_config');
+        $item_data = $this->getItem('form_config',$id);
 
         if(!is_array($item_data))
         {
@@ -268,9 +272,9 @@ class MenuController extends CrudController
      *
      * @return void
      */
-    public function otherConfig()
+    public function otherConfig($id = 0)
     {
-        $item_data = $this->getItem('other_config');
+        $item_data = $this->getItem('other_config',$id);
 
         if(!is_array($item_data))
         {

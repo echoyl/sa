@@ -21,6 +21,7 @@ class Utils
         'tmapInput'=>'tmapInput',
         'tinyEditor'=>'tinyEditor',
         'price'=>'digit',
+        'digit'=>'digit',
         'confirm'=>'confirm'
     ];
 

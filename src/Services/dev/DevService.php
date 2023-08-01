@@ -86,6 +86,7 @@ class DevService
                 $field_sql = "`{$name}`  bigint NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
             break;
             case 'vachar':
+            case 'varchar':
                 $length = $length?:255;
                 $field_sql = "`{$name}`  varchar({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
             break;
@@ -378,6 +379,9 @@ class DevService
             $parse_columns = '';
         }
 
+        //检测文件是否已经存在 存在的话将自定义代码带入
+        [$customer_code,$customer_construct,$customer_namespace] = $this->customerCode($model_file_path);
+
         $replace_arr = [
             '/\$use_namespace\$/'=> implode("\r",$use_namespace),
             '/\$namespace\$/'=>$namespace,
@@ -385,6 +389,9 @@ class DevService
             '/\$name\$/'=>$name,
             '/\$relationship\$/'=>implode("\r",$tpl),
             '/\$parse_columns\$/'=>$parse_columns,
+            '/\$customer_code\$/'=>$customer_code,
+            '/\$customer_construct\$/'=>$customer_construct,
+            '/\$customer_namespace\$/'=>$customer_namespace,
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -400,6 +407,43 @@ class DevService
         $content = preg_replace($search,$replace,$content);
         $this->createFile($model_file_path,$content,true);
         return;
+    }
+
+    public function customerCode($file_path)
+    {
+        $customer_code = '';//自定义代码
+        $customer_construct = '';//自定义构造函数代码
+        $customer_namespace = '';
+        if(file_exists($file_path))
+        {
+            $old_content = file_get_contents($file_path);
+            $match = [];
+            preg_match('/customer code start(.*)\/\/customer code end/s',$old_content,$match);
+            if(!empty($match))
+            {
+                //已存在的文件该段不做覆盖
+                $customer_code = trim($match[1]);
+            }
+
+            $match1 = [];
+            preg_match('/customer construct start(.*)\/\/customer construct end/s',$old_content,$match1);
+            if(!empty($match1))
+            {
+                //已存在的文件该段不做覆盖
+                $customer_construct = trim($match1[1]);
+            }
+
+            $match2 = [];
+            preg_match('/customer namespace start(.*)\/\/customer namespace end/s',$old_content,$match2);
+            if(!empty($match2))
+            {
+                $customer_namespace = trim($match2[1]);
+            }
+            //d($match,$old_content);
+        }
+        return [
+            $customer_code,$customer_construct,$customer_namespace
+        ];
     }
 
     public function createControllerFile($data)
@@ -436,36 +480,7 @@ class DevService
         $use_namespace = $parse_columns = [];
         
         //检测文件是否已经存在 存在的话将自定义代码带入
-        $customer_code = '';//自定义代码
-        $customer_construct = '';//自定义构造函数代码
-        $customer_namespace = '';
-        if(file_exists($model_file_path))
-        {
-            $old_content = file_get_contents($model_file_path);
-            $match = [];
-            preg_match('/customer code start(.*)\/\/customer code end/s',$old_content,$match);
-            if(!empty($match))
-            {
-                //已存在的文件该段不做覆盖
-                $customer_code = trim($match[1]);
-            }
-
-            $match1 = [];
-            preg_match('/customer construct start(.*)\/\/customer construct end/s',$old_content,$match1);
-            if(!empty($match1))
-            {
-                //已存在的文件该段不做覆盖
-                $customer_construct = trim($match1[1]);
-            }
-
-            $match2 = [];
-            preg_match('/customer namespace start(.*)\/\/customer namespace end/s',$old_content,$match2);
-            if(!empty($match2))
-            {
-                $customer_namespace = trim($match2[1]);
-            }
-            //d($match,$old_content);
-        }
+        [$customer_code,$customer_construct,$customer_namespace] = $this->customerCode($model_file_path);
 
         $replace_arr = [
             '/\$namespace\$/'=>$namespace,
@@ -501,7 +516,7 @@ class DevService
         $namespace_data = [];
         $parse_columns = [];
         $crud_config = [];
-        $with_sum = $with_count = $with_columns = $search_config = [];//配置处理好后 直接返回代码了
+        $with_sum = $with_count = $with_columns = $search_config = $can_be_null_columns = [];//配置处理好后 直接返回代码了
 
         $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel.relations'])->get()->toArray();
 
@@ -687,7 +702,13 @@ class DevService
             $columns = json_decode($model['columns'],true);
             foreach($columns as $column)
             {
-                if(!isset($column['form_type']) || in_array($column['form_type'],['textarea','dateTime','tinyEditor','datetime']))
+                //字段是否可为空
+                $empty = Arr::get($column,'empty',0);
+                if($empty)
+                {
+                    $can_be_null_columns[] = $column['name'];
+                }
+                if(!isset($column['form_type']) || in_array($column['form_type'],['textarea','dateTime','tinyEditor','datetime','digit']))
                 {
                     //不存在type 或者一些不需要parse的字段 直接过滤
                     continue;
@@ -709,6 +730,8 @@ class DevService
                         
                         //如果是select 且设置了tabel menu，那么form_data设置的label 和value 
 
+                        //新增数据筛选配置
+                        //$filter = $clo
                         if($table_menu && $form_data)
                         {
                             [$label,$value] = explode(',',$form_data);
@@ -758,15 +781,20 @@ class DevService
                     
                     
                     $d['default'] = $default_value?1:0;
-                    if($table_menu && !empty($valueEnum))
+                    if($table_menu)
                     {
-                        $d['with'] = true;
-                        $d['data'] = $valueEnum;
+                        
                         $d['table_menu'] = true;
                     }else
                     {
                         //continue;
                     }
+                    if(!empty($valueEnum))
+                    {
+                        $d['with'] = true;
+                        $d['data'] = $valueEnum;
+                    }
+
                 }
                 if($form_type == 'search_select')
                 {
@@ -778,7 +806,7 @@ class DevService
                         $d['value'] = $fieldNames[1];
                     }
                 }
-                if($form_type == 'cascaders')
+                if($form_type == 'cascaders' || $form_type == 'cascader')
                 {
                     $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                     $d['with'] = true;
@@ -806,6 +834,11 @@ class DevService
                 $parse_columns[] = $d;
             }
         }
+
+        if(!empty($can_be_null_columns))
+        {
+            $crud_config[] = '$this->can_be_null_columns = '.(json_encode($can_be_null_columns)).';';
+        }
     
         return [$namespace_data,$crud_config,$parse_columns,$useModelArr];
     }
@@ -816,11 +849,11 @@ class DevService
 
         $foreign_model_name = ucfirst(array_pop($foreign_model_names));
 
-        $namespace_prefix = 'use App\Models';
+        $namespace_prefix = 'App\Models';
         if($foreign_model['admin_type'] == 'system')
         {
             //系统模型需要获取单独的namespace 前缀
-            $namespace_prefix = 'use Echoyl\Sa\Models';
+            $namespace_prefix = 'Echoyl\Sa\Models';
         }
         if(!empty($foreign_model_names))
         {
@@ -842,7 +875,7 @@ class DevService
             $foreign_model_name = $foreign_model_as_name;
             $namespace_prefix .= ' as '.$foreign_model_as_name;
         }
-        return [$namespace_prefix,$foreign_model_name];
+        return ['use '.$namespace_prefix,$foreign_model_name,$namespace_prefix];
     }
 
     public function createFile($file,$content,$force = false)

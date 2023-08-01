@@ -95,15 +95,7 @@ class IndexController extends ApiBaseController
 
     public function setting()
     {
-        $ss = new SetsService();
-        $setting = $ss->getSet(implode('_',[env('APP_NAME','base'),'setting']));
-        HelperService::deImagesOne($setting,['logo','favicons']);
-        $setting['title'] = $setting['title']??'Deadmin';
-        $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
-        $setting['logo'] = $setting['logo']['url']?:false;
-        $setting['favicons'] = [$setting['favicons']['url']];
-        $setting['dev'] = Arr::get($setting,'dev',true);
-        return $this->success($setting);
+        return $this->success(AdminService::setting());
     }
 
     public function notice()

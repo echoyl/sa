@@ -76,14 +76,20 @@ class HelperService
         {
             foreach($fields as $f)
             {
-                $img_fields = self::getImageFields($data[$f]['value']);
-                if(!empty($img_fields))
-                {
-                    $data[$f]['value'] = self::parseImages($data[$f]['value'],$img_fields,false);
-                }
+                $data[$f]['value'] = self::autoParseImages($data[$f]['value']);
             }
         }
         return;
+    }
+
+    public static function autoParseImages($data)
+    {
+        $img_fields = self::getImageFields($data);
+        if(!empty($img_fields))
+        {
+            self::parseImages($data,$img_fields,false);
+        }
+        return $data;
     }
 
     /**
@@ -542,5 +548,30 @@ class HelperService
             }
         }
         return $data;
+    }
+
+    public static function getFromObject($data,$keys)
+    {
+        $name = '';
+        $key = $keys[0];
+
+        if(isset($data[$key]))
+        {
+            if(is_array($data[$key]))
+            {
+                array_shift($keys);
+                if(!empty($keys))
+                {
+                    $name = ($data[$key]['text']??'').' - '.self::getFromObject($data[$key],$keys);
+                }else
+                {
+                    $name = $data[$key];
+                }
+            }else
+            {
+                $name = $data[$key];
+            }
+        }
+        return $name;
     }
 }

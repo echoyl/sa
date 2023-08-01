@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : mysql8
+ Source Server         : localhost
  Source Server Type    : MySQL
- Source Server Version : 80032
+ Source Server Version : 50733
  Source Host           : localhost:3306
  Source Schema         : echoyl
 
  Target Server Type    : MySQL
- Target Server Version : 80032
+ Target Server Version : 50733
  File Encoding         : 65001
 
- Date: 13/07/2023 15:06:18
+ Date: 20/07/2023 14:45:52
 */
 
 SET NAMES utf8mb4;
@@ -22,34 +22,34 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `la_dev_menu`;
 CREATE TABLE `la_dev_menu`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   `path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `parent_id` int(0) NOT NULL DEFAULT 0,
-  `displayorder` int(0) NOT NULL DEFAULT 0,
-  `status` int(0) NOT NULL DEFAULT 0 COMMENT '菜单隐藏控制 1显示0隐藏',
+  `parent_id` int(11) NOT NULL DEFAULT 0,
+  `displayorder` int(11) NOT NULL DEFAULT 0,
+  `status` int(11) NOT NULL DEFAULT 0 COMMENT '菜单隐藏控制 1显示0隐藏',
   `icon` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '菜单图标',
-  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '额外数据 json',
-  `created_at` datetime(0) DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
-  `state` int(0) DEFAULT 0 COMMENT '状态 enum 1和 0',
-  `model` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '模型名称',
-  `category_id` int(0) DEFAULT 0 COMMENT '模型的分类id值',
-  `_category_id` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '',
-  `router` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '菜单指定路由 空的话自动根据父级拼接',
-  `perms` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '菜单指定的子权限json',
-  `type` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'system' COMMENT '菜单类型 system -系统菜单 其它-对应项目菜单',
-  `admin_model_id` int(0) NOT NULL DEFAULT 0 COMMENT '所选的模型id',
-  `table_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '列表展示列的配置信息',
-  `form_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '表单展示的配置信息',
-  `other_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '其它额外配置信息',
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '额外数据 json',
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `state` int(11) NULL DEFAULT 0 COMMENT '状态 enum 1和 0',
+  `model` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '模型名称',
+  `category_id` int(11) NULL DEFAULT 0 COMMENT '模型的分类id值',
+  `_category_id` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '',
+  `router` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '菜单指定路由 空的话自动根据父级拼接',
+  `perms` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '菜单指定的子权限json',
+  `type` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'system' COMMENT '菜单类型 system -系统菜单 其它-对应项目菜单',
+  `admin_model_id` int(11) NOT NULL DEFAULT 0 COMMENT '所选的模型id',
+  `table_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '列表展示列的配置信息',
+  `form_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '表单展示的配置信息',
+  `other_config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '其它额外配置信息',
   `page_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '菜单页面类型 category or table',
   `open_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'page' COMMENT 'form页面打开方式 page or drawer',
-  `addable` int(0) NOT NULL DEFAULT 1 COMMENT '是否可以新增',
-  `editable` int(0) NOT NULL DEFAULT 1 COMMENT '表单是否可以 提交',
-  `deleteable` int(0) NOT NULL DEFAULT 1 COMMENT '数据是否可以删除',
+  `addable` int(11) NOT NULL DEFAULT 1 COMMENT '是否可以新增',
+  `editable` int(11) NOT NULL DEFAULT 1 COMMENT '表单是否可以 提交',
+  `deleteable` int(11) NOT NULL DEFAULT 1 COMMENT '数据是否可以删除',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 172 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 170 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_dev_menu
@@ -70,7 +70,7 @@ INSERT INTO `la_dev_menu` VALUES (30, '导航', 'menu', 29, 0, 1, '', '{\"tableC
 INSERT INTO `la_dev_menu` VALUES (31, '权限', 'perm', 0, 0, 1, 'lock', '{}', '2022-08-24 10:37:22', '2023-07-10 17:03:41', 1, '', 0, '', '', '{}', 'system', 0, NULL, NULL, NULL, '', '', 1, 1, 1);
 INSERT INTO `la_dev_menu` VALUES (32, '角色分组', 'role', 31, 0, 1, '', '{\"tableColumns\":[{\"dataIndex\":\"id\",\"title\":\"id\",\"search\":false},{\"dataIndex\":\"title\",\"title\":\"\\u540d\\u79f0\"},{\"dataIndex\":\"desc\",\"title\":\"\\u63cf\\u8ff0\",\"search\":false},{\"dataIndex\":\"created_at\",\"title\":\"\\u521b\\u5efa\\u65f6\\u95f4\",\"search\":false},{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"select\",\"search\":false,\"valueEnum\":[{\"text\":\"\\u7981\\u7528\",\"status\":\"error\"},{\"text\":\"\\u542f\\u7528\",\"status\":\"success\"}]},\"option\"],\"formColumns\":[{\"dataIndex\":\"title\",\"title\":\"\\u540d\\u79f0\"},{\"dataIndex\":\"desc\",\"title\":\"\\u63cf\\u8ff0\",\"valueType\":\"textarea\"},{\"valueType\":\"group\",\"columns\":[{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"switch\",\"fieldProps\":{\"checkedChildren\":\"\\u542f\\u7528\",\"unCheckedChildren\":\"\\u7981\\u7528\",\"defaultChecked\":true},\"width\":\"md\"},\"id\"]},{\"dataIndex\":\"perms2\",\"title\":\"\\u6743\\u9650\",\"valueType\":\"permGroup\",\"fieldProps\":{\"requestNames\":[\"perms\"]}}],\"leftMenu\":false,\"url\":\"perm\\/role\"}', '2022-08-24 10:37:37', '2023-05-04 15:24:50', 1, '', 0, '', '', '{}', 'system', 61, '[{\"key\":\"id\"},{\"key\":\"title\",\"can_search\":[1]},{\"key\":\"desc\"},{\"key\":[\"created_at\"]},{\"key\":\"state\"},{\"key\":[\"option\"]}]', '[{\"columns\":[{\"key\":\"title\"}]},{\"columns\":[{\"key\":\"desc\"}]},{\"columns\":[{\"key\":\"state\"},{\"key\":\"id\"}]},{\"columns\":[{\"key\":\"perms2\",\"type\":\"permGroup\",\"name\":{\"requestNames\":[\"perms\"]}}]}]', NULL, 'table', '', 1, 1, 1);
 INSERT INTO `la_dev_menu` VALUES (33, '后台用户', 'user', 31, 0, 1, '', '{\"tableColumns\":[{\"dataIndex\":\"id\",\"title\":\"id\",\"search\":false},{\"dataIndex\":\"username\",\"title\":\"\\u7528\\u6237\\u540d\",\"search\":false},{\"dataIndex\":[\"role\",\"title\"],\"title\":\"\\u89d2\\u8272\",\"search\":false},{\"dataIndex\":\"desc\",\"title\":\"\\u63cf\\u8ff0\",\"valueType\":\"textarea\",\"search\":false},{\"dataIndex\":\"created_at\",\"title\":\"\\u521b\\u5efa\\u65f6\\u95f4\",\"search\":false},{\"dataIndex\":\"latest_login_at\",\"title\":\"\\u6700\\u540e\\u767b\\u5f55\\u65f6\\u95f4\",\"search\":false},{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"select\",\"search\":false,\"valueEnum\":[{\"text\":\"\\u7981\\u7528\",\"status\":\"error\"},{\"text\":\"\\u542f\\u7528\",\"status\":\"success\"}]},\"option\",{\"dataIndex\":\"roleid\",\"title\":\"\\u89d2\\u8272\",\"valueType\":\"select\",\"hideInTable\":true,\"requestDataName\":\"roleids\",\"fieldProps\":{\"fieldNames\":{\"label\":\"title\",\"value\":\"id\"}}},{\"dataIndex\":\"id\",\"title\":\"\\u6743\\u9650\\u5206\\u7ec4\",\"valueType\":\"userPerm\",\"search\":false}],\"formColumns\":[\"id\",{\"dataIndex\":\"username\",\"title\":\"\\u7528\\u6237\\u540d\"},{\"dataIndex\":\"desc\",\"title\":\"\\u63cf\\u8ff0\",\"valueType\":\"textarea\"},{\"dataIndex\":\"password\",\"title\":\"\\u5bc6\\u7801\",\"fieldProps\":{\"placeholder\":\"\\u8bf7\\u8f93\\u5165\\u5bc6\\u7801\\uff0c\\u4e3a\\u7a7a\\u65f6\\u8868\\u793a\\u4e0d\\u4fee\\u6539\\u5bc6\\u7801\"}},{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"switch\",\"fieldProps\":{\"checkedChildren\":\"\\u542f\\u7528\",\"unCheckedChildren\":\"\\u7981\\u7528\",\"defaultChecked\":true}}],\"leftMenu\":false,\"table_menu_key\":\"state\",\"url\":\"perm\\/user\"}', '2022-08-24 10:37:54', '2023-05-08 14:41:58', 1, '', 0, '', '', '{}', 'system', 43, '[{\"key\":\"id\"},{\"key\":\"username\"},{\"key\":[\"role\",\"title\"],\"title\":\"\"},{\"key\":\"desc\"},{\"key\":[\"created_at\"]},{\"key\":[\"latest_login_at\"]},{\"key\":\"state\",\"left_menu\":[],\"table_menu\":[1]},{\"key\":[\"option\"]},{\"key\":[\"roleid\"],\"can_search\":[1],\"hide_in_table\":[1]},{\"key\":[\"id\"],\"title\":\"权限分组\",\"hide_in_table\":[],\"type\":\"userPerm\"}]', '[{\"columns\":[{\"key\":\"id\",\"readonly\":true}]},{\"columns\":[{\"key\":\"username\"}]},{\"columns\":[{\"key\":\"desc\"}]},{\"columns\":[{\"key\":\"password\",\"placeholder\":\"请输入密码，为空时表示不修改密码\"}]},{\"columns\":[{\"key\":\"state\"}]}]', NULL, 'table', '', 1, 1, 1);
-INSERT INTO `la_dev_menu` VALUES (34, '操作记录', 'log', 31, 0, 1, '', '{\"tableColumns\":[{\"dataIndex\":\"id\",\"title\":\"id\",\"search\":false},{\"dataIndex\":[\"user\",\"username\"],\"title\":\"操作用户\",\"search\":false},{\"dataIndex\":\"url\",\"title\":\"请求链接\",\"search\":false},{\"dataIndex\":\"ip\",\"title\":\"IP\",\"search\":false},{\"dataIndex\":\"type\",\"title\":\"请求类型\",\"valueType\":\"select\",\"search\":false,\"fieldProps\":{\"options\":[\"post\",\"get\"]}},{\"dataIndex\":\"created_at\",\"title\":\"操作时间\",\"search\":false},{\"dataIndex\":\"created_at\",\"title\":\"操作时间\",\"valueType\":\"dateRange\",\"hideInTable\":true},\"option\"],\"formColumns\":[\"id\",{\"dataIndex\":[\"user\",\"username\"],\"title\":\"操作用户\",\"readonly\":true},{\"dataIndex\":\"url\",\"title\":\"请求链接\",\"readonly\":true},{\"dataIndex\":\"request\",\"title\":\"请求数据\",\"readonly\":true,\"valueType\":\"jsonCode\"},{\"dataIndex\":\"ip\",\"title\":\"IP\",\"readonly\":true},{\"valueType\":\"group\",\"columns\":[{\"dataIndex\":\"type\",\"title\":\"请求类型\",\"readonly\":true,\"valueType\":\"select\",\"fieldProps\":{\"options\":[\"post\",\"get\"]},\"width\":\"md\"},{\"dataIndex\":\"created_at\",\"title\":\"请求时间\",\"readonly\":true,\"valueType\":\"dateTime\",\"width\":\"md\"}]}],\"leftMenu\":false,\"url\":\"perm/log\"}', '2022-08-24 10:38:08', '2023-05-05 11:32:50', 1, '', 0, '', '', '{}', 'system', 62, '[{\"key\":\"id\"},{\"key\":[\"user\",\"username\"]},{\"key\":\"url\"},{\"key\":\"ip\"},{\"key\":\"type\"},{\"key\":[\"created_at\"],\"title\":\"操作时间\"},{\"key\":[\"created_at\"],\"title\":\"操作时间\",\"can_search\":[1],\"hide_in_table\":[1],\"type\":\"dateRange\"},{\"key\":[\"option\"]}]', '[{\"columns\":[{\"key\":\"id\",\"readonly\":true}]},{\"columns\":[{\"key\":\"user\",\"label\":\"username\",\"readonly\":true}]},{\"columns\":[{\"key\":\"url\",\"readonly\":true}]},{\"columns\":[{\"key\":\"request\",\"readonly\":true,\"type\":\"jsonCode\"}]},{\"columns\":[{\"key\":\"ip\",\"readonly\":true}]},{\"columns\":[{\"key\":\"type\",\"readonly\":true},{\"key\":\"created_at\",\"title\":\"请求时间\",\"readonly\":true}]}]', NULL, 'table', 'drawer', 0, 1, 1);
+INSERT INTO `la_dev_menu` VALUES (34, '操作记录', 'log', 31, 0, 1, '', '{\"tableColumns\":[{\"dataIndex\":\"id\",\"title\":\"id\",\"search\":false},{\"dataIndex\":[\"user\",\"username\"],\"title\":\"\\u64cd\\u4f5c\\u7528\\u6237\",\"search\":false},{\"dataIndex\":\"url\",\"title\":\"\\u8bf7\\u6c42\\u94fe\\u63a5\",\"search\":false},{\"dataIndex\":\"ip\",\"title\":\"IP\",\"search\":false},{\"dataIndex\":\"type\",\"title\":\"\\u8bf7\\u6c42\\u7c7b\\u578b\",\"valueType\":\"select\",\"search\":false,\"fieldProps\":{\"options\":[\"post\",\"get\"]}},{\"dataIndex\":\"created_at\",\"title\":\"\\u64cd\\u4f5c\\u65f6\\u95f4\",\"search\":false},{\"dataIndex\":\"created_at\",\"title\":\"\\u64cd\\u4f5c\\u65f6\\u95f4\",\"valueType\":\"dateRange\",\"hideInTable\":true},\"option\"],\"formColumns\":[\"id\",{\"dataIndex\":[\"user\",\"username\"],\"title\":\"\\u64cd\\u4f5c\\u7528\\u6237\",\"readonly\":true},{\"dataIndex\":\"url\",\"title\":\"\\u8bf7\\u6c42\\u94fe\\u63a5\",\"readonly\":true},{\"dataIndex\":\"request\",\"title\":\"\\u8bf7\\u6c42\\u6570\\u636e\",\"readonly\":true,\"valueType\":\"jsonCode\"},{\"dataIndex\":\"ip\",\"title\":\"IP\",\"readonly\":true},{\"valueType\":\"group\",\"columns\":[{\"dataIndex\":\"type\",\"title\":\"\\u8bf7\\u6c42\\u7c7b\\u578b\",\"readonly\":true,\"valueType\":\"select\",\"fieldProps\":{\"options\":[\"post\",\"get\"]},\"width\":\"md\"},{\"dataIndex\":\"created_at\",\"title\":\"\\u8bf7\\u6c42\\u65f6\\u95f4\",\"readonly\":true,\"valueType\":\"dateTime\",\"width\":\"md\"}]}],\"leftMenu\":false,\"url\":\"perm\\/log\"}', '2022-08-24 10:38:08', '2023-07-17 11:23:28', 1, '', 0, '', '', '{}', 'system', 62, '[{\"key\":\"id\"},{\"key\":[\"user\",\"username\"]},{\"key\":\"url\"},{\"key\":\"ip\"},{\"key\":\"type\"},{\"key\":[\"created_at\"],\"title\":\"操作时间\"},{\"key\":[\"created_at\"],\"title\":\"操作时间\",\"can_search\":[1],\"hide_in_table\":[1],\"type\":\"dateRange\"},{\"key\":[\"option\"]}]', '[{\"columns\":[{\"key\":\"id\",\"readonly\":true}]},{\"columns\":[{\"key\":\"user\",\"label\":\"username\",\"readonly\":true}]},{\"columns\":[{\"key\":\"url\",\"readonly\":true}]},{\"columns\":[{\"key\":\"request\",\"readonly\":true,\"type\":\"jsonCode\"}]},{\"columns\":[{\"key\":\"ip\",\"readonly\":true}]},{\"columns\":[{\"key\":\"type\",\"readonly\":true},{\"key\":\"created_at\",\"title\":\"请求时间\",\"readonly\":true}]}]', NULL, 'table', 'drawer', 0, 0, 1);
 INSERT INTO `la_dev_menu` VALUES (35, '系统菜单', '', 0, 0, 1, '', '{}', '2022-09-07 14:09:33', '2022-09-07 14:21:12', 1, '', 0, '', '', '{}', 'system', 0, NULL, NULL, NULL, '', '', 1, 1, 1);
 INSERT INTO `la_dev_menu` VALUES (36, '上传文件', 'uploader', 35, 0, 1, '', '{}', '2022-09-07 14:14:05', '2022-09-07 14:15:34', 1, '', 0, '', 'uploader/index', '{\"index\":\"允许\"}', 'system', 0, NULL, NULL, NULL, '', '', 1, 1, 1);
 INSERT INTO `la_dev_menu` VALUES (43, '支付配置', 'pay', 21, 0, 1, '', '{\"tableColumns\":[{\"dataIndex\":\"id\",\"title\":\"id\",\"search\":false},{\"dataIndex\":\"name\",\"title\":\"\\u540d\\u79f0\",\"search\":false},{\"dataIndex\":\"appid\",\"title\":\"Appid\",\"search\":false},{\"dataIndex\":\"mch_id\",\"title\":\"\\u5546\\u6237\\u53f7\",\"search\":false},{\"dataIndex\":\"apikey\",\"title\":\"\\u5546\\u6237\\u79d8\\u94a5\",\"valueType\":\"password\",\"search\":false},{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"select\",\"search\":false,\"valueEnum\":[{\"text\":\"\\u7981\\u7528\",\"status\":\"error\"},{\"text\":\"\\u542f\\u7528\",\"status\":\"success\"}]},\"option\"],\"formColumns\":[\"id\",{\"dataIndex\":\"name\",\"title\":\"\\u652f\\u4ed8\\u540d\\u79f0\",\"formItemProps\":{\"rules\":[{\"required\":true}]}},{\"dataIndex\":\"mch_id\",\"title\":\"\\u5546\\u6237\\u53f7\",\"formItemProps\":{\"rules\":[{\"required\":true}]}},{\"dataIndex\":\"appid\",\"title\":\"Appid\",\"formItemProps\":{\"rules\":[{\"required\":true}]}},{\"dataIndex\":\"apikey\",\"title\":\"\\u5546\\u6237\\u79d8\\u94a5\",\"formItemProps\":{\"rules\":[{\"required\":true}]}},{\"dataIndex\":\"cert\",\"title\":\"cert\",\"valueType\":\"textarea\",\"fieldProps\":{\"placeholder\":\"\\u5982\\u9700\\u4fee\\u6539\\u652f\\u4ed8\\u8bc1\\u4e66\\uff0c\\u8bf7\\u8f93\\u5165\\u590d\\u5236\\u6587\\u4ef6\\u5185\\u5bb9\\u3002\"}},{\"dataIndex\":\"key\",\"title\":\"key\",\"valueType\":\"textarea\",\"fieldProps\":{\"placeholder\":\"\\u5982\\u9700\\u4fee\\u6539\\u652f\\u4ed8\\u8bc1\\u4e66\\uff0c\\u8bf7\\u8f93\\u5165\\u590d\\u5236\\u6587\\u4ef6\\u5185\\u5bb9\\u3002\"}},{\"dataIndex\":\"state\",\"title\":\"\\u72b6\\u6001\",\"valueType\":\"switch\",\"fieldProps\":{\"checkedChildren\":\"\\u542f\\u7528\",\"unCheckedChildren\":\"\\u7981\\u7528\",\"defaultChecked\":true}}],\"leftMenu\":false,\"url\":\"wechat\\/pay\"}', '2022-09-27 16:32:38', '2023-06-07 09:32:07', 0, '', 0, '', '', '{}', 'system', 67, '[{\"key\":\"id\"},{\"key\":\"name\"},{\"key\":\"appid\"},{\"key\":\"mch_id\"},{\"key\":\"apikey\",\"type\":\"password\"},{\"key\":\"state\"},{\"key\":[\"option\"]}]', '[{\"columns\":[{\"key\":\"id\",\"readonly\":true}]},{\"columns\":[{\"key\":\"name\",\"title\":\"支付名称\",\"required\":true}]},{\"columns\":[{\"key\":\"mch_id\",\"required\":true}]},{\"columns\":[{\"key\":\"appid\",\"required\":true}]},{\"columns\":[{\"key\":\"apikey\",\"required\":true}]},{\"columns\":[{\"key\":\"cert\",\"placeholder\":\"如需修改支付证书，请输入复制文件内容。\"}]},{\"columns\":[{\"key\":\"key\",\"placeholder\":\"如需修改支付证书，请输入复制文件内容。\"}]},{\"columns\":[{\"key\":\"state\"}]}]', NULL, 'table', 'drawer', 1, 1, 1);
@@ -85,20 +85,20 @@ INSERT INTO `la_dev_menu` VALUES (162, '网站配置', 'web', 11, 0, 1, '', '{\"
 -- ----------------------------
 DROP TABLE IF EXISTS `la_dev_model`;
 CREATE TABLE `la_dev_model`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '标题',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
-  `type` int(0) NOT NULL DEFAULT 0 COMMENT '0-文件夹 1-模型',
-  `columns` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '模型的字段信息',
-  `created_at` datetime(0) DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
-  `parent_id` int(0) NOT NULL DEFAULT 0 COMMENT '上级id',
-  `displayorder` int(0) DEFAULT 0,
+  `type` int(11) NOT NULL DEFAULT 0 COMMENT '0-文件夹 1-模型',
+  `columns` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '模型的字段信息',
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `parent_id` int(11) NOT NULL DEFAULT 0 COMMENT '上级id',
+  `displayorder` int(11) NULL DEFAULT 0,
   `leixing` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '模型类型 category | normal',
   `admin_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'system - 系统模型 | other - 所属项目模型',
-  `search_columns` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '字段搜索配置',
+  `search_columns` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '字段搜索配置',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 131 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 118 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_dev_model
@@ -133,81 +133,136 @@ INSERT INTO `la_dev_model` VALUES (113, '内容', 'posts', 1, '[{\"title\":\"id\
 -- ----------------------------
 DROP TABLE IF EXISTS `la_dev_model_relation`;
 CREATE TABLE `la_dev_model_relation`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
-  `model_id` int(0) NOT NULL DEFAULT 0 COMMENT '所属模型id',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `model_id` int(11) NOT NULL DEFAULT 0 COMMENT '所属模型id',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关系名称',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '模型关系名称',
   `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关系类型 one | many',
-  `foreign_model_id` int(0) NOT NULL DEFAULT 0 COMMENT '关联模型id',
+  `foreign_model_id` int(11) NOT NULL DEFAULT 0 COMMENT '关联模型id',
   `foreign_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联模型字段名称',
   `local_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '当前模型的字段名称',
-  `created_at` datetime(0) DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
-  `can_search` int(0) NOT NULL DEFAULT 0 COMMENT '1-支持搜索',
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `can_search` int(11) NOT NULL DEFAULT 0 COMMENT '1-支持搜索',
   `search_columns` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '搜索哪些字段',
-  `show_column_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '关联模型展示信息的字段名称',
-  `with_count` int(0) NOT NULL DEFAULT 0 COMMENT '是否计算数量',
+  `show_column_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '关联模型展示信息的字段名称',
+  `with_count` int(11) NOT NULL DEFAULT 0 COMMENT '是否计算数量',
   `with_sum` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '如果类型是hasmany的话 存储需要计算和的字段',
-  `is_with` int(0) NOT NULL DEFAULT 1 COMMENT '该关联是否加入with数组',
+  `is_with` int(11) NOT NULL DEFAULT 1 COMMENT '该关联是否加入with数组',
   `select_columns` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联模型包含字段 可以包含多级',
-  `is_with_in_page` int(0) DEFAULT NULL COMMENT '该关联是否加入页面级的with,数据会设置到columnData中 组件可以使用这个context',
+  `is_with_in_page` int(11) NULL DEFAULT NULL COMMENT '该关联是否加入页面级的with,数据会设置到columnData中 组件可以使用这个context',
   `in_page_select_columns` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联包含的字段 这个只包含一级',
   `with_default` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联的默认返回数据withDefault',
+  `filter` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联模型数据筛选条件',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 116 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 119 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_dev_model_relation
 -- ----------------------------
-INSERT INTO `la_dev_model_relation` VALUES (80, 43, '角色', 'role', 'one', 61, 'title', 'roleid', '2023-05-04 15:37:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (81, 62, '操作用户', 'user', 'one', 43, 'id', 'user_id', '2023-05-05 10:36:23', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (82, 7, '小程序账号', 'app', 'one', 63, 'appid', 'appid', '2023-05-05 15:36:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (83, 65, '公众号账号', 'app', 'one', 66, 'appid', 'appid', '2023-05-06 10:09:53', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (110, 96, '流程', 'nodes', 'many', 97, 'workflow_id', 'id', '2023-05-24 16:53:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (111, 97, '上一个流程', 'upstream', 'one', 97, 'id', 'upstream_id', '2023-05-24 17:05:02', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (112, 97, '下一个流程', 'downstream', 'one', 97, 'id', 'downstream_id', '2023-05-24 17:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
-INSERT INTO `la_dev_model_relation` VALUES (116, 100, '流程节点', 'node', 'one', 97, 'id', 'node_id', '2023-05-26 15:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '');
+INSERT INTO `la_dev_model_relation` VALUES (80, 43, '角色', 'role', 'one', 61, 'title', 'roleid', '2023-05-04 15:37:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (81, 62, '操作用户', 'user', 'one', 43, 'id', 'user_id', '2023-05-05 10:36:23', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (82, 7, '小程序账号', 'app', 'one', 63, 'appid', 'appid', '2023-05-05 15:36:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (83, 65, '公众号账号', 'app', 'one', 66, 'appid', 'appid', '2023-05-06 10:09:53', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (110, 96, '流程', 'nodes', 'many', 97, 'workflow_id', 'id', '2023-05-24 16:53:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (111, 97, '上一个流程', 'upstream', 'one', 97, 'id', 'upstream_id', '2023-05-24 17:05:02', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (112, 97, '下一个流程', 'downstream', 'one', 97, 'id', 'downstream_id', '2023-05-24 17:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (116, 100, '流程节点', 'node', 'one', 97, 'id', 'node_id', '2023-05-26 15:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '');
 
 -- ----------------------------
 -- Table structure for la_dev_sqllog
 -- ----------------------------
 DROP TABLE IF EXISTS `la_dev_sqllog`;
 CREATE TABLE `la_dev_sqllog`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
-  `sql` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  `date` date DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
-  `created_at` datetime(0) DEFAULT NULL,
-  `table_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sql` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `date` date NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `table_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_dev_sqllog
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for la_menu
+-- ----------------------------
+DROP TABLE IF EXISTS `la_menu`;
+CREATE TABLE `la_menu`  (
+  `id` int(11) NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '标题',
+  `small_title` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '副标题',
+  `parent_id` int(11) NOT NULL DEFAULT 0,
+  `displayorder` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `status` int(11) NULL DEFAULT 0,
+  `tpl` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '模板名称 如果为空 就调用每个模块下默认的模板',
+  `link` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '外链',
+  `banner` varchar(5000) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `pagesize` int(11) NOT NULL DEFAULT 0 COMMENT '当为列表是需要填写分页数量',
+  `desc` varchar(2555) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `ext_cateid` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '附加栏目id',
+  `alias` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '路由别名',
+  `content_detail` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+  `json` varchar(5000) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `specs` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+  `content_id` int(11) NOT NULL DEFAULT 0 COMMENT '选择内容id',
+  `category_id` int(11) NOT NULL DEFAULT 0 COMMENT '内容分类id',
+  `_category_id` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `blank` int(11) NOT NULL DEFAULT 0 COMMENT '1-新页面打开',
+  `hits` int(11) NOT NULL DEFAULT 0,
+  `module` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '模块类型 link page model',
+  `state` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `params` varchar(2550) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '页面 变量 存储字段',
+  `pagetype` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `top` int(11) NOT NULL DEFAULT 1 COMMENT '顶部是否显示',
+  `bottom` int(11) NOT NULL DEFAULT 1 COMMENT '底部是否显示',
+  `category_all` int(11) NOT NULL DEFAULT 1 COMMENT '是否显示子分类',
+  `relate_menu_id` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '' COMMENT '相关联菜单id 多个',
+  `_relate_menu_id` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT '',
+  `type` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT '',
+  `admin_model_id` int(11) NOT NULL DEFAULT 0 COMMENT '关联模型'
+) ENGINE = MyISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of la_menu
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for la_migrations
 -- ----------------------------
 DROP TABLE IF EXISTS `la_migrations`;
 CREATE TABLE `la_migrations`  (
-  `id` int unsigned NOT NULL,
+  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `batch` int(0) NOT NULL,
+  `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_migrations
+-- ----------------------------
+INSERT INTO `la_migrations` VALUES (2, '2019_12_14_000001_create_personal_access_tokens_table', 1);
 
 -- ----------------------------
 -- Table structure for la_pca
 -- ----------------------------
 DROP TABLE IF EXISTS `la_pca`;
 CREATE TABLE `la_pca`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `code` int(0) NOT NULL DEFAULT 0,
-  `pcode` int(0) NOT NULL DEFAULT 0,
+  `code` int(11) NOT NULL DEFAULT 0,
+  `pcode` int(11) NOT NULL DEFAULT 0,
   `index` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   `name2` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `code`(`code`) USING BTREE,
   INDEX `pcode`(`pcode`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3441 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 3442 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_pca
@@ -3659,105 +3714,127 @@ INSERT INTO `la_pca` VALUES (3441, '高新技术产业开发区', 360109, 360100
 -- ----------------------------
 DROP TABLE IF EXISTS `la_perm_log`;
 CREATE TABLE `la_perm_log`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
-  `user_id` int(0) NOT NULL DEFAULT 0,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL DEFAULT 0,
   `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `request` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '',
-  `created_at` datetime(0) DEFAULT NULL,
+  `request` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `ip` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '',
+  `created_at` datetime NULL DEFAULT NULL,
   `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'post get',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_uid`(`user_id`) USING BTREE,
   INDEX `idx_createtime`(`created_at`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 44 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 167 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_perm_log
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for la_perm_notice
 -- ----------------------------
 DROP TABLE IF EXISTS `la_perm_notice`;
 CREATE TABLE `la_perm_notice`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
   `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '类型',
-  `read` int(0) NOT NULL DEFAULT 0 COMMENT '是否阅读',
-  `updated_at` datetime(0) DEFAULT NULL,
-  `created_at` datetime(0) DEFAULT NULL,
-  `displayorder` int(0) NOT NULL DEFAULT 0 COMMENT '排序权重',
-  `user_id` int(0) NOT NULL DEFAULT 0 COMMENT '用户id',
+  `read` int(11) NOT NULL DEFAULT 0 COMMENT '是否阅读',
+  `updated_at` datetime NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `displayorder` int(11) NOT NULL DEFAULT 0 COMMENT '排序权重',
+  `user_id` int(11) NOT NULL DEFAULT 0 COMMENT '用户id',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 77 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 77 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_perm_notice
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for la_perm_role
 -- ----------------------------
 DROP TABLE IF EXISTS `la_perm_role`;
 CREATE TABLE `la_perm_role`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
-  `perms2` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '权限',
-  `created_at` datetime(0) DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
-  `state` int(0) NOT NULL DEFAULT 0 COMMENT '状态',
+  `perms2` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '权限',
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
+  `state` int(11) NOT NULL DEFAULT 0 COMMENT '状态',
   `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '描述',
-  `deleted_at` datetime(0) DEFAULT NULL COMMENT '删除于',
+  `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除于',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_perm_role
+-- ----------------------------
+INSERT INTO `la_perm_role` VALUES (31, 'Test', '9.index,10.index,160.index,160.show,162.index,162.show,32.index,33.index,34.index,32.show,33.show,34.show,167.index,167.show,167.add,167.edit,167.destroy,168.index,168.show,168.add,168.edit,168.destroy', '2023-07-16 17:02:58', '2023-07-16 17:37:39', 0, 'test', NULL);
 
 -- ----------------------------
 -- Table structure for la_perm_user
 -- ----------------------------
 DROP TABLE IF EXISTS `la_perm_user`;
 CREATE TABLE `la_perm_user`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'id',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '用户名',
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '密码',
-  `roleid` int(0) NOT NULL DEFAULT 0 COMMENT '角色',
-  `perms2` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '权限',
+  `roleid` int(11) NOT NULL DEFAULT 0 COMMENT '角色',
+  `perms2` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '权限',
   `desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '描述',
-  `created_at` datetime(0) DEFAULT NULL,
-  `updated_at` datetime(0) DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  `updated_at` datetime NULL DEFAULT NULL,
   `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '头像',
-  `state` int(0) NOT NULL DEFAULT 0 COMMENT '状态',
-  `latest_login_at` datetime(0) DEFAULT NULL COMMENT '最后登录时间',
+  `state` int(11) NOT NULL DEFAULT 0 COMMENT '状态',
+  `latest_login_at` datetime NULL DEFAULT NULL COMMENT '最后登录时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_roleid`(`roleid`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_perm_user
 -- ----------------------------
-INSERT INTO `la_perm_user` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', 0, '', '做更好的后台系统~', NULL, '2023-07-12 16:00:28', '', 1, '2023-07-12 16:00:28');
+INSERT INTO `la_perm_user` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', 0, '', '做更好的后台系统~', NULL, '2023-07-17 10:00:37', '', 1, '2023-07-17 10:00:37');
+INSERT INTO `la_perm_user` VALUES (27, 'test', 'e10adc3949ba59abbe56e057f20f883e', 31, '9.index,10.index,160.index,160.show,162.index,162.show,32.index,32.show,33.index,33.show,34.index,34.show,167.index,167.show,167.add,167.edit,167.destroy,168.index,168.show,168.add,168.edit,168.destroy', 'test user', '2023-07-16 17:03:15', '2023-07-17 11:24:55', '', 1, '2023-07-17 10:00:16');
 
 -- ----------------------------
 -- Table structure for la_personal_access_tokens
 -- ----------------------------
 DROP TABLE IF EXISTS `la_personal_access_tokens`;
 CREATE TABLE `la_personal_access_tokens`  (
-  `id` bigint unsigned NOT NULL,
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tokenable_id` bigint unsigned NOT NULL,
+  `tokenable_id` bigint(20) UNSIGNED NOT NULL,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `last_used_at` timestamp(0) DEFAULT NULL,
-  `expires_at` timestamp(0) DEFAULT NULL,
-  `created_at` timestamp(0) DEFAULT NULL,
-  `updated_at` timestamp(0) DEFAULT NULL,
+  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `la_personal_access_tokens_token_unique`(`token`) USING BTREE,
   INDEX `la_personal_access_tokens_tokenable_type_tokenable_id_index`(`tokenable_type`, `tokenable_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of la_personal_access_tokens
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for la_setting
 -- ----------------------------
 DROP TABLE IF EXISTS `la_setting`;
 CREATE TABLE `la_setting`  (
-  `id` int(0) NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   `value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `key`(`key`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of la_setting
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;

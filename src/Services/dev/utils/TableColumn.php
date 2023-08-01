@@ -76,7 +76,10 @@ class TableColumn
         $can_search = $config['can_search']??'';
         //是否在列表中隐藏
         $hide_in_table = $config['hide_in_table']??'';
-        
+        //ellipsis
+        $ellipsis = $props['ellipsis']??'';
+        //copyable
+        $copyable = $props['copyable']??'';
         //是否设定列宽
         $width = $props['width']??'';
         //$width = $config['width']??$p_width;
@@ -154,6 +157,14 @@ class TableColumn
         if(!empty($sort))
         {
             $d['sort'] = true;
+        }
+        if($ellipsis)
+        {
+            $d['ellipsis'] = true;
+        }
+        if($copyable)
+        {
+            $d['copyable'] = true;
         }
 
         $this->data = $d;
@@ -274,10 +285,22 @@ class TableColumn
         {
             //关联的select 需要获取数据
             $d['requestDataName'] = $this->schema['name'].'s';
-            if($form_data && !$table_menu)
+            $label = $value = '';
+            if($form_data)
+            {
+                [$label,$value] = explode(',',$form_data);
+            }else
+            {
+                if($this->schema['form_type'] == 'select')
+                {
+                    $label = 'title';
+                    $value = 'id';
+                }
+                
+            }
+            if(!$table_menu && $label)
             {
                 //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
-                [$label,$value] = explode(',',$form_data);
                 $d['fieldProps'] = ['fieldNames'=>[
                     'label'=>$label,'value'=>$value
                 ]];
@@ -337,7 +360,33 @@ class TableColumn
             ];
         }
         //列表显示 需要设置类型为 select
-        $this->data['valueType'] = 'select';
+        //如果key是state  预设值列表可操作
+        if($this->key == 'state')
+        {
+            $this->data['valueType'] = 'customerColumn';
+            $this->data['readonly'] = true;
+            $this->data['fieldProps'] = [
+                'items'=>[
+                    [
+                        "domtype"=>"text",
+                        "action"=> "dropdown",
+                        "request"=> [
+                          "url"=> '{{url}}',
+                          "modelName"=> "state",
+                          "fieldNames"=> "value,label",
+                          "data"=> [
+                            "actype"=> "state"
+                          ]
+                        ]
+                    ]
+                ]
+            ];
+
+        }else
+        {
+            $this->data['valueType'] = 'select';
+        }
+        
         return;
     }
 

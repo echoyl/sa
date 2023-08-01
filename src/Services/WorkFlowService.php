@@ -208,8 +208,22 @@ class WorkFlowService
                 }else
                 {
                     $action_text = $node['title'] .' '.$user['username'].' '.$action['title'].' 于 '.$val['updated_at'];
+                    //添加form表单信息显示
+                    $form = Arr::get($action,'form');
+                    $form_text = [];
+                    if(!empty($form))
+                    {
+                        $form_data = $val['form']?json_decode($val['form'],true):[];
+                        foreach($form as $f)
+                        {
+                            $form_text[] = implode(':',[$f['title'],$form_data[$f['dataIndex']]??'']);
+                        }
+                        
+                    }
+                    $form_text = implode(',',$form_text);
+                    $action_text .= ' '.$form_text;
+                    $val['form_text'] = $form_text;
                 }
-                
             }else
             {
                 $action_text = $is_end?"流程结束":($node['title'] .' 待操作');
@@ -280,13 +294,28 @@ class WorkFlowService
                         $btn['danger'] = true;
                     }
                 }
+                if(isset($action['color']) && $action['color'] == 'red')
+                {
+                    $btn['danger'] = true;
+                }
+                $form = Arr::get($action,'form');
+                $action_dom_type = 'confirm';
+                if(!empty($form))
+                {
+                    $action_dom_type = 'confirmForm';
+                }
+                if($action['key'] == 'reedit')
+                {
+                    $action_dom_type = 'edit';
+                }
                 $item = [
                     'domtype'=>'button',
                     'btn'=>$btn,
-                    'action'=>'confirm',
+                    'action'=>$action_dom_type,
                     'modal'=>[
                         'title'=>$node['title'],
-                        'msg'=>'是否确定'.$action['title'].'？'
+                        'msg'=>'是否确定'.$action['title'].'？',
+                        'formColumns'=>$form
                     ],
                     'request'=>[
                         'url'=>$action_url,
@@ -310,7 +339,7 @@ class WorkFlowService
      *
      * @return void
      */
-    public function doAction($key)
+    public function doAction($key,$form_data = [])
     {
         $doing_node = $this->doingNode();
         if(!$doing_node)
@@ -334,6 +363,19 @@ class WorkFlowService
             return [1,'无该操作'];
         }
 
+        //检测动作是否有表单提交
+        $form = Arr::get($action,'form');
+        $form_update = [];
+        if(!empty($form))
+        {
+            
+            foreach($form as $f)
+            {
+                $dataIndex = $f['dataIndex'];
+                $form_update[$dataIndex] = $form_data[$dataIndex]??'';
+            }
+        }
+
         //更新当前流程记录
         $log = $doing_node['log'];
         $update = [
@@ -341,6 +383,10 @@ class WorkFlowService
             'state'=>1,
             'action'=>$action['key'],
         ];
+        if(!empty($form_update))
+        {
+            $update['form'] = json_encode($form_update);
+        }
 
         $downstream = $this->getNodeByTo($action['to']);
 

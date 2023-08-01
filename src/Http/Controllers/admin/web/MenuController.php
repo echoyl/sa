@@ -37,10 +37,31 @@ class MenuController extends CrudController
         //['name' => 'state', 'type' => 'state', 'default' => 'disable'],
         ['name' => 'parent_id', 'type' => '', 'default' => '0'],
         ['name' => 'banner', 'type' => 'image', 'default' => ''],
+        ['name' => 'specs', 'type' => 'config', 'default' => ''],
+        ['name' => 'pics', 'type' => 'image', 'default' => ''],
         ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
         ['name' => 'relate_menu_id', 'type' => 'cascaders', 'default' => ''],
         ['name' => 'content_id', 'type' => 'search_select', 'default' => '0'],
+        [
+            'name' => 'state',
+            'type' => 'switch',
+            'default' => 1,
+            'table_menu' => true,
+            'with' => true,
+            'data' => [
+                [
+                    'label' => '禁用',
+                    'value' => 0,
+                ],
+                [
+                    'label' => '启用',
+                    'value' => 1,
+                ],
+            ],
+        ],
     ];
+
+    var $can_be_null_columns = ['tpl','small_title'];
     public function __construct(Menu $model)
     {
         $this->model = $model;
@@ -73,6 +94,7 @@ class MenuController extends CrudController
         $data['modules'] = $ws->modules;
         $ds = new DevService;
         $data['admin_model_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
+        //$data['admin_model_folder_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
         if ($data['id']) {
 
             $data['content_id'] = $ws->menuContent($data);
@@ -149,6 +171,7 @@ class MenuController extends CrudController
         $category_class = implode('\\',$namespace);
         if(!class_exists($category_class))
         {
+            return $this->success([]);
             return $this->fail([1,'请先创建 '.$model_data['title'].' 下方的Category模型']);
         }
 
