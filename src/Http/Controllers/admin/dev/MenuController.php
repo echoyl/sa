@@ -30,8 +30,8 @@ class MenuController extends CrudController
                 ["label" => "系统", "value" => 'system'],
             ], "with" => true],
             ["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
-                ["label" => "禁用","value" => 0],
                 ["label" => "启用","value" => 1],
+                ["label" => "禁用","value" => 0],
             ],"table_menu" => true],
             ['name'=>'desc','type'=>'json','default'=>'{}'],
             ['name'=>'perms','type'=>'json','default'=>'{}'],
@@ -53,21 +53,22 @@ class MenuController extends CrudController
         $search = [];
         $this->parseWiths($search);
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
-        $search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
-
-        $table_menu_id = request('table_menu_id','all');
+        //$search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
+        $search['table_menu'] = ['state'=>$search['states']];
+        $types = ['system',env('APP_NAME')];
+        $table_menu_id = request('state','all');
         if($table_menu_id == 'all')
         {
-            $types = ['system',env('APP_NAME'),''];
+            $where = [];
         }else
         {
-            $types = [$table_menu_id,''];
+            $where = ['state'=>$table_menu_id];
         }
 
         $data = $this->model->getChild($this->cid,$types,function($item){
             $this->parseData($item,'decode','list');
             return $item;
-        });
+        },0,1,[['displayorder','desc'],['id','asc']],$where);
         //d($data);
         $ds = new DevService;
         $search['menus'] = $ds->getMenusTree();
@@ -82,6 +83,30 @@ class MenuController extends CrudController
             $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'],array_values(collect(Utils::$title_arr)->map(function($v,$k){
                 return ['title'=>$v,'name'=>$k];
             })->toArray()));
+        }
+        if(!$this->is_post)
+        {
+            if(isset($item['form_config']))
+            {
+                $formColumns = $item['form_config'];
+                $item['tabs'] = [];
+                if(isset($formColumns['tabs']))
+                {
+                    foreach($formColumns['tabs'] as $key=>$tab)
+                    {
+                        $item['tabs'][] = $tab['title'];
+                        $k = $key?'form_config'.$key:'form_config';
+                        $item[$k] = $tab['config'];
+                    }
+                }else
+                {
+                    $item['tabs'] = ['基础信息'];
+                }
+                
+            }else
+            {
+                $item['tabs'] = ['基础信息'];
+            }
         }
     }
 
@@ -128,7 +153,7 @@ class MenuController extends CrudController
         $item = $item->toArray();
         if(!$config)
         {
-            $config = $item[$name]?json_decode($item[$name],true):[];
+            $config = isset($item[$name]) && $item[$name]?json_decode($item[$name],true):[];
         }
 
         return ['config'=>$config,'item'=>$item];
@@ -225,23 +250,8 @@ class MenuController extends CrudController
 
     }
 
-    /**
-     * 表单配置信息
-     *
-     * @return void
-     */
-    public function formConfig($id = 0)
+    protected function formTabConfig($item,$config)
     {
-        $item_data = $this->getItem('form_config',$id);
-
-        if(!is_array($item_data))
-        {
-            return $item_data;
-        }
-
-        $item = $item_data['item'];
-        $config = $item_data['config'];
-
         //根据form配置生成json配置
         $json = [];
         $ds = new DevService;
@@ -259,9 +269,81 @@ class MenuController extends CrudController
                 $json[] = array_shift($columns);
             }
         }
-        $formColumns = $json;
+        return $json;
+    }
+
+
+    /**
+     * 表单配置信息
+     *
+     * @return void
+     */
+    public function formConfig($id = 0)
+    {
+        $item_data = $this->getItem('form_config',$id);
+        
+        if(!is_array($item_data))
+        {
+            return $item_data;
+        }
+
+        $item = $item_data['item'];
+        $config = $item_data['config'];
         $desc = json_decode($item['desc'],true);
-        $desc['formColumns'] = $formColumns;
+        //如果有tab
+
+        $input_tabs = request('base.tags');
+        $tabs = [];
+        //数据库读取配置 + 配置中已经有了tabs设置
+        if($id && isset($config['tabs']))
+        {
+            $tabs = $config['tabs'];
+        }else
+        {
+            if($input_tabs)
+            {
+                foreach($input_tabs as $key=>$tab)
+                {
+                    $tabs[] = [
+                        'title'=>$tab,
+                        'config'=>$key?request('base.form_config'.$key):$config
+                    ];
+                }
+            }
+        }
+        
+        if(!empty($tabs))
+        {
+            $_tabs = [];
+            foreach($tabs as $key=>$tab)
+            {
+                $_config = $key?request('base.form_config'.$key):$config;
+                
+                $formColumns = $this->formTabConfig($item,$_config);
+                $_tabs[] = [
+                    'title'=>$tab['title'],
+                    'formColumns'=>$formColumns
+                ];
+            }
+            if(isset($desc['formColumns']))
+            {
+                unset($desc['formColumns']);
+            }
+            $desc['tabs'] = $_tabs;
+            $config = ['tabs'=>$tabs];
+
+        }else
+        {
+            if(isset($desc['tabs']))
+            {
+                unset($desc['tabs']);
+            }
+            $desc['formColumns'] = $this->formTabConfig($item,$config);
+        }
+
+        
+        
+        
         
         return $this->updateDesc($desc,$item,['form_config'=>json_encode($config)]);
 
@@ -287,7 +369,7 @@ class MenuController extends CrudController
 
         //这里需要 合并之前的配置 将生成的配置都保留 其它全部删除 然后合并现有的other 配置
         $_desc = [];
-        $keep_column = ['formColumns','toolBarButton','leftMenu','table_menu_key','tableColumns'];
+        $keep_column = ['formColumns','toolBarButton','leftMenu','table_menu_key','tableColumns','tabs'];
         foreach($keep_column as $kc)
         {
             if(isset($desc[$kc]))

@@ -114,7 +114,15 @@ class WorkFlowService
         foreach($condition as $where)
         {
             [$field,$type,$val] = $where;
-            $model = $model->where([[$field,$type,$this->getDataByField($val)]]);
+            $val = $this->getDataByField($val);
+            if($type == 'has')
+            {
+                //has 添加类型，数据格式为a,b 包含find_in_set模式
+                $model = $model->whereRaw("FIND_IN_SET(?,{$field})", [$val]);
+            }else
+            {
+                $model = $model->where([[$field,$type,$val]]);
+            }
         }
         $user_ids = $model->get()->pluck('id')->toArray();
 

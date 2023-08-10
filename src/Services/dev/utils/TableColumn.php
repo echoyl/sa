@@ -279,44 +279,40 @@ class TableColumn
     public function select()
     {
         $d = $this->data;
-        $form_data = $this->schema['form_data']??'';
+        $setting = $this->schema['setting']??[];
+        $label = $setting['label']??'';
+        $value = $setting['value']??'';
         $table_menu = $this->schema['table_menu']??'';
         if($this->relation)
         {
             //关联的select 需要获取数据
             $d['requestDataName'] = $this->schema['name'].'s';
-            $label = $value = '';
-            if($form_data)
-            {
-                [$label,$value] = explode(',',$form_data);
-            }else
+            $d['fieldProps'] = [];
+            if(!$value || !$label)
             {
                 if($this->schema['form_type'] == 'select')
                 {
                     $label = 'title';
                     $value = 'id';
                 }
-                
             }
             if(!$table_menu && $label)
             {
                 //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
-                $d['fieldProps'] = ['fieldNames'=>[
+                $d['fieldProps']['fieldNames'] = [
                     'label'=>$label,'value'=>$value
-                ]];
+                ];
+            }
+            if($this->form_type == 'selects')
+            {
+                $d['fieldProps']['mode'] = 'tags';
             }
         }else
         {
             //非关联的话 手动设置数据源
-            if($form_data)
+            if(isset($setting['json']) && $setting['json'])
             {
-                if(strpos($form_data,'{'))
-                {
-                    $d['fieldProps']['options'] = json_decode($form_data,true);
-                }else
-                {
-                    $d['fieldProps']['options'] = explode(',',$form_data);
-                }
+                $d['fieldProps']['options'] = json_decode($setting['json'],true);
                 // if($this->form_type == 'selects')
                 // {
                 //     $d['fieldProps']['mode'] = 'tags';
@@ -342,23 +338,16 @@ class TableColumn
 
     public function switch()
     {
-        $form_data = $this->schema['form_data']??'';
+        $setting = $this->schema['setting']??[];
+        $open = $setting['open']??'开';
+        $close = $setting['close']??'关';
         //switch开关
         //是switch 或者select 需要设置数据类型为enum
-        if($form_data)
-        {
-            $valueEnum = collect(explode(',',$form_data))->map(function($v,$k){
-                return ['text' => $v, 'status' => $k == 0?'error':'success'];
-            });
-            $this->data['valueEnum'] = $valueEnum;
-        }else
-        {
-            //未设置switch的文本 默认设置文本
-            $this->data['valueEnum'] = [
-                ['text' => '关', 'status' => 'error'],
-                ['text' => '开', 'status' => 'success']
-            ];
-        }
+        $valueEnum =[
+            ['text' => $close, 'status' => 'error'],
+            ['text' => $open, 'status' => 'success']
+        ];
+        $this->data['valueEnum'] = $valueEnum;
         //列表显示 需要设置类型为 select
         //如果key是state  预设值列表可操作
         if($this->key == 'state')
@@ -394,11 +383,14 @@ class TableColumn
     {
         //多选分类
         $d = $this->data;
-        $form_data = $this->schema['form_data']??'';
+        $setting = $this->schema['setting']??[];
         if($this->relation)
         {
             //关联的select 需要获取数据
             $d['requestDataName'] = $this->schema['name'].'s';
+            $d['fieldProps'] = [
+                'changeOnSelect'=>true
+            ];
             // if(isset($column['form_data']))
             // {
             //     [$label,$value] = explode(',',$column['form_data']);
@@ -409,14 +401,22 @@ class TableColumn
         }else
         {
             //非关联的话 手动设置数据源
-            if($form_data)
+            if(isset($setting['json']))
             {
                 $d['fieldProps'] = [
-                    'options'=>json_decode($form_data,true)
+                    'options'=>json_decode($setting['json'],true),
+                    'changeOnSelect'=>true
                 ];
             }
         }
         $this->data = $d;
+        return;
+    }
+    public function pca()
+    {
+        $this->data['fieldProps'] = [
+            'changeOnSelect'=>true
+        ];
         return;
     }
 }

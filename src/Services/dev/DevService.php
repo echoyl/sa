@@ -713,7 +713,8 @@ class DevService
                     //不存在type 或者一些不需要parse的字段 直接过滤
                     continue;
                 }
-                $form_data = $column['form_data']??'';
+                //$form_data = $column['form_data']??'';
+                $setting = $column['setting']??[];
                 $form_type = $column['form_type'];
                 $default_value = $column['default']??'';
                 //['name' => 'shop_id', 'type' => 'search_select', 'default' => '0','data_name'=>'shop','label'=>'name'],
@@ -723,6 +724,9 @@ class DevService
                     'default' => in_array($form_type,['select','search_select','price'])?($default_value?intval($default_value):0):$default_value,
                 ];
                 $table_menu = isset($column['table_menu']) && $column['table_menu'];
+                $label = $setting['label']??'';
+                $value = $setting['value']??'';
+                $children = $setting['children']??'';
                 if($form_type == 'select')
                 {
                     if(isset($all_models[$column['name']]))
@@ -732,9 +736,10 @@ class DevService
 
                         //新增数据筛选配置
                         //$filter = $clo
-                        if($table_menu && $form_data)
+                        
+                        if($table_menu && $label && $value)
                         {
-                            [$label,$value] = explode(',',$form_data);
+                            
                             $data_select = ["{$label} as label","{$value} as value"];
                             $d['data'] = '@php(new '.$all_models[$column['name']].'())->select('.json_encode($data_select).')->get()->toArray()@endphp';
                         }else
@@ -744,10 +749,10 @@ class DevService
 
                     }else
                     {
-                        if($form_data)
+                        if(isset($setting['json']) && $setting['json'])
                         {
                             //d(json_decode($column['form_data'],true));
-                            $d['data'] = json_decode($form_data,true);
+                            $d['data'] = json_decode($setting['json'],true);
                             //d($d['data']);
                         }else
                         {
@@ -765,11 +770,12 @@ class DevService
                 {
                     //switch 也支持 table_menu
                     $valueEnum = [];
-                    if($form_data)
+                    if(isset($setting['close']) && isset($setting['open']))
                     {
-                        $valueEnum = collect(explode(',',$form_data))->map(function($v,$k){
-                            return ['label'=>$v,'value'=>$k];
-                        })->toArray();
+                        $valueEnum = [
+                            ['label'=>$setting['close'],'value'=>0],
+                            ['label'=>$setting['open'],'value'=>1]
+                        ];
                     }
                    
                     // $_value = [];
@@ -799,17 +805,25 @@ class DevService
                 if($form_type == 'search_select')
                 {
                     $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]);
-                    $fieldNames = explode(',',$column['form_data']);
-                    $d['label'] = $fieldNames[0];
-                    if(isset($fieldNames[1]))
+                    $label = $setting['label']??'';
+                    $value = $setting['value']??'';
+                    if($label)
                     {
-                        $d['value'] = $fieldNames[1];
+                        $d['label'] = $label;
+                    }
+                    if($value)
+                    {
+                        $d['value'] = $value;
                     }
                 }
                 if($form_type == 'cascaders' || $form_type == 'cascader')
                 {
                     $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                     $d['with'] = true;
+                    if($label && $value && $children)
+                    {
+                        $d['fields'] = ['id'=>$value,'title'=>$label,'children'=>$children];
+                    }
                 }
                 if($form_type == 'selects')
                 {
@@ -817,6 +831,10 @@ class DevService
                     {
                         $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                         $d['with'] = true;
+                        if($label && $value && $children)
+                        {
+                            $d['fields'] = ['id'=>$value,'title'=>$label,'children'=>$children];
+                        }
                     }
                     
                     
@@ -825,11 +843,7 @@ class DevService
                 if($form_type == 'pca')
                 {
                     $d['default'] = "__unset";
-                    if(isset($column['form_data']))
-                    {
-                        $d['level'] = intval($column['form_data']);
-                    }
-                    
+                    $d['level'] = $setting['pca_level']??1;
                 }
                 $parse_columns[] = $d;
             }
@@ -1059,6 +1073,7 @@ class DevService
     {
         $self = new self();
         if(!$menus)return;
+        $app_name = self::appname();
         //d($menus);
         foreach($menus as $menu)
         {
@@ -1078,6 +1093,15 @@ class DevService
                         //检测是否有namespace
                         $model_path = array_reverse(self::getPath($model,$self->allModel()));
                         $_prefix = array_merge($prefix,[$menu['path']]);
+                        $controller_prefix = '';
+                        //检测如果菜单是项目菜单 指向的是系统模型需要添加控制器文件绝对路径前缀
+                        if($menu['type'] == $app_name && $model['admin_type'] == 'system')
+                        {
+                            $_model_path = $model_path;
+                            array_pop($_model_path);
+                            $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.(!empty($_model_path)?implode("\\",$_model_path).'\\':'');
+                        }
+
                         if(count($model_path) > 1)
                         {
                             //默认所有路由都走这里 因为都有一个项目namespace
@@ -1096,21 +1120,21 @@ class DevService
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$key){
-                                    Route::any(implode('/',$_prefix), ucfirst($name).'Controller@'.$key);
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$key,$controller_prefix){
+                                    Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
                                 });
                             }else
                             {
                                 //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms){
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms,$controller_prefix){
                                     if($perms)
                                     {
                                         foreach($perms as $key=>$title)
                                         {
-                                            Route::any(implode('/',array_merge($_prefix,[$key])), ucfirst($name).'Controller@'.$key);
+                                            Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
                                         }
                                     }
-                                    Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                                    Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
                                 });
                             }
 
@@ -1121,11 +1145,11 @@ class DevService
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
-                                Route::any(implode('/',$_prefix), ucfirst($name).'Controller@'.$key);
+                                Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
                             }else
                             {
                                 //Log::channel('daily')->info('createRoute:',['name'=>implode('/',$_prefix),'to'=>$name]);
-                                Route::resource(implode('/',$_prefix), ucfirst($name).'Controller');
+                                Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
                             }
                             
                         }

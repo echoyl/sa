@@ -18,9 +18,13 @@ class Menu extends Category
         return $this->hasOne(self::class, 'id', 'parent_id');
     }
 
-    public function getChild($cid = 0, $whereIn = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['displayorder','desc'],['id','asc']])
+    public function getChild($cid = 0, $whereIn = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['displayorder','desc'],['id','asc']],$where = [])
     {
-        $list = $this->where(['parent_id' => $cid])->whereIn('type',$whereIn);
+        $list = $this->where(['parent_id' => $cid])->where($where);
+        if(!empty($whereIn))
+        {
+            $list = $list->whereIn('type',$whereIn);
+        };
         foreach($displayorder as $dis)
         {
             $list = $list->orderBy($dis[0],$dis[1]);
@@ -33,7 +37,7 @@ class Menu extends Category
             }
             if($max_level == 0 || $max_level > $level)
             {
-                $children = $this->getChild($val['id'], $whereIn,$parseData,$max_level,$level+1);
+                $children = $this->getChild($val['id'], $whereIn,$parseData,$max_level,$level+1,$displayorder);
                 if (!empty($children)) {
                     $list[$key]['children'] = $children;
                 }

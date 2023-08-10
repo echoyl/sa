@@ -12,6 +12,7 @@ use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\MySQLDump;
 use Echoyl\Sa\Services\dev\utils\Utils;
+use GuzzleHttp\Promise\Create;
 use mysqli;
 
 class ModelController extends CrudController
@@ -61,9 +62,21 @@ class ModelController extends CrudController
         //当前模型
         $data = $this->model->where(['id'=>$id])->with(['relations'])->first();
         $to_folder = (new Model())->where(['id'=>$toid])->first();
-        if(!$data || !$to_folder || $to_folder['type'] != 0)
+        if(!$data)
         {
             return $this->fail([1,'数据错误']);
+        }
+        if($to_folder)
+        {
+            if($to_folder['type'] != 0)
+            {
+                return $this->fail([1,'所选文件夹类型错误']);
+            }
+        }else{
+            $to_folder = [
+                'id'=>0,
+                'admin_type'=>DevService::appname()
+            ];
         }
 
         $data = $data->toArray();
@@ -88,35 +101,7 @@ class ModelController extends CrudController
 
     }
 
-    public function checkHas($model_data)
-    {
-        $model_has = $this->model->where(['name'=>$model_data['name'],'parent_id'=>$model_data['parent_id'],'type'=>$model_data['type'],'admin_type'=>$model_data['admin_type']])->first();
-        if(!$model_has)
-        {
-            $model_id = $this->model->insertGetId($model_data);
-        }else
-        {
-            //更新
-            $this->model->where(['id'=>$model_has['id']])->update($model_data);
-            $model_id = $model_has['id'];
-        }
-        return $model_id;
-    }
-    public function checkHasMenu($model_data)
-    {
-        $model = new Menu();
-        $model_has = $model->where(['path'=>$model_data['path'],'parent_id'=>$model_data['parent_id'],'type'=>$model_data['type']])->first();
-        if(!$model_has)
-        {
-            $model_id = $model->insertGetId($model_data);
-        }else
-        {
-            //更新
-            $model->where(['id'=>$model_has['id']])->update($model_data);
-            $model_id = $model_has['id'];
-        }
-        return $model_id;
-    }
+    
 
     /**
      * 快速创建内容模块
@@ -131,156 +116,21 @@ class ModelController extends CrudController
             return $this->fail([1,'环境错误！']); 
         }
 
-        $title = request('title');
-        $name = request('name');
-
-        $model_to_id = request('model_to_id',0);
-        $menu_to_id = request('menu_to_id',0);
-        $appname = DevService::appname();
-        //先创建模型
-        //1.列表
-        $model_to = $this->model->where(['id'=>$model_to_id])->first();
-        $model_to_id = $model_to?$model_to['id']:0; 
-
-        $category_level = request('category_level',1);
-        $category_type = request('category_type','single');
-        $type = '';
-        $relation_type = 'cascaders';
-        if($category_level > 1)
+        $type = request('type');
+        $c = new Creator;
+        if($type == 'posts')
         {
-            $type = $category_type == 'single'?'cascader':'cascaders';
-            $relation_type = $category_type == 'single'?'cascader':'cascaders';
-        }else
+            $c->postsContent();
+        }elseif($type == 'perm')
         {
-            $type = $category_type == 'single'?'select':'selects';
-            $relation_type = $category_type == 'single'?'one':'cascaders';
+            $c->permContent();
         }
 
-        $model_data = [
-            'title'=>$title,
-            'name'=>$name,
-            'admin_type'=>$appname,
-            'type'=>1,
-            'leixing'=>'normal',
-            'columns'=>Creator::postsColumns($type),
-            'parent_id'=>$model_to_id
-        ];
         
-        $model_id = $this->checkHas($model_data);
-        //2.分类表
-        //2.1 先创建posts父级
-        $model_category_f = [
-            'title'=>$title,
-            'name'=>$name,
-            'admin_type'=>$appname,
-            'type'=>0,//文件夹
-            'leixing'=>'normal',
-            'parent_id'=>$model_to_id
-        ];
-        $model_f_id = $this->checkHas($model_category_f);
-        //2.2 category
-        $model_category_data = [
-            'title'=>'分类',
-            'name'=>'category',
-            'admin_type'=>$appname,
-            'type'=>1,
-            'leixing'=>'category',
-            'columns'=>Creator::$default_category_columns,
-            'parent_id'=>$model_f_id
-        ];
-        $model_category_id = $this->checkHas($model_category_data);
-        $model = $this->model->where(['id'=>$model_id])->first();
-        $category_model = $this->model->where(['id'=>$model_category_id])->first();
-        //创建数据表
-        $ds = new DevService;
-        $ds->createModelSchema($model);
-        $ds->createModelSchema($category_model);
-        //3.关联模型
-        $relation = [
-            'model_id'=>$model_id,
-            'title'=>'分类',
-            'name'=>'category',
-            'type'=>$relation_type,
-            'foreign_model_id'=>$model_category_id,
-            'foreign_key'=>'id',
-            'local_key'=>'category_id',
-            'created_at'=>now(),
-            'updated_at'=>now(),
-            'is_with'=>1
-        ];
-        $has_relation = (new Relation())->where(['model_id'=>$model_id,'foreign_model_id'=>$model_category_id])->first();
-        if(!$has_relation)
-        {
-            (new Relation())->insert($relation);
-        }else
-        {
-            (new Relation())->where(['id'=>$has_relation['id']])->update($relation);
-        }
-        //4.1生成model文件
-        
-        $ds->createModelFile($model);
-        $ds->createModelFile($category_model);
-        //4.2及controller文件
-        $ds->createControllerFile($model);
-        $ds->createControllerFile($category_model);
-
-        //5 创建菜单
-        //5.1大菜单
-        $big_menu = [
-            'title'=>$title,
-            'path'=>$name,
-            'parent_id'=>$menu_to_id,
-            'status'=>1,
-            'icon'=>'table',
-            'state'=>1,
-            'type'=>$appname
-        ];
-        $big_menu_id = $this->checkHasMenu($big_menu);
-        //5.3分类菜单
-        $category_menu = array_merge([
-            'title'=>'分类',
-            'path'=>'category',
-            'parent_id'=>$big_menu_id,
-            'status'=>1,
-            'state'=>1,
-            'type'=>$appname,
-            'page_type'=>'category',
-            'open_type'=>'drawer',
-            'admin_model_id'=>$model_category_id,
-        ],Creator::menuCategory($category_level));
-        //5.2列表
-        $menu = array_merge([
-            'title'=>'列表',
-            'path'=>$name,
-            'parent_id'=>$big_menu_id,
-            'status'=>1,
-            'state'=>1,
-            'type'=>$appname,
-            'page_type'=>'table',
-            'open_type'=>'drawer',
-            'admin_model_id'=>$model_id
-        ],Creator::$menu_posts);
-        $menu_category_id = $this->checkHasMenu($category_menu);
-        $menu_id = $this->checkHasMenu($menu);
-        
-        //5.4生成菜单的配置信息 desc
-        //所请求使用菜单的path路径
-        $this->updateMenuDesc($menu_id);
-        $this->updateMenuDesc($menu_category_id);
         return $this->success('操作成功');
     }
 
-    public function updateMenuDesc($menu_id)
-    {
-        $ds = new DevService;
-        $ds->allMenu(true);
-        $ds->allModel(true);
-        $mc = new MenuController(new Menu());
-        $mc->tableConfig($menu_id);
-        $mc->formConfig($menu_id);
-        $mc->otherConfig($menu_id);
-        return;
-    }
+    
 
     /**
      * 导出开发配置sql文件 直接在服务器中运行更新

@@ -120,6 +120,14 @@ class Category extends Base
      */
     public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['displayorder','desc'],['id','asc']])
     {
+        if(is_array($cid))
+        {
+            $parent = $cid;
+            $cid = $parent['id'];
+        }else
+        {
+            $parent = false;
+        }
         $list = $this->where(['parent_id' => $cid])->where($where);
         foreach($displayorder as $dis)
         {
@@ -129,11 +137,11 @@ class Category extends Base
         foreach ($list as $key => $val) {
             if($parseData)
             {
-                $list[$key] = $parseData($val);
+                $list[$key] = $parseData($val,$parent);
             }
             if($max_level == 0 || $max_level > $level)
             {
-                $children = $this->getChild($val['id'], $where,$parseData,$max_level,$level+1,$displayorder);
+                $children = $this->getChild($val, $where,$parseData,$max_level,$level+1,$displayorder);
                 if (!empty($children)) {
                     $list[$key]['children'] = $children;
                 }

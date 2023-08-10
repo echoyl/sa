@@ -118,7 +118,7 @@ class AdminService
         $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '';
 		$as = new MenuService;
         $rolename = $user['role']?$user['role']['title']:'超级管理员';
-        $is_super = self::isSuper();
+        $is_super = self::isSuper($user);
         $auth_ids = [];
         if(!$is_super)
         {

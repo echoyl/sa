@@ -61,7 +61,7 @@ class MenuController extends CrudController
         ],
     ];
 
-    var $can_be_null_columns = ['tpl','small_title'];
+    var $can_be_null_columns = ['tpl','small_title','desc','content_detail'];
     public function __construct(Menu $model)
     {
         $this->model = $model;

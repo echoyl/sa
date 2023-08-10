@@ -33,6 +33,7 @@ class Role extends Base
 			                'value' => 1,
 			            ],
 			        ],
+                    "table_menu" => true
 			    ],
 			];
         }

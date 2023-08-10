@@ -9,7 +9,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class UploadService
 {
     public $file_ext_arr = [
-        'rar', 'doc', 'xls', 'ppt', 'zip', 'pdf', 'xlsx','bin'
+        'rar', 'doc', 'docx', 'xls', 'ppt', 'zip', 'pdf', 'xlsx','bin'
     ];
     public $image_ext_arr = [
         'jpg', 'jpeg', 'png', 'gif','ico'

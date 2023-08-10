@@ -337,14 +337,26 @@ class HelperService
         {
             return $model;
         }
-        $search_val = $search;
-        $search = self::json_validate($search);
-        if($search !== false)
+
+        $search_val = false;
+        
+        if(is_string($search))
         {
+            $search = self::json_validate($search);
+            if($search !== false)
+            {
+                $search = array_values($search);
+                $search_val = array_shift($search);
+            }
+        }elseif(is_array($search))
+        {
+            if(empty($search))
+            {
+                return $model;
+            }
             $search = array_values($search);
             $search_val = array_shift($search);
         }
-        
         if(!$search_val)
         {
             return $model;
@@ -407,6 +419,10 @@ class HelperService
     public static function json_validate($string)
     {
         // decode the JSON data
+        if(!is_string($string))
+        {
+            return false;
+        }
         $result = json_decode($string,true);
 
         // switch and check possible JSON errors

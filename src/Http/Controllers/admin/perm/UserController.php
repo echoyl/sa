@@ -17,9 +17,9 @@ class UserController extends CrudController
 	//var $json_columns = ['perms2'];
 	var $with_count = ['logs'];
 	var $can_be_null_columns = ['desc'];
-    public function __construct(User $model)
+    public function __construct()
 	{
-		$this->model = $model;
+		$this->model = new User;
 		$this->with_column = ['role','logs'=>function($q){
 			$q->orderBy('last_used_at','desc')->limit(1);
 		}];
@@ -55,26 +55,6 @@ class UserController extends CrudController
 		$m = $m->where([['id','!=',1]]);
 
 		return [$m,$search];
-	}
-
-	public function postData(&$item)
-	{
-		$ps = new PermService();
-
-		$roles = Role::get();
-		$role_perms = [];
-		foreach($roles as $val)
-		{
-			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
-		}
-
-		$as = new MenuService;
-		$item['perms'] = $as->perms();
-		//$item['perms'] = $ps->parsePerms();
-
-		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
-		$item['role_perms'] = $role_perms;
-		$item['password'] = '';
 	}
 
 	public function beforePost(&$data,$id)

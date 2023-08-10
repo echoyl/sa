@@ -265,7 +265,7 @@ class WebsiteService
     public function parseData($menu, $m, $limit, $cid = 0)
     {
         $ps = new PostsService();
-        $list = $m->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'desc')->limit($limit)->get()->toArray();
+        $list = $m->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('created_at', 'desc')->limit($limit)->get()->toArray();
         foreach ($list as $k => $val) {
             //$val = HelperService::autoParseImages($val);
             $val = HelperService::deImagesOne($val, ['titlepic']);

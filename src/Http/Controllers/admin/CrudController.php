@@ -99,14 +99,27 @@ class CrudController extends ApiBaseController
                     if (isset($col['class'])) {
                         $cids = [];
                         $cmodel = new $col['class'];
-                        foreach ($category_id as $cid) {
-                            if (is_array($cid)) {
+                        //检测$category_id是二位数组还是一维数组
+                        $is_2 = false;
+                        foreach($category_id as $cid)
+                        {
+                            if(is_array($cid))
+                            {
+                                //只要有一个子项是数组 则 传入的就是多选
+                                $is_2 = true;
                                 $cid = array_pop($cid);
+                                $_cids = $cmodel->childrenIds($cid);
+                                $cids = array_merge($cids, $_cids);
                             }
-
+                        }
+                        if(!$is_2)
+                        {
+                            $cid = array_pop($category_id);
                             $_cids = $cmodel->childrenIds($cid);
                             $cids = array_merge($cids, $_cids);
                         }
+
+                        
                         $m = $m->whereIn($name, $cids);
                     }
 
@@ -573,7 +586,14 @@ class CrudController extends ApiBaseController
                         $data[$name] = $_m->get()->toArray();
                     }else
                     {
-                        $data[$name] = $_m->format($with['cid']??0);
+                        if(isset($with['fields']))
+                        {
+                            $data[$name] = $_m->format($with['cid']??0,$with['fields']);
+                        }else
+                        {
+                            $data[$name] = $_m->format($with['cid']??0);
+                        }
+                        
                     }
                 }elseif(isset($with['data']))
                 {

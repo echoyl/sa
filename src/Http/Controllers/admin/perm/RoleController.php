@@ -5,7 +5,6 @@ namespace Echoyl\Sa\Http\Controllers\admin\perm;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\perm\Role;
 use Echoyl\Sa\Services\dev\MenuService;
-use Echoyl\Sa\Services\PermService;
 
 class RoleController extends CrudController
 {
@@ -16,41 +15,24 @@ class RoleController extends CrudController
 		$this->model = $model;
 	}
 
-	public function postData(&$item)
+
+	public function perms()
 	{
-		$ps = new PermService();
-		$as = new MenuService;
-
-		//$item['perms'] = $ps->parsePerms();
-		$item['perms'] = $as->perms();
-		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
-
-	}
-
-	public function beforePost(&$data)
-	{
-		// if(isset($data['perms2']) && $data['perms2'])
-		// {
-		// 	$data['perms2'] = implode(',',$data['perms2']);
-		// }
-		return;
-	}
-
-	public function handleSearch()
-	{
-		$m = $this->model;
-
-
-		$title = request('title','');
-		$search = [];
-		if($title)
+		$roles = $this->model->get()->toArray();
+		$role_perms = [];
+		foreach($roles as $val)
 		{
-			$title = urldecode($title);
-			$m = $m->where([['title','like','%'.$title.'%']]);
-
+			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
 		}
 
-		return [$m,$search];
+		$as = new MenuService;
+		$data = [];
+		$data['perms'] = $as->perms();
+		//$item['perms'] = $ps->parsePerms();
+
+		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
+		$data['role_perms'] = $role_perms;
+		return $this->success($data);
 	}
     
 }

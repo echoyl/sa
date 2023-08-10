@@ -24,6 +24,8 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 
                 //用户修改信息
                 Route::any('index/user', 'IndexController@user'); 
+                //所有权限及角色权限
+                Route::any('perm/role/perms', 'perm\RoleController@perms'); 
                 //需要检测权限的路由
                 Route::middleware(['echoyl.permcheck'])->group(function () {
                     //上传文件

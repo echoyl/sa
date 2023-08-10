@@ -44,6 +44,11 @@ class FormItem
             'title'=>'创建时间',
             'form_type'=>'datetime'
         ];
+        $columns[] = [
+            'name'=>'updated_at',
+            'title'=>'更新时间',
+            'form_type'=>'datetime'
+        ];
         $schema = Utils::arrGet($columns,'name',$key);
         $this->schema = $schema;
 
@@ -164,6 +169,11 @@ class FormItem
             $this->data['tooltip'] = $props['tooltip'];
         }
 
+        if(isset($props['outside']))
+        {
+            $this->data = array_merge($this->data,$props['outside']);
+        }
+
         return;
     }
 
@@ -216,7 +226,7 @@ class FormItem
             $fieldProps['readonly'] = true;
         }
         //如果是saFormTable 表单中的table 需要读取该关联模型所对应的第一个菜单的所形成的地址，这样组件可以在页面中根据这个path获取该页面的配置参数信息
-        if($relation['foreign_model']['menu'])
+        if($relation && $relation['foreign_model'] && $relation['foreign_model']['menu'])
         {
             $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
             $fieldProps['path'] = implode('/',$path);
@@ -275,16 +285,17 @@ class FormItem
     public function select()
     {
         $d = $this->data;
-        $form_data = $this->schema['form_data']??'';
+        $setting = $this->schema['setting']??[];
         $table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
         if($this->relation)
         {
             $d['requestDataName'] = $this->schema['name'].'s';
             $label = $value = '';
-            if($form_data)
+            if(isset($setting['label']) && isset($setting['value']))
             {
-                [$label,$value] = explode(',',$form_data);
+                $label = $setting['label'];
+                $value = $setting['value'];
             }else
             {
                 if($this->schema['form_type'] == 'select')
@@ -306,15 +317,9 @@ class FormItem
             }
         }else
         {
-            if($form_data)
+            if(isset($setting['json']))
             {
-                if(strpos($form_data,'{'))
-                {
-                    $d['fieldProps']['options'] = json_decode($form_data,true);
-                }else
-                {
-                    $d['fieldProps']['options'] = explode(',',$form_data);
-                }
+                $d['fieldProps']['options'] = json_decode($setting['json'],true);
                 if($this->form_type == 'selects')
                 {
                     $d['fieldProps']['mode'] = 'tags';
@@ -334,12 +339,11 @@ class FormItem
     {
         $d = $this->data;
         $relation = $this->relation;
-        $form_data = $this->schema['form_data']??'';
+        $setting = $this->schema['setting']??[];
+        $label = $setting['label']??'';
+        $value = $setting['value']??'';
         //输入搜索select
-        if($form_data)
-        {
-            [$label,$value] = explode(',',$form_data);
-        }
+
         if($this->readonly)
         {
             //unset($d['valueType']);
@@ -359,7 +363,7 @@ class FormItem
                 }
                 
             }
-            if($form_data)
+            if($label && $value)
             {
                 $d['fieldProps'] = array_merge($d['fieldProps'],['fieldNames'=>['label'=>$label,'value'=>$value]]);
             }
@@ -370,26 +374,27 @@ class FormItem
 
     public function uploader()
     {
-        $form_data = $this->schema['form_data']??'';
-        if($form_data)
+        $setting = $this->schema['setting']??[];
+        if(isset($setting['image_count']))
         {
-            $this->data['fieldProps'] = ['max'=>intval($form_data)];
+            $this->data['fieldProps'] = ['max'=>intval($setting['image_count'])];
         }
         return;
     }
 
     public function switch()
     {
-        $form_data = $this->schema['form_data']??'';
+
+        $setting = $this->schema['setting']??[];
+        $open = $setting['open']??'';
+        $close = $setting['close']??'';
         //switch开关
-        if($form_data)
+        if($open && $close)
         {
             $default = $this->schema['default']??1;
-            //d($default,$this->schema);
-            [$label,$value] = explode(',',$form_data);
             $this->data['fieldProps'] = [
-                "checkedChildren"=>$value,
-                "unCheckedChildren"=>$label,
+                "checkedChildren"=>$open,
+                "unCheckedChildren"=>$close,
                 "defaultChecked"=>$default?true:false
             ];
             
@@ -416,12 +421,11 @@ class FormItem
     public function pca()
     {
         //省市区选择
-        $form_data = $this->schema['form_data']??'';
-        //$d['requestDataName'] = $column['name'].'s';
-        if($form_data)
+        $setting = $this->schema['setting']??[];
+        if(isset($setting['pca_level']))
         {
             $this->data['fieldProps'] = [
-                'level'=>intval($form_data)
+                'level'=>intval($setting['pca_level'])
             ];
         }
     }
@@ -429,5 +433,12 @@ class FormItem
     public function datetime()
     {
         
+    }
+
+    public function permGroup()
+    {
+        $this->data['fieldProps'] = [
+            'requestNames'=>['perms']
+        ];
     }
 }

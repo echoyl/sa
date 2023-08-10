@@ -15,6 +15,6 @@ class Log extends Base
 
     public function user()
     {
-        return $this->hasOne(User::class,'id','user_id');
+        return $this->hasOne(config('sa.userModel'),'id','user_id');
     }
 }
