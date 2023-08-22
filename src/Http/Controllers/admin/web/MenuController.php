@@ -9,6 +9,7 @@ use Echoyl\Sa\Models\Category;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\Posts;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\HelperService;
 
 class MenuController extends CrudController
 {
@@ -103,7 +104,7 @@ class MenuController extends CrudController
         // {
         //     $data['specs'] = json_decode($data['specs'],true);
         // }
-
+        HelperService::deImagesFromConfig($data);
         return;
     }
 

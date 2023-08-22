@@ -57,9 +57,8 @@ class CrudController extends ApiBaseController
             }
         }
 
-        $model_parse_columns = $this->getParseColumns();
+        $parse_columns = $this->getParseColumns();
 
-        $parse_columns = !empty($model_parse_columns)?$model_parse_columns:$this->parse_columns;
         foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
@@ -420,6 +419,14 @@ class CrudController extends ApiBaseController
                     $data = ['state' => $val];
                     //批量操作
                     $this->parseData($data, 'encode', 'update');
+
+                    if (method_exists($this, 'beforePost')) {
+                        $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+                        if ($ret) {
+                            return $ret;
+                        }
+                    }
+
                     if(is_array($id))
                     {
                         $this->model->whereIn('id',$id)->update($data);
@@ -472,6 +479,8 @@ class CrudController extends ApiBaseController
             }
             $ret = null;
             
+            //操作完数据后 读取可操作关联模型的数据处理
+            $this->afterPostParseData($id,request('base'));
 
             //返回插入或更新后的数据
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
@@ -563,9 +572,7 @@ class CrudController extends ApiBaseController
             $ret[] = $with['name'];
         }
 
-        $model_parse_columns = $this->getParseColumns();
-
-        $parse_columns = !empty($model_parse_columns)?$model_parse_columns:$this->parse_columns;
+        $parse_columns = $this->getParseColumns();
 
         $table_menu = [];
 
@@ -617,15 +624,20 @@ class CrudController extends ApiBaseController
         return $ret;
     }
 
-    public function getParseColumns()
+    public function getParseColumns($parse_columns = [])
     {
+        if(!empty($parse_columns))
+        {
+            return $parse_columns;
+        }
         if(method_exists($this->model,'getParseColumns'))
         {
-            return $this->model->getParseColumns();
+            $parse_columns = $this->model->getParseColumns();
         }else
         {
-            return [];
+            $parse_columns = [];
         }
+        return !empty($parse_columns)?$parse_columns:$this->parse_columns;
     }
 
     public function parseData(&$data, $in = 'encode', $from = 'detail',$parse_columns = [])
@@ -637,9 +649,8 @@ class CrudController extends ApiBaseController
             $is_first = false;
         }
 
-        $model_parse_columns = $this->getParseColumns();
+        $parse_columns = $this->getParseColumns($parse_columns);
 
-        $parse_columns = !empty($parse_columns)?$parse_columns:(!empty($model_parse_columns)?$model_parse_columns:$this->parse_columns);
         foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
@@ -964,7 +975,7 @@ class CrudController extends ApiBaseController
                                 $val = '__unset';
                             }else
                             {
-                                $val = json_decode($val,true);
+                                $val = is_string($val)?json_decode($val,true):$val;
                             }
                         }else{
                             $val = '__unset';
@@ -1003,6 +1014,22 @@ class CrudController extends ApiBaseController
                             $val = $wms->getSpecs($val,true);
                         }
                     }
+                    break;
+                case 'modalSelect':
+                    //表单类型为 搜索select时
+                    $id_name = $col['value']??'id';
+                    if($encode)
+                    {
+                        if($isset && $val && isset($val[$id_name]))
+                        {
+                            $val = $val[$id_name];
+                        }
+                    }else
+                    {
+                        //特定字段名称 label value
+                        //前端数据暂时不用
+                    }
+                    break;
                 // case 'enum':
                 //     if($from == 'list' && $isset)
                 //     {
@@ -1024,6 +1051,74 @@ class CrudController extends ApiBaseController
         }
 
         return $unsetNames;
+    }
+
+    /**
+     * 数据更新或插入后的操作
+     *
+     * @param [type] $id
+     * @param [type] $data
+     * @return void
+     */
+    public function afterPostParseData($id,$data)
+    {
+        $parse_columns = $this->getParseColumns();
+        foreach($parse_columns as $column)
+        {
+            $type = $column['type'];
+            $name = $column['name'];
+            
+            switch ($type) {
+                case 'model':
+                    if(isset($data[$name]))
+                    {
+                        $foreign_key = $column['foreign_key'];//外键名称
+                        $this->modelData($data[$name],$column['class'],[$foreign_key=>$id]);
+                    }
+                break;
+            }
+        }
+        return;
+    }
+
+    /**
+     * 处理管理模型数据 function
+     * 1-1关系
+     * @param [type] $data  数据
+     * @param [type] $class 模型
+     * @param [type] $where 模型的唯一条件
+     * @return void
+     */
+    public function modelData($data,$class,$where)
+    {
+        $model = new $class;
+        $item = $model->where($where)->first();
+
+        $cls_p_c = $model->getParseColumns();
+        if($item)
+        {
+            //更新
+            $from = 'update';
+        }else
+        {
+            //新增
+            $from = 'insert';
+        }
+        if(!empty($cls_p_c))
+        {
+            $this->parseData($data,true,$from,$cls_p_c);
+        }
+
+        $data = array_merge($data,$where);
+
+        if($from == 'update')
+        {
+            $model->where($where)->update($data);
+        }else
+        {
+            $model->where($where)->insert($data);
+        }
+        return;
     }
 
 }

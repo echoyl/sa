@@ -9,14 +9,16 @@ use Echoyl\Sa\Models\wechat\offiaccount\Account;
 
 class AccountController extends CrudController
 {
-	
-
     public function __construct()
 	{
+		parent::__construct();
+		$this->with_column = [
+		    'menus',
+		];
 		$this->model = new Account();
-
-		$this->parse_columns = [];
-
+		//customer construct start
+		
+		//customer construct end
 	}
 	//customer code start
 	

@@ -16,6 +16,14 @@ class GoodsService
 
     public function parseGuige($goods)
     {
+        if(!isset($goods['items']))
+        {
+            return [
+                'items'=>[],
+                'attrs'=>[],
+                'open'=>false
+            ];
+        }
         $items = [];
         $items_id_map = [];
         foreach($goods['items'] as $item)
@@ -61,7 +69,7 @@ class GoodsService
         return [
             'items'=>$items,
             'attrs'=>$guiges,
-            'open'=>true
+            'open'=>$goods['guige_open']?true:false
         ];
 
     }
@@ -73,6 +81,13 @@ class GoodsService
 			return;
 		}
 		$guige = is_array($guige)?$guige:json_decode($guige,true);
+
+        if(!$guige['open'])
+        {
+            //关闭规格
+            $this->goodsModel->where(['id'=>$goods_id])->update(['guige_open'=>0]);
+        }
+
 		if(!$guige['open'] || empty($guige['attrs']) || empty($guige['items']))
         {
             return;
@@ -177,8 +192,9 @@ class GoodsService
 		$update = [
 			'sku'=>$sku,
 			'old_price'=>$old_price[0],
-			'min_price'=>$price[0],
+			'price'=>$price[0],
             'max_price'=>$price[count($price)-1],
+            'guige_open'=>1
 		];
 
 		$this->goodsModel->where(['id'=>$goods_id])->update($update);

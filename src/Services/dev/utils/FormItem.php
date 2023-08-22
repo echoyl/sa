@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 
+use Echoyl\Sa\Models\dev\Model;
 use Illuminate\Support\Arr;
 
 class FormItem
@@ -23,7 +24,7 @@ class FormItem
         $this->models = $models;
         $this->model = $model;
 
-        $key = $config['key'];
+        $key = $dataIndex = $config['key']??'';
 
         $props = $config['props']??'';
         $this->props = $props;
@@ -31,6 +32,15 @@ class FormItem
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
             $key = $props['dataIndex'];
+        }
+
+        if(is_array($key))
+        {
+            if(count($key) == 1)
+            {
+                $dataIndex = $key[0];
+            }
+            $key = $key[0];
         }
 
         if(in_array($key,['id','parent_id','created_at_s','displayorder']))
@@ -58,6 +68,15 @@ class FormItem
         {
             return;
         }
+
+        //如果是关联模型的字段
+        if(is_array($dataIndex) && count($dataIndex) > 1)
+        {
+            $this->data = $this->foreignModel($dataIndex);
+            return;
+        }
+        
+
         $p_title = $props['title']??'';
         $title = $config['title']??'';
         $title = $p_title?:$title;
@@ -73,7 +92,7 @@ class FormItem
         $placeholder = $config['placeholder']??'';
         //$extra = $config['name']??'';
 
-        $d = ['dataIndex'=>$key,'title'=>$title?:($schema?$schema['title']:$relation['title'])];
+        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:$relation['title'])];
 
         if($readonly)
         {
@@ -213,6 +232,21 @@ class FormItem
         $this->data['readonly'] = true;
         $this->data['fieldProps'] = ['items'=>$items];
         return;
+    }
+
+    public function foreignModel($dataIndex)
+    {
+        $new_index = $dataIndex;
+        array_shift($new_index);
+        $config = $this->config;
+        $relation = $this->relation;
+        $new_config = $config;
+        $new_config['key'] = $new_index;
+        $new_model = (new Model())->where(['id'=>$relation['foreign_model_id']])->with(['relations.foreignModel.menu'])->first();
+        $formItem = new FormItem($new_config,$new_model,$this->menus,$this->models);
+        $data = $formItem->data;
+        $data['dataIndex'] = $dataIndex;
+        return $data;
     }
 
     public function saFormTable()

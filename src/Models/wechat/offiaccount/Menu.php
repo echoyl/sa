@@ -2,15 +2,17 @@
 namespace Echoyl\Sa\Models\wechat\offiaccount;
 
 use Echoyl\Sa\Models\Base;
+//customer namespace start
 
-class Account extends Base
+//customer namespace end
+class Menu extends Base
 {
     /**
      * 与模型关联的数据表
      *
      * @var string
      */
-    protected $table = 'wechat_offiaccount_account';
+    protected $table = 'wechat_offiaccount_menu';
 
     public function getParseColumns()
     {
@@ -19,14 +21,13 @@ class Account extends Base
         {
             $data = [
 			    [
-			        'name' => 'state',
+			        'name' => 'open',
 			        'type' => 'switch',
 			        'default' => 0,
-			        'table_menu' => true,
 			        'with' => true,
 			        'data' => [
 			            [
-			                'label' => '禁用',
+			                'label' => '未启用',
 			                'value' => 0,
 			            ],
 			            [
@@ -36,8 +37,15 @@ class Account extends Base
 			        ],
 			    ],
 			    [
-			        'name' => 'qrcode',
-			        'type' => 'image',
+			        'name' => 'wechat_offiaccount_id',
+			        'type' => 'select',
+			        'default' => 0,
+			        'data' => '[]',
+			        'with' => true,
+			    ],
+				[
+			        'name' => 'content',
+			        'type' => 'json',
 			        'default' => '',
 			    ],
 			];
@@ -46,10 +54,11 @@ class Account extends Base
     }
 
     //relationship start
-    public function menus()
-    {
-        return $this->hasMany(Menu::class,'wechat_offiaccount_id','id');
-    }
+    
     
     //relationship end
+
+    //customer code start
+	
+	//customer code end
 }

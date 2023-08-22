@@ -708,6 +708,9 @@ class WebMenuService
             {
                 $_specs = json_decode($_specs,true);
             }
+            $more = [$_specs];
+            HelperService::deImagesFromConfig($more);
+            $_specs = $more[0];
             $specs = $_specs['value'];
             // foreach($menu['specs'] as $spec)
             // {

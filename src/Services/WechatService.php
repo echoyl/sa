@@ -244,12 +244,19 @@ class WechatService
         echo 'success';exit;
     }
 
-    public static function createMenu($content)
+    public static function createMenu($content,$wechat_offiaccount_id)
     {
-        $app = self::getApp();
-        
         try{
-            $res = $app->menu->create($content);
+            $app = self::getOffiaccount($wechat_offiaccount_id);
+        }catch(Exception $e)
+        {
+            return ['code'=>1,'msg'=>$e->getMessage()];
+        }
+
+        $api = $app->getClient();
+        try{
+            //Log::channel('daily')->info('menus:',['data'=>['button'=>$content]]);
+            $res = $api->postJson('cgi-bin/menu/create',['button'=>$content]);
         }catch(Exception $e)
         {
             return ['code'=>1,'msg'=>$e->getMessage()];
@@ -263,7 +270,14 @@ class WechatService
         }
     }
 
-    public static function getOffiaccount($account_id = 0,$params = [])
+    /**
+     * 通过账号id获取app
+     *
+     * @param integer $account_id
+     * @param array $params
+     * @return \EasyWeChat\OfficialAccount\Application
+     */
+    public static function getOffiaccount($account_id = 0,$params = []):OfficialAccountApplication
     {
         if($account_id)
         {
@@ -274,7 +288,7 @@ class WechatService
         }
         if(!$account)
         {
-            return [1,'请先配置或开启公众号'];
+            throw new Exception('请先配置或开启公众号');
         }
 
         $account_id = $account['id'];
@@ -292,7 +306,7 @@ class WechatService
             //'response_type' => 'array',
         ];
         $app = new OfficialAccountApplication($config);
-        return [0,$app];
+        return $app;
     }
 
     public static function getMiniprogram($account)
@@ -393,17 +407,25 @@ class WechatService
         return ['code'=>0,'msg'=>'同步完成'];
     }
 
-    public static function getMenu()
+    public static function getMenu($wechat_offiaccount_id)
     {
-        $app = self::getApp();
         try{
-            $res = $app->menu->current();
-            return ['code'=>0,'data'=>$res];
+            $app = self::getOffiaccount($wechat_offiaccount_id);
         }catch(Exception $e)
         {
             return ['code'=>1,'msg'=>$e->getMessage()];
         }
-        return;
+
+        $api = $app->getClient();
+        try{
+            //Log::channel('daily')->info('menus:',['data'=>['button'=>$content]]);
+            $res = $api->get('cgi-bin/menu/get');
+        }catch(Exception $e)
+        {
+            return ['code'=>1,'msg'=>$e->getMessage()];
+        }
+        $menu = json_decode($res->getContent(),true);
+        return ['code'=>0,'data'=>$menu['menu']['button']];
     }
 
     /**

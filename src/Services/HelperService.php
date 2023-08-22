@@ -89,6 +89,25 @@ class HelperService
         {
             self::parseImages($data,$img_fields,false);
         }
+        foreach($data as $key=>$deep_val)
+        {
+            if(is_array($deep_val) && !empty($deep_val))
+            {
+                //如果是
+                foreach($deep_val as $k=>$v)
+                {
+                    if(is_array($v))
+                    {
+                        
+                        $deep_val[$k] = self::autoParseImages($v);
+                        
+                    }
+                    
+                }
+                $data[$key] = $deep_val;
+                
+            }
+        }
         return $data;
     }
 

@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
+use stdClass;
 
 class TableColumn
 {
@@ -237,6 +238,12 @@ class TableColumn
         return;
     }
 
+    public function toolbar()
+    {
+        $this->customerColumn();
+        return;
+    }
+
     /**
      * 自定义列
      * 将items 的值传入fieldProps
@@ -253,9 +260,9 @@ class TableColumn
         foreach($items as $key=>$item)
         {
             $action = Arr::get($item,'action');
-            if($action == 'modalTable')
+            $fieldProps = Arr::get($item,'fieldProps.value',[]);
+            if($action == 'modalTable' || $action == 'drawerTable')
             {
-                $fieldProps = [];
                 $model = Arr::get($item,'modal.model');
                 $relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model));
                 if($relation['foreign_model']['menu'])
@@ -343,7 +350,8 @@ class TableColumn
         $close = $setting['close']??'关';
         //switch开关
         //是switch 或者select 需要设置数据类型为enum
-        $valueEnum =[
+        //$valueEnum = new stdClass;
+        $valueEnum = [
             ['text' => $close, 'status' => 'error'],
             ['text' => $open, 'status' => 'success']
         ];

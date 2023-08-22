@@ -2,6 +2,8 @@
 namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Models\dev\Model;
+use Echoyl\Sa\Models\dev\model\Relation;
+use Illuminate\Support\Facades\Log;
 
 class Utils
 {
@@ -92,13 +94,30 @@ class Utils
                 {
                     $data['models'][$first_field] = ['columns'=>[],'models'=>[]];
                 }
-                $data['models'][$first_field] = array_merge($data['models'][$first_field],self::toTree([$field]));
+                $deep = self::toTree([$field]);
+                if(!isset($data['models'][$first_field]['models'][$field[0]]))
+                {
+                    $data['models'][$first_field]['models'][$field[0]] = ['columns'=>[],'models'=>[]];
+                }
+                $data['models'][$first_field]['models'][$field[0]]['columns'] = array_merge($data['models'][$first_field]['models'][$field[0]]['columns'],$deep['models'][$field[0]]['columns']);
+                //$data['models'][$first_field]['models'][$field[0]]['models'] = array_merge($data['models'][$first_field]['models'][$field[0]]['models'],$deep['models']);
             }
         }
+        //Log::channel('daily')->info('toTree:',$data);
         return $data;
     }
-    public static function withTree($trees,$indent = 0,$i = 0)
+    /**
+     * Undocumented function
+     *
+     * @param [type] $trees 处理过的选择字段模型名称数据
+     * @param integer $indent 格式化代码的缩进数量
+     * @param integer $pmodel_id 主模型id
+     * @param integer $i 递归的次数
+     * @return void
+     */
+    public static function withTree($trees,$indent = 0,$pmodel_id = 0,$i = 0)
     {
+        //d($trees);
         if(empty($trees))
         {
             return '';
@@ -109,6 +128,8 @@ class Utils
         $j = 0;
         foreach($trees as $name=>$tree)
         {
+            
+            $_model_id = 0;
             if(is_numeric($name))
             {
                 $model = (new Model())->where(['id'=>$name])->first();
@@ -117,10 +138,18 @@ class Utils
                     return '';
                 }
                 $name = $model['name'];
+                $_model_id = $model['id'];
             }
-            if(!empty($tree['models']))
+            $relation = (new Relation())->where(['model_id'=>$pmodel_id,'name'=>$name])->first();
+            // if($i == 1)
+            // {
+            //     d($name,$pmodel_id,$relation);
+            // }
+
+            if(isset($tree['models']) && !empty($tree['models']))
             {
-                $replace[] = self::withTree($tree['models'],$indent + 1,$i+1);
+                
+                $replace[] = self::withTree($tree['models'],$indent + 1,$_model_id?:$relation['foreign_model_id'],$i+1);
                 $sear = 'sear_'.$j;
                 $search[] = $sear;
                 $inner_with = '->with('.$sear.')';
@@ -129,24 +158,40 @@ class Utils
             {
                 $inner_with = '';
             }
-            if(!empty($tree['columns']))
+            //读取关系数据
+            
+            
+            $filter_where = '';
+            if($relation && $relation['filter'])
             {
-                $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($tree['columns']).')'.$inner_with.';}@endphp';
+                $filter = json_decode($relation['filter'],true);
+                $filter_where = '->where('.json_encode($filter).')';
+            }
+            if(isset($tree['columns']) && !empty($tree['columns']))
+            {
+                $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($tree['columns']).')'.$filter_where.$inner_with.';}@endphp';
             }else
             {
                 if($inner_with)
                 {
-                    $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$inner_with.';}@endphp';
+                    $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$filter_where.$inner_with.';}@endphp';
                 }else
                 {
-                    $data[] = $name;
+                    if($filter_where)
+                    {
+                        //有过滤条件
+                        $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$filter_where.';}@endphp';
+                    }else
+                    {
+                        $data[] = $name;
+                    }
                 }
             }
             $j++;
         }
-        
         $ret = Dev::export($data,$indent);
         $ret = str_replace($search,$replace,$ret);
         return $ret;
+        
     }
 }

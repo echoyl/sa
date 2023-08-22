@@ -411,39 +411,32 @@ class DevService
 
     public function customerCode($file_path)
     {
-        $customer_code = '';//自定义代码
-        $customer_construct = '';//自定义构造函数代码
-        $customer_namespace = '';
+        $replace = [
+            ['/customer code start(.*)\/\/customer code end/s'],//自定义代码
+            ['/customer construct start(.*)\/\/customer construct end/s'],//自定义构造函数代码
+            ['/customer namespace start(.*)\/\/customer namespace end/s'],//自定义namespace
+        ];
+        $ret = [];
         if(file_exists($file_path))
         {
             $old_content = file_get_contents($file_path);
-            $match = [];
-            preg_match('/customer code start(.*)\/\/customer code end/s',$old_content,$match);
-            if(!empty($match))
+            foreach($replace as $val)
             {
-                //已存在的文件该段不做覆盖
-                $customer_code = trim($match[1]);
+                $match = [];
+                preg_match($val[0],$old_content,$match);
+                $code = '';
+                if(!empty($match))
+                {
+                    //已存在的文件该段不做覆盖
+                    $code = trim($match[1]);
+                }
+                $ret[] = $code;
             }
-
-            $match1 = [];
-            preg_match('/customer construct start(.*)\/\/customer construct end/s',$old_content,$match1);
-            if(!empty($match1))
-            {
-                //已存在的文件该段不做覆盖
-                $customer_construct = trim($match1[1]);
-            }
-
-            $match2 = [];
-            preg_match('/customer namespace start(.*)\/\/customer namespace end/s',$old_content,$match2);
-            if(!empty($match2))
-            {
-                $customer_namespace = trim($match2[1]);
-            }
-            //d($match,$old_content);
+        }else
+        {
+            $ret = ['','',''];
         }
-        return [
-            $customer_code,$customer_construct,$customer_namespace
-        ];
+        return $ret;
     }
 
     public function createControllerFile($data)
@@ -533,7 +526,7 @@ class DevService
         $all_models = [$model['name']=>$model['name']];
         $all_relations = [];
         
-        $with_columns_search = $with_columns_replace = [];
+        $with_columns_search = $with_columns_replace = $with_trees = [];
         $useModelArr = [];//使用过的模型数据
         if(!empty($relations))
         {
@@ -604,10 +597,6 @@ class DevService
                     if(in_array($val['type'],['one','many']))
                     {
                         //关联模型的字段
-                        
-                        // $foreign_model_columns = array_merge($default_fields,collect(json_decode($foreign_model['columns'],true))->pluck('name')->toArray());
-                        // //关联模型的关联模型
-                        //$foreign_model_relations = $foreign_model['relations'];
                         //检测是否填写了需要关联模型的字段
                         if($val['select_columns'])
                         {
@@ -618,32 +607,12 @@ class DevService
                                 return count($a) < count($b);
                             })->toArray();
                             $with_tree = Utils::toTree($fields);
-                            $select_columns = $with_tree['columns'];
-                            $inner_with = Utils::withTree($with_tree['models'],3);
-                            if($inner_with)
-                            {
-                                $with_columns_replace[] = $inner_with;
-                                $sear = 'sear_'.$key;
-                                $with_columns_search[] = $sear;
-                                $inner_with = '->with('.$sear.')';
-                            }
-                            if(!empty($select_columns))
-                            {
-                                $with_columns[$val['name']] = '@phpfunction($query){$query->select('.json_encode($select_columns).')'.$inner_with.';}@endphp';
-                            }else
-                            {
-                                if($inner_with)
-                                {
-                                    $with_columns[$val['name']] = '@phpfunction($query){$query'.$inner_with.';}@endphp';
-                                }
-                            }
-                            //d($with_columns[$val['name']]);
                         }else
                         {
-                            //未填写表示全部
-                            $with_columns[] = $val['name'];
+                            $with_tree = [];
                         }
-                        
+                        //将需要处理的with数据先存入数组中
+                        $with_trees[$val['name']] =  $with_tree;
                     }
                     
                     if($val['type'] == 'one')
@@ -653,6 +622,7 @@ class DevService
                             'name'=>$val['name'],
                             'type'=>'model',
                             'class'=>'@php'.$f_model_name.'::class@endphp',
+                            'foreign_key'=>$val['foreign_key']
                         ];
     
                     }
@@ -668,16 +638,16 @@ class DevService
                         'with'=>true,
                         'columns'=>$val['in_page_select_columns']?explode(',',$val['in_page_select_columns']):[]
                     ];
-
                 }
-                
-
             }
+            $with_columns = Utils::withTree($with_trees,2,$model_id);
+            //d($with_columns);
         }
 
         if(!empty($with_columns))
         {
-            $crud_config[] = str_replace($with_columns_search,$with_columns_replace,'$this->with_column = '.(Dev::export($with_columns,2)).';');
+            $crud_config[] = '$this->with_column = '.$with_columns.';';
+            //$crud_config[] = str_replace($with_columns_search,$with_columns_replace,'$this->with_column = '.(Dev::export($with_columns,2)).';');
         }
         if(!empty($search_config))
         {
