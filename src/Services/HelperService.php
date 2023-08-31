@@ -358,14 +358,16 @@ class HelperService
         }
 
         $search_val = false;
-        
         if(is_string($search))
         {
-            $search = self::json_validate($search);
-            if($search !== false)
+            $json = self::json_validate($search);
+            if($json !== false)
             {
-                $search = array_values($search);
-                $search_val = array_shift($search);
+                $json = array_values($json);
+                $search_val = array_shift($json);
+            }else
+            {
+                $search_val = $search;
             }
         }elseif(is_array($search))
         {
@@ -376,6 +378,7 @@ class HelperService
             $search = array_values($search);
             $search_val = array_shift($search);
         }
+        
         if(!$search_val)
         {
             return $model;
@@ -438,12 +441,12 @@ class HelperService
     public static function json_validate($string)
     {
         // decode the JSON data
-        if(!is_string($string))
+        if(!is_string($string) || is_numeric($string))
         {
             return false;
         }
+        
         $result = json_decode($string,true);
-
         // switch and check possible JSON errors
         switch (json_last_error()) {
             case JSON_ERROR_NONE:
@@ -608,5 +611,9 @@ class HelperService
             }
         }
         return $name;
+    }
+    public static function parseMobile($mobile)
+    {
+        return substr($mobile,0,3).'****'.substr($mobile,7,4);
     }
 }

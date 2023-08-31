@@ -26,6 +26,32 @@ class SetsService
         }
         return $data;
     }
+
+    public function appName()
+    {
+        return env('APP_NAME','');
+    }
+
+    public function baseKey()
+    {
+        return implode('_',[$this->appName(),'base']);
+    }
+
+    public function getBase($key = '',$type = '')
+    {
+        return $this->get(implode('.',[$this->baseKey(),$key]),$type);
+    }
+
+    public function webKey()
+    {
+        return implode('_',[$this->appName(),'web']);
+    }
+
+    public function getWeb($key = '',$type = '')
+    {
+        return $this->get(implode('.',[$this->webKey(),$key]),$type);
+    }
+
     public function post($key)
     {
         $item = $this->model->where(['key'=>$key])->first();

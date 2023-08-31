@@ -722,7 +722,14 @@ class DevService
                         if(isset($setting['json']) && $setting['json'])
                         {
                             //d(json_decode($column['form_data'],true));
-                            $d['data'] = json_decode($setting['json'],true);
+                            if(is_string($setting['json']))
+                            {
+                                $d['data'] = json_decode($setting['json'],true);
+                            }else
+                            {
+                                $d['data'] = $setting['json'];
+                            }
+                            
                             //d($d['data']);
                         }else
                         {
@@ -801,9 +808,9 @@ class DevService
                     {
                         $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                         $d['with'] = true;
-                        if($label && $value && $children)
+                        if($label && $value)
                         {
-                            $d['fields'] = ['id'=>$value,'title'=>$label,'children'=>$children];
+                            $d['fields'] = ['id'=>$value,'title'=>$label];
                         }
                     }
                     
@@ -1065,11 +1072,23 @@ class DevService
                         $_prefix = array_merge($prefix,[$menu['path']]);
                         $controller_prefix = '';
                         //检测如果菜单是项目菜单 指向的是系统模型需要添加控制器文件绝对路径前缀
+                        //20230825 - 先检测一遍项目下是否有该控制器 没有的话再指向system下的控制器
                         if($menu['type'] == $app_name && $model['admin_type'] == 'system')
                         {
+                            
                             $_model_path = $model_path;
-                            array_pop($_model_path);
-                            $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.(!empty($_model_path)?implode("\\",$_model_path).'\\':'');
+                            $name = array_pop($_model_path);
+                            $c = !empty($_model_path)?implode("\\",$_model_path).'\\':'';
+                            if(class_exists('App\Http\Controllers\admin\\'.$c.ucfirst($name).'Controller'))
+                            {
+                                //这样设置的话 系统路由中存在项目路由
+                                $controller_prefix = '\App\Http\Controllers\admin\\'.$c;
+                            }else
+                            {
+                                //项目路由中存在指向系统控制器的路由
+                                $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.$c;
+                            }
+                            //Log::channel('daily')->info('createRoute form:',['controller_prefix'=>$controller_prefix]);
                         }
 
                         if(count($model_path) > 1)
@@ -1114,6 +1133,7 @@ class DevService
                             if($menu['page_type'] == 'form')
                             {
                                 //如果是form直接指向控制器方法
+                                //Log::channel('daily')->info('createRoute form:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller',]);
                                 $key = $menu['path'];
                                 Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
                             }else

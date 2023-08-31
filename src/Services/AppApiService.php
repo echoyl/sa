@@ -13,8 +13,7 @@ class AppApiService implements SaServiceInterface
     public function baseSet($name = '')
     {
         $ss = new SetsService();
-        $this->app_name = implode('_',[env('APP_NAME','base'),'base']);
-        return $ss->get(implode('.',[$this->app_name,$name]));
+        return $ss->getBase($name);
     }
 
     /**
@@ -205,6 +204,7 @@ class AppApiService implements SaServiceInterface
         return;
 
     }
+
 
     public function getUnpaidOrder($sn)
     {

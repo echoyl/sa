@@ -302,6 +302,7 @@ class WechatService
             'oauth' => [
                 'scopes'   => $params['scopes']??['snsapi_userinfo'],
                 'callback' => '/'.env('APP_PREFIX','').'wx/auth',
+                'redirect_url'=> url('wx/auth')
             ],
             //'response_type' => 'array',
         ];

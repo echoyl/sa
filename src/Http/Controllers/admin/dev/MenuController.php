@@ -259,15 +259,19 @@ class MenuController extends CrudController
         {
             $keys = $val['columns'];
             $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
-            if(count($keys) > 1)
+            if($columns)
             {
-                //form group
-                $json[] = ['valueType'=>'group','columns'=>$columns];
-            }else
-            {
-                //单个form item
-                $json[] = array_shift($columns);
+                if(count($keys) > 1)
+                {
+                    //form group
+                    $json[] = ['valueType'=>'group','columns'=>$columns];
+                }else
+                {
+                    //单个form item
+                    $json[] = array_shift($columns);
+                }
             }
+            
         }
         return $json;
     }
@@ -317,9 +321,9 @@ class MenuController extends CrudController
             $_tabs = [];
             foreach($tabs as $key=>$tab)
             {
-                $_config = $key?request('base.form_config'.$key):$config;
+                //$_config = $key?request('base.form_config'.$key):$config;
                 
-                $formColumns = $this->formTabConfig($item,$_config);
+                $formColumns = $this->formTabConfig($item,$tab['config']);
                 $_tabs[] = [
                     'title'=>$tab['title'],
                     'formColumns'=>$formColumns

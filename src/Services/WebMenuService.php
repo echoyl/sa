@@ -661,7 +661,7 @@ class WebMenuService
         //计算seo 的 title description keyword之类的
         $menu = $this->getMenu();
         //d(caInfo('controller'));
-        if (!empty($menu)) {
+        if (!empty($menu) && $seo) {
             $seo['seotitle'] = $menu['title'] . ',' . $seo['seotitle'];
             $seo['seokeywords'] = $menu['title'] . ',' . $seo['seokeywords'];
 
@@ -670,7 +670,13 @@ class WebMenuService
                 $seo['seotitle'] = $detail['title'] . ',' . $seo['seotitle'];
                 $seo['seokeywords'] = $detail['title'] . ',' . $seo['seokeywords'];
             }
-
+        }else
+        {
+            $seo = [
+                'seotitle'=>'首页',
+                'seokeywords'=>'',
+                'seodescription'=>'',
+            ];
         }
 
         return $seo;

@@ -35,6 +35,7 @@ class CrudController extends ApiBaseController
     var $service;
     var $action_type = '';//操作类型 add edit 
     var $is_post = false;
+    var $page_size = 10;
 
     /**
      * 搜索项配置
@@ -64,6 +65,20 @@ class CrudController extends ApiBaseController
             $type = $col['type'];
             $search_val = request($name, '');
             if (empty($search_val) && $search_val !== 0) {
+                //无查询值情况的默认查询
+                switch ($type) {
+                    case 'cascader': //单选分类
+                    case 'cascaders':
+                    case 'selects':
+                    case 'select':
+                        if(isset($col['class']) && isset($col['cid']) && $col['cid'])
+                        {
+                            $cmodel = new $col['class'];
+                            $big_cids = $cmodel->childrenIds($col['cid']);
+                            $m = $m->whereIn($name, $big_cids);
+                        }
+                        break;
+                }
                 continue;
             }
 
@@ -117,7 +132,11 @@ class CrudController extends ApiBaseController
                             $_cids = $cmodel->childrenIds($cid);
                             $cids = array_merge($cids, $_cids);
                         }
-
+                        if(isset($col['cid']) && $col['cid'])
+                        {
+                            $big_cids = $cmodel->childrenIds($col['cid']);
+                            $cids = array_intersect($big_cids,$cids);
+                        }
                         
                         $m = $m->whereIn($name, $cids);
                     }
@@ -140,6 +159,11 @@ class CrudController extends ApiBaseController
 
                             $_cids = $cmodel->childrenIds($cid);
                             $cids = array_merge($cids, $_cids);
+                        }
+                        if(isset($col['cid']) && $col['cid'])
+                        {
+                            $big_cids = $cmodel->childrenIds($col['cid']);
+                            $cids = array_intersect($big_cids,$cids);
                         }
                         $cids = array_unique($cids);
                         //d($cids);
@@ -197,15 +221,15 @@ class CrudController extends ApiBaseController
 
         }
 
-        $startTime = request('startTime', '');
-        $endTime = request('endTime', '');
+        // $startTime = request('startTime', '');
+        // $endTime = request('endTime', '');
 
-        if ($startTime) {
-            $m = $m->where([['created_at', '>=', $startTime]]);
-        }
-        if ($endTime) {
-            $m = $m->where([['created_at', '<=', date("Y-m-d H:i:s", strtotime($endTime) + 3600 * 24 - 1)]]);
-        }
+        // if ($startTime) {
+        //     $m = $m->where([['created_at', '>=', $startTime]]);
+        // }
+        // if ($endTime) {
+        //     $m = $m->where([['created_at', '<=', date("Y-m-d H:i:s", strtotime($endTime) + 3600 * 24 - 1)]]);
+        // }
 
         //搜索配置 自动根据name搜索对应的字段
         if(!empty($this->search_config))
@@ -265,9 +289,9 @@ class CrudController extends ApiBaseController
 
     public function index()
     {
-        $psize = request('pageSize', 10);
+        $psize = request('pageSize', $this->page_size);
         $page = request('current', 1);
-
+        $this->action_type = 'list';
         $search = [];
 
         if (method_exists($this, 'handleSearch')) {
@@ -593,6 +617,11 @@ class CrudController extends ApiBaseController
                         $data[$name] = $_m->get()->toArray();
                     }else
                     {
+                        if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
+                        {
+                            //设置post_all 时 不再读取cid筛选数据
+                            $with['cid'] = 0;
+                        }
                         if(isset($with['fields']))
                         {
                             $data[$name] = $_m->format($with['cid']??0,$with['fields']);
@@ -723,6 +752,7 @@ class CrudController extends ApiBaseController
                             $val = implode(',', $__val);
                         } else {
                             $val = 0;
+                            $data[$_name] = '';
                         }
                     } else {
                         $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : '';
@@ -744,7 +774,7 @@ class CrudController extends ApiBaseController
                 case 'selects':
                     //select 不需要而外字段了
                     if ($encode) {
-                        $val = is_array($val)?implode(',',$val):'';
+                        $val = is_array($val)?implode(',',$val):$val;
                     }else{
                         if($val && $isset)
                         {

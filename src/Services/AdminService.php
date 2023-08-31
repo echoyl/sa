@@ -103,6 +103,7 @@ class AdminService
         HelperService::deImagesOne($setting,['logo','favicons']);
         $setting['title'] = $setting['title']??'Deadmin';
         $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
+        $setting['subtitle'] = $setting['subtitle']??'后台管理系统';
         $setting['logo'] = $setting['logo']['url']?:false;
         $setting['favicons'] = [$setting['favicons']['url']];
         $dev = Arr::get($setting,'dev',true);

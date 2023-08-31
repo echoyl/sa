@@ -353,7 +353,13 @@ class FormItem
         {
             if(isset($setting['json']))
             {
-                $d['fieldProps']['options'] = json_decode($setting['json'],true);
+                if(is_string($setting['json']))
+                {
+                    $d['fieldProps']['options'] = json_decode($setting['json'],true);
+                }else
+                {
+                    $d['fieldProps']['options'] = $setting['json'];
+                }
                 if($this->form_type == 'selects')
                 {
                     $d['fieldProps']['mode'] = 'tags';
@@ -474,5 +480,10 @@ class FormItem
         $this->data['fieldProps'] = [
             'requestNames'=>['perms']
         ];
+    }
+
+    public function digit()
+    {
+        $this->data['width'] = 'md';
     }
 }

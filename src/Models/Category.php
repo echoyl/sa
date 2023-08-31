@@ -50,16 +50,23 @@ class Category extends Base
     }
     public function parentIds($id)
     {
-        static $ids = [];
         $data = $this->find($id);
         if (!$data) {
-            $ids[] = 0;
+            return '';
+        }
+        $ids = [];
+        if ($data['parent_id'] != 0) {
+            $pids = $this->parentIds($data['parent_id']);
+            if($pids)
+            {
+                foreach($pids as $pid)
+                {
+                    $ids[] = $pid;
+                }
+            }
         }
         $ids[] = $data['id'];
-        if ($data['parent_id'] != 0) {
-            $this->parentIds($data['parent_id']);
-        }
-        return array_reverse($ids);
+        return $ids;
     }
     public function parentInfo($id)
     {

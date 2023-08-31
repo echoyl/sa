@@ -144,4 +144,70 @@ class AliyunService
         }
     }
 
+    public static function sendSMS($mobile,$data,$params)
+    {
+        //注册 SMS_8740008 登录 SMS_8740010 // 审核通过 SMS_183791211 审核失败 SMS_183796303
+        if(env('APP_ENV') == 'local')
+        {
+            //return ['code'=>0,'msg'=>'发送成功'];
+            //return ['code'=>0,'msg'=>'发送成功','codex'=>isset($data['code'])?$data['code']:''];
+        }
+
+        $tp = $params['id'];
+        $SignName = $params['name'];
+
+        // $tplArr = [
+        //     'code'=>'SMS_109490162',
+        //     'register'=>'SMS_109490162',
+        //     'login'=>'SMS_137805222',
+        //     'forget'=>'SMS_109490162',
+        //     'youhui'=>'SMS_137673826',
+        //     'bianjia'=>'SMS_137673826',
+        //     'maiche'=>'SMS_215795268',
+        //     'xunjia'=>'SMS_219737298',
+        //     'chujia'=>'SMS_219752135',
+        //     'xiadan'=>'SMS_166096705'
+        // ];
+
+        //$tp = isset($tplArr[$tp])?$tplArr[$tp]:$tp;
+
+        $accessKeyId = env('ALI_accessKeyId');
+        $accessKeySecret = env('ALI_accessKeySecret');
+        AlibabaCloud::accessKeyClient($accessKeyId, $accessKeySecret)
+                        ->regionId('cn-hangzhou') // replace regionId as you need
+                        ->asDefaultClient();
+
+        try {
+            $result = AlibabaCloud::rpc()
+                                ->product('Dysmsapi')
+                                // ->scheme('https') // https | http
+                                ->version('2017-05-25')
+                                ->action('SendSms')
+                                ->method('POST')
+                                ->host('dysmsapi.aliyuncs.com')
+                                ->options([
+                                                'query' => [
+                                                'RegionId' => "default",
+                                                'PhoneNumbers' => $mobile,
+                                                'SignName' => $SignName,
+                                                'TemplateCode' => $tp,
+                                                'TemplateParam' => json_encode($data),
+                                                ],
+                                            ])
+                                ->request();
+            $result = $result->toArray();
+            if($result['Code'] == 'OK')
+            {
+                return ['code'=>0,'msg'=>'发送成功'];
+            }else
+            {
+                return ['code'=>1,'msg'=>$result['Message']];
+            }
+        } catch (ClientException $e) {
+            return ['code'=>1,'msg'=>$e->getErrorMessage()];
+        } catch (ServerException $e) {
+            return ['code'=>1,'msg'=>$e->getErrorMessage()];
+        }
+    }
+
 }

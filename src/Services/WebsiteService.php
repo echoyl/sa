@@ -178,8 +178,7 @@ class WebsiteService
     public function webset()
     {
         $setservice = new SetsService();
-        $key = implode('_',[env('APP_NAME','web'),'web']);
-        $data = $setservice->get($key);
+        $data = $setservice->getWeb();
         HelperService::deImagesFromConfig($data);
         $data = HelperService::autoParseImages($data);
         return $data;
@@ -273,7 +272,7 @@ class WebsiteService
             //$val['titlepic'] =
             $val['time_str'] = date("Y-m-d", strtotime($val['created_at']));
 
-            $val['href'] = UrlService::create($menu, $val['id'], $cid);
+            $val['href'] = UrlService::create($menu, $val['id'], $cid,$val['link']??'');
             $val['desc_short'] = $this->shortDesc($val['desc']);
             //d($val['files']);
             $val['hits'] = $ps->hits($val['hits']??0);

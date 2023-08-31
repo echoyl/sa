@@ -319,7 +319,14 @@ class TableColumn
             //非关联的话 手动设置数据源
             if(isset($setting['json']) && $setting['json'])
             {
-                $d['fieldProps']['options'] = json_decode($setting['json'],true);
+                if(is_string($setting['json']))
+                {
+                    $d['fieldProps']['options'] = json_decode($setting['json'],true);
+                }else
+                {
+                    $d['fieldProps']['options'] = $setting['json'];
+                }
+                
                 // if($this->form_type == 'selects')
                 // {
                 //     $d['fieldProps']['mode'] = 'tags';

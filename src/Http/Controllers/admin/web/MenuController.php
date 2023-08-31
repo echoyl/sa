@@ -40,7 +40,7 @@ class MenuController extends CrudController
         ['name' => 'banner', 'type' => 'image', 'default' => ''],
         ['name' => 'specs', 'type' => 'config', 'default' => ''],
         ['name' => 'pics', 'type' => 'image', 'default' => ''],
-        ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
+        ['name' => 'category_id', 'type' => 'cascader', 'default' => 0],
         ['name' => 'relate_menu_id', 'type' => 'cascaders', 'default' => ''],
         ['name' => 'content_id', 'type' => 'search_select', 'default' => '0'],
         [
@@ -62,7 +62,7 @@ class MenuController extends CrudController
         ],
     ];
 
-    var $can_be_null_columns = ['tpl','small_title','desc','content_detail'];
+    var $can_be_null_columns = ['tpl','small_title','desc','content_detail','category_id'];
     public function __construct(Menu $model)
     {
         $this->model = $model;

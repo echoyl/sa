@@ -12,8 +12,13 @@ class UrlService
      * @param [int] $id 内容id
      * @return void
      */
-    public static function create($menu, $id = 0, $cid = 0)
+    public static function create($menu, $id = 0, $cid = 0,$link = '')
     {
+        if($link)
+        {
+            //如果有外链的话 直接返回外链
+            return $link;
+        }
         if ($id) {
             //如果有id的话那么就是详情
             $ms = new WebMenuService;
