@@ -18,20 +18,21 @@ class RoleController extends CrudController
 
 	public function perms()
 	{
-		$roles = $this->model->get()->toArray();
-		$role_perms = [];
-		foreach($roles as $val)
-		{
-			$role_perms[$val['id']] = $val['perms2']?explode(',',$val['perms2']):[];
-		}
-
-		$as = new MenuService;
+		$roleid = request('roleid');
+		$enable = [];
 		$data = [];
-		$data['perms'] = $as->perms();
-		//$item['perms'] = $ps->parsePerms();
-
-		//$item['user_perms'] = isset($item['perms2']) && $item['perms2']?explode(',',$item['perms2']):[];
-		$data['role_perms'] = $role_perms;
+		if($roleid)
+		{
+			$role = $this->model->where(['id'=>$roleid])->first();
+			if($role)
+			{
+				$enable = explode(',',$role['perms2']);
+				$data['role_perms2'] = $enable;
+			}
+		}
+		$as = new MenuService;
+		[$perms] = $as->perms(0,$enable);
+		$data['perms'] = $perms;
 		return $this->success($data);
 	}
     

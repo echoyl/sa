@@ -130,7 +130,7 @@ class FormItem
                 [
                     "required"=>true,
                 ]
-                ];
+            ];
         }
         if($hidden)
         {
@@ -229,7 +229,11 @@ class FormItem
                 $items[$key] = $item;
             }
         }
-        $this->data['readonly'] = true;
+        if(isset($this->data['readonly']))
+        {
+            //不需要再设置 readonly  如果是form的话 没有值 就不会渲染 render函数 所以删掉readonly 可以渲染 renderFormItem 函数
+            unset($this->data['readonly']);
+        }
         $this->data['fieldProps'] = ['items'=>$items];
         return;
     }
@@ -349,6 +353,11 @@ class FormItem
             {
                 $d['fieldProps']['mode'] = 'multiple';
             }
+            if($this->schema['form_type'] == 'radioButton')
+            {
+                $d['valueType'] = 'radioButton';
+                $d['fieldProps']['buttonStyle'] = 'solid';
+            }
         }else
         {
             if(isset($setting['json']))
@@ -465,7 +474,8 @@ class FormItem
         if(isset($setting['pca_level']))
         {
             $this->data['fieldProps'] = [
-                'level'=>intval($setting['pca_level'])
+                'level'=>intval($setting['pca_level']),
+                'topCode'=>Arr::get($setting,'pca_topCode','')
             ];
         }
     }

@@ -16,6 +16,6 @@ class SettingController extends ApiBaseController
 
 	public function setting()
     {
-		return (new SetsService)->post(implode('_',[env('APP_NAME','setting'),'setting']));
+		return (new SetsService)->post('setting');
 	}
 }

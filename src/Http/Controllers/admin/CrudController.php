@@ -6,11 +6,12 @@ use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\WebMenuService;
+use Illuminate\Support\Arr;
 
 /**
  * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
- * @method mixed beforePost(&$data,$id = 0)  提交数据前的检测数据
+ * @method mixed beforePost(&$data,$id = 0,$item)  提交数据前的检测数据
  * @method mixed handleSearch() 数据列表中额外的搜索调价等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
@@ -29,6 +30,7 @@ class CrudController extends ApiBaseController
     public $can_be_null_columns = []; //可以设置为空的字段
     public $with_count = [];//计算总数量
     public $select_columns = [];
+    public $uniqueFields = [];//检测唯一字段
 
     public $model_id = 0;//系统所选的模型id值
 
@@ -47,6 +49,7 @@ class CrudController extends ApiBaseController
 
     public function defaultSearch($m)
     {
+        //
         $title = request('title', '');
         if ($title) {
             $has_customer_search = collect($this->search_config)->first(function($item){
@@ -149,17 +152,37 @@ class CrudController extends ApiBaseController
                         $category_id = json_decode($search_val, true);
                     }
 
-                    if (isset($col['class'])) {
+                    if (isset($col['class']) && is_array($category_id)) {
                         $cids = [];
                         $cmodel = new $col['class'];
-                        foreach ($category_id as $cid) {
-                            if (is_array($cid)) {
-                                $cid = array_pop($cid);
-                            }
 
-                            $_cids = $cmodel->childrenIds($cid);
-                            $cids = array_merge($cids, $_cids);
+                        //这里检测是否是多选还是单选
+                        $mutiple = true;
+                        foreach ($category_id as $cid) {
+                            if (!is_array($cid)) {
+                                //某个元素不是数组 表示 是单选
+                                $mutiple = false;
+                                break;
+                            }
                         }
+
+                        if($mutiple)
+                        {
+                            foreach ($category_id as $cid) {
+                                if (is_array($cid)) {
+                                    $cid = array_pop($cid);
+                                }
+    
+                                $_cids = $cmodel->childrenIds($cid);
+                                $cids = array_merge($cids, $_cids);
+                            }
+                        }else
+                        {
+                            $cid = array_pop($category_id);
+                            $cids = $cmodel->childrenIds($cid);
+                        }
+
+                        
                         if(isset($col['cid']) && $col['cid'])
                         {
                             $big_cids = $cmodel->childrenIds($col['cid']);
@@ -250,7 +273,17 @@ class CrudController extends ApiBaseController
                     $search_val = request($name,'');
                     
                     $where_type = $sc['where_type']??'=';
-                    if($where_type == 'whereBetween' || $where_type == 'whereIn')
+                    if($where_type == 'has' || $where_type == 'doesntHave')
+                    {
+                        if($search_val)
+                        {
+                            if(is_array($columns))
+                            {
+                                $columns = implode('.',$columns);
+                            }
+                            $m = $m->$where_type($columns);
+                        }
+                    }elseif($where_type == 'whereBetween' || $where_type == 'whereIn')
                     {
                         
                         if($search_val)
@@ -383,6 +416,58 @@ class CrudController extends ApiBaseController
         return $this->post();
     }
 
+    public function checkUnique($data,$id = 0)
+    {
+        if(empty($this->uniqueFields))
+        {
+            return;
+        }
+        $key = '';
+        $is_has = false;
+        foreach($this->uniqueFields as $field)
+        {
+            
+            $where = [];
+            if(is_array($field))
+            {
+                $key = implode('-',$field);
+                foreach($field as $f)
+                {
+                    if(!isset($data[$f]))
+                    {
+                        continue;
+                    }
+                    $where[$f] = $data[$f];
+                }
+            }else
+            {
+                if(!isset($data[$field]))
+                {
+                    continue;
+                }
+                $where[$field] = $data[$field];
+                $key = $field;
+            }
+            if(empty($where))
+            {
+                continue;
+            }
+
+            $has = $this->model->where($where);
+			if($id)
+			{
+				$has = $has->where([['id','!=',$id]]);
+			}
+            if($has->first())
+			{
+                $is_has = true;
+				break; 
+			}
+        }
+
+        return $is_has?$key:'';
+    }
+
     public function post()
     {
         if (request()->isMethod('post'))
@@ -428,6 +513,7 @@ class CrudController extends ApiBaseController
         $type = request('actype');
 
         if ($this->is_post) {
+            //+检测字段的唯一性
             switch ($type) {
                 case 'status':
                     $name = request('field', 'status');
@@ -466,7 +552,11 @@ class CrudController extends ApiBaseController
                     break;
                 default:
                     $data = filterEmpty(request('base'), $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
-
+                    $check_uniue_result = $this->checkUnique($data,$id);
+                    if($check_uniue_result)
+                    {
+                        return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
+                    }
                     //设置不需要提交字段
                     if (!empty($this->dont_post_columns)) {
                         foreach ($this->dont_post_columns as $c) {
@@ -808,22 +898,28 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'pca':
+                    $level = Arr::get($col,'level',3);//省市区列数
+                    $topCode = Arr::get($col,'topCode','');//省市区指定上级
+                    $topLevel = $topCode?count(explode(',',$topCode)):0;
+                    $topLevel = $topLevel > 3?3:$topLevel;
+                    $keys = ['province','city','area'];
+                    for($i=0;$i<$topLevel;$i++)
+                    {
+                        //如果有上级 那么将多余name弹出
+                        array_shift($keys);
+                    }
                     if ($encode) {
                         if($isset)
                         {
-                            if(isset($val[0]))
+                            foreach($keys as $k=>$v)
                             {
-                                $data['province'] = $val[0];
+                                if(!isset($val[$k]) || $k >= $level)
+                                {
+                                    continue;
+                                }
+                                $data[$v] = $val[$k];
                             }
-                            if(isset($val[1]))
-                            {
-                                $data['city'] = $val[1];
-                            }
-                            if(isset($val[2]))
-                            {
-                                $data['area'] = $val[2];
-                            }
-                            if(!in_array($name,['province','city','area']))
+                            if(!in_array($name,$keys))
                             {
                                 //如果用了其它字段需要将该字段移除
                                 $val = '__unset';
@@ -833,20 +929,13 @@ class CrudController extends ApiBaseController
                             }
                         }
                     } else {
-                        if(isset($data['province']) && $data['province'])
+                        $val = [];
+                        foreach($keys as $k=>$v)
                         {
-                            $level = $col['level']??3;
-                            if($level == 2)
+                            if(isset($data[$v]) && $data[$v] && $k < $level)
                             {
-                                $val = [$data['province'],$data['city']];
-                            }elseif($level == 1)
-                            {
-                                $val = [$data['province']];
-                            }else
-                            {
-                                $val = [$data['province'],$data['city'],$data['area']];
+                                $val[] = $data[$v];
                             }
-                            
                         }
                         
                     }
@@ -885,7 +974,7 @@ class CrudController extends ApiBaseController
                     {
                         if($isset)
                         {
-                            $val = intval($val * 100);
+                            $val = bcmul($val,100);
                         }
                     }else
                     {

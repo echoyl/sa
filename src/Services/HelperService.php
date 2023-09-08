@@ -349,7 +349,6 @@ class HelperService
         return;
     }
 
-
     public static function searchWhereHas($model,$name,$columns,$search)
     {
         if($search === '')
@@ -492,60 +491,6 @@ class HelperService
         // everything is OK
         return $result;
     }
-    public static function format_var_export($data = [],$tab_len = 0,$json = false)
-    {
-        if(!$data)
-        {
-            return '[]';
-        }
-        $start_tab = $tab_len > 0?str_repeat("\t",$tab_len):'';
-        $end_tab = $tab_len - 1 > 0?str_repeat("\t",$tab_len-1):'';
-        if($json)
-        {
-            $string = $data;
-        }else
-        {
-            $data = self::arrayrecursive($data, 'urlencode', true);
-            $string = json_encode($data); 
-            $string = urldecode($string); 
-        }
-        
-        $string = str_replace("[[", "[\r{$start_tab}[", $string);
-        $string = str_replace("],[", "],\r{$start_tab}[", $string);
-        $string = str_replace("]]", "]\r{$end_tab}]", $string);
-        $string = str_replace("{", "\r{$start_tab}[", $string);
-        $string = str_replace("},", "],", $string);
-        $string = str_replace("}", "]", $string);
-        $string = str_replace("]]", "],\r{$end_tab}]", $string);
-        $string = str_replace("::", "@@", $string);
-        $string = str_replace(":", " => ", $string);
-        $string = str_replace("@@", "::", $string);
-        $string = str_replace("\"@php", "", $string);
-        $string = str_replace("@endphp\"", "", $string);
-        //$string = var_export($data, TRUE);
-        // $string = str_replace("=> \n  array (", "=> [", $string);
-        // $string = str_replace("),", "],", $string);
-        // $string = str_replace(");", "];", $string);
-        // $string = str_replace("array (", "[", $string);
-        // $string = str_replace("  ", "    ", $string);
-        return $string;
-    }
-
-    public static function arrayrecursive($array, $function) 
-    { 
-        foreach ($array as $key => $value) { 
-            if (is_array($value)) { 
-                $array[$key] = self::arrayrecursive($array[$key],$function); 
-            } else {
-                if(is_string($value))
-                {
-                    $array[$key] = $function($value); 
-                }
-                
-            } 
-        }
-        return $array;
-    } 
 
     public static function getChild($model,$parseData = false,$order_by = [],$pid = 0,$pname = 'parent_id',$max_level = 0,$level = 1)
     {
@@ -600,7 +545,7 @@ class HelperService
                 array_shift($keys);
                 if(!empty($keys))
                 {
-                    $name = ($data[$key]['text']??'').' - '.self::getFromObject($data[$key],$keys);
+                    return self::getFromObject($data[$key],$keys);
                 }else
                 {
                     $name = $data[$key];

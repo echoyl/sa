@@ -68,22 +68,39 @@ class AdminService
         }
     }
 
-    public static function doLogin($username,$pwd)
+    public static function doLogin($user)
+    {
+        $model = self::getUserModel();
+        $token = self::login($user);
+        $info = [
+            'userinfo'=>self::parseUser($user),
+            'access_token'=>$token,
+            'setting'=>self::setting(AdminService::isSuper($user)),
+        ];
+        self::log('登录',['id'=>$user['id']]);
+        //更新最后登录时间
+        $model->where(['id'=>$user['id']])->update(['latest_login_at'=>now()]);
+        return $info;
+    }
+
+    public static function doLoginByMobile($mobile)
+    {
+        $model = self::getUserModel();
+        $user = $model->where(['mobile'=>$mobile])->first();
+        if($user)
+        {
+            return self::doLogin($user);
+        }
+        return false;
+    }
+
+    public static function doLoginByUsername($username,$pwd)
     {
         $model = self::getUserModel();
         $user = $model->where(['username'=>$username])->first();
         if($user && $user['password'] == self::pwd($pwd))
         {
-            $token = self::login($user);
-            $info = [
-                'userinfo'=>self::parseUser($user),
-                'access_token'=>$token,
-                'setting'=>self::setting(AdminService::isSuper($user)),
-            ];
-            self::log('登录',['id'=>$user['id']]);
-            //更新最后登录时间
-            $model->where(['id'=>$user['id']])->update(['latest_login_at'=>now()]);
-            return $info;
+            return self::doLogin($user);
         }
         return false;
     }
@@ -91,7 +108,7 @@ class AdminService
     public static function setting($is_super = false)
     {
         $ss = new SetsService();
-        $setting = $ss->getSet(implode('_',[env('APP_NAME','base'),'setting']));
+        $setting = $ss->getSet('setting');
 
         if(isset($setting['theme']))
         {
@@ -100,11 +117,30 @@ class AdminService
             $setting = array_merge($theme,$setting);
         }
 
-        HelperService::deImagesOne($setting,['logo','favicons']);
-        $setting['title'] = $setting['title']??'Deadmin';
-        $setting['tech'] = $setting['tech']??'Deadmin 技术支持';
-        $setting['subtitle'] = $setting['subtitle']??'后台管理系统';
+        HelperService::deImagesOne($setting,['logo','favicons','loginBgImgage']);
+        $setting['title'] = Arr::get($setting,'title','Deadmin');
+        $setting['tech'] = Arr::get($setting,'tech','Deadmin 技术支持');
+        $setting['subtitle'] = Arr::get($setting,'subtitle','后台管理系统');
+        $setting['baseurl'] = Arr::get($setting,'baseurl','/antadmin/');
         $setting['logo'] = $setting['logo']['url']?:false;
+        $setting['loginBgImgage'] = $setting['loginBgImgage']['url']?:false;
+        $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
+        $login_type = Arr::get($setting,'loginType',[]);
+
+        if(in_array($setting['loginTypeDefault'],$login_type))
+        {
+            foreach($login_type as $key=>$val)
+            {
+                if($val == $setting['loginTypeDefault'])
+                {
+                    unset($login_type[$key]);
+                }
+            }
+        }
+        array_unshift($login_type,$setting['loginTypeDefault']);
+
+        $setting['loginType'] = $login_type;
+
         $setting['favicons'] = [$setting['favicons']['url']];
         $dev = Arr::get($setting,'dev',true);
         $is_super = $is_super?:AdminService::isSuper();
@@ -178,7 +214,7 @@ class AdminService
                 $q->select(['id', 'perms2']);
             }])->first()->toArray();
             $as = new MenuService;
-            //d($now_router);
+            //d($now_router,$perms['perms2'],$perms['role']['perms2']);
             $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']['perms2']);
             if (!$has_perm) {
                 return false;

@@ -34,7 +34,7 @@ class TableColumn
 
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
-            $key = $dataIndex = $props['dataIndex'];
+            $key = $dataIndex = explode('.',$props['dataIndex']);
         }
 
         if(is_array($key))
@@ -399,6 +399,7 @@ class TableColumn
         //多选分类
         $d = $this->data;
         $setting = $this->schema['setting']??[];
+        $d['fieldProps'] = [];
         if($this->relation)
         {
             //关联的select 需要获取数据
@@ -406,6 +407,7 @@ class TableColumn
             $d['fieldProps'] = [
                 'changeOnSelect'=>true
             ];
+            
             // if(isset($column['form_data']))
             // {
             //     [$label,$value] = explode(',',$column['form_data']);
@@ -423,6 +425,10 @@ class TableColumn
                     'changeOnSelect'=>true
                 ];
             }
+        }
+        if($this->schema['form_type'] == 'cascaders')
+        {
+            $d['fieldProps']['multiple'] = true;
         }
         $this->data = $d;
         return;

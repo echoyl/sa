@@ -10,6 +10,6 @@ class HelperController extends ApiBaseController
     public function pca()
     {
         $cs = new CasService;
-        return $this->success($cs->cascader(request('level')));
+        return $this->success($cs->cascader(request('level'),request('topCode','')));
     }
 }

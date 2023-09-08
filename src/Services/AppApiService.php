@@ -10,6 +10,16 @@ class AppApiService implements SaServiceInterface
     var $app_name = '';
     var $check_insert_user = true;
 
+
+    public function __construct()
+    {
+        $frontUserModel = config('sa.frontUserModel');
+        if($frontUserModel)
+        {
+            $this->userModel = new $frontUserModel;
+        }
+    }
+
     public function baseSet($name = '')
     {
         $ss = new SetsService();
@@ -200,6 +210,12 @@ class AppApiService implements SaServiceInterface
             
 
             $model->insert($user);
+        }else
+        {
+            $user = [
+                'last_used_at'=>now(),
+            ];
+            $model->where(['id'=>$has['id']])->update($user);
         }
         return;
 

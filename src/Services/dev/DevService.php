@@ -59,7 +59,7 @@ class DevService
     public function schemaColumnSql($val)
     {
         $field_sql = '';
-        $default_value = $val['default']??"";
+        $default_value = Arr::get($val,'default','');
         $comment = $val['desc']??$val['title'];
         $name = $val['name'];
         $length = $val['length']??0;
@@ -251,7 +251,7 @@ class DevService
         $hasone_tpl ="
     public function _name()
     {
-        return \$this->has_type(_modelName::class,'_foreignKey','_localKey')_withDefault;
+        return \$this->has_type(_modelName::class,'_foreignKey','_localKey')_filterWhere_orderBy_withDefault;
     }";
         
         $has_model = [ucfirst($model['name'])];
@@ -296,6 +296,24 @@ class DevService
                     $with_default = '->withDefault('.Dev::export($with_default,2).')';
                 }
             }
+            //加入筛选条件
+            $filter_where = '';
+            if($val['filter'])
+            {
+                $filter = json_decode($val['filter'],true);
+                $filter_where = '->where('.json_encode($filter).')';
+            }
+            //加入排序条件
+            $order_by = '';
+            if($val['order_by'])
+            {
+                $_order_by = json_decode($val['order_by'],true);
+                foreach($_order_by as $ob)
+                {
+                    $order_by .= '->orderBy("'.$ob[0].'","'.$ob[1].'")';
+                }
+                
+            }
 
             $hasone_data[] = str_replace([
                 '_name',
@@ -303,14 +321,18 @@ class DevService
                 '_foreignKey',
                 '_localKey',
                 '_type',
-                '_withDefault'
+                '_withDefault',
+                '_filterWhere',
+                '_orderBy'
             ],[
                 $val['name'],
                 $foreign_model_name,
                 $val['foreign_key'],
                 $val['local_key'],
                 ucfirst($val['type']),
-                $with_default
+                $with_default,
+                $filter_where,
+                $order_by
             ],$hasone_tpl);
         }
         return [$namespace_data,$hasone_data];
@@ -663,6 +685,18 @@ class DevService
             $crud_config[] = '$this->with_count = '.(json_encode($with_count)).';';
         }
 
+        //添加唯一字段检测
+        if($model['unique_fields'])
+        {
+            $_unique_fields = json_decode($model['unique_fields'],true);
+            $unique_fields = [];
+            foreach($_unique_fields as $uf)
+            {
+                $unique_fields[] = $uf['columns'];
+            }
+            $crud_config[] = '$this->uniqueFields = '.(json_encode($unique_fields)).';';
+        }
+
 
         
 
@@ -697,7 +731,7 @@ class DevService
                 $label = $setting['label']??'';
                 $value = $setting['value']??'';
                 $children = $setting['children']??'';
-                if($form_type == 'select')
+                if($form_type == 'select' || $form_type == 'radioButton')
                 {
                     if(isset($all_models[$column['name']]))
                     {
@@ -821,6 +855,7 @@ class DevService
                 {
                     $d['default'] = "__unset";
                     $d['level'] = $setting['pca_level']??1;
+                    $d['topCode'] = Arr::get($setting,'pca_topCode','');
                 }
                 $parse_columns[] = $d;
             }

@@ -89,8 +89,12 @@ class IndexController extends ApiBaseController
     public function currentUser()
     {
         $user = AdminService::user();
+
+        $userinfo = AdminService::parseUser($user);
         
-        return $this->success(AdminService::parseUser($user));
+        $userinfo = $this->service->parseUserInfo($userinfo,$user);
+
+        return $this->success($userinfo);
     }
 
     public function setting()

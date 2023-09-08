@@ -88,4 +88,9 @@ class AdminAppService implements SaAdminAppServiceInterface
         ];
         return $items;
     }
+
+    public function parseUserInfo($userinfo,$user)
+    {
+        return $userinfo;
+    }
 }

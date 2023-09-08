@@ -57,8 +57,8 @@ class ModelController extends CrudController
 
     public function copyToFolder()
     {
-        $id = request('id');
-        $toid = request('toid');
+        $id = request('base.id');
+        $toid = request('base.toid');
         //当前模型
         $data = $this->model->where(['id'=>$id])->with(['relations'])->first();
         $to_folder = (new Model())->where(['id'=>$toid])->first();
@@ -116,7 +116,7 @@ class ModelController extends CrudController
             return $this->fail([1,'环境错误！']); 
         }
 
-        $type = request('type');
+        $type = request('base.type');
         $c = new Creator;
         if($type == 'posts')
         {
@@ -140,32 +140,49 @@ class ModelController extends CrudController
     public function export()
     {
         //导出dev_menu表
-        $appname = DevService::appname();
-        $filename = 'update.sql';
-        $file = storage_path('app/public/'.$filename);
-        //file_put_contents($file,'');
-        $check = request('check');
-        $export_table = [
-            ['dev_menu',''],
-            ['dev_model',''],
-            ['dev_model_relation',''],
-        ];
-        if(!in_array('all',$check))
+        if(request()->isMethod('post'))
         {
-            $export_table[0][1] = "type = 'system' or type = '{$appname}'";
-            $export_table[1][1] = "admin_type = 'system' or admin_type = '{$appname}'";
-            $model_ids = (new Model())->whereIn('admin_type',['system',$appname])->pluck('id')->toArray();
-            $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
-        }
-        $c = new Dump;
-        foreach($export_table as $tb)
+            $appname = DevService::appname();
+            $filename = 'update.sql';
+            $file = storage_path('app/public/'.$filename);
+            //file_put_contents($file,'');
+            $check = request('base.check',[]);
+            $export_table = [
+                ['dev_menu',''],
+                ['dev_model',''],
+                ['dev_model_relation',''],
+            ];
+            if(!in_array('all',$check))
+            {
+                //包含系统数据 + app数据
+                if(in_array('app',$check))
+                {
+                    $export_table[0][1] = "type = '{$appname}'";
+                    $export_table[1][1] = "admin_type = '{$appname}'";
+                    $model_ids = (new Model())->whereIn('admin_type',[$appname])->pluck('id')->toArray();
+                    $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
+                }else
+                {
+                    $export_table[0][1] = "type = 'system' or type = '{$appname}'";
+                    $export_table[1][1] = "admin_type = 'system' or admin_type = '{$appname}'";
+                    $model_ids = (new Model())->whereIn('admin_type',['system',$appname])->pluck('id')->toArray();
+                    $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
+                }
+            }
+            $c = new Dump;
+            foreach($export_table as $tb)
+            {
+                $c = $c->exportTable($tb[0],$tb[1],$check);
+            }
+            $c = $c->dumpToFile($file);
+    
+            //return $this->success();
+            return $this->success(['url'=>tomedia($filename),'download'=>$filename]);
+        }else
         {
-            $c = $c->exportTable($tb[0],$tb[1],$check);
+            return $this->success(['check'=>['replace','app']]);
         }
-        $c = $c->dumpToFile($file);
-
-        //return $this->success();
-        return $this->success(['url'=>tomedia($filename),'download'=>$filename]);
+        
     }
 
     /**

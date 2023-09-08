@@ -13,6 +13,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
         Route::middleware(['echoyl.remember', 'auth:sanctum'])->group(function () {
 
             Route::get('setting', 'IndexController@setting');
+            Route::post('sms', 'SmsController@sms');
 
             //需要登录的路由
             Route::middleware(['echoyl.sa'])->group(function () {

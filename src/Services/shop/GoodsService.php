@@ -57,6 +57,8 @@ class GoodsService
                 'sku'=>$guige['sku'],
                 'max'=>$guige['max'],
                 'old_price'=>$guige['old_price']/100,
+                'chengben_price'=>$guige['old_price']/100,
+                'jiesuan_price'=>$guige['old_price']/100,
             ];
             $ids = explode(':',$guige['ids']);
             foreach($ids as $id)
@@ -148,7 +150,7 @@ class GoodsService
             $name = [];
             foreach($val as $k=>$v)
             {
-                if(!in_array($k,['id','price','sku','max','old_price']))
+                if(!in_array($k,['id','price','sku','max','old_price','jiesuan_price','chengben_price']))
                 {
                     $name[] = $v;
                 }
@@ -168,6 +170,8 @@ class GoodsService
                 'ids'=>$_ids,
                 'price'=>intval(($val['price']??0)*100),
                 'old_price'=>intval(($val['old_price']??0)*100),
+                'jiesuan_price'=>intval(($val['jiesuan_price']??0)*100),
+                'chengben_price'=>intval(($val['chengben_price']??0)*100),
                 'sku'=>$val['sku']??0,
                 'max'=>$val['max']??0,
 			];

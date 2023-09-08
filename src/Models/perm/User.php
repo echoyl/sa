@@ -3,7 +3,7 @@
 namespace Echoyl\Sa\Models\perm;
 
 use Echoyl\Sa\Models\BaseAuth;
-use Laravel\Sanctum\PersonalAccessToken;
+use Echoyl\Sa\Models\personal\access\Tokens;
 
 class User extends BaseAuth
 {
@@ -20,14 +20,53 @@ class User extends BaseAuth
         if(empty($data))
         {
             $data = [
-			["name" => "roleid","type" => "select","default" => 0,"data" => (new Role())->get()->toArray(),'with'=>true],
-			[
-                "name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
-                    ["label" => "禁用","value" => 0],
-                    ["label" => "启用","value" => 1],
-                ],"table_menu" => true
-            ],
-		];
+			    [
+			        'name' => 'role',
+			        'type' => 'model',
+			        'class' => Role::class,
+			        'foreign_key' => 'id',
+			    ],
+			    [
+			        'name' => 'log',
+			        'type' => 'model',
+			        'class' => Tokens::class,
+			        'foreign_key' => 'tokenable_id',
+			    ],
+			    [
+			        'name' => 'roleid',
+			        'type' => 'select',
+			        'default' => 0,
+			        'data' => (new Role())->get()->toArray(),
+			        'with' => true,
+			    ],
+			    [
+			        'name' => 'password',
+			        'type' => 'password',
+			        'default' => '',
+			    ],
+			    [
+			        'name' => 'avatar',
+			        'type' => 'image',
+			        'default' => '',
+			    ],
+			    [
+			        'name' => 'state',
+			        'type' => 'switch',
+			        'default' => 0,
+			        'table_menu' => true,
+			        'with' => true,
+			        'data' => [
+			            [
+			                'label' => '禁用',
+			                'value' => 0,
+			            ],
+			            [
+			                'label' => '启用',
+			                'value' => 1,
+			            ],
+			        ],
+			    ],
+			];
         }
         return $data;
     }
@@ -38,8 +77,8 @@ class User extends BaseAuth
     }
 
 
-    public function logs()
+    public function log()
     {
-        return $this->hasMany(PersonalAccessToken::class,'tokenable_id','id')->where(['tokenable_type'=>'Echoyl\Sa\Models\perm\User']);
+        return $this->hasOne(Tokens::class,'tokenable_id','id')->where([["name","=","admin"]])->orderBy("last_used_at","desc");
     }
 }

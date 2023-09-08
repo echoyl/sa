@@ -6,6 +6,7 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Services\dev\utils\Utils;
+use Illuminate\Support\Arr;
 
 class MenuController extends CrudController
 {
@@ -76,6 +77,24 @@ class MenuController extends CrudController
 
     }
 
+    public function allModels()
+    {
+        $model = new Model();
+        $data = [];
+        $list = $model->where(['type'=>1])->with(['relations'=>function($query){
+            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
+        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
+        foreach($list as $val)
+        {
+            $data[] = [
+                'id'=>$val['id'],
+                'columns'=>$val['columns']?json_decode($val['columns'],true):[],
+                'relations'=>$val['relations']?:[]
+            ];
+        }
+        return $data;
+    }
+
     public function postData(&$item)
     {
         if(isset($item['admin_model']) && isset($item['admin_model']['columns']))
@@ -83,6 +102,7 @@ class MenuController extends CrudController
             $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'],array_values(collect(Utils::$title_arr)->map(function($v,$k){
                 return ['title'=>$v,'name'=>$k];
             })->toArray()));
+            $item['allModels'] = $this->allModels();
         }
         if(!$this->is_post)
         {
@@ -112,8 +132,8 @@ class MenuController extends CrudController
 
     public function copyTo()
     {
-        $id = request('id');
-        $toid = request('toid');
+        $id = request('base.id');
+        $toid = request('base.toid');
         //当前菜单
         $data = $this->model->where(['id'=>$id])->first();
         $to = $this->model->where(['id'=>$toid])->first();
@@ -143,8 +163,15 @@ class MenuController extends CrudController
 
     protected function getItem($name = 'table_config',$id = 0)
     {   
-        $id = request('base.id',$id);
-        $config = request('base.'.$name);
+        if(!$id)
+        {
+            $id = request('base.id');
+            $config = request('base.'.$name);
+        }else
+        {
+            $config = false;
+        }
+        
         $item = $this->model->where(['id'=>$id])->with($this->with_column)->first();
         if(!$item)
         {
@@ -182,9 +209,18 @@ class MenuController extends CrudController
         $left_menu = false;
         $tool_bar_button = [];
         $json = [];
+
+        
+
         
         foreach($config as $val)
         {
+            $key = Arr::get($val,'key');
+            if($item['page_type'] == 'category' && $key == 'id')
+            {
+                //这里注入一个 如果是分类页面 自动将第一列改成 title + id 显示
+                $val = json_decode('{"key":"id","props":{"items":[{"id":"02bhysgdg9s","domtype":"text","btn":{"text":"{{record.title+ \' - \' + record.id}}"}}]},"type":"customerColumn"}',true);
+            }
             $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
             if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
@@ -360,8 +396,9 @@ class MenuController extends CrudController
      */
     public function otherConfig($id = 0)
     {
+        
         $item_data = $this->getItem('other_config',$id);
-
+        
         if(!is_array($item_data))
         {
             return $item_data;
@@ -382,7 +419,7 @@ class MenuController extends CrudController
             }
         }
         $desc = array_merge($_desc,$config);
-
+        //d($desc);
         return $this->updateDesc($desc,$item,['other_config'=>json_encode($config)]);
     }
 

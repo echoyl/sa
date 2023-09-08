@@ -24,7 +24,8 @@ class Utils
         'tinyEditor'=>'tinyEditor',
         'price'=>'digit',
         'digit'=>'digit',
-        'confirm'=>'confirm'
+        'confirm'=>'confirm',
+        'radioButton'=>'select'
     ];
 
     public static $title_arr = [
@@ -162,11 +163,12 @@ class Utils
             
             
             $filter_where = '';
-            if($relation && $relation['filter'])
-            {
-                $filter = json_decode($relation['filter'],true);
-                $filter_where = '->where('.json_encode($filter).')';
-            }
+            //筛选条件转移至 model 中
+            // if($relation && $relation['filter'])
+            // {
+            //     $filter = json_decode($relation['filter'],true);
+            //     $filter_where = '->where('.json_encode($filter).')';
+            // }
             if(isset($tree['columns']) && !empty($tree['columns']))
             {
                 $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($tree['columns']).')'.$filter_where.$inner_with.';}@endphp';

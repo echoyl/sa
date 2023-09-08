@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Setting;
+use Echoyl\Sa\Services\dev\DevService;
 
 class SetsService
 {
@@ -29,12 +30,12 @@ class SetsService
 
     public function appName()
     {
-        return env('APP_NAME','');
+        return DevService::appname();
     }
 
     public function baseKey()
     {
-        return implode('_',[$this->appName(),'base']);
+        return 'base';
     }
 
     public function getBase($key = '',$type = '')
@@ -44,7 +45,7 @@ class SetsService
 
     public function webKey()
     {
-        return implode('_',[$this->appName(),'web']);
+        return 'web';
     }
 
     public function getWeb($key = '',$type = '')
@@ -54,7 +55,8 @@ class SetsService
 
     public function post($key)
     {
-        $item = $this->model->where(['key'=>$key])->first();
+        $app_name = $this->appName();
+        $item = $this->model->where(['key'=>$key,'app_name'=>$app_name])->first();
 
         //新增自动检测字段是否是图片 及 配置 类型
 
@@ -148,7 +150,7 @@ class SetsService
         {
             return $data[$key];
         }
-        $data[$key] = $this->model->where(['key'=>$key])->first();
+        $data[$key] = $this->model->where(['key'=>$key,'app_name'=>$this->appName()])->first();
         return $data[$key];
     }
 

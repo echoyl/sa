@@ -117,15 +117,17 @@ class MenuService
         return $data;
     }
 
-    public function perms($id = 0,$prefix = [])
+    public function perms($id = 0,$enable_keys = [])
     {
         $data = $this->getAll2()->filter(function ($item) use ($id) {
             return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
         });
         $ret = [];
+        $total = count($data);
+        $disable_count = 0;
         foreach ($data as $val) {
-            $routers = $this->perms($val['id']);
-            $more = true;
+            [$routers,$routers_disable] = $this->perms($val['id'],$enable_keys);
+            //$more = true;
             if(empty($routers))
             {
                 //没有子集 渲染权限
@@ -135,21 +137,30 @@ class MenuService
                     //如果设置了子权限
                     $menu_perms = json_decode($val['perms'],true);
                 }
-                $routers = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?true:false);
-                $more = false;
+                [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?true:false,$enable_keys);
+                //$more = false;
+            }
+            if($routers_disable)
+            {
+                $disable_count++;
             }
             $item = [
                 'label' => $val['title'],
                 'value' => strval($val['id']),
-                'more'=>$more,
+                //'more'=>$more,
                 'options' => $routers,
             ];
+            if($routers_disable)
+            {
+                $item['disabled'] = true;
+            }
+            
             $ret[] = $item;
         }
-        return $ret;
+        return [$ret,$total == $disable_count];
     }
 
-    public function getBasePerms($menu_id,$ext_perms = [],$add_ext = false)
+    public function getBasePerms($menu_id,$ext_perms = [],$add_ext = false,$enable_keys = [])
     {
         $ret = [];
         //检测菜单是否映射到了模型，是： 基础 + 子权限 否：只使用子权限
@@ -160,13 +171,23 @@ class MenuService
         {
             $perms = !empty($ext_perms)?$ext_perms:$this->basePerms;
         }
-        
+        $total = count($perms);
+        $disable_count = 0;
         foreach($perms as $key=>$val)
         {
             $value = implode('.',[$menu_id,$key]);
-            $ret[] = ['label'=>$val,'value'=>$value];
+            $item= ['label'=>$val,'value'=>$value];
+
+            if(!empty($enable_keys) && !in_array($item['value'],$enable_keys))
+            {
+                $item['disableCheckbox'] = true;
+                $item['disabled'] = true;
+                $disable_count++;
+            }
+
+            $ret[] = $item;
         }
-        return $ret;
+        return [$ret,$total == $disable_count];
     }
 
     public function checkPerm($router,$user_perms,$role_perms)
@@ -234,8 +255,8 @@ class MenuService
         }
 
         //通过路由切割来找到菜单
-        //上面将action name 加入到数组 现在重新删除该name
-        array_pop($r);
+        //上面将action name 加入到数组 现在重新删除该name 但是要获取这个name
+        $name = array_pop($r);
         if(!empty($r))
         {
             $r = array_reverse($r);

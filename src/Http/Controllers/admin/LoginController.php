@@ -3,43 +3,68 @@
 namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Echoyl\Sa\Http\Controllers\ApiBaseController;
+use Echoyl\Sa\Models\Smslog;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\CaptchaService;
 
-class LoginController extends Controller
+class LoginController extends ApiBaseController
 {
     //
     public function index(Request $request)
     {
         //提交登录信息
-        $code = $request->input('captcha.captchaCode');
-        $code = $code?:$request->input('vercode');
-        $key = $request->input('captcha.captchaKey');
-        $key = $key?:$request->input('key');
+        $loginType = request('loginType');
 
-        if(!CaptchaService::check($key,$code))
+        if($loginType == 'phone')
         {
-            return ['code'=>1,'msg'=>'验证码错误','status'=>1];
+            //手机号码登录
+            $code = request('mobilecode');
+            $mobile = request('mobile');
+            if(!$code || !$mobile)
+            {
+                return $this->fail([1,'请输入验证码']);
+            }
+            if(!Smslog::checkCode($mobile,$code))
+            {
+                return $this->fail([1,'验证码错误']);
+            }
+
+            //验证码正确 登录账号
+            $info = AdminService::doLoginByMobile($mobile);
+
+        }else
+        {
+            $code = $request->input('captcha.captchaCode');
+            $code = $code?:$request->input('vercode');
+            $key = $request->input('captcha.captchaKey');
+            $key = $key?:$request->input('key');
+    
+            if(!CaptchaService::check($key,$code))
+            {
+                return $this->fail([1,'验证码错误']);
+            }
+    
+            $username = $request->input('username');
+            $pwd = $request->input('password');
+    
+            $info = AdminService::doLoginByUsername($username,$pwd);
         }
 
-        $username = $request->input('username');
-        $pwd = $request->input('password');
-
-        $info = AdminService::doLogin($username,$pwd);
+        
 
         if($info)
         {
-            return ['code'=>0,'msg'=>'登录成功，页面跳转中...','data'=>$info,'status'=>0];
+            return $this->success($info,[0,'登录成功，页面跳转中...']);
         }else
         {
-            return ['code'=>1,'msg'=>'账号或密码错误，请重新输入','status'=>1];
+            return $this->fail([1,'账号或密码错误，请重新输入']);
         }
     }
 
     public function captcha()
     {
-        return ['code'=>0,'data'=>CaptchaService::get(request('key'))];
+        return $this->success(CaptchaService::get(request('key')));
     }
 
 }
