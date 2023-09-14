@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\WebMenuService;
 use Illuminate\Support\Arr;
@@ -64,6 +65,11 @@ class CrudController extends ApiBaseController
         $parse_columns = $this->getParseColumns();
 
         foreach ($parse_columns as $col) {
+
+            $cs = new CrudService([
+                'col'=>$col,
+            ]);
+
             $name = $col['name'];
             $type = $col['type'];
             $search_val = request($name, '');
@@ -202,7 +208,7 @@ class CrudController extends ApiBaseController
                     break;
                 case 'selects':
                     if (is_numeric($search_val)) {
-                        $category_id = $search_val;
+                        $category_id = [$search_val];
                     } else {
                         $json = HelperService::json_validate($search_val);
                         if($json)
@@ -217,23 +223,25 @@ class CrudController extends ApiBaseController
                         {
                             break;
                         }
-                        $category_id = array_pop($category_id);
+                        //$category_id = array_pop($category_id);
                     }
+                    $m = $m->where(function($query) use($category_id,$name){
+                        foreach($category_id as $k=>$id)
+                        {
+                            if(!$k)
+                            {
+                                $query->whereRaw("FIND_IN_SET(?,{$name})", [$id]);
+                            }else
+                            {
+                                $query->orWhereRaw("FIND_IN_SET(?,{$name})", [$id]);
+                            }
+                        }
+                    });
 
-                    $m = $m->whereRaw("FIND_IN_SET(?,{$name})", [$category_id]);
+                    
                     break;
                 case 'pca':
-                    //地区筛选
-                    $search_val = json_decode($search_val, true);
-                    $keys = ['province','city','area'];
-                    foreach($search_val as $k=>$v)
-                    {
-                        if(isset($keys[$k]))
-                        {
-                            $m = $m->where($keys[$k],$v);
-                        }
-                        
-                    }
+                    $m = $cs->search($m,'pca',['search_val'=>$search_val]);
                     break;
             }
         }
@@ -267,7 +275,14 @@ class CrudController extends ApiBaseController
                 if($type == 'has')
                 {
                     $search_val = request(HelperService::uncamelize($name),'');
-                    $m = HelperService::searchWhereHas($m,$name,$columns,$search_val);
+                    if(isset($sc['default']) && $sc['default'] && $search_val == $sc['default'])
+                    {
+                        //如果等于默认值 修改查询类型为 doesntHave
+                        $m = $m->doesntHave($name);
+                    }else
+                    {
+                        $m = HelperService::searchWhereHas($m,$name,$columns,$search_val);
+                    }
                 }else
                 {
                     $search_val = request($name,'');
@@ -788,6 +803,10 @@ class CrudController extends ApiBaseController
             $col['default'] = $col['default']??"";
 
             $val = $isset ? $data[$name] : $col['default'];
+            $config = [
+                'data'=>$data,'col'=>$col,
+            ];
+            $cs = new CrudService($config);
             switch ($type) {
                 case 'model':
                     if($encode)
@@ -814,6 +833,15 @@ class CrudController extends ApiBaseController
                     }else
                     {
                         $val = HelperService::uploadParse($val ?? '', $encode ? true : false,['p'=>'s']);
+                    }
+                    break;
+                case 'aliyunVideo':
+                    if(!$val && !$encode)
+                    {
+                        $val = '__unset';
+                    }else
+                    {
+                        $val = HelperService::aliyunVideoParse($val ?? '', $encode ? true : false,);
                     }
                     break;
                 case 'cascader':
@@ -849,6 +877,7 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'select':
+                case 'radioButton':
                     if ($encode) {
                         $val = is_numeric($val)?intval($val):$val;
                     }else{
@@ -898,47 +927,12 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'pca':
-                    $level = Arr::get($col,'level',3);//省市区列数
-                    $topCode = Arr::get($col,'topCode','');//省市区指定上级
-                    $topLevel = $topCode?count(explode(',',$topCode)):0;
-                    $topLevel = $topLevel > 3?3:$topLevel;
-                    $keys = ['province','city','area'];
-                    for($i=0;$i<$topLevel;$i++)
-                    {
-                        //如果有上级 那么将多余name弹出
-                        array_shift($keys);
-                    }
-                    if ($encode) {
-                        if($isset)
-                        {
-                            foreach($keys as $k=>$v)
-                            {
-                                if(!isset($val[$k]) || $k >= $level)
-                                {
-                                    continue;
-                                }
-                                $data[$v] = $val[$k];
-                            }
-                            if(!in_array($name,$keys))
-                            {
-                                //如果用了其它字段需要将该字段移除
-                                $val = '__unset';
-                            }else
-                            {
-                                $need_set = false;//字段重复不需要再设值了
-                            }
-                        }
-                    } else {
-                        $val = [];
-                        foreach($keys as $k=>$v)
-                        {
-                            if(isset($data[$v]) && $data[$v] && $k < $level)
-                            {
-                                $val[] = $data[$v];
-                            }
-                        }
-                        
-                    }
+                    $data = $cs->make('pca',[
+                        'encode'=>$encode
+                    ]);
+                    //之后 字段类型都 抽离后 下面两行可以删除
+                    $val = '';
+                    $need_set = false;
                     break;
                 case 'latlng':
                 case 'tmapInput':
@@ -1191,8 +1185,9 @@ class CrudController extends ApiBaseController
                 case 'model':
                     if(isset($data[$name]))
                     {
+                        $idata = filterEmpty($data[$name]);
                         $foreign_key = $column['foreign_key'];//外键名称
-                        $this->modelData($data[$name],$column['class'],[$foreign_key=>$id]);
+                        $this->modelData($idata,$column['class'],[$foreign_key=>$id]);
                     }
                 break;
             }

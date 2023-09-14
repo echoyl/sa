@@ -50,8 +50,9 @@ class ModelController extends CrudController
         $search['table_menu'] = ['admin_type'=>[['value' => env('APP_NAME'), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
         //d($data);
         $ds = new DevService;
-        $search['models'] = $ds->getModelsFolderTree();
+        $search['foldermodels'] = $ds->getModelsFolderTree();//模型文件夹
         $search['menus'] = $ds->getMenusTree();//增加快速创建内容模块 选择创建到菜单下
+        $search['models'] = $ds->getModelsTree();//可选模型
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
     }
 
@@ -220,6 +221,7 @@ class ModelController extends CrudController
         $ds = new DevService;
 
         $ds->createModelFile($data);
+        $ds->createControllerFile($data);
 
         return $this->success('操作成功');
     }

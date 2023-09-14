@@ -47,6 +47,7 @@ class GoodsService
                 'items'=>$_its
             ];
         }
+        //d($items_id_map);
 
         $guiges = [];
         foreach($goods['guiges'] as $guige)
@@ -95,7 +96,8 @@ class GoodsService
             return;
         }
 
-        $items_id_map = [];//id索引目录
+        $items_id_map = [];//id，name索引目录
+       
 
 
         $has_item_ids = [];
@@ -118,7 +120,7 @@ class GoodsService
                 //新增数据
                 $item_id = $itemModel->insertGetId(['name'=>$item['name'],'goods_id'=>$goods_id]);
             }
-            $items_id_map[$item['id']] = $item_id;
+            $items_id_map[$item['id']] = ['id'=>$item_id,'name'=>$item['name']];
             $has_item_ids[] = $item_id;
 
             foreach($item['items'] as $it)
@@ -134,7 +136,7 @@ class GoodsService
                     $item_2_id = $itemModel->insertGetId(['name'=>$it['name'],'goods_id'=>$goods_id,'parent_id'=>$item_id]);
                 }
                 $has_item_ids[] = $item_2_id;
-                $items_id_map[$it['id']] = $item_2_id;
+                $items_id_map[$it['id']] = ['id'=>$item_2_id,'name'=>$it['name']];
             }
         }
         //将之前没有的id都删除
@@ -145,22 +147,16 @@ class GoodsService
 		$guigeModel = $this->guigeModel;
 		$price = $old_price = [];
 		$sku = 0;
+        //d($guige['attrs']);
         foreach($guige['attrs'] as $key=>$val)
         {
             $name = [];
-            foreach($val as $k=>$v)
-            {
-                if(!in_array($k,['id','price','sku','max','old_price','jiesuan_price','chengben_price']))
-                {
-                    $name[] = $v;
-                }
-            }
-
             $ids = explode(':',$val['id']);
             $_ids = [];
             foreach($ids as $_id)
             {
-                $_ids[] = $items_id_map[$_id];
+                $_ids[] = $items_id_map[$_id]['id'];
+                $name[] = $items_id_map[$_id]['name'];
             }
             $_ids = implode(':',$_ids);
 

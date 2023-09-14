@@ -83,6 +83,7 @@ class SetsService
 				$this->model->where(['id'=>$item['id']])->update($data);
 			}else
 			{
+                $data['app_name'] = $app_name;
 				$this->model->insert($data);
 			}
 			return ['code'=>0,'msg'=>'提交成功'];

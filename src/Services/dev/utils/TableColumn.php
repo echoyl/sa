@@ -58,7 +58,12 @@ class TableColumn
         $schema = Utils::arrGet($columns,'name',$key);
         $this->schema = $schema;
 
-        $relation = Utils::arrGet($model['relations'],$schema?'local_key':'name',Utils::uncamelize($key));
+        //如果本地字段 需要转化下驼峰格式？ 如果本地没有字段 通过关联的name获取相关关联
+        $relation = Utils::arrGet($model['relations'],$schema?'local_key':'name',$schema?Utils::uncamelize($key):$key);
+        // if($key == 'hexiaoUser')
+        // {
+        //     d($relation,Utils::uncamelize($key));
+        // }
         $this->relation = $relation;
         
         
@@ -85,15 +90,19 @@ class TableColumn
         $width = $props['width']??'';
         //$width = $config['width']??$p_width;
         $relation_title = '';
-        if($relation && is_array($dataIndex))
+        if($relation)
         {
             $_relation_title = [$relation['title']];
-            $foreign_model_columns = json_decode($relation['foreign_model']['columns'],true);
-            $field = Utils::arrGet($foreign_model_columns,'name',$dataIndex[1]);
-            if($field && $field['title'])
+            if(is_array($dataIndex))
             {
-                $_relation_title[] = $field['title'];
+                $foreign_model_columns = json_decode($relation['foreign_model']['columns'],true);
+                $field = Utils::arrGet($foreign_model_columns,'name',$dataIndex[1]);
+                if($field && $field['title'])
+                {
+                    $_relation_title[] = $field['title'];
+                }
             }
+            
             $relation_title = implode(' - ',$_relation_title);
         }
 
@@ -297,7 +306,7 @@ class TableColumn
             $d['fieldProps'] = [];
             if(!$value || !$label)
             {
-                if($this->schema['form_type'] == 'select')
+                if($this->schema['form_type'] == 'select' || $this->schema['form_type'] == 'radioButton')
                 {
                     $label = 'title';
                     $value = 'id';
@@ -312,7 +321,7 @@ class TableColumn
             }
             if($this->form_type == 'selects')
             {
-                $d['fieldProps']['mode'] = 'tags';
+                $d['fieldProps']['mode'] = 'multiple';
             }
         }else
         {
@@ -435,9 +444,18 @@ class TableColumn
     }
     public function pca()
     {
-        $this->data['fieldProps'] = [
+        $setting = $this->schema['setting']??[];
+        $p = [];
+        if(isset($setting['pca_level']))
+        {
+            $p = [
+                'level'=>intval($setting['pca_level']),
+                'topCode'=>Arr::get($setting,'pca_topCode','')
+            ];
+        }
+        $this->data['fieldProps'] = array_merge([
             'changeOnSelect'=>true
-        ];
+        ],$p);
         return;
     }
 }

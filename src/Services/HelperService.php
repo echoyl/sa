@@ -266,6 +266,42 @@ class HelperService
         return $data;
     }
 
+    public static function aliyunVideoParse($data,$encode = true,$params = [])
+    {
+        if($encode)
+        {
+            if (is_array($data) && !empty($data)) {
+                $_data = [];
+                foreach ($data as $item) {
+                    if(isset($item['url']))
+                    {
+                        unset($item['url']);
+                    }
+                    if(isset($item['play_url']))
+                    {
+                        unset($item['play_url']);
+                    }
+                    $_data[] = $item;
+                }
+
+                
+                return json_encode($_data);
+            }else
+            {
+                return '';
+            }
+        }else
+        {
+            $_data = [];
+            if($data)
+            {
+                $data = is_string($data)? json_decode($data, 'true'):$data;
+                return $data;
+            }
+            return $_data;
+        }
+    }
+
     public static function uploadParse($data,$encode = true,$params = [])
     {
         if($encode)
@@ -560,5 +596,10 @@ class HelperService
     public static function parseMobile($mobile)
     {
         return substr($mobile,0,3).'****'.substr($mobile,7,4);
+    }
+
+    public static function isMobileNumber($mobile)
+    {
+        return preg_match("/^1\d{10}$/",$mobile);
     }
 }

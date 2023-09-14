@@ -148,27 +148,29 @@ class FormItem
             $this->$form_type();
         }
 
+        if(!isset($this->data['fieldProps']))
+        {
+            $this->data['fieldProps'] = [];
+        }
+
         if($placeholder)
         {
-            if(isset($this->data['fieldProps']))
+            $this->data['fieldProps']['placeholder'] = $placeholder;
+        }else
+        {
+            //默认给每个表单设置 placeholder
+            if(in_array($form_type,['select','cascader','tmapInput']))
             {
-                $this->data['fieldProps']['placeholder'] = $placeholder;
+                $this->data['fieldProps']['placeholder'] = '请选择'.$d['title'];
             }else
             {
-                $this->data['fieldProps'] = ['placeholder'=>$placeholder];
+                $this->data['fieldProps']['placeholder'] = '请输入'.$d['title'];
             }
         }
 
         if($fieldProps && !is_string($fieldProps))
         {
-            if(isset($this->data['fieldProps']))
-            {
-                
-                $this->data['fieldProps'] = array_merge($fieldProps,$this->data['fieldProps']);
-            }else
-            {
-                $this->data['fieldProps'] = $fieldProps;
-            }
+            $this->data['fieldProps'] = array_merge($fieldProps,$this->data['fieldProps']);
         }
 
         if($formItemProps && !is_string($formItemProps))
@@ -258,7 +260,7 @@ class FormItem
         $fieldProps = [];
         $d = $this->data;
         $relation = $this->relation;
-        $d['readonly'] = true;
+        //$d['readonly'] = true;
         if($this->readonly)
         {
             $fieldProps['readonly'] = true;
@@ -336,7 +338,7 @@ class FormItem
                 $value = $setting['value'];
             }else
             {
-                if($this->schema['form_type'] == 'select')
+                if($this->schema['form_type'] == 'select' || $this->schema['form_type'] == 'radioButton')
                 {
                     $label = 'title';
                     $value = 'id';
@@ -430,6 +432,18 @@ class FormItem
         }
         return;
     }
+
+    public function aliyunVideo()
+    {
+        $setting = $this->schema['setting']??[];
+        if(isset($setting['image_count']))
+        {
+            $this->data['fieldProps'] = ['max'=>intval($setting['image_count'])];
+        }
+        return;
+    }
+
+    
 
     public function switch()
     {

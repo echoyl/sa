@@ -32,10 +32,10 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     //上传文件
                     Route::post('uploader/index', 'UploaderController@index'); 
                     //视频相关
-                    // Route::post('uploader/video', 'UploaderController@video'); //上传视频文件路由
-                    // Route::post('uploader/createUploadVideo', 'UploaderController@createUploadVideo');
-                    // Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
-                    // Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
+                    Route::post('uploader/video', 'UploaderController@video'); //上传视频文件路由
+                    Route::post('uploader/createUploadVideo', 'UploaderController@createUploadVideo');
+                    Route::post('uploader/refreshUploadVideo', 'UploaderController@refreshUploadVideo');
+                    Route::post('uploader/getVideoUrl', 'UploaderController@getVideoUrl');
                     DevService::aliasRouteSystem();
                     //开发工具使用
                     Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {

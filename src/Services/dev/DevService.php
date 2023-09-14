@@ -558,8 +558,27 @@ class DevService
     
                 if($val['can_search'])
                 {
-                    //这里的关联名称需要转化小驼峰->下划线模式
-                    $search_config[] = ['name'=>$val['name'],'columns'=>explode(',',$val['search_columns']),'type'=>'has'];
+                    //这里的关联名称需要转化小驼峰->下划线模式 //这里加入withdefault 的空逻辑
+                    $default_with_value = '';
+                    if($val['with_default'])
+                    {
+                        $with_default = json_decode($val['with_default'],true);
+                        foreach($with_default as $wd)
+                        {
+                            if($wd)
+                            {
+                                //获取第一个有值的数据
+                                $default_with_value = $wd;
+                                break;
+                            }
+                        }
+                    }
+                    $search_config[] = [
+                        'name'=>$val['name'],
+                        'columns'=>explode(',',$val['search_columns']),
+                        'type'=>'has',
+                        'default'=>$default_with_value
+                    ];
                 }
 
                 if($val['type'] == 'many')

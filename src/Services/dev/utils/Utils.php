@@ -25,7 +25,8 @@ class Utils
         'price'=>'digit',
         'digit'=>'digit',
         'confirm'=>'confirm',
-        'radioButton'=>'select'
+        'radioButton'=>'select',
+        'aliyunVideo'=>'aliyunVideo'
     ];
 
     public static $title_arr = [

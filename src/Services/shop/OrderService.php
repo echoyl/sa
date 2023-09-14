@@ -40,4 +40,14 @@ class OrderService
         return $this->order['yun_fee'] + $goods_price;
     }
 
+    public static function createSn($length = 4,$prefix = '',$sufix = '')
+    {
+        $rand = [];
+        for($i=0;$i<$length;$i++)
+        {
+            $rand[] = mt_rand(0,9);
+        }
+        return $prefix.date("YmdHis").(implode('',$rand)).$sufix;
+    } 
+
 }

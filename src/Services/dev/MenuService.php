@@ -121,7 +121,7 @@ class MenuService
     {
         $data = $this->getAll2()->filter(function ($item) use ($id) {
             return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
-        });
+        })->toArray();
         $ret = [];
         $total = count($data);
         $disable_count = 0;
@@ -131,13 +131,28 @@ class MenuService
             if(empty($routers))
             {
                 //没有子集 渲染权限
-                $menu_perms = [];
-                if($val['perms'])
+                
+                if($val['page_type'] == 'form')
                 {
-                    //如果设置了子权限
-                    $menu_perms = json_decode($val['perms'],true);
+                    //form类型只有自己的权限
+                    $val['id'] = implode('.',[$val['id'],$val['path']]);
+                    if(!empty($enable_keys) && !in_array($val['id'],$enable_keys))
+                    {
+                        $routers_disable = true;
+                    }
+                    
+                    //d($val);
+                }else
+                {
+                    $menu_perms = [];
+                    if($val['perms'])
+                    {
+                        //如果设置了子权限
+                        $menu_perms = json_decode($val['perms'],true);
+                    }
+                    [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?true:false,$enable_keys);
                 }
-                [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?true:false,$enable_keys);
+                
                 //$more = false;
             }
             if($routers_disable)
@@ -157,7 +172,7 @@ class MenuService
             
             $ret[] = $item;
         }
-        return [$ret,$total == $disable_count];
+        return [$ret,$total && $total == $disable_count];
     }
 
     public function getBasePerms($menu_id,$ext_perms = [],$add_ext = false,$enable_keys = [])
@@ -254,22 +269,34 @@ class MenuService
             return [$name,$menu];
         }
 
-        //通过路由切割来找到菜单
         //上面将action name 加入到数组 现在重新删除该name 但是要获取这个name
         $name = array_pop($r);
         if(!empty($r))
         {
             $r = array_reverse($r);
         }
-        //d($r);
 
-        $m = (new Menu())->where(['path'=>$r[0]])->whereIn('type',[env('APP_NAME'),'system']);
+        //先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
+        $m = (new Menu())->where(['path'=>$name,'page_type'=>'form'])->whereIn('type',[env('APP_NAME'),'system']);
+        if(!empty($r))
+        {
+            $m = $this->searchParent($m,$r);
+        }
+        $form_menu = $m->first();
+        if($form_menu)
+        {
+            return [$name,$form_menu];
+        }
+        
+
+        //通过路由切割来找到菜单
+        $m2 = (new Menu())->where(['path'=>$r[0]])->whereIn('type',[env('APP_NAME'),'system']);
         //d(['path'=>$r[0],'type'=>env('APP_NAME')]);
         //这里不知道怎么回事只做到了 3层菜单模式 应该写一个递归 无限级菜单读取
         if(isset($r[1]))
         {
             array_shift($r);
-            $m = $this->searchParent($m,$r);
+            $m2 = $this->searchParent($m2,$r);
             // $m = $m->whereHas('parent',function($q) use($r){
             //     $q->where(['path'=>$r[0]]);
             //     if(isset($r[1]))
@@ -282,7 +309,7 @@ class MenuService
             // });
             
         }
-        $menu = $m->first();
+        $menu = $m2->first();
         //d($name,$menu);
         return [$name,$menu?:['id'=>0]];
     }
