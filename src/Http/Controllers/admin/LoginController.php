@@ -4,9 +4,9 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Illuminate\Http\Request;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
-use Echoyl\Sa\Models\Smslog;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\CaptchaService;
+use Echoyl\Sa\Services\utils\SmsService;
 
 class LoginController extends ApiBaseController
 {
@@ -25,7 +25,8 @@ class LoginController extends ApiBaseController
             {
                 return $this->fail([1,'请输入验证码']);
             }
-            if(!Smslog::checkCode($mobile,$code))
+            $ss = new SmsService($mobile);
+            if(!$ss->checkCode($code))
             {
                 return $this->fail([1,'验证码错误']);
             }

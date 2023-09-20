@@ -21,6 +21,8 @@ class RelationController extends CrudController
             //'displayorder' => 0,
         ];
 
+        $this->can_be_null_columns = ['with_default'];
+
         $this->parse_columns = [
             //['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
             //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],

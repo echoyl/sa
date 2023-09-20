@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\dev\crud\item\Json;
 use Echoyl\Sa\Services\dev\crud\item\Pca;
 
 /**
@@ -15,7 +16,8 @@ class CrudService
     {
         $this->config = $config;
         $this->items = [
-            'pca'=>Pca::class
+            'pca'=>Pca::class,
+            'json'=>Json::class
         ];
     }
 

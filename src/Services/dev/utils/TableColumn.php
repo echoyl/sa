@@ -1,6 +1,8 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 
+use Echoyl\Sa\Models\dev\Menu;
+use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 use stdClass;
@@ -253,6 +255,26 @@ class TableColumn
         return;
     }
 
+    public function getRelation($names,$relations)
+    {
+        if(is_array($names))
+        {
+            $name = array_shift($names);
+            $relation = Utils::arrGet($relations,'name',Utils::uncamelize($name));
+            if(!empty($names))
+            {
+                $new_relations = (new Relation())->with(['foreignModel.menu'])->where(['model_id'=>$relation['foreign_model_id']])->get()->toArray();
+                return $this->getRelation($names,$new_relations);
+            }else
+            {
+                return $relation;
+            }
+        }else
+        {
+            return Utils::arrGet($relations,'name',Utils::uncamelize($names));
+        }
+    }
+
     /**
      * 自定义列
      * 将items 的值传入fieldProps
@@ -273,15 +295,39 @@ class TableColumn
             if($action == 'modalTable' || $action == 'drawerTable')
             {
                 $model = Arr::get($item,'modal.model');
-                $relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model));
+                $relation = $this->getRelation($model,$this->model['relations']);
+                if(is_array($model))
+                {
+                    $first_level_relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model[0]));
+                    $relation['foreign_key'] = $first_level_relation['foreign_key'];
+                }
                 if($relation['foreign_model']['menu'])
                 {
                     $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
                     $fieldProps['path'] = implode('/',$path);
-                    $fieldProps['foreign_key'] = $relation['foreign_key'];
-                    $fieldProps['local_key'] = $relation['local_key'];
+                    //多层聚合的话 foreign_key 需要使用数组第一级的relation的foreign_key值
+                    //示例：活动预约->预约订单->预约人 直接在预约活动列表展示预约人，foreign_key读取 活动预约活动的id 而不是 预约订单id
+                    $fieldProps['foreign_key'] = $relation['foreign_key'];//请求参数 类似这种格式 {foreign_key:record.local_key}
+                    $fieldProps['local_key'] = $relation['local_key'];//前端读取record的字段名称 ；record指当前行的数据
                     $fieldProps['name'] = $relation['title'];
                     $item['fieldProps'] = $fieldProps;
+                }
+                $items[$key] = $item;
+            }
+            if($action == 'confirmForm')
+            {
+                //通过菜单id 读取菜单的path
+                $modal = Arr::get($item,'modal',[]);
+                $menu_id = Arr::get($modal,'page',0);
+                if($menu_id)
+                {
+                    $menu = (new Menu())->where(['id'=>$menu_id])->first();
+                    if($menu)
+                    {
+                        $path = array_reverse(Utils::getPath($menu,$this->menus,'path'));
+                        $item['modal']['page'] = implode('/',$path);
+                    }
+                    
                 }
                 $items[$key] = $item;
             }

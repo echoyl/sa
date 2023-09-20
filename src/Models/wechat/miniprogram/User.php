@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Models\wechat\miniprogram;
 
 use Echoyl\Sa\Models\BaseAuth;
+use Echoyl\Sa\Models\wechat\miniprogram\user\Bind;
 use Echoyl\Sa\Models\wechat\offiaccount\User as OffiaccountUser;
 
 class User extends BaseAuth
@@ -45,6 +46,11 @@ class User extends BaseAuth
     public function offiaccountUser()
     {
         return $this->hasOne(OffiaccountUser::class,'unionid','unionid');
+    }
+
+    public function bind()
+    {
+        return $this->hasOne(Bind::class,'openid','openid');
     }
     
     //relationship end

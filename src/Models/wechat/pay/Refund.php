@@ -1,17 +1,18 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\pay;
+
 use Echoyl\Sa\Models\Base;
 //customer namespace start
 
 //customer namespace end
-class Log extends Base
+class Refund extends Base
 {
     /**
      * 与模型关联的数据表
      *
      * @var string
      */
-    protected $table = 'wechat_pay_log';
+    protected $table = 'wechat_pay_refund';
 
     public function getParseColumns()
     {
@@ -31,10 +32,6 @@ class Log extends Base
 
     //relationship start
     
-    public function refunds()
-    {
-        return $this->hasMany(Refund::class,'log_id','id');
-    }
     
     //relationship end
 

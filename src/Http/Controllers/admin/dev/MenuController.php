@@ -103,6 +103,7 @@ class MenuController extends CrudController
                 return ['title'=>$v,'name'=>$k];
             })->toArray()));
             $item['allModels'] = $this->allModels();
+
         }
         if(!$this->is_post)
         {
@@ -127,6 +128,9 @@ class MenuController extends CrudController
             {
                 $item['tabs'] = ['基础信息'];
             }
+            //新增全部菜单选择
+            $ds = new DevService;
+            $item['menus'] = $ds->getMenusTree();//添加 confirm form | modal table 可以直接选择已创建的菜单信息
         }
     }
 

@@ -19,6 +19,7 @@ class ModelController extends CrudController
 {
     public $model;
     public $cid = 0;
+    var $can_be_null_columns = ['search_columns'];
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -102,6 +103,23 @@ class ModelController extends CrudController
 
     }
 
+    /**
+     * 保存完后就直接创建 文件
+     *
+     * @param [type] $id
+     * @param [type] $data
+     * @return void
+     */
+    public function afterPost($id, $data)
+    {
+        $ds = new DevService;
+
+        $ds->createControllerFile($data);
+
+        $ds->createModelFile($data);
+
+        return;
+    }
     
 
     /**

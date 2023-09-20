@@ -15,4 +15,8 @@ class Pca extends Base
         return $this->hasMany(self::class, 'pcode', 'code');
     }
 
+    public function parent()
+    {
+        return $this->hasOne(self::class, 'code', 'pcode');
+    }
 }

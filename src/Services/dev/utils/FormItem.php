@@ -371,10 +371,10 @@ class FormItem
                 {
                     $d['fieldProps']['options'] = $setting['json'];
                 }
-                if($this->form_type == 'selects')
-                {
-                    $d['fieldProps']['mode'] = 'tags';
-                }
+            }
+            if($this->form_type == 'selects')
+            {
+                $d['fieldProps']['mode'] = 'tags';
             }
         }
         if($this->readonly)

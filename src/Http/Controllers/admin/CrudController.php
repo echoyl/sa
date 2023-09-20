@@ -240,6 +240,9 @@ class CrudController extends ApiBaseController
 
                     
                     break;
+                case 'select':
+                    $m = $m->where($name,$search_val);
+                    break;
                 case 'pca':
                     $m = $cs->search($m,'pca',['search_val'=>$search_val]);
                     break;
@@ -541,10 +544,10 @@ class CrudController extends ApiBaseController
                     break;
                 case 'state':
                     $val = request('state',0);
-                    $data = ['state' => $val];
+                    $data = ['state' => $val?1:0];
                     //批量操作
-                    $this->parseData($data, 'encode', 'update');
-
+                    //$this->parseData($data, 'encode', 'update');
+                    //d($data);
                     if (method_exists($this, 'beforePost')) {
                         $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
                         if ($ret) {
@@ -926,8 +929,9 @@ class CrudController extends ApiBaseController
                         }
                     }
                     break;
-                case 'pca':
-                    $data = $cs->make('pca',[
+                case 'pca'://所有独立的类型 都在此集合
+                case 'json':
+                    $data = $cs->make($type,[
                         'encode'=>$encode
                     ]);
                     //之后 字段类型都 抽离后 下面两行可以删除
@@ -1061,38 +1065,6 @@ class CrudController extends ApiBaseController
                             $val = '__unset';
                         }
                         
-                    }
-                    break;
-                case 'json':
-                    if($encode)
-                    {
-                        if($val)
-                        {  
-                            if(!is_string($val))
-                            {
-                                $val = json_encode($val);
-                            }else
-                            {
-                                if($val == '{}')
-                                {
-                                    $val = '';
-                                }
-                            }
-                        }
-                    }else
-                    {
-                        if($val)
-                        {  
-                            if($val == '{}')
-                            {
-                                $val = '__unset';
-                            }else
-                            {
-                                $val = is_string($val)?json_decode($val,true):$val;
-                            }
-                        }else{
-                            $val = '__unset';
-                        }
                     }
                     break;
                 case 'date':

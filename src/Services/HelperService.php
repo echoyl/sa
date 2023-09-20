@@ -602,4 +602,52 @@ class HelperService
     {
         return preg_match("/^1\d{10}$/",$mobile);
     }
+
+    public static function get($url,$query)
+    {
+        $client = new Client();
+        //Log::channel('daily')->info('request query:',['query'=>$query,'url'=>$url]);
+
+        try{
+            $res = $client->request('GET',$url,[
+                'query'=>$query,
+                'timeout'=>10,
+            ]);
+        }catch(Exception $e)
+        {
+            return [1,$e->getMessage()];
+        }
+
+        
+        $content = $res->getBody()->getContents();
+
+        //Log::channel('daily')->info('request get result:',['content'=>$content,'url'=>$url]);
+
+        $data = json_decode($content,true);
+        return [0,$data];
+    }
+
+    public static function post($url,$post)
+    {
+        //Log::channel('daily')->info('post start:',['params'=>$post]);
+
+        $client = new Client();
+        //Log::channel('daily')->info('try post start:',['params'=>$post]);
+        try{
+            $res = $client->request('POST',$url,[
+                'form_params'=>$post,
+                'timeout'=>10,
+            ]);
+        }catch(Exception $e)
+        {
+            return [1,$e->getMessage()];
+        }
+        
+        $content = $res->getBody()->getContents();
+
+        //Log::channel('daily')->info('request post result:',['content'=>$content,'url'=>$url]);
+        $data = json_decode($content,true);
+        
+        return [0,$data];
+    }
 }

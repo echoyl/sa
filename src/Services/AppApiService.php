@@ -9,6 +9,7 @@ class AppApiService implements SaServiceInterface
     var $userModel;
     var $app_name = '';
     var $check_insert_user = true;
+    var $login_name = 'front_user';
 
 
     public function __construct()
@@ -29,10 +30,8 @@ class AppApiService implements SaServiceInterface
     /**
      * 获取小程序账号信息
      */
-    public function wechatMiniprogramAccount($type = 'user')
+    public function wechatMiniprogramAccount($key = 'user')
     {
-        $ss = new SetsService();
-        $key = $type == 'user'?'user_miniprogram_account_id':'merch_miniprogram_account_id';
         //$id = $ss->get('base.'.$key);
         $id = $this->baseSet($key);
 
@@ -107,7 +106,12 @@ class AppApiService implements SaServiceInterface
         return;
     }
 
-
+    /**
+     * Undocumented function
+     *
+     * @param string $type 获取用户信息类型
+     * @return \Echoyl\Sa\Models\perm\User
+     */
     public static function apiUser($type = 'wechat_miniprogram')
     {
         $user = request()->user();
@@ -121,46 +125,62 @@ class AppApiService implements SaServiceInterface
         }
     }
 
-    /**
-     * Undocumented function
-     *
-     * @param string $type 获取用户信息类型
-     * @param string $from 第三方登录的类型 默认微信小程序
-     * @return void
-     */
-    public function user($type = 'customer',$from = 'wechat_miniprogram')
+    public function wechatMiniprogramUser()
     {
-        $user = self::apiUser($from);
+        $api_user = $this->apiUser();
+        if(!$api_user)
+        {
+            return false;
+        }
+        if(!$api_user['bind'])
+        {
+            return false;
+        }
+        //登录后有绑定信息
+        $user_id = $api_user['bind']['user_id'];
+        $user = $this->userModel->where(['id'=>$user_id])->first();
         if(!$user)
         {
             return false;
         }
-        $ret = false;
-        if($type == 'customer')
-        {
-            $model = $this->userModel;
+        $user['apiUser'] = $api_user;
+        return $user;
+    }
 
-            $user_data = $model->where(['wechat_miniprogram_openid'=>$user['openid']])->first();
-    
-            if($user_data)
-            {
-                $ret = $user_data->toArray();
-            }
+    /**
+     * Undocumented function
+     *
+     * @param string $type 默认获取小程序登录用户信息
+     * @return \Echoyl\Sa\Models\perm\User
+     */
+    public function user($type = '')
+    {
+        return $this->wechatMiniprogramUser();
+    }
+
+
+
+    public function checkUserByMobile($mobile)
+    {
+        $model = $this->userModel;
+
+        $has = $model->where(['mobile'=>$mobile])->first();
+
+        if(!$has)
+        {
+            $user = [
+                //'name'=>$miniprogramUser['nickname'],
+                //'avatar'=>$miniprogramUser['avatar'],
+                'created_at'=>now(),
+                'mobile'=>$mobile,
+                'last_used_at'=>now(),
+            ];
+            $id = $model->insertGetId($user);
+            return $model->where(['id'=>$id])->first();
         }else
         {
-            // $login = (new Login())->where(['openid'=>$user['openid']])->with(['shop.provinceName','shop.areaName','shop.cityName'])->first();
-
-            // if($login)
-            // {
-            //     $ret = $login['shop'];
-            // }
+            return $has;
         }
-
-        if($ret)
-        {
-            $ret['wechatMiniprogramUser'] = $user;
-        }
-        return $ret;
     }
 
     /**
