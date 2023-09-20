@@ -14,6 +14,7 @@ class Utils
         'search_select'=>'debounceSelect',
         'textarea'=>'textarea',
         'image'=>'uploader',
+        'file'=>'uploader',
         'datetime'=>'dateTime',
         'date'=>'date',
         'switch'=>'switch',

@@ -401,7 +401,12 @@ class TableColumn
 
     public function uploader()
     {
-        $this->data['fieldProps'] = ['max'=>1];
+        $fieldProps = ['max'=>1];
+        if($this->form_type == 'file')
+        {
+            $fieldProps['type'] = 'file';
+        }
+        $this->data['fieldProps'] = $fieldProps;
         return;
     }
 

@@ -830,12 +830,14 @@ class CrudController extends ApiBaseController
                     
                     break;
                 case 'image':
+                case 'file':
                     if(!$val && !$encode)
                     {
                         $val = '__unset';
                     }else
                     {
-                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,['p'=>'s']);
+                        $par = $type == 'image'?['p'=>'s']:[];
+                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,$par);
                     }
                     break;
                 case 'aliyunVideo':

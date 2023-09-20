@@ -426,9 +426,18 @@ class FormItem
     public function uploader()
     {
         $setting = $this->schema['setting']??[];
+        $fieldProps = [];
         if(isset($setting['image_count']))
         {
-            $this->data['fieldProps'] = ['max'=>intval($setting['image_count'])];
+            $fieldProps['max'] = intval($setting['image_count']);
+        }
+        if($this->form_type == 'file')
+        {
+            $fieldProps['type'] = 'file';
+        }
+        if(!empty($fieldProps))
+        {
+            $this->data['fieldProps'] = $fieldProps;
         }
         return;
     }

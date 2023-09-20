@@ -115,18 +115,25 @@ class MenuController extends CrudController
                 {
                     foreach($formColumns['tabs'] as $key=>$tab)
                     {
-                        $item['tabs'][] = $tab['title'];
+                        if(isset($tab['title']))
+                        {
+                            $item['tabs'][] = ['title'=>$tab['title']];
+                        }else
+                        {
+                            $item['tabs'][] = $tab['tab'];
+                        }
+                        
                         $k = $key?'form_config'.$key:'form_config';
                         $item[$k] = $tab['config'];
                     }
                 }else
                 {
-                    $item['tabs'] = ['基础信息'];
+                    $item['tabs'] = ['title'=>'基础信息'];
                 }
                 
             }else
             {
-                $item['tabs'] = ['基础信息'];
+                $item['tabs'] = ['title'=>'基础信息'];
             }
             //新增全部菜单选择
             $ds = new DevService;
@@ -348,8 +355,12 @@ class MenuController extends CrudController
             {
                 foreach($input_tabs as $key=>$tab)
                 {
+                    if(isset($tab['hidden']) && $tab['hidden'])
+                    {
+                        continue;
+                    }
                     $tabs[] = [
-                        'title'=>$tab,
+                        'tab'=>$tab,
                         'config'=>$key?request('base.form_config'.$key):$config
                     ];
                 }
@@ -365,7 +376,7 @@ class MenuController extends CrudController
                 
                 $formColumns = $this->formTabConfig($item,$tab['config']);
                 $_tabs[] = [
-                    'title'=>$tab['title'],
+                    'tab'=>$tab['tab'],
                     'formColumns'=>$formColumns
                 ];
             }
