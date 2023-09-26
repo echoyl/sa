@@ -26,7 +26,7 @@ class MenuService
      * @param boolean | array $auth_ids
      * @return void
      */
-    public function get($id = 0,$auth_ids = false)
+    public function getMenuData($id = 0,$auth_ids = false)
     {
         $data = $this->getAll()->filter(function ($item) use ($id,$auth_ids) {
             if($auth_ids)
@@ -38,6 +38,7 @@ class MenuService
             }
             
         });
+        
         $ret = [];
         foreach ($data as $val) {
             $item = [
@@ -45,7 +46,7 @@ class MenuService
                 'path' => $val['path'],
                 'icon' => $val['icon'],
                 "access" => 'routeFilter',
-                'routes' => $this->get($val['id'],$auth_ids),
+                'routes' => $this->getMenuData($val['id'],$auth_ids),
                 //'data' => (new stdClass),
                 'data'=>[],
                 'page_type'=>$val['page_type']
@@ -68,6 +69,83 @@ class MenuService
             $ret[] = $item;
         }
         return $ret;
+    }
+
+    public function get($id = 0,$auth_ids = false)
+    {
+        $data = $this->getMenuData($id,$auth_ids);
+        return $this->bigFirstMenu($data);
+    }
+
+    /**
+     * 将菜单最外层大菜单默认设置一个跳转链接 兼容头部分割菜单模式
+     *
+     * @param [type] $menus
+     * @return void
+     */
+    public function bigFirstMenu($menus)
+    {
+        foreach($menus as $key=>$bigmenu)
+        {
+            if(!empty($bigmenu['routes']))
+            {
+                $first = $this->getFirstChildPath($bigmenu);
+                //d($first_path);
+                // $bread = collect($first['name'])->map(function($v){
+                //     return [
+                //         'title'=>$v,
+                //         'breadcrumbName'=>$v,
+                //         'linkPath'=>''
+                //     ];
+                // })->toArray();
+                // $menu = [
+                //     'path'=>'/'.$bigmenu['path'],
+                //     // 'data'=>[
+                //     //     'redirect'=>'/'. implode('/',$first['path'])
+                //     // ]
+                // ];
+                //$bigmenu['redirect'] = '/'. implode('/',$first_path['path']);
+                //$bigmenu['data'] = $first_path['route']['data'];
+                //$menu = array_merge($first['route'],$menu);
+                //$first['route']['data']['names'] = $bread;
+                //unset($menu['name']);
+                //array_unshift($bigmenu['routes'],$menu);
+                //$bigmenu['data'] = $first['route']['data'];
+                //将大菜单去取到的第一个有页面的子菜单的路径放入数据中，前端中转页面判断后跳转页面
+                $bigmenu['data'] = [
+                    'redirect'=>'/'. implode('/',$first['path'])
+                ];
+            }
+            
+
+            $menus[$key] = $bigmenu;
+        }
+        //d($menus);
+        return $menus;
+    }
+
+    public function getFirstChildPath($menu)
+    {
+        
+        $first_child = $menu['routes'][0];
+        //d($children);
+        if(!empty($first_child['routes']))
+        {
+            //d($this->getFirstChildPath($first_child['routes'],$first_child['path']));
+            $c = $this->getFirstChildPath($first_child);
+            $path = array_merge([$menu['path']],$c['path']);
+            $name = array_merge([$menu['name']],$c['name']);
+            return ['path'=>$path,'name'=>$name,'route'=>$c['route']];
+        }else
+        {
+            $path = [
+                'path'=>[$menu['path'],$first_child['path']],
+                'name'=>[$menu['name'],$first_child['name']],
+                'route'=>$first_child
+            ];
+        }
+        return $path;
+        
     }
 
     public function getAll()

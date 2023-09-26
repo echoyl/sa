@@ -1,6 +1,8 @@
 <?php
 namespace Echoyl\Sa\Services\shop;
 
+use Echoyl\Sa\Services\HelperService;
+
 class GoodsService
 {
     var $goodsModel;
@@ -61,6 +63,10 @@ class GoodsService
                 'chengben_price'=>$guige['old_price']/100,
                 'jiesuan_price'=>$guige['old_price']/100,
             ];
+            if(isset($guige['titlepic']) && $guige['titlepic'])
+            {
+                $_guige['titlepic'] = HelperService::uploadParse($guige['titlepic'],false, ['p'=>'s']);
+            }
             $ids = explode(':',$guige['ids']);
             foreach($ids as $id)
             {
@@ -171,6 +177,10 @@ class GoodsService
                 'sku'=>$val['sku']??0,
                 'max'=>$val['max']??0,
 			];
+            if(isset($val['titlepic']))
+            {
+                $update['titlepic'] = HelperService::uploadParse($val['titlepic']);
+            }
 			$sku += $update['sku'];
 			$price[] = $update['price'];
 			$old_price[] = $update['old_price'];

@@ -2,9 +2,11 @@
 namespace App\Models$namespace$;
 $use_namespace$
 use Echoyl\Sa\Models\BaseAuth;
+
 //customer namespace start
 $customer_namespace$
 //customer namespace end
+
 class $name$ extends BaseAuth
 {
     /**
@@ -24,4 +26,5 @@ class $name$ extends BaseAuth
     //customer code start
 	$customer_code$
 	//customer code end
+    
 }

@@ -2,9 +2,11 @@
 namespace App\Models$namespace$;
 $use_namespace$
 use Echoyl\Sa\Models\Base;
+
 //customer namespace start
 $customer_namespace$
 //customer namespace end
+
 class $name$ extends Base
 {
     /**
@@ -24,4 +26,5 @@ class $name$ extends Base
     //customer code start
 	$customer_code$
 	//customer code end
+    
 }

@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services;
 
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Support\Arr;
 
 class HelperService
 {
@@ -313,10 +314,13 @@ class HelperService
                     {
                         unset($item['url']);
                     }
+                    $value = Arr::get($item,'value');
+                    if(!$value)
+                    {
+                        continue;
+                    }
                     $_data[] = $item;
                 }
-
-                
                 return json_encode($_data);
             }else
             {
@@ -593,6 +597,15 @@ class HelperService
         }
         return $name;
     }
+
+    public static function distanceRaw($lat,$lng,$lat_name = 'lat',$lng_name = 'lng')
+    {
+        $lat = floatval($lat);
+        $lng = floatval($lng);
+        $distance = ' ACOS(SIN((' . $lat . ' * 3.1415) / 180 ) *SIN(('.$lat_name.' * 3.1415) / 180 ) +COS((' . $lat . ' * 3.1415) / 180 ) * COS(('.$lat_name.' * 3.1415) / 180 ) *COS((' . $lng . ' * 3.1415) / 180 - ('.$lng_name.' * 3.1415) / 180 ) ) * 6380';
+        return $distance;
+    }
+
     public static function parseMobile($mobile)
     {
         return substr($mobile,0,3).'****'.substr($mobile,7,4);

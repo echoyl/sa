@@ -301,7 +301,21 @@ class DevService
             if($val['filter'])
             {
                 $filter = json_decode($val['filter'],true);
-                $filter_where = '->where('.json_encode($filter).')';
+                //关联模型不支持变量参数过滤掉
+                $_filter = [];
+                foreach($filter as $f)
+                {
+                    if(isset($f[2]) && strpos($f[2],'this.') !== false)
+                    {
+                        continue;
+                    }
+                    $_filter[] = $f;
+                }
+                if(!empty($_filter))
+                {
+                    $filter_where = '->where('.json_encode($_filter).')';
+                }
+                
             }
             //加入排序条件
             $order_by = '';
@@ -548,7 +562,7 @@ class DevService
         $all_models = [$model['name']=>$model['name']];
         $all_relations = [];
         
-        $with_columns_search = $with_columns_replace = $with_trees = [];
+        $with_trees = [];
         $useModelArr = [];//使用过的模型数据
         if(!empty($relations))
         {
@@ -629,7 +643,7 @@ class DevService
                 $all_models[$val['local_key']] = $f_model_name;
                 if(!isset($all_relations[$val['local_key']]))
                 {
-                    $all_relations[$val['local_key']] = $val['name'];
+                    $all_relations[$val['local_key']] = $val;
                 }
                 
 
@@ -750,26 +764,32 @@ class DevService
                 $label = $setting['label']??'';
                 $value = $setting['value']??'';
                 $children = $setting['children']??'';
+
+                $relation = $all_relations[$column['name']]??false;//当前字段有的关联
+
+                // if($column['name'] == 'leimu_id')
+                // {
+                //     d($relation);
+                // }
+
+                if($relation && $relation['filter'])
+                {
+                    $d['where'] = json_decode($relation['filter'],true);
+                }
+
                 if($form_type == 'select' || $form_type == 'radioButton')
                 {
                     if(isset($all_models[$column['name']]))
                     {
-                        
+                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                         //如果是select 且设置了tabel menu，那么form_data设置的label 和value 
-
                         //新增数据筛选配置
                         //$filter = $clo
-                        
                         if($table_menu && $label && $value)
                         {
-                            
-                            $data_select = ["{$label} as label","{$value} as value"];
-                            $d['data'] = '@php(new '.$all_models[$column['name']].'())->select('.json_encode($data_select).')->get()->toArray()@endphp';
-                        }else
-                        {
-                            $d['data'] = "@php(new ".$all_models[$column['name']]."())->get()->toArray()@endphp";
+                            $d['columns'] = ["{$label} as label","{$value} as value"];
                         }
-
+                        $d['no_category'] = true;
                     }else
                     {
                         if(isset($setting['json']) && $setting['json'])
@@ -834,7 +854,7 @@ class DevService
                 }
                 if($form_type == 'search_select')
                 {
-                    $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]);
+                    $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]['name']);
                     $label = $setting['label']??'';
                     $value = $setting['value']??'';
                     if($label)
@@ -861,10 +881,12 @@ class DevService
                     {
                         $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
                         $d['with'] = true;
-                        if($label && $value)
-                        {
-                            $d['fields'] = ['id'=>$value,'title'=>$label];
-                        }
+                        //多选的话 关联模型应该不是分类 不再使用format
+                        $d['no_category'] = true;
+                        // if($label && $value)
+                        // {
+                        //     $d['fields'] = ['id'=>$value,'title'=>$label];
+                        // }
                     }
                     
                     

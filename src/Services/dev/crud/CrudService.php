@@ -1,8 +1,8 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
-use Echoyl\Sa\Services\dev\crud\item\Json;
-use Echoyl\Sa\Services\dev\crud\item\Pca;
+use Echoyl\Sa\Services\dev\crud\fields\Json;
+use Echoyl\Sa\Services\dev\crud\fields\Pca;
 
 /**
  * crud字段的渲染

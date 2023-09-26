@@ -1,5 +1,5 @@
 <?php
-namespace Echoyl\Sa\Services\dev\crud\item;
+namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\CrudInterface;
 use Echoyl\Sa\Services\HelperService;

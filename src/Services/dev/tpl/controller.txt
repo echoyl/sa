@@ -3,9 +3,11 @@ namespace App\Http\Controllers\admin$namespace$;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
+
 //customer namespace start
 $customer_namespace$
 //customer namespace end
+
 /**
  * @property \App\Services\$app_name$\AdminAppService $service
  */
@@ -20,7 +22,9 @@ class $name$Controller extends CrudController
 		$customer_construct$
 		//customer construct end
 	}
+
 	//customer code start
 	$customer_code$
 	//customer code end
+	
 }

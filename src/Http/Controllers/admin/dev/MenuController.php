@@ -128,12 +128,12 @@ class MenuController extends CrudController
                     }
                 }else
                 {
-                    $item['tabs'] = ['title'=>'基础信息'];
+                    $item['tabs'][] = ['title'=>'基础信息'];
                 }
                 
             }else
             {
-                $item['tabs'] = ['title'=>'基础信息'];
+                $item['tabs'][] = ['title'=>'基础信息'];
             }
             //新增全部菜单选择
             $ds = new DevService;

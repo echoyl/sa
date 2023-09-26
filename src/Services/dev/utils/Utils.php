@@ -27,7 +27,8 @@ class Utils
         'digit'=>'digit',
         'confirm'=>'confirm',
         'radioButton'=>'select',
-        'aliyunVideo'=>'aliyunVideo'
+        'aliyunVideo'=>'aliyunVideo',
+        'modalSelect'=>'modalSelect'
     ];
 
     public static $title_arr = [

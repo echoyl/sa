@@ -81,6 +81,29 @@ class RelationController extends CrudController
         return;
     }
 
+    protected function createFile($model_id)
+    {
+        $model = (new Model())->where(['id'=>$model_id])->first();
+
+        if($model)
+        {
+            $ds = new DevService;
+
+            $data = $model->toArray();
+
+            $ds->createControllerFile($data);
+    
+            $ds->createModelFile($data);
+        }
+
+        return;
+    }
+
+    public function afterPost($id, $data)
+    {
+        return $this->createFile($data['model_id']);
+    }
+
     public function getModelColumns($id)
     {
         $model_data = (new Model())->where(['id'=>$id])->first();
@@ -111,6 +134,28 @@ class RelationController extends CrudController
             ];
         }
         return $data;
+    }
+
+    public function destroy()
+    {
+        $id = request('id', 0);
+        if ($id) {
+            if (!is_array($id)) {
+                $id = [$id];
+            }
+        }
+        if (!empty($id)) {
+            $m = $this->beforeDestroy($this->model->whereIn('id', $id));
+
+            $items = $m->get();
+            foreach ($items as $val) {
+                $model_id = $val['model_id'];
+                $val->delete();
+                $this->createFile($model_id);
+            }
+            return ['code' => 0, 'msg' => '删除成功'];
+        }
+        return ['code' => 1, 'msg' => '参数错误'];
     }
 
 }

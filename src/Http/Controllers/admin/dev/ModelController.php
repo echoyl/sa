@@ -5,15 +5,9 @@ namespace Echoyl\Sa\Http\Controllers\admin\dev;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
-use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Creator;
-use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\Dump;
-use Echoyl\Sa\Services\dev\utils\MySQLDump;
-use Echoyl\Sa\Services\dev\utils\Utils;
-use GuzzleHttp\Promise\Create;
-use mysqli;
 
 class ModelController extends CrudController
 {

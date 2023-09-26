@@ -17,6 +17,7 @@ use Illuminate\Support\Arr;
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
  * @method mixed listData(&$list) 列表数据格式化
+ * @method mixed setThis() 设置一个值 在select 获取数据的时候可以当做filter条件使用
  * @property \App\Services\AdminAppService $service
  */
 class CrudController extends ApiBaseController
@@ -211,14 +212,20 @@ class CrudController extends ApiBaseController
                         $category_id = [$search_val];
                     } else {
                         $json = HelperService::json_validate($search_val);
-                        if($json)
+                        //d(empty($json));
+                        if($json !== false)
                         {
+                            if(empty($json))
+                            {
+                                break;
+                            }
                             $category_id = $json;
                         }else
                         {
                             $category_id = [$search_val];
                         }
                         $len = count($category_id);
+                        
                         if($len <= 0)
                         {
                             break;
@@ -715,6 +722,7 @@ class CrudController extends ApiBaseController
                 if(isset($with['class']))
                 {
                     $_m = new $with['class'];
+                    $no_category = Arr::get($with,'no_category',false);//不是分类模型
                     if($with['type'] == 'select_columns')
                     {
                         //这里只获取一层数据因为一般的模型都没有继承category模型 没有format方法
@@ -725,18 +733,44 @@ class CrudController extends ApiBaseController
                         $data[$name] = $_m->get()->toArray();
                     }else
                     {
-                        if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
+                        if($no_category)
                         {
-                            //设置post_all 时 不再读取cid筛选数据
-                            $with['cid'] = 0;
-                        }
-                        if(isset($with['fields']))
-                        {
-                            $data[$name] = $_m->format($with['cid']??0,$with['fields']);
+                            if(isset($with['where']))
+                            {
+                                $this_data = $this->setThis();
+                                $with_where = [];
+                                foreach($with['where'] as $ww)
+                                {
+                                    if(strpos($ww[2],'this.') !== false)
+                                    {
+                                        $data_key = str_replace('this.','',$ww[2]);
+                                        if(isset($this_data[$data_key]))
+                                        {
+                                            $ww[2] = $this_data[$data_key];
+                                        }
+                                    }
+                                    $with_where[] = $ww;
+                                }
+                                $_m = $_m->where($with_where);
+                            }
+                            
+                            $data[$name] = $_m->get()->toArray();
                         }else
                         {
-                            $data[$name] = $_m->format($with['cid']??0);
+                            if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
+                            {
+                                //设置post_all 时 不再读取cid筛选数据
+                                $with['cid'] = 0;
+                            }
+                            if(isset($with['fields']))
+                            {
+                                $data[$name] = $_m->format($with['cid']??0,$with['fields']);
+                            }else
+                            {
+                                $data[$name] = $_m->format($with['cid']??0);
+                            }
                         }
+                        
                         
                     }
                 }elseif(isset($with['data']))
@@ -1209,4 +1243,8 @@ class CrudController extends ApiBaseController
         return;
     }
 
+    public function setThis()
+    {
+        return [];
+    }
 }

@@ -146,6 +146,7 @@ class AdminService
         $is_super = $is_super?:AdminService::isSuper();
         $setting['dev'] = $dev && $is_super;
         $setting['lang'] = Arr::get($setting,'lang',true);
+        $setting['splitMenus'] = Arr::get($setting,'splitMenus',false);
         return $setting;
     }
 

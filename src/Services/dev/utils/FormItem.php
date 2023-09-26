@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 
+use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Illuminate\Support\Arr;
 
@@ -230,11 +231,29 @@ class FormItem
                 }
                 $items[$key] = $item;
             }
+            if($action == 'confirmForm')
+            {
+                //通过菜单id 读取菜单的path
+                $modal = Arr::get($item,'modal',[]);
+                $menu_id = Arr::get($modal,'page',0);
+                if($menu_id)
+                {
+                    $menu = (new Menu())->where(['id'=>$menu_id])->first();
+                    if($menu)
+                    {
+                        $path = array_reverse(Utils::getPath($menu,$this->menus,'path'));
+                        $item['modal']['page'] = implode('/',$path);
+                    }
+                    
+                }
+                $items[$key] = $item;
+            }
         }
         if(isset($this->data['readonly']))
         {
             //不需要再设置 readonly  如果是form的话 没有值 就不会渲染 render函数 所以删掉readonly 可以渲染 renderFormItem 函数
-            unset($this->data['readonly']);
+            //由自己控制，如果设置了readonly 对于其它类型的 还是有用的
+            //unset($this->data['readonly']);
         }
         $this->data['fieldProps'] = ['items'=>$items];
         return;
@@ -307,12 +326,14 @@ class FormItem
             if($relation && $relation['foreign_model'])
             {
                 //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
-                $d['fieldProps']['name'] = $relation['name'];
+                $d['fieldProps']['relationname'] = $relation['name'];
                 if($relation['foreign_model']['menu'] && !$set_url)
                 {
                     //如果关联模型 也关联了菜单 直接使用第一个匹配的这个菜单的url地址
                     $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
-                    $d['fieldProps']['url'] = implode('/',$path);
+                    $d['fieldProps']['page'] = [
+                        'path'=>implode('/',$path),
+                    ];
                 }
                 //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
                 
