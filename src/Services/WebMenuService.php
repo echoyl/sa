@@ -656,7 +656,7 @@ class WebMenuService
     public function seo($detail = false)
     {
         $ss = new SetsService;
-        $key = implode('_',[env('APP_NAME','web'),'web']);
+        $key = 'web';
         $seo = $ss->get($key);
         //计算seo 的 title description keyword之类的
         $menu = $this->getMenu();
@@ -672,11 +672,22 @@ class WebMenuService
             }
         }else
         {
-            $seo = [
-                'seotitle'=>'首页',
-                'seokeywords'=>'',
-                'seodescription'=>'',
-            ];
+            if($seo)
+            {
+                $seo = [
+                    'seotitle'=>($seo['seotitle']??'').' 首页',
+                    'seokeywords'=>$seo['seokeywords']??'',
+                    'seodescription'=>$seo['seokeywords']??'',
+                ];
+            }else
+            {
+                $seo = [
+                    'seotitle'=>'首页',
+                    'seokeywords'=>'',
+                    'seodescription'=>'',
+                ];
+            }
+            
         }
 
         return $seo;

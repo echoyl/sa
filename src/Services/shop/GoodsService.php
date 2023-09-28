@@ -60,8 +60,8 @@ class GoodsService
                 'sku'=>$guige['sku'],
                 'max'=>$guige['max'],
                 'old_price'=>$guige['old_price']/100,
-                'chengben_price'=>$guige['old_price']/100,
-                'jiesuan_price'=>$guige['old_price']/100,
+                'chengben_price'=>$guige['chengben_price']/100,
+                'jiesuan_price'=>$guige['jiesuan_price']/100,
             ];
             if(isset($guige['titlepic']) && $guige['titlepic'])
             {

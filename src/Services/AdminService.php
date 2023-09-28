@@ -97,7 +97,7 @@ class AdminService
     public static function doLoginByUsername($username,$pwd)
     {
         $model = self::getUserModel();
-        $user = $model->where(['username'=>$username])->first();
+        $user = $model->where(['username'=>$username])->orWhere(['mobile'=>$username])->first();
         if($user && $user['password'] == self::pwd($pwd))
         {
             return self::doLogin($user);

@@ -577,11 +577,7 @@ class CrudController extends ApiBaseController
                     break;
                 default:
                     $data = filterEmpty(request('base'), $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
-                    $check_uniue_result = $this->checkUnique($data,$id);
-                    if($check_uniue_result)
-                    {
-                        return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
-                    }
+                    
                     //设置不需要提交字段
                     if (!empty($this->dont_post_columns)) {
                         foreach ($this->dont_post_columns as $c) {
@@ -610,10 +606,20 @@ class CrudController extends ApiBaseController
             //d($data);
             if (!empty($id)) {
                 $this->parseData($data, 'encode', 'update');
+                $check_uniue_result = $this->checkUnique($data,$id);
+                if($check_uniue_result)
+                {
+                    return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
+                }
                 $this->model->where(['id' => $id])->update($data);
             } else {
                 $data['created_at'] = $data['created_at']??now();
                 $this->parseData($data);
+                $check_uniue_result = $this->checkUnique($data,$id);
+                if($check_uniue_result)
+                {
+                    return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
+                }
                 $id = $this->model->insertGetId($data);
             }
             $ret = null;
@@ -735,6 +741,10 @@ class CrudController extends ApiBaseController
                     {
                         if($no_category)
                         {
+                            if(isset($with['columns']))
+                            {
+                                $_m = $_m->select($with['columns']);
+                            }
                             if(isset($with['where']))
                             {
                                 $this_data = $this->setThis();
@@ -783,7 +793,7 @@ class CrudController extends ApiBaseController
             //检测是否有table_menu设置
             if(isset($with['table_menu']) && !isset($data['table_menu']))
             {
-                $table_menu[$with['name']] = $with['data']??[];
+                $table_menu[$with['name']] = $with['data']??$data[$name];
             }
         }
 
@@ -1195,7 +1205,11 @@ class CrudController extends ApiBaseController
                     {
                         $idata = filterEmpty($data[$name]);
                         $foreign_key = $column['foreign_key'];//外键名称
-                        $this->modelData($idata,$column['class'],[$foreign_key=>$id]);
+                        if($foreign_key != 'id')
+                        {
+                            //只有外键名称不是id的时候才去更新 关联数据信息
+                            $this->modelData($idata,$column['class'],[$foreign_key=>$id]);
+                        }
                     }
                 break;
             }
