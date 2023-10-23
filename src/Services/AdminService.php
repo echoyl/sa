@@ -216,7 +216,7 @@ class AdminService
             }])->first()->toArray();
             $as = new MenuService;
             //d($now_router,$perms['perms2'],$perms['role']['perms2']);
-            $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']['perms2']);
+            $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']?$perms['role']['perms2']:'');
             if (!$has_perm) {
                 return false;
             }

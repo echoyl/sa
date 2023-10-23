@@ -62,7 +62,7 @@ class IndexController extends ApiBaseController
 
             }
             AdminService::updateUserInfo($uinfo['id'],$update);
-            return $this->success(['pwd' => $pwd],[0,'修改成功' . $msg]);
+            return $this->success(['pwd' => $pwd,'logout'=>$pwd],[0,'修改成功' . $msg]);
 
         }
         $uinfo = AdminService::user();
@@ -118,9 +118,7 @@ class IndexController extends ApiBaseController
 
     public function workplace()
     {
-        $chartData = $this->service->chartData();
-        $cards = $this->service->cards();
-        return $this->success(['charts'=>$chartData,'cards'=>$cards]);
+        return $this->success($this->service->panel());
     }
 
 }

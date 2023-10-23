@@ -8,6 +8,5 @@ namespace Echoyl\Sa\Constracts;
 interface SaAdminAppServiceInterface
 {
     public function parseUserInfo($userinfo,$user);
-    public function  chartData();
-    public function cards();
+    public function  panel();
 }

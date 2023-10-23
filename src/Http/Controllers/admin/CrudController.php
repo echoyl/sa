@@ -13,7 +13,7 @@ use Illuminate\Support\Arr;
  * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
  * @method mixed beforePost(&$data,$id = 0,$item)  提交数据前的检测数据
- * @method mixed handleSearch() 数据列表中额外的搜索调价等
+ * @method mixed handleSearch($search = []) 数据列表中额外的搜索调价等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
  * @method mixed listData(&$list) 列表数据格式化
@@ -352,13 +352,17 @@ class CrudController extends ApiBaseController
         $this->action_type = 'list';
         $search = [];
 
+        $this->parseWiths($search);
+
         if (method_exists($this, 'handleSearch')) {
-            [$m, $search] = $this->handleSearch();
+            [$m, $csearch] = $this->handleSearch($search);
+            $search = array_merge($search,$csearch);
+            //系统渲染search数据后 还可以自定义handleSearch 修改注入信息
         } else {
             $m = $this->model;
         }
 
-        $this->parseWiths($search);
+        
 
         $m = $this->defaultSearch($m);
 
@@ -521,6 +525,12 @@ class CrudController extends ApiBaseController
                     }
                 }
             } else {
+                if (method_exists($this, 'checkPost')) {
+                    $ret = $this->checkPost($item, $id); //新增数据检测
+                    if ($ret) {
+                        return $ret;
+                    }
+                }
                 $this->action_type = 'add';
                 $item = $this->default_post; //数据的默认值
                 $item['created_at'] = now()->toDateTimeString();
@@ -574,6 +584,8 @@ class CrudController extends ApiBaseController
                     break;
                 case 'displayorder':
                     $data = ['displayorder' => intval(request('displayorder'))];
+                    $this->model->where('id',$id)->update($data);
+                    return $this->success();
                     break;
                 default:
                     $data = filterEmpty(request('base'), $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
@@ -702,7 +714,7 @@ class CrudController extends ApiBaseController
         return ['code' => 0, 'msg' => '复制成功'];
     }
 
-    public function parseWiths(&$data)
+    public function parseWiths(&$data,$parse_columns = [])
     {
         $ret = [];
         foreach ($this->withs as $with) {
@@ -717,7 +729,7 @@ class CrudController extends ApiBaseController
             $ret[] = $with['name'];
         }
 
-        $parse_columns = $this->getParseColumns();
+        $parse_columns = $this->getParseColumns($parse_columns);
 
         $table_menu = [];
 
@@ -736,7 +748,7 @@ class CrudController extends ApiBaseController
                         {
                             $_m = $_m->select($with['columns']);
                         }
-                        $data[$name] = $_m->get()->toArray();
+                        $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
                     }else
                     {
                         if($no_category)
@@ -764,7 +776,7 @@ class CrudController extends ApiBaseController
                                 $_m = $_m->where($with_where);
                             }
                             
-                            $data[$name] = $_m->get()->toArray();
+                            $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
                         }else
                         {
                             if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
@@ -821,14 +833,9 @@ class CrudController extends ApiBaseController
         return !empty($parse_columns)?$parse_columns:$this->parse_columns;
     }
 
-    public function parseData(&$data, $in = 'encode', $from = 'detail',$parse_columns = [])
+    public function parseData(&$data, $in = 'encode', $from = 'detail',$parse_columns = [],$deep = 1)
     {
         $unsetNames = [];
-        $is_first = true;
-        if(!empty($parse_columns))
-        {
-            $is_first = false;
-        }
 
         $parse_columns = $this->getParseColumns($parse_columns);
 
@@ -864,11 +871,12 @@ class CrudController extends ApiBaseController
                     {
                         $cls = new $col['class'];
                         $cls_p_c = $cls->getParseColumns();
-                        if(!empty($cls_p_c) && $is_first && $isset)
+                        if(!empty($cls_p_c) && $deep <= 3 && $isset)
                         {
                             //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                             //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
-                            $this->parseData($val,$in,$from,$cls_p_c);
+                            $this->parseWiths($val,$cls_p_c);
+                            $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
                         }
                     }
                     
@@ -1077,7 +1085,7 @@ class CrudController extends ApiBaseController
                     {
                         if($isset && $val)
                         {
-                            $val = md5($val);
+                            $val = HelperService::pwd($val);
                         }
                     }else
                     {
@@ -1151,9 +1159,31 @@ class CrudController extends ApiBaseController
                     $id_name = $col['value']??'id';
                     if($encode)
                     {
-                        if($isset && $val && isset($val[$id_name]))
+                        if($isset && $val)
                         {
-                            $val = $val[$id_name];
+                            if(isset($val[$id_name]))
+                            {
+                                $val = $val[$id_name];
+                            }elseif(is_array($val))
+                            {
+                                //如果传输的数据是数组 这里暂时数据库中只存储逗号拼接的id值  如果之后需要关联模型处理再说
+                                $_v = [];
+                                foreach($val as $v)
+                                {
+                                    if(isset($v['data']) && isset($v['data'][$id_name]))
+                                    {
+                                        $_v[] = $v['data'][$id_name];
+                                    }
+                                }
+                                if(!empty($_v))
+                                {
+                                    $val = implode(',',$_v);
+                                }else
+                                {
+                                    $val = '';
+                                }
+                            }
+                            
                         }
                     }else
                     {

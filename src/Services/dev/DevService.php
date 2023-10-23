@@ -11,6 +11,7 @@ use Echoyl\Sa\Services\dev\utils\TableColumn;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +29,7 @@ class DevService
         return env('APP_NAME','');
     }
 
-    public function createSchemaSql($table_name,$columns)
+    public function createSchemaSql($table_name,$columns,$par = [])
     {
         $table_sql = ['CREATE TABLE `la_'.$table_name.'` ('];
         $has_id = false;
@@ -47,6 +48,12 @@ class DevService
         $table_sql[] = "`updated_at`  datetime DEFAULT NULL ,";
         $table_sql[] = "`created_at`  datetime DEFAULT NULL ,";
         $table_sql[] = "`displayorder`  int(11) NOT NULL DEFAULT 0 COMMENT '排序权重',";
+
+        $soft_delete = Arr::get($par,'soft_delete');
+        if($soft_delete)
+        {
+            $table_sql[] = "`deleted_at`  datetime DEFAULT NULL ,";
+        }
 
         if($has_id)
         {
@@ -116,11 +123,13 @@ class DevService
         if ($model['columns']) {
             $columns = json_decode($model['columns'], true);
         }
+        $setting = $model['setting']?json_decode($model['setting'],true):[];
+        $soft_delete = Arr::get($setting,'soft_delete');
         //Schema::dropIfExists($table_name);
         
         if(!Schema::hasTable($table_name))
         {
-            $table_sql = $this->createSchemaSql($table_name,$columns);
+            $table_sql = $this->createSchemaSql($table_name,$columns,['soft_delete'=>$soft_delete]);
             DB::statement(implode('',$table_sql));
             $this->line('创建数据表:'.$table_name.'成功');
         }else
@@ -212,7 +221,12 @@ class DevService
         static $data = [];
         if(empty($data) || $flush)
         {
-            $data = (new Model())->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
+            $data = Cache::get('devAllModel');
+            if(!$data || $flush)
+            {
+                $data = (new Model())->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
+                Cache::set('devAllModel',$data);
+            }
         }
         
         return $data;
@@ -222,9 +236,14 @@ class DevService
     {
         
         static $data = [];
-        if((empty($data) || $flush) && Schema::hasTable('dev_menu'))
+        if((empty($data)  || $flush) && Schema::hasTable('dev_menu'))
         {
-            $data = (new Menu())->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
+            $data = Cache::get('devAllMenu');
+            if(!$data || $flush)
+            {
+                $data = (new Menu())->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('id', 'asc')->get()->toArray();
+                Cache::set('devAllMenu',$data);
+            }
         }
         
         return $data;
@@ -243,9 +262,20 @@ class DevService
         $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel'])->get()->toArray();
         $namespace_data = [];
         $hasone_data = [];
+
+        $setting = $model['setting']?json_decode($model['setting'],true):[];
+
+        $soft_delete = Arr::get($setting,'soft_delete');
+        $use = [];
+        if($soft_delete)
+        {
+            $namespace_data[] = 'use Illuminate\Database\Eloquent\SoftDeletes;';
+            $use[] = 'use SoftDeletes;';
+        }
+
         if(empty($relations))
         {
-            return [$namespace_data,$hasone_data];
+            return [$namespace_data,$hasone_data,$use];
         }
 
         $hasone_tpl ="
@@ -305,6 +335,11 @@ class DevService
                 $_filter = [];
                 foreach($filter as $f)
                 {
+                    if(isset($f[1]) && $f[1] == 'in' && is_array($f[2]))
+                    {
+                        $filter_where .= '->whereIn("'.$f[0].'",'.json_encode($f[2]).')';
+                        continue;
+                    }
                     if(isset($f[2]) && strpos($f[2],'this.') !== false)
                     {
                         continue;
@@ -313,7 +348,7 @@ class DevService
                 }
                 if(!empty($_filter))
                 {
-                    $filter_where = '->where('.json_encode($_filter).')';
+                    $filter_where .= '->where('.json_encode($_filter).')';
                 }
                 
             }
@@ -349,7 +384,7 @@ class DevService
                 $order_by
             ],$hasone_tpl);
         }
-        return [$namespace_data,$hasone_data];
+        return [$namespace_data,$hasone_data,$use];
     }
 
     /**
@@ -360,9 +395,10 @@ class DevService
      */
     public function createModelFile($data)
     {
-        $all = $this->allModel();
+        $all = $this->allModel(true);
 
         $names = array_reverse(self::getPath($data, $all));
+        
         //d($names);
 
         $table_name = implode('_',$names);
@@ -390,9 +426,11 @@ class DevService
         $this->line('开始生成model文件：');
 
         [$use_namespace,$crud_config,$parse_columns,$useModelArr] = $this->createControllerRelation($data);
-        [$use_namespace2,$tpl] = $this->createModelRelation($data,$useModelArr);
+        [$use_namespace2,$tpl,$use] = $this->createModelRelation($data,$useModelArr);
         
         $use_namespace = array_unique(array_merge($use_namespace,$use_namespace2));
+
+        
     
         //d($use_namespace,$tpl);
 
@@ -420,6 +458,7 @@ class DevService
 
         $replace_arr = [
             '/\$use_namespace\$/'=> implode("\r",$use_namespace),
+            '/\$use\$/'=> implode("\r",$use),
             '/\$namespace\$/'=>$namespace,
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
@@ -451,6 +490,7 @@ class DevService
             ['/customer code start(.*)\/\/customer code end/s'],//自定义代码
             ['/customer construct start(.*)\/\/customer construct end/s'],//自定义构造函数代码
             ['/customer namespace start(.*)\/\/customer namespace end/s'],//自定义namespace
+            ['/customer property start(.*)\/\/customer property end/s'],//自定义属性
         ];
         $ret = [];
         if(file_exists($file_path))
@@ -470,14 +510,14 @@ class DevService
             }
         }else
         {
-            $ret = ['','',''];
+            $ret = ['','','',''];
         }
         return $ret;
     }
 
     public function createControllerFile($data)
     {
-        $all = $this->allModel();
+        $all = $this->allModel(true);
 
         $names = array_reverse(self::getPath($data, $all));
 
@@ -509,7 +549,7 @@ class DevService
         $use_namespace = $parse_columns = [];
         
         //检测文件是否已经存在 存在的话将自定义代码带入
-        [$customer_code,$customer_construct,$customer_namespace] = $this->customerCode($model_file_path);
+        [$customer_code,$customer_construct,$customer_namespace,$customer_property] = $this->customerCode($model_file_path);
 
         $replace_arr = [
             '/\$namespace\$/'=>$namespace,
@@ -520,6 +560,7 @@ class DevService
             //'/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/'=>$customer_code,
             '/\$customer_construct\$/'=>$customer_construct,
+            '/\$customer_property\$/'=>$customer_property,
             '/\$customer_namespace\$/'=>$customer_namespace,
             '/\$app_name\$/'=>env('APP_NAME',''),
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
@@ -1181,7 +1222,7 @@ class DevService
                                 $perms = false;
                             }
 
-                            if($menu['page_type'] == 'form')
+                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel')
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
@@ -1206,11 +1247,11 @@ class DevService
                             
                         }else
                         {
-                            if($menu['page_type'] == 'form')
+                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel')
                             {
                                 //如果是form直接指向控制器方法
-                                //Log::channel('daily')->info('createRoute form:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller',]);
                                 $key = $menu['path'];
+                                //Log::channel('daily')->info('createRoute form:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller@'.$key,]);
                                 Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
                             }else
                             {

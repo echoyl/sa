@@ -8,11 +8,20 @@ class GoodsService
     var $goodsModel;
     var $itemModel;
     var $guigeModel;
-    public function __construct($goodsModel,$itemModel,$guigeModel)
+    var $columns;
+    public function __construct($goodsModel,$itemModel,$guigeModel,$columns = [])
     {
         $this->goodsModel = $goodsModel;
         $this->itemModel = $itemModel;
         $this->guigeModel = $guigeModel;
+        $this->columns = !empty($columns)?$columns:[
+            ['name'=>'price','type'=>'price'],
+            ['name'=>'old_price','type'=>'price'],
+            ['name'=>'jiesuan_price','type'=>'price'],
+            ['name'=>'chengben_price','type'=>'price'],
+            ['name'=>'sku','type'=>''],
+            ['name'=>'max','type'=>''],
+        ];
     }
 
 
@@ -56,13 +65,24 @@ class GoodsService
         {
             $_guige = [
                 'id'=>$guige['ids'],
-                'price'=>$guige['price']/100,
-                'sku'=>$guige['sku'],
-                'max'=>$guige['max'],
-                'old_price'=>$guige['old_price']/100,
-                'chengben_price'=>$guige['chengben_price']/100,
-                'jiesuan_price'=>$guige['jiesuan_price']/100,
             ];
+            foreach($this->columns as $col)
+            {
+                $ctype = $col['type'];
+                $cname = $col['name'];
+                $v = '';
+                if($ctype == 'price')
+                {
+                    $v = $guige[$cname]/100;
+                }elseif($ctype == 'int')
+                {
+                    $v = $guige[$cname]??0;
+                }else
+                {
+                    $v = $guige[$cname]??'';
+                }
+                $_guige[$cname] = $v;
+            }
             if(isset($guige['titlepic']) && $guige['titlepic'])
             {
                 $_guige['titlepic'] = HelperService::uploadParse($guige['titlepic'],false, ['p'=>'s']);
@@ -170,20 +190,32 @@ class GoodsService
 			$update = [
 				'desc'=>implode('-',$name),
                 'ids'=>$_ids,
-                'price'=>intval(($val['price']??0)*100),
-                'old_price'=>intval(($val['old_price']??0)*100),
-                'jiesuan_price'=>intval(($val['jiesuan_price']??0)*100),
-                'chengben_price'=>intval(($val['chengben_price']??0)*100),
-                'sku'=>$val['sku']??0,
-                'max'=>$val['max']??0,
 			];
+            //字段通过设置写入
+            foreach($this->columns as $col)
+            {
+                $ctype = $col['type'];
+                $cname = $col['name'];
+                $v = '';
+                if($ctype == 'price')
+                {
+                    $v = intval(($val[$cname]??0)*100);
+                }elseif($ctype == 'int')
+                {
+                    $v = $val[$cname]??0;
+                }else
+                {
+                    $v = $val[$cname]??'';
+                }
+                $update[$cname] = $v;
+            }
             if(isset($val['titlepic']))
             {
                 $update['titlepic'] = HelperService::uploadParse($val['titlepic']);
             }
-			$sku += $update['sku'];
-			$price[] = $update['price'];
-			$old_price[] = $update['old_price'];
+			$sku += $update['sku']??0;
+			$price[] = $update['price']??0;
+			$old_price[] = $update['old_price']??0;
 			if($has)
 			{
 				$has_guige_ids[] = $has['id'];

@@ -28,12 +28,13 @@ class ModelController extends CrudController
     {
         //修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
+        $ds = new DevService;
         $this->parseWiths($search);
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
 
-        $table_menu_id = request('admin_type', 'all');
+        $table_menu_id = request('admin_type', $ds->appname());
         if ($table_menu_id == 'all') {
-            $types = ['system', env('APP_NAME'), ''];
+            $types = ['system', $ds->appname(), ''];
         } else {
             $types = [$table_menu_id, ''];
         }
@@ -42,9 +43,9 @@ class ModelController extends CrudController
             $this->parseData($item, 'decode', 'list');
             return $item;
         });
-        $search['table_menu'] = ['admin_type'=>[['value' => env('APP_NAME'), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
+        $search['table_menu'] = ['admin_type'=>[['value' => $ds->appname(), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
         //d($data);
-        $ds = new DevService;
+        
         $search['foldermodels'] = $ds->getModelsFolderTree();//模型文件夹
         $search['menus'] = $ds->getMenusTree();//增加快速创建内容模块 选择创建到菜单下
         $search['models'] = $ds->getModelsTree();//可选模型
@@ -112,7 +113,17 @@ class ModelController extends CrudController
 
         $ds->createModelFile($data);
 
+        $this->clearCache();
+
         return;
+    }
+
+    public function clearCache()
+    {
+        $ds = new DevService;
+        $ds->allMenu(true);
+        $ds->allModel(true);
+        return $this->success('success');
     }
     
 

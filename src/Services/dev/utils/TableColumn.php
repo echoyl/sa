@@ -91,6 +91,10 @@ class TableColumn
         //是否设定列宽
         $width = $props['width']??'';
         //$width = $config['width']??$p_width;
+
+        //控制显示展示
+        $if = $props['if']??'';
+
         $relation_title = '';
         if($relation)
         {
@@ -181,6 +185,11 @@ class TableColumn
 
         $this->data = $d;
 
+        if(!isset($this->data['fieldProps']))
+        {
+            $this->data['fieldProps'] = [];
+        }
+
         if($form_type && method_exists(self::class,$form_type))
         {
             $this->$form_type();
@@ -196,9 +205,20 @@ class TableColumn
                 $this->data['fieldProps'] = $fieldProps;
             }
         }
+
+        if($if)
+        {
+            $this->data['fieldProps'] = array_merge(['if'=>$if],$this->data['fieldProps']);
+        }
+
         if($formItemProps && !is_string($formItemProps))
         {
             $this->data['formItemProps'] = $formItemProps;
+        }
+
+        if(isset($props['outside']))
+        {
+            $this->data = array_merge($this->data,$props['outside']);
         }
 
         return;
@@ -286,6 +306,7 @@ class TableColumn
         $props = $this->props;
         if(!$props || !isset($props['items']) || !$props['items'])return;
         $items = $props['items'];
+        $direction = $props['dom_direction']??'horizontal';//默认元素都是水平排列
 
         //检测是否有modalTable 有的话通过关联数据设置属性值
         foreach($items as $key=>$item)
@@ -333,7 +354,7 @@ class TableColumn
             }
         }
         $this->data['readonly'] = true;
-        $this->data['fieldProps'] = ['items'=>$items];
+        $this->data['fieldProps'] = ['items'=>$items,'direction'=>$direction];
         return;
     }
 

@@ -9,6 +9,7 @@ $customer_namespace$
 
 class $name$ extends SaCategory
 {
+    $use$
     /**
      * 与模型关联的数据表
      *

@@ -75,10 +75,10 @@ class AdminAppService implements SaAdminAppServiceInterface
             'row'=>[
                 [
                     'col'=>[
-                        ['title'=>'总销售额','value'=>126560,'href'=>'','prefix'=>'￥'],
-                        ['title'=>'访问量','value'=>8846,'href'=>'','suffix'=>'次'],
-                        ['title'=>'支付比数','value'=>6560,'href'=>'','suffix'=>'笔'],
-                        ['title'=>'营销活动效果','value'=>78,'href'=>'','suffix'=>'%'],
+                        ['title'=>'总销售额','value'=>126560,'href'=>'','prefix'=>'￥','type'=>'card'],
+                        ['title'=>'访问量','value'=>8846,'href'=>'','suffix'=>'次','type'=>'card'],
+                        ['title'=>'支付比数','value'=>6560,'href'=>'','suffix'=>'笔','type'=>'card'],
+                        ['title'=>'营销活动效果','value'=>78,'href'=>'','suffix'=>'%','type'=>'card'],
                     ]
                 ]
             ]
@@ -87,6 +87,16 @@ class AdminAppService implements SaAdminAppServiceInterface
             // ['title'=>'资产总净额','value'=>(new Zichan())->sum('jinge') / 100,'href'=>'/zichan/zichan','unit'=>'元'],
         ];
         return $items;
+    }
+
+    public function panel()
+    {
+        $charts = $this->chartData();
+        $cards = $this->cards();
+
+        $data = array_merge($cards['row'],$charts['row']);
+
+        return ['row'=>$data];
     }
 
     public function parseUserInfo($userinfo,$user)

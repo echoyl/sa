@@ -13,18 +13,22 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
         Route::middleware(['echoyl.remember', 'auth:sanctum'])->group(function () {
 
             Route::get('setting', 'IndexController@setting');
-            Route::post('sms', 'SmsController@sms');
+            Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
+                Route::get('menu/clearCache', 'MenuController@clearCache');//删除菜单缓存
+            });
+            
+            //Route::post('sms', 'SmsController@sms');
 
             //需要登录的路由
             Route::middleware(['echoyl.sa'])->group(function () {
                 Route::any('currentUser', 'IndexController@currentUser');
                 Route::any('notice', 'IndexController@notice');
                 Route::any('clearNotice', 'IndexController@clearNotice');
-                Route::any('index/workplace', 'IndexController@workplace');
+                //Route::any('index/workplace', 'IndexController@workplace');
                 Route::any('helper/pca', 'HelperController@pca');
                 
                 //用户修改信息
-                Route::any('index/user', 'IndexController@user'); 
+                //Route::any('index/user', 'IndexController@user'); 
                 //所有权限及角色权限
                 Route::any('perm/role/perms', 'perm\RoleController@perms'); 
                 //需要检测权限的路由
@@ -40,7 +44,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     //开发工具使用
                     Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
                         Route::any('setting', 'SettingController@setting');
-
+                        
                         Route::post('menu/copyTo', 'MenuController@copyTo');
                         Route::post('menu/tableConfig', 'MenuController@tableConfig');
                         Route::post('menu/formConfig', 'MenuController@formConfig');

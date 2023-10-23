@@ -210,7 +210,7 @@ class MenuService
             {
                 //没有子集 渲染权限
                 
-                if($val['page_type'] == 'form')
+                if($val['page_type'] == 'form' || $val['page_type'] == 'panel')
                 {
                     //form类型只有自己的权限
                     $val['id'] = implode('.',[$val['id'],$val['path']]);
@@ -355,7 +355,7 @@ class MenuService
         }
 
         //先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
-        $m = (new Menu())->where(['path'=>$name,'page_type'=>'form'])->whereIn('type',[env('APP_NAME'),'system']);
+        $m = (new Menu())->where(['path'=>$name,'state'=>1])->whereIn('page_type',['form','panel'])->whereIn('type',[env('APP_NAME'),'system']);
         if(!empty($r))
         {
             $m = $this->searchParent($m,$r);
@@ -394,7 +394,7 @@ class MenuService
 
     public function searchParent($query,$path)
     {
-        $query->whereHas('parent',function($q) use($path){
+        $query->where(['state'=>1])->whereHas('parent',function($q) use($path){
             $q->where(['path'=>$path[0]])->whereIn('type',[env('APP_NAME'),'system']);
             if(isset($path[1]))
             {

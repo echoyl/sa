@@ -13,6 +13,9 @@ $customer_namespace$
  */
 class $name$Controller extends CrudController
 {
+	//customer property start
+	$customer_property$
+	//customer property end
     public function __construct()
 	{
 		parent::__construct();

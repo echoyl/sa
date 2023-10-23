@@ -28,7 +28,9 @@ class Utils
         'confirm'=>'confirm',
         'radioButton'=>'select',
         'aliyunVideo'=>'aliyunVideo',
-        'modalSelect'=>'modalSelect'
+        'modalSelect'=>'modalSelect',
+        'saTransfer'=>'saTransfer',
+        'html'=>'html'
     ];
 
     public static $title_arr = [
@@ -133,18 +135,26 @@ class Utils
         foreach($trees as $name=>$tree)
         {
             
-            $_model_id = 0;
+
             if(is_numeric($name))
             {
-                $model = (new Model())->where(['id'=>$name])->first();
-                if(!$model)
-                {
-                    return '';
-                }
-                $name = $model['name'];
-                $_model_id = $model['id'];
+                //现在数字name 为 relation的id了
+                $relation = (new Relation())->where(['id'=>$name])->first();
+                //$model = (new Model())->where(['id'=>$name])->first();
+                
+            }else
+            {
+                $relation = (new Relation())->where(['model_id'=>$pmodel_id,'name'=>$name])->first();
             }
-            $relation = (new Relation())->where(['model_id'=>$pmodel_id,'name'=>$name])->first();
+            if(!$relation)
+            {
+                return '';
+            }
+            $name = $relation['name'];
+
+            //
+
+            //$name = $relation?$relation['name']:$name;
             // if($i == 1)
             // {
             //     d($name,$pmodel_id,$relation);
@@ -153,7 +163,7 @@ class Utils
             if(isset($tree['models']) && !empty($tree['models']))
             {
                 
-                $replace[] = self::withTree($tree['models'],$indent + 1,$_model_id?:$relation['foreign_model_id'],$i+1);
+                $replace[] = self::withTree($tree['models'],$indent + 1,$relation['foreign_model_id'],$i+1);
                 $sear = 'sear_'.$j;
                 $search[] = $sear;
                 $inner_with = '->with('.$sear.')';

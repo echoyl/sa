@@ -52,12 +52,13 @@ class MenuController extends CrudController
     {
         //修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
+        $ds = new DevService;
         $this->parseWiths($search);
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
         //$search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
         $search['table_menu'] = ['state'=>$search['states']];
-        $types = ['system',env('APP_NAME')];
-        $table_menu_id = request('state','all');
+        $types = ['system',$ds->appname()];
+        $table_menu_id = request('state',1);
         if($table_menu_id == 'all')
         {
             $where = [];
@@ -71,7 +72,7 @@ class MenuController extends CrudController
             return $item;
         },0,1,[['displayorder','desc'],['id','asc']],$where);
         //d($data);
-        $ds = new DevService;
+        
         $search['menus'] = $ds->getMenusTree();
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
@@ -93,6 +94,20 @@ class MenuController extends CrudController
             ];
         }
         return $data;
+    }
+
+    public function clearCache()
+    {
+        $ds = new DevService;
+        $ds->allMenu(true);
+        $ds->allModel(true);
+        return $this->success('success');
+    }
+
+    public function afterPost($id, $data)
+    {
+        $this->clearCache();
+        return;
     }
 
     public function postData(&$item)
@@ -444,6 +459,11 @@ class MenuController extends CrudController
         //所请求使用菜单的path路径
         $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
         $desc['url'] = implode('/',$path);
+        if($item['page_type'] == 'form')
+        {
+            //如果指定form页面额外设置 postUrl参数
+            $desc['postUrl'] = $desc['url'];
+        }
         $data['desc'] = json_encode($desc);
         $this->model->where(['id'=>$item['id']])->update($data);
         return $this->success('操作成功');

@@ -84,6 +84,7 @@ class FormItem
 
         $fieldProps = $props['fieldProps']??'';
         $formItemProps = $props['formItemProps']??'';
+        $if = $props['if']??'';
 
         //$title = $config['title']??'';
         $readonly = $config['readonly']??'';
@@ -174,6 +175,11 @@ class FormItem
             $this->data['fieldProps'] = array_merge($fieldProps,$this->data['fieldProps']);
         }
 
+        if($if)
+        {
+            $this->data['fieldProps'] = array_merge(['if'=>$if],$this->data['fieldProps']);
+        }
+
         if($formItemProps && !is_string($formItemProps))
         {
             if(isset($this->data['formItemProps']))
@@ -259,10 +265,16 @@ class FormItem
         return;
     }
 
+    /**
+     * 如果字段是关联模型中某个字段的话 去到该关联模型中生成该字段的配置信息
+     *
+     * @param [type] $dataIndex
+     * @return void
+     */
     public function foreignModel($dataIndex)
     {
         $new_index = $dataIndex;
-        array_shift($new_index);
+        $first = array_shift($new_index);
         $config = $this->config;
         $relation = $this->relation;
         $new_config = $config;
@@ -270,7 +282,24 @@ class FormItem
         $new_model = (new Model())->where(['id'=>$relation['foreign_model_id']])->with(['relations.foreignModel.menu'])->first();
         $formItem = new FormItem($new_config,$new_model,$this->menus,$this->models);
         $data = $formItem->data;
+        
         $data['dataIndex'] = $dataIndex;
+        if($dataIndex == ['wuliu','type_id'])
+        {
+            //d($data);
+        }
+
+        if(isset($data['requestDataName']))
+        {
+            if(is_array($data['requestDataName']))
+            {
+                array_unshift($data['requestDataName'],$first);
+            }else
+            {
+                $data['requestDataName'] = [$first,$data['requestDataName']];
+            }
+        }
+       
         return $data;
     }
 
@@ -299,6 +328,10 @@ class FormItem
         {
             $d['fieldProps'] = $fieldProps;
         }
+        if(isset($d['readonly']))
+        {
+            unset($d['readonly']);
+        }
         $this->data = $d;
         return;
     }
@@ -320,20 +353,23 @@ class FormItem
         }else
         {
             $d['fieldProps'] = [];
-            $fieldProps = $this->props['fieldProps']??'';
+            $fieldProps = $this->props['fieldProps']??[];
             $set_url = $fieldProps['url']??'';
             //如果没有自定义url 才自动查找菜单路径
             if($relation && $relation['foreign_model'])
             {
                 //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
                 $d['fieldProps']['relationname'] = $relation['name'];
+                $page = $fieldProps['page']??[];
                 if($relation['foreign_model']['menu'] && !$set_url)
                 {
                     //如果关联模型 也关联了菜单 直接使用第一个匹配的这个菜单的url地址
                     $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
-                    $d['fieldProps']['page'] = [
-                        'path'=>implode('/',$path),
-                    ];
+                    $page['path'] = implode('/',$path);
+                }
+                if(!empty($page))
+                {
+                    $d['fieldProps']['page'] = $page;
                 }
                 //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
                 
