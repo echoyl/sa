@@ -6,6 +6,9 @@ use stdClass;
 
 class MenuService
 {
+    /**
+     * @var array 模型默认基础权限子集
+     */
     var $basePerms = [
         // ['label'=>'查看列表','value'=>'index'],
         // ['label'=>'查看详情','value'=>'show'],
@@ -13,10 +16,18 @@ class MenuService
         // ['label'=>'修改','value'=>'edit'],
         // ['label'=>'删除','value'=>'destroy'],
         'index' => '列表',
-        'show' => '详情',
+        'show' => '查看',
         'add' => '新增',
         'edit' => '修改',
         'destroy' => '删除',
+    ];
+
+    /**
+     * @var array 表单类型基础权限子集
+     */
+    var $formBasePerms = [
+        'show'=>'查看',
+        'submit'=>'提交'
     ];
 
     /**
@@ -66,6 +77,7 @@ class MenuService
             $item['data']['addable'] = $val['addable']?true:false;
             $item['data']['editable'] = $val['editable']?true:false;
             $item['data']['deleteable'] = $val['deleteable']?true:false;
+            $item['data']['setting'] = $val['setting']?json_decode($val['setting'], true):[];
             $ret[] = $item;
         }
         return $ret;
@@ -90,43 +102,18 @@ class MenuService
             if(!empty($bigmenu['routes']))
             {
                 $first = $this->getFirstChildPath($bigmenu);
-                //d($first_path);
-                // $bread = collect($first['name'])->map(function($v){
-                //     return [
-                //         'title'=>$v,
-                //         'breadcrumbName'=>$v,
-                //         'linkPath'=>''
-                //     ];
-                // })->toArray();
-                // $menu = [
-                //     'path'=>'/'.$bigmenu['path'],
-                //     // 'data'=>[
-                //     //     'redirect'=>'/'. implode('/',$first['path'])
-                //     // ]
-                // ];
-                //$bigmenu['redirect'] = '/'. implode('/',$first_path['path']);
-                //$bigmenu['data'] = $first_path['route']['data'];
-                //$menu = array_merge($first['route'],$menu);
-                //$first['route']['data']['names'] = $bread;
-                //unset($menu['name']);
-                //array_unshift($bigmenu['routes'],$menu);
-                //$bigmenu['data'] = $first['route']['data'];
                 //将大菜单去取到的第一个有页面的子菜单的路径放入数据中，前端中转页面判断后跳转页面
                 $bigmenu['data'] = [
                     'redirect'=>'/'. implode('/',$first['path'])
                 ];
             }
-            
-
             $menus[$key] = $bigmenu;
         }
-        //d($menus);
         return $menus;
     }
 
     public function getFirstChildPath($menu)
     {
-        
         $first_child = $menu['routes'][0];
         //d($children);
         if(!empty($first_child['routes']))
@@ -145,7 +132,6 @@ class MenuService
             ];
         }
         return $path;
-        
     }
 
     public function getAll()
@@ -210,9 +196,9 @@ class MenuService
             {
                 //没有子集 渲染权限
                 
-                if($val['page_type'] == 'form' || $val['page_type'] == 'panel')
+                if($val['page_type'] == 'panel')
                 {
-                    //form类型只有自己的权限
+                    //面板类型只有自己的权限
                     $val['id'] = implode('.',[$val['id'],$val['path']]);
                     if(!empty($enable_keys) && !in_array($val['id'],$enable_keys))
                     {
@@ -220,6 +206,10 @@ class MenuService
                     }
                     
                     //d($val);
+                }elseif($val['page_type'] == 'form')
+                {
+                    //form 类型使用 $formBasePerms
+                    [$routers,$routers_disable] = $this->getFormBasePerms($val['id'],$enable_keys);
                 }else
                 {
                     $menu_perms = [];
@@ -253,9 +243,13 @@ class MenuService
         return [$ret,$total && $total == $disable_count];
     }
 
+    public function getFormBasePerms($menu_id,$enable_keys = [])
+    {
+        return $this->getPerms($this->formBasePerms,$menu_id,$enable_keys);
+    }
+
     public function getBasePerms($menu_id,$ext_perms = [],$add_ext = false,$enable_keys = [])
     {
-        $ret = [];
         //检测菜单是否映射到了模型，是： 基础 + 子权限 否：只使用子权限
         if($add_ext)
         {
@@ -264,6 +258,12 @@ class MenuService
         {
             $perms = !empty($ext_perms)?$ext_perms:$this->basePerms;
         }
+        return $this->getPerms($perms,$menu_id,$enable_keys);
+    }
+
+    public function getPerms($perms,$menu_id,$enable_keys = [])
+    {
+        $ret = [];
         $total = count($perms);
         $disable_count = 0;
         foreach($perms as $key=>$val)
@@ -282,6 +282,8 @@ class MenuService
         }
         return [$ret,$total == $disable_count];
     }
+
+    
 
     public function checkPerm($router,$user_perms,$role_perms)
     {
@@ -363,6 +365,11 @@ class MenuService
         $form_menu = $m->first();
         if($form_menu)
         {
+            //如果是form的话需要判断 请求是get或是post
+            if($form_menu['page_type'] == 'form')
+            {
+                $name = request()->isMethod('POST')?'submit':'show';
+            }
             return [$name,$form_menu];
         }
         

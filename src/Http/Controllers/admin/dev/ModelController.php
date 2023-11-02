@@ -107,6 +107,11 @@ class ModelController extends CrudController
      */
     public function afterPost($id, $data)
     {
+        if($data['type'] == 0)
+        {
+            //文件夹直接跳过
+            return;
+        }
         $ds = new DevService;
 
         $ds->createControllerFile($data);

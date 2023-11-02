@@ -30,9 +30,13 @@ class FormItem
         $props = $config['props']??'';
         $this->props = $props;
 
+        $has_customer_dataindex = false;
+
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
             $key = $props['dataIndex'];
+            $dataIndex = $props['dataIndex'];
+            $has_customer_dataindex = true;
         }
 
         if(is_array($key))
@@ -65,7 +69,7 @@ class FormItem
 
         $relation = Utils::arrGet($model['relations'],$schema?'local_key':'name',Utils::uncamelize($key));
         $this->relation = $relation;
-        if(!$schema && !$relation)
+        if(!$schema && !$relation && !$has_customer_dataindex)
         {
             return;
         }
@@ -89,13 +93,17 @@ class FormItem
         //$title = $config['title']??'';
         $readonly = $config['readonly']??'';
         $hidden = $config['hidden']??'';//是否隐藏
+        $disabled = $config['disabled']??'';//是否禁用
         $set_label = $config['label']??'';
         $required = $config['required']??'';
         $placeholder = $config['placeholder']??'';
         //$extra = $config['name']??'';
 
-        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:$relation['title'])];
-
+        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation?$relation['title']:''))];
+        // if($dataIndex == 'sn2')
+        // {
+        //     d($d);
+        // }
         if($readonly)
         {
             $d['readonly'] = true;
@@ -154,6 +162,11 @@ class FormItem
         {
             $this->data['fieldProps'] = [];
         }
+        if($disabled)
+        {
+            $this->data['fieldProps']['disabled'] = true;
+        }
+
 
         if($placeholder)
         {
@@ -200,6 +213,11 @@ class FormItem
         if(isset($props['outside']))
         {
             $this->data = array_merge($this->data,$props['outside']);
+        }
+
+        if(isset($props['width']))
+        {
+            $this->data['width'] = is_numeric($props['width'])?intval($props['width']):$props['width'];
         }
 
         return;
@@ -259,6 +277,7 @@ class FormItem
         {
             //不需要再设置 readonly  如果是form的话 没有值 就不会渲染 render函数 所以删掉readonly 可以渲染 renderFormItem 函数
             //由自己控制，如果设置了readonly 对于其它类型的 还是有用的
+            //20231030 如果使用了form的record 那么不能使用readonly 不然会组件不能读取record的值
             //unset($this->data['readonly']);
         }
         $this->data['fieldProps'] = ['items'=>$items];
@@ -575,5 +594,13 @@ class FormItem
     public function digit()
     {
         $this->data['width'] = 'md';
+    }
+
+    public function textarea()
+    {
+        //textarea默认4行
+        $this->data['fieldProps'] = [
+            'rows'=>4
+        ];
     }
 }

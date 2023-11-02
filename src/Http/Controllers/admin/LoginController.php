@@ -7,7 +7,9 @@ use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\CaptchaService;
 use Echoyl\Sa\Services\utils\SmsService;
-
+/**
+ * @property \Echoyl\Sa\Services\AdminAppService $service
+ */
 class LoginController extends ApiBaseController
 {
     //
@@ -56,6 +58,8 @@ class LoginController extends ApiBaseController
 
         if($info)
         {
+            $info['userinfo'] = $this->service->parseUserInfo($info['userinfo'],$info['user']);
+            unset($info['user']);
             return $this->success($info,[0,'登录成功，页面跳转中...']);
         }else
         {

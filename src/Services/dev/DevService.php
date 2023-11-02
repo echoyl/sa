@@ -939,6 +939,14 @@ class DevService
                     $d['level'] = $setting['pca_level']??1;
                     $d['topCode'] = Arr::get($setting,'pca_topCode','');
                 }
+                //modalSelect
+                if($form_type == 'modalSelect')
+                {
+                    if($relation)
+                    {
+                        $d['value'] = $relation['foreign_key'];
+                    }
+                }
                 $parse_columns[] = $d;
             }
         }
@@ -1114,7 +1122,7 @@ class DevService
             {
                 continue;
             }
-            if(!is_string($formItem->data))
+            if(!is_string($formItem->data) && !isset($d['width']))
             {
                 if($key_len == 2)
                 {

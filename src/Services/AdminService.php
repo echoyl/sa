@@ -76,6 +76,7 @@ class AdminService
             'userinfo'=>self::parseUser($user),
             'access_token'=>$token,
             'setting'=>self::setting(AdminService::isSuper($user)),
+            'user'=>$user,
         ];
         self::log('登录',['id'=>$user['id']]);
         //更新最后登录时间

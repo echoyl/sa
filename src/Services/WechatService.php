@@ -344,7 +344,7 @@ class WechatService
             return ['code' => 1, 'msg' => $e->getMessage()];
         }
         $menu = json_decode($res->getContent(), true);
-        return ['code' => 0, 'data' => $menu['menu']['button']];
+        return ['code' => 0, 'data' => isset($menu['menu'])?$menu['menu']['button']:[]];
     }
 
     /**
