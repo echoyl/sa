@@ -125,8 +125,12 @@ class Category extends Base
      * @param [int] $cid
      * @return array
      */
-    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [['displayorder','desc'],['id','asc']])
+    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [])
     {
+        if(empty($displayorder))
+        {
+            $displayorder = [['displayorder','desc'],['id','asc']];
+        }
         if(is_array($cid))
         {
             $parent = $cid;

@@ -17,6 +17,14 @@ class AdminAppService implements SaAdminAppServiceInterface
             }
             return $r;
         };
+        $mapdata = [
+            '360000'=>['unit_price'=>33],
+            '110000'=>['unit_price'=>444],
+            '120000'=>['unit_price'=>22],
+            '130000'=>['unit_price'=>33],
+            '140000'=>['unit_price'=>234],
+            '150000'=>['unit_price'=>444],
+        ];
         $data = [
             'row' => [
                 [
@@ -42,7 +50,21 @@ class AdminAppService implements SaAdminAppServiceInterface
                                             'alias'=>'销售额'
                                         ]
                                     ]
-                                ]]
+                                ]],
+                                [
+                                    'title'=>'全国统计',
+                                    'data' => $this->areaMap($mapdata), 
+                                    'type' => 'areaMap', 
+                                    'field'=>'unit_price',
+                                    'config'=>[
+                                        'tooltip'=>[
+                                            'items'=>[
+                                                ['field'=>'name','alias'=>'省份'],
+                                                ['field'=>'unit_price','alias'=>'数值']
+                                            ]
+                                        ]
+                                    ]
+                                ]
                             ]
                         ]
                         
@@ -102,5 +124,34 @@ class AdminAppService implements SaAdminAppServiceInterface
     public function parseUserInfo($userinfo,$user)
     {
         return $userinfo;
+    }
+
+    public function areaMap($data,$type = 'cn')
+    {
+        $file = storage_path('app/public/map/'.$type.'.json');
+        if(!file_exists($file))
+        {
+            return false;
+        }
+
+        $map_data = file_get_contents($file);
+        //return $data;
+        $map_data = json_decode($map_data,true);
+        foreach($map_data['features'] as $key=>$val)
+        {
+            //d($val['properties']['adcode']);
+            if(!isset($val['properties']['adcode']))
+            {
+                //d($val['properties']);
+                continue;
+            }
+            if(isset($data[$val['properties']['adcode']]))
+            {
+                $val['properties'] = array_merge($val['properties'],$data[$val['properties']['adcode']]);
+            }
+            $map_data['features'][$key] = $val;
+        }
+        //$data['features'] = $features;
+        return $map_data;
     }
 }

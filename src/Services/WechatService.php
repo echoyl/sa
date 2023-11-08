@@ -307,7 +307,7 @@ class WechatService
                         //'province'=>$user['province'],
                         //'country'=>$user['country'],
                         //'avatar'=>$user['headimgurl'],
-                        'subscribe_time' => $user['subscribe_time'],
+                        'subscribe_at' => $user['subscribe_time'],
                         'unionid' => $user['unionid'] ?? '',
                         'subscribe_scene' => $user['subscribe_scene'],
                         'appid' => $app->config->app_id
@@ -395,7 +395,7 @@ class WechatService
         if ($has_user) {
             //关注事件
             if ($flag) {
-                $model->where(['id' => $has_user['id']])->update(['subscribe' => 1, 'subscribe_time' => now()]);
+                $model->where(['id' => $has_user['id']])->update(['subscribe' => 1, 'subscribe_at' => now()]);
             } else {
                 //取消关注
                 $model->where(['id' => $has_user['id']])->update(['subscribe' => 0]);

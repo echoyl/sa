@@ -96,7 +96,7 @@ class FormItem
         $disabled = $config['disabled']??'';//是否禁用
         $set_label = $config['label']??'';
         $required = $config['required']??'';
-        $placeholder = $config['placeholder']??'';
+        $placeholder = $fieldProps['placeholder']??'';
         //$extra = $config['name']??'';
 
         $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation?$relation['title']:''))];
@@ -167,6 +167,38 @@ class FormItem
             $this->data['fieldProps']['disabled'] = true;
         }
 
+        //已取消这个设置 兼容之前的 还写在这里
+        if(isset($props['tooltip']))
+        {
+            $this->data['tooltip'] = $props['tooltip'];
+        }
+
+        //tip包含3个数据 1.placeholder 2.tooltip 3.extra
+        $tip = $props['tip']??[];
+        $tip_placeholder = Arr::get($tip,'placeholder');
+        $tip_tooltip = Arr::get($tip,'tooltip');
+        $tip_extra = Arr::get($tip,'extra');
+        if($tip_placeholder)
+        {
+            $this->data['fieldProps']['placeholder'] = $tip_placeholder;
+        }
+
+        if($tip_tooltip)
+        {
+            $this->data['tooltip'] = $tip_tooltip;
+        }
+
+        if($tip_extra)
+        {
+            if(isset($this->data['formItemProps']))
+            {
+                $this->data['formItemProps']['extra'] = $tip_extra;
+            }else
+            {
+                $this->data['formItemProps'] = ['extra'=>$tip_extra];
+            }
+        }
+
 
         if($placeholder)
         {
@@ -205,10 +237,9 @@ class FormItem
             }
         }
 
-        if(isset($props['tooltip']))
-        {
-            $this->data['tooltip'] = $props['tooltip'];
-        }
+        
+
+
 
         if(isset($props['outside']))
         {
