@@ -35,6 +35,22 @@ class Role extends Base
 			        ],
                     "table_menu" => true
 			    ],
+                [
+			        'name' => 'sync_user',
+			        'type' => 'switch',
+			        'default' => 0,
+			        'with' => true,
+			        'data' => [
+			            [
+			                'label' => '否',
+			                'value' => 0,
+			            ],
+			            [
+			                'label' => '是',
+			                'value' => 1,
+			            ],
+			        ],
+			    ],
 			];
         }
         return $data;

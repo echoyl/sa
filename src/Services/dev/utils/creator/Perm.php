@@ -25,7 +25,7 @@ class Perm extends Creator
                 'table_config'=>'[{"key":"id"},{"key":"username","can_search":[],"props":[]},{"id":"6lhcymlljjz","key":["mobile"],"can_search":[]},{"key":["role","title"]},{"key":"desc"},{"key":["created_at"]},{"key":["latest_login_at"]},{"key":"state","left_menu":[],"table_menu":[1]},{"key":["option"]},{"key":["roleid"],"can_search":[1],"hide_in_table":[1]},{"key":["id"],"type":"userPerm","props":{"title":"权限配置","dataIndex":"id"}},{"id":"w24r2cz55kj","key":["username"],"can_search":[1],"props":{"title":"检索","fieldProps":{"placeholder":"请输入用户姓名或手机号码"}}}]',
             ],
             'role'=>[
-                'form_config'=>'[{"columns":[{"key":"title"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"state"},{"key":"id"}]},{"columns":[{"key":"perms2","type":"permGroup"}]}]',
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"state"},{"key":"id"}]},{"columns":[{"key":"perms2","type":"permGroup","props":[]}]},{"id":"2c0q2fcmkw6","columns":[{"key":["sync_user"]}]}]}]}',
                 'table_config'=>'[{"key":"id"},{"key":"title","can_search":[1]},{"key":"desc"},{"key":["created_at"]},{"key":"state","table_menu":[1]},{"key":["option"]}]',
             ],
             'log'=>[

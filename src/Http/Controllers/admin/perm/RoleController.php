@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin\perm;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\perm\Role;
+use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\MenuService;
 
 class RoleController extends CrudController
@@ -34,6 +35,18 @@ class RoleController extends CrudController
 		[$perms] = $as->perms(0,$enable);
 		$data['perms'] = $perms;
 		return $this->success($data);
+	}
+
+	public function afterPost($id, $data)
+	{
+		if($data['sync_user'])
+		{
+			//同步该角色所有用户的权限
+			$update = [
+				'perms2'=>$data['perms2']
+			];
+			AdminService::getUserModel()->where(['roleid'=>$data['id']])->update($update);
+		}
 	}
     
 }

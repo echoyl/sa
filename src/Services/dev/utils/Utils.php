@@ -30,7 +30,8 @@ class Utils
         'aliyunVideo'=>'aliyunVideo',
         'modalSelect'=>'modalSelect',
         'saTransfer'=>'saTransfer',
-        'html'=>'html'
+        'html'=>'html',
+        'tmapShow'=>'tmapShow'
     ];
 
     public static $title_arr = [
