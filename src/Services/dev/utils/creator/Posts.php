@@ -13,18 +13,18 @@ class Posts extends Creator
     public function __construct()
     {
         $this->schema = [
-            'posts'=>'[{"title":"ID","name":"id","type":"int"},{"title":"标题","name":"title","type":"varchar"},{"title":":category_title","name":":category_name","type":"varchar","form_type":":category_id","setting":{"label":"title","value":"id"}},{"title":"_分类","name":":_category_name","type":"varchar","length":500},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"作者来源","name":"author","type":"varchar"},{"title":"阅读数","name":"hits","type":"int","form_type":"digit"},{"title":"内容","name":"content","type":"text","form_type":"tinyEditor"},{"title":"其它属性","name":"specs","type":"text","form_type":"json"},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"table_menu":true,"setting":{"open":"启用","close":"禁用"}},{"title":"外链","name":"link","type":"varchar"}]',
-            'category'=>'[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"varchar"},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"icon","name":"icon","type":"varchar"},{"title":"父级Id","name":"parent_id","type":"int"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"状态","name":"state","type":"int","form_type":"switch","default":"1","setting":{"open":"启用","close":"禁用"}}]'
+            'posts'=>'[{"title":"ID","name":"id","type":"int"},{"title":"标题","name":"title","type":"varchar"},{"title":":category_title","name":":category_name","type":"varchar","form_type":":category_type","setting":{"label":"title","value":"id"}},{"title":"_:category_title","name":":_category_name","type":"varchar","length":500},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea","empty":[1]},{"title":"作者来源","name":"author","type":"varchar","empty":[1]},{"title":"阅读数","name":"hits","type":"int","form_type":"digit"},{"title":"内容","name":"content","type":"text","form_type":"tinyEditor"},{"title":"其它属性","name":"specs","type":"text","form_type":"json"},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"table_menu":true,"setting":{"open":"启用","close":"禁用"}},{"title":"外链","name":"link","type":"varchar","empty":[1]}]',
+            'category'=>'[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"varchar"},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"父级Id","name":"parent_id","type":"int"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"状态","name":"state","type":"int","form_type":"switch","default":"1","setting":{"open":"启用","close":"禁用"},"table_menu":true}]'
         ];
 
         $this->confJson = [
             'posts'=>[
-                'table_config'=>'[{"key":"id","props":[]},{"key":"title","can_search":[1],"props":{"width":"300","copyable":true,"ellipsis":true}},{"key":":category_name"},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
-                'form_config'=>'{"tabs":[{"tab":[{"title":"基础信息"}],"config":[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"title","required":true}]},{"columns":[{"key":":category_name","required":true},{"key":"created_at"}]},{"columns":[{"key":"author"},{"key":"hits"}]},{"columns":[{"key":"titlepic"}]},{"columns":[{"key":"pics"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]},{"columns":[{"key":"specs","type":"jsonForm"}]},{"columns":[{"key":"state"},{"key":"displayorder"}]}]}]}'
+                'table_config'=>'[{"key":"id","props":[]},{"key":"title","can_search":[1],"props":{"width":"300","copyable":true,"ellipsis":true}},{"key":":category_name","can_search":[1]},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"title","required":true}]},{"columns":[{"key":":category_name","required":true},{"key":"created_at"}]},{"columns":[{"key":"author"},{"key":"hits"}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]},{"columns":[{"key":"specs","type":"jsonForm"}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]}]}'
             ],
             'category'=>[
-                'form_config'=>'[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"title"}]},{"id":"ocqx6wedk0u","columns":[{"key":["displayorder"]},{"key":["icon"]}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"titlepic"}]},{"columns":[{"key":["state"]}]}]',
-                'table_config'=>'[{"key":"id"},{"key":"title"},{"key":"titlepic"},{"key":"displayorder"},{"key":"state"},{"key":"coption"}]',
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"id":"5502ynqp7rs","columns":[{"key":["id"],"readonly":true}]},{"id":"notvg3ox047","columns":[{"key":["title"],"required":true},{"key":["displayorder"]}]},{"id":"s6hsnxta2yc","columns":[{"key":["desc"]}]},{"id":"ovjiqj6t6oh","columns":[{"key":["state"]}]}]}]}',
+                'table_config'=>'[{"key":"id"},{"key":"title"},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":["option"]}]',
                 'other_config'=>'{"level"::level}'
             ]
         ];
@@ -79,7 +79,7 @@ class Posts extends Creator
 
         $category_model = $model->where(['id'=>$customer_category_id])->first();
         $search = [
-            ':category_title',':category_name',':category_id',':_category_name'
+            ':category_title',':category_name',':category_type',':_category_name'
         ];
         $replace = ['分类','category_id',$type,'_category_id'];
         if($category_model)

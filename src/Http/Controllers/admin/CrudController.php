@@ -319,7 +319,7 @@ class CrudController extends ApiBaseController
                             }else
                             {
                                 $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
-                                if($where_type == 'whereBetween')
+                                if($where_type == 'whereBetween' && is_array($search_val) && isset($search_val[1]))
                                 {
                                     //检测是否是日期
                                     $d = DateTime::createFromFormat("Y-m-d",$search_val[1]);

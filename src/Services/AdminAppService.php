@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
+use Echoyl\Sa\Models\Pca;
 use stdClass;
 
 class AdminAppService implements SaAdminAppServiceInterface
@@ -17,20 +18,62 @@ class AdminAppService implements SaAdminAppServiceInterface
             }
             return $r;
         };
-        $mapdata = [
-            '360000'=>['unit_price'=>33],
-            '110000'=>['unit_price'=>444],
-            '120000'=>['unit_price'=>22],
-            '130000'=>['unit_price'=>33],
-            '140000'=>['unit_price'=>234],
-            '150000'=>['unit_price'=>444],
-        ];
+        $pca = (new Pca())->where(['pcode'=>0])->get()->toArray();
+        $mapdatas = collect($pca)->map(function($q){
+            return [
+                'code'=>$q['code'],'la'=>rand(0,100),'li'=>rand(0,100),'name'=>$q['name']
+            ];
+        })->toArray();
+        $mapdata = [];
+        foreach($mapdatas as $val)
+        {
+            $mapdata[$val['code']] = $val;
+        }
+        //d($mapdata);
         $data = [
             'row' => [
                 [
+                    'form'=>$this->form(),
                     'col' => [
                         [
                             'tab'=>[
+                                [
+                                    'title'=>'全国吃辣程度统计',
+                                    'row'=>[
+                                        [
+                                            'col'=>[
+                                                [
+                                                    'title'=>'地图统计',
+                                                    'data' => $this->areaMap($mapdata), 
+                                                    'type' => 'areaMap', 
+                                                    'field'=>'la',
+                                                    'config'=>[
+                                                        'tooltip'=>[
+                                                            'items'=>[
+                                                                ['field'=>'name','alias'=>'省份'],
+                                                                ['field'=>'la','alias'=>'数值'],
+                                                                ['field'=>'li','alias'=>'彩礼']
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ],
+                                                [
+                                                    'title'=>'表格统计',
+                                                    'data' => $mapdatas, 
+                                                    'type' => 'table', 
+                                                    'columns'=>[
+                                                        ['dataIndex'=>'name','title'=>'省份','width'=>250],
+                                                        ['dataIndex'=>'la','title'=>'辣值','sort'=>true],
+                                                        ['dataIndex'=>'li','title'=>'彩礼','sort'=>true]
+                                                    ],
+                                                    'props'=>[
+                                                        'size'=>'small'
+                                                    ]
+                                                ],
+                                            ]
+                                        ]
+                                    ]
+                                ],
                                 ['title' => '当月数据', 'y' => '', 'data' => collect($carr(30))->map(function($v,$k){
                                     $day = 30 - $k;
                                     return ['x'=>date("m-d",strtotime("-{$day} days")),'y'=>rand(10,200)];
@@ -51,20 +94,6 @@ class AdminAppService implements SaAdminAppServiceInterface
                                         ]
                                     ]
                                 ]],
-                                [
-                                    'title'=>'全国统计',
-                                    'data' => $this->areaMap($mapdata), 
-                                    'type' => 'areaMap', 
-                                    'field'=>'unit_price',
-                                    'config'=>[
-                                        'tooltip'=>[
-                                            'items'=>[
-                                                ['field'=>'name','alias'=>'省份'],
-                                                ['field'=>'unit_price','alias'=>'数值']
-                                            ]
-                                        ]
-                                    ]
-                                ]
                             ]
                         ]
                         
@@ -97,10 +126,10 @@ class AdminAppService implements SaAdminAppServiceInterface
             'row'=>[
                 [
                     'col'=>[
-                        ['title'=>'总销售额','value'=>126560,'href'=>'','prefix'=>'￥','type'=>'card'],
-                        ['title'=>'访问量','value'=>8846,'href'=>'','suffix'=>'次','type'=>'card'],
-                        ['title'=>'支付比数','value'=>6560,'href'=>'','suffix'=>'笔','type'=>'card'],
-                        ['title'=>'营销活动效果','value'=>78,'href'=>'','suffix'=>'%','type'=>'card'],
+                        ['title'=>'总销售额','value'=>rand(10000,90000),'href'=>'','prefix'=>'￥','type'=>'card'],
+                        ['title'=>'访问量','value'=>rand(1000,10000),'href'=>'','suffix'=>'次','type'=>'card'],
+                        ['title'=>'支付比数','value'=>rand(100,1000),'href'=>'','suffix'=>'笔','type'=>'card'],
+                        ['title'=>'营销活动效果','value'=>rand(10,100),'href'=>'','suffix'=>'%','type'=>'card'],
                     ]
                 ]
             ]
@@ -153,5 +182,30 @@ class AdminAppService implements SaAdminAppServiceInterface
         }
         //$data['features'] = $features;
         return $map_data;
+    }
+
+    public function form()
+    {
+        return [
+            //form的默认值
+            'value'=>[
+                'date[]'=>[date("Y-m-d",strtotime("-7 days")),date("Y-m-d")],
+            ],
+            //form的项
+            'columns'=>[
+                [
+                    'dataIndex'=>'date[]',
+                    'title'=>'日期检索',
+                    'valueType'=>'dateRange',
+                    'fieldProps'=>[
+                        'presets'=>[
+                            ['label'=>'近7日','value'=>[date("Y-m-d",strtotime("-7 days")),date("Y-m-d")]],
+                            ['label'=>'近30日','value'=>[date("Y-m-d",strtotime("-30 days")),date("Y-m-d")]],
+                            ['label'=>'近1年','value'=>[date("Y-m-d",strtotime("-1 year")),date("Y-m-d")]]
+                        ]
+                    ]
+                ]
+            ]
+        ];
     }
 }

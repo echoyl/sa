@@ -11,8 +11,10 @@ class RoleController extends CrudController
 {
     //
 	var $model;
+	
     public function __construct(Role $model)
 	{
+		$this->can_be_null_columns = ["desc","perms2"];
 		$this->model = $model;
 	}
 

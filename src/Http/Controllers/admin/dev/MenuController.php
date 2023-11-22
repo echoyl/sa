@@ -125,6 +125,7 @@ class MenuController extends CrudController
         {
             if(isset($item['form_config']))
             {
+                
                 $formColumns = $item['form_config'];
                 $item['tabs'] = [];
                 if(isset($formColumns['tabs']))
@@ -136,7 +137,7 @@ class MenuController extends CrudController
                             $item['tabs'][] = ['title'=>$tab['title']];
                         }else
                         {
-                            $item['tabs'][] = $tab['tab'];
+                            $item['tabs'] = array_merge($item['tabs'],$tab['tab']);
                         }
                         
                         $k = $key?'form_config'.$key:'form_config';
@@ -144,7 +145,7 @@ class MenuController extends CrudController
                     }
                 }else
                 {
-                    $item['tabs'][] = ['title'=>'基础信息'];
+                    $item['tabs'][] = [['title'=>'基础信息']];
                 }
                 
             }else

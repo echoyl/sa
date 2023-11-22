@@ -170,6 +170,21 @@ class TableColumn
             $d['tooltip'] = $tooltip;
         }
 
+        //tip包含3个数据 1.placeholder 2.tooltip 3.extra
+        $tip = $props['tip']??[];
+        $tip_placeholder = Arr::get($tip,'placeholder');
+        $tip_tooltip = Arr::get($tip,'tooltip');
+        $tip_extra = Arr::get($tip,'extra');
+        if($tip_placeholder)
+        {
+            $d['fieldProps'] = ['placeholder'=>$tip_placeholder];
+        }
+
+        if($tip_tooltip)
+        {
+            $d['tooltip'] = $tip_tooltip;
+        }
+
         if(!empty($sort))
         {
             $d['sort'] = true;
@@ -324,7 +339,18 @@ class TableColumn
                 }
                 if($relation['foreign_model']['menu'])
                 {
-                    $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                    //检测关联的菜单数量 多个的话 根据前端传的page参数选择该菜单
+                    $menu_id = Arr::get($item,'modal.page');
+                    $foreign_menu = false;
+                    if($menu_id)
+                    {
+                        $menu = (new Menu())->where(['id'=>$menu_id])->first();
+                        if($menu && $menu['admin_model_id'] == $relation['foreign_model']['id'])
+                        {
+                            $foreign_menu = $menu;
+                        }
+                    }
+                    $path = array_reverse(Utils::getPath($foreign_menu?:$relation['foreign_model']['menu'],$this->menus,'path'));
                     $fieldProps['path'] = implode('/',$path);
                     //多层聚合的话 foreign_key 需要使用数组第一级的relation的foreign_key值
                     //示例：活动预约->预约订单->预约人 直接在预约活动列表展示预约人，foreign_key读取 活动预约活动的id 而不是 预约订单id

@@ -27,6 +27,12 @@ class AdminService
         return $user && $user['id'] == 1;
     }
 
+    public static function isDevUser($user = false)
+    {
+        $user = $user?:self::user();
+        return $user && $user['desc'] == 'dev';
+    }
+
     public static function user()
     {
         $user = request()->user();
@@ -75,7 +81,7 @@ class AdminService
         $info = [
             'userinfo'=>self::parseUser($user),
             'access_token'=>$token,
-            'setting'=>self::setting(AdminService::isSuper($user)),
+            'setting'=>self::setting($user),
             'user'=>$user,
         ];
         self::log('登录',['id'=>$user['id']]);
@@ -106,7 +112,7 @@ class AdminService
         return false;
     }
 
-    public static function setting($is_super = false)
+    public static function setting($user = false)
     {
         $ss = new SetsService();
         $setting = $ss->getSet('setting');
@@ -144,8 +150,10 @@ class AdminService
 
         $setting['favicons'] = [$setting['favicons']['url']];
         $dev = Arr::get($setting,'dev',true);
-        $is_super = $is_super?:AdminService::isSuper();
-        $setting['dev'] = $dev && $is_super;
+        $is_super = AdminService::isSuper($user);
+        $is_dev = AdminService::isDevUser($user);
+        //新增 体验权限也能看到 开发菜单
+        $setting['dev'] = $dev && ($is_super || $is_dev);
         $setting['lang'] = Arr::get($setting,'lang',true);
         $setting['splitMenus'] = Arr::get($setting,'splitMenus',false);
         return $setting;
@@ -201,6 +209,28 @@ class AdminService
         return;
     }
 
+    public static function checkDevAuth($user,$router)
+    {
+        $is_dev = self::isDevUser($user);
+        if(!$is_dev)
+        {
+            return false;
+        }
+        $router = $router?explode('/',$router):[];
+        if(empty($router) || $router[0] != 'dev')
+        {
+            return false;
+        }
+        if(request()->isMethod('GET'))
+        {
+            //只在get请求有权限
+            return true;
+        }else
+        {
+            return false;
+        }
+    }
+
     public static function checkAuth()
     {
         $user = self::user();
@@ -216,11 +246,19 @@ class AdminService
                 $q->select(['id', 'perms2']);
             }])->first()->toArray();
             $as = new MenuService;
-            //d($now_router,$perms['perms2'],$perms['role']['perms2']);
-            $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']?$perms['role']['perms2']:'');
-            if (!$has_perm) {
-                return false;
+            //注入一段 体验账号的权限检测
+            if(self::checkDevAuth($user,$now_router))
+            {
+
+            }else
+            {
+                //d($now_router,$perms['perms2'],$perms['role']['perms2']);
+                $has_perm = $as->checkPerm($now_router,$perms['perms2'],$perms['role']?$perms['role']['perms2']:'');
+                if (!$has_perm) {
+                    return false;
+                }
             }
+            
         }
 
         //检测菜单是否有默认请求参数
@@ -327,7 +365,11 @@ class AdminService
         $path = array_reverse(Utils::getPath($menu,$ds->allMenu(),'title'));
         
         $name = $ms->basePerms[$name]??'';
-        $path[] = $name;
+        if($name)
+        {
+            $path[] = $name;
+        }
+        
 
         return implode(' - ',$path);
 

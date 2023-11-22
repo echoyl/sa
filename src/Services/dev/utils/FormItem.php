@@ -178,10 +178,7 @@ class FormItem
         $tip_placeholder = Arr::get($tip,'placeholder');
         $tip_tooltip = Arr::get($tip,'tooltip');
         $tip_extra = Arr::get($tip,'extra');
-        if($tip_placeholder)
-        {
-            $this->data['fieldProps']['placeholder'] = $tip_placeholder;
-        }
+
 
         if($tip_tooltip)
         {
@@ -200,13 +197,13 @@ class FormItem
         }
 
 
-        if($placeholder)
+        if($placeholder || $tip_placeholder)
         {
-            $this->data['fieldProps']['placeholder'] = $placeholder;
+            $this->data['fieldProps']['placeholder'] = $placeholder?:$tip_placeholder;
         }else
         {
             //默认给每个表单设置 placeholder
-            if(in_array($form_type,['select','cascader','tmapInput']))
+            if(in_array($form_type,['select','cascader','tmapInput','switch']))
             {
                 $this->data['fieldProps']['placeholder'] = '请选择'.$d['title'];
             }else
@@ -484,6 +481,10 @@ class FormItem
                 $d['fieldProps']['mode'] = 'tags';
             }
         }
+        if($this->schema['form_type'] == 'select')
+        {
+            $d['fieldProps']['showSearch'] = true;
+        }
         if($this->readonly)
         {
             //只读的话 删除valueType 直接显示数据了
@@ -617,9 +618,9 @@ class FormItem
 
     public function permGroup()
     {
-        $this->data['fieldProps'] = [
-            'requestNames'=>['perms']
-        ];
+        // $this->data['fieldProps'] = [
+        //     'requestNames'=>['perms']
+        // ];
     }
 
     public function digit()
