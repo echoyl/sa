@@ -11,7 +11,7 @@
  Target Server Version : 80032
  File Encoding         : 65001
 
- Date: 24/11/2023 15:33:14
+ Date: 24/11/2023 16:16:02
 */
 
 SET NAMES utf8mb4;
@@ -309,7 +309,6 @@ CREATE TABLE `la_migrations`  (
 -- ----------------------------
 -- Records of la_migrations
 -- ----------------------------
-INSERT INTO `la_migrations` VALUES (2, '2019_12_14_000001_create_personal_access_tokens_table', 1);
 
 -- ----------------------------
 -- Table structure for la_pca
@@ -3863,30 +3862,6 @@ CREATE TABLE `la_perm_user`  (
 -- Records of la_perm_user
 -- ----------------------------
 INSERT INTO `la_perm_user` VALUES (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', 36, '9.workplace,10.show,10.submit,43.index,43.show,43.add,43.edit,43.destroy,23.index,23.show,23.add,23.edit,23.destroy,24.index,24.show,24.add,24.edit,24.destroy,26.index,26.show,26.add,26.edit,26.destroy,27.index,27.show,27.add,27.edit,27.destroy,318.index,318.show,318.add,318.edit,318.destroy,318.pub,318.sync,32.index,32.show,32.add,32.edit,32.destroy,33.index,33.show,33.add,33.edit,33.destroy,34.index,34.show,34.add,34.edit,34.destroy,36.index', 'deadmin de the fucking admin ~', NULL, '2023-11-24 13:52:31', '', 1, '2023-11-24 13:52:31', '', '');
-
--- ----------------------------
--- Table structure for la_personal_access_tokens
--- ----------------------------
-DROP TABLE IF EXISTS `la_personal_access_tokens`;
-CREATE TABLE `la_personal_access_tokens`  (
-  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tokenable_id` bigint UNSIGNED NOT NULL,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
-  `last_used_at` timestamp NULL DEFAULT NULL,
-  `expires_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `la_personal_access_tokens_token_unique`(`token` ASC) USING BTREE,
-  INDEX `la_personal_access_tokens_tokenable_type_tokenable_id_index`(`tokenable_type` ASC, `tokenable_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 194 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Records of la_personal_access_tokens
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for la_setting
