@@ -40,6 +40,8 @@ class CrudController extends ApiBaseController
     var $action_type = '';//操作类型 add edit 
     var $is_post = false;
     var $page_size = 10;
+    var $withTrashed = false;
+    var $group_by = '';
 
     /**
      * 搜索项配置
@@ -285,6 +287,7 @@ class CrudController extends ApiBaseController
                 if($type == 'has')
                 {
                     $search_val = request(HelperService::uncamelize($name),'');
+                    //d($search_val);
                     if(isset($sc['default']) && $sc['default'] && $search_val == $sc['default'])
                     {
                         //如果等于默认值 修改查询类型为 doesntHave
@@ -366,7 +369,16 @@ class CrudController extends ApiBaseController
 
         $m = $this->defaultSearch($m);
 
-        $count = $m->count();
+        if($this->group_by)
+        {
+            $count = $m->distinct($this->group_by)->count();
+            $m = $m->groupBy($this->group_by);
+        }else
+        {
+            $count = $m->count();
+        }
+
+        
         $select_columns = request('select','');
         if (!empty($this->with_column) && empty($select_columns)) {
             $m = $m->with($this->with_column);
@@ -513,7 +525,14 @@ class CrudController extends ApiBaseController
         }
         if(!is_array($id))
         {
-            $item = $m->where(['id' => $id])->first();
+            if($this->withTrashed)
+            {
+                $item = $m->where(['id' => $id])->withTrashed()->first();
+            }else
+            {
+                $item = $m->where(['id' => $id])->first();
+            }
+            
 
             if (!empty($item)) {
                 $this->action_type = 'edit';
