@@ -37,43 +37,43 @@ class AdminAppService implements SaAdminAppServiceInterface
                     'col' => [
                         [
                             'tab'=>[
-                                [
-                                    'title'=>'全国吃辣程度统计',
-                                    'row'=>[
-                                        [
-                                            'col'=>[
-                                                [
-                                                    'title'=>'地图统计',
-                                                    'data' => $this->areaMap($mapdata), 
-                                                    'type' => 'areaMap', 
-                                                    'field'=>'la',
-                                                    'config'=>[
-                                                        'tooltip'=>[
-                                                            'items'=>[
-                                                                ['field'=>'name','alias'=>'省份'],
-                                                                ['field'=>'la','alias'=>'数值'],
-                                                                ['field'=>'li','alias'=>'彩礼']
-                                                            ]
-                                                        ]
-                                                    ]
-                                                ],
-                                                [
-                                                    'title'=>'表格统计',
-                                                    'data' => $mapdatas, 
-                                                    'type' => 'table', 
-                                                    'columns'=>[
-                                                        ['dataIndex'=>'name','title'=>'省份','width'=>250],
-                                                        ['dataIndex'=>'la','title'=>'辣值','sort'=>true],
-                                                        ['dataIndex'=>'li','title'=>'彩礼','sort'=>true]
-                                                    ],
-                                                    'props'=>[
-                                                        'size'=>'small'
-                                                    ]
-                                                ],
-                                            ]
-                                        ]
-                                    ]
-                                ],
+                                // [
+                                //     'title'=>'全国吃辣程度统计',
+                                //     'row'=>[
+                                //         [
+                                //             'col'=>[
+                                //                 [
+                                //                     'title'=>'地图统计',
+                                //                     'data' => $this->areaMap($mapdata), 
+                                //                     'type' => 'areaMap', 
+                                //                     'field'=>'la',
+                                //                     'config'=>[
+                                //                         'tooltip'=>[
+                                //                             'items'=>[
+                                //                                 ['field'=>'name','alias'=>'省份'],
+                                //                                 ['field'=>'la','alias'=>'数值'],
+                                //                                 ['field'=>'li','alias'=>'彩礼']
+                                //                             ]
+                                //                         ]
+                                //                     ]
+                                //                 ],
+                                //                 [
+                                //                     'title'=>'表格统计',
+                                //                     'data' => $mapdatas, 
+                                //                     'type' => 'table', 
+                                //                     'columns'=>[
+                                //                         ['dataIndex'=>'name','title'=>'省份','width'=>250],
+                                //                         ['dataIndex'=>'la','title'=>'辣值','sort'=>true],
+                                //                         ['dataIndex'=>'li','title'=>'彩礼','sort'=>true]
+                                //                     ],
+                                //                     'props'=>[
+                                //                         'size'=>'small'
+                                //                     ]
+                                //                 ],
+                                //             ]
+                                //         ]
+                                //     ]
+                                // ],
                                 ['title' => '当月数据', 'y' => '', 'data' => collect($carr(30))->map(function($v,$k){
                                     $day = 30 - $k;
                                     return ['x'=>date("m-d",strtotime("-{$day} days")),'y'=>rand(10,200)];
