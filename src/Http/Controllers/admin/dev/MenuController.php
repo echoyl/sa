@@ -137,7 +137,7 @@ class MenuController extends CrudController
                             $item['tabs'][] = ['title'=>$tab['title']];
                         }else
                         {
-                            $item['tabs'] = array_merge($item['tabs'],$tab['tab']);
+                            $item['tabs'][] = $tab['tab'];
                         }
                         
                         $k = $key?'form_config'.$key:'form_config';
