@@ -30,14 +30,7 @@ class ServiceProvider extends LaravelServiceProvider
     {
         //
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
-
-        //配置文件
-        $this->publishes([
-            __DIR__.'/../config/sa.php' => config_path('sa.php'),
-        ],'config');
-        $this->publishes([
-            __DIR__.'/../database/schema/mysql-schema.dump' => database_path('schema/mysql-schema.dump'),
-        ],'config');
+        
 
         //数据迁移
         //$this->loadMigrationsFrom(__DIR__.'/../database/schema');
@@ -46,6 +39,20 @@ class ServiceProvider extends LaravelServiceProvider
             $this->commands([
                 SaCommand::class
             ]);
+            //静态发布文件
+            //build的文件
+            $this->publishes([__DIR__ . '/../static/dist' => public_path('antadmin')], 'antadmin');
+            //前端开发文件
+            $this->publishes([__DIR__ . '/../static/dev' => public_path('antadmindev')], 'antadmindev');
+            //配置文件
+            $this->publishes([
+                __DIR__.'/../config/sa.php' => config_path('sa.php'),
+            ],'deadmin');
+            //数据库基础文件
+            $this->publishes([
+                __DIR__.'/../database/schema/mysql-schema.dump' => database_path('schema/mysql-schema.dump'),
+            ],'deadmin');
+            
         }
 
         $router = $this->app['router'];
