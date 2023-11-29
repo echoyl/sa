@@ -13,7 +13,7 @@ class SaCommand extends VendorPublishCommand
      */
     //protected $signature = 'sa:command {name} {type=list_0_0}';
 
-    protected $signature = 'sa:publish
+    protected $signature = 'deadmin:publish
                     {--existing : Publish and overwrite only the files that have already been published}
                     {--force : Overwrite any existing files}
                     {--all : Publish assets for all service providers without prompt}
@@ -26,7 +26,7 @@ class SaCommand extends VendorPublishCommand
      *
      * @var string
      */
-    protected $description = 'Publish sa static files';
+    protected $description = 'Publish deadmin static files';
 
     /**
      * Execute the console command.
