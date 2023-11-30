@@ -16,7 +16,7 @@ interface actionConfirm {
   title?: string;
 }
 
-export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef) => {
+export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = undefined) => {
   const { msg, method = 'post', url = '', data = {}, dataId = 0, callback, title } = props;
   const values = searchFormRef?.current?.getFieldsFormatValue();
   const m = modal.confirm({

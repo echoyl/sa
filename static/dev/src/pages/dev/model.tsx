@@ -156,6 +156,7 @@ export default () => {
     { label: '数字- digit', value: 'digit' },
     { label: 'json', value: 'json' },
     { label: '弹层选择 - modalSelect', value: 'modalSelect' },
+    { label: '拾色器 - colorPicker', value: 'colorPicker' },
   ];
 
   const setTableColumns = (type: string) => {

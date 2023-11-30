@@ -27,9 +27,9 @@ import {
   getMenuData,
 } from '@ant-design/pro-components';
 import { useModel, useRouteData } from '@umijs/max';
-import { Image } from 'antd';
+import { ColorPicker, Image } from 'antd';
 import { get } from 'rc-util';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DebounceSelect from './DebounceSelect';
 import { ConfirmRender } from './action/confirm';
@@ -146,6 +146,7 @@ export declare type saValueTypeMapType<T = any, ValueType = 'text'> = ProFormCol
   | 'aliyunVideo'
   | 'saTransfer'
   | 'html'
+  | 'colorPicker'
 >;
 export declare type saFormColumnsType = Array<saValueTypeMapType | saColumnsExtend | string>;
 export declare type saTableColumnsType = Array<
@@ -352,7 +353,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
     renderFormItem: (text, props) => {
       //console.log('out', props);
       const { fieldProps } = props;
-      const name = fieldProps.dataIndex ? fieldProps.dataIndex : fieldProps.id;
+      const name = fieldProps.dataindex ? fieldProps.dataindex : fieldProps.id;
       return (
         <SaOptions
           name={name}
@@ -429,6 +430,43 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       return <div dangerouslySetInnerHTML={{ __html: text }}></div>;
     },
   },
+  colorPicker: {
+    render: (_, props) => {
+      return <ColorPicker size="small" value={_} showText disabled />;
+    },
+    renderFormItem: (_, props) => {
+      const [value, setValue] = useState(
+        props.fieldProps?.value ? props.fieldProps?.value : '#ffffff',
+      );
+
+      return (
+        <ColorPicker
+          value={value}
+          onChange={(color) => {
+            props.fieldProps?.onChange(color.toHexString());
+            setValue(color.toHexString());
+          }}
+          presets={[
+            {
+              label: 'Recommended',
+              colors: [
+                '#000000',
+                '#F5222D',
+                '#FA8C16',
+                '#FADB14',
+                '#8BBB11',
+                '#52C41A',
+                '#13A8A8',
+                '#1677FF',
+                '#2F54EB',
+                '#722ED1',
+              ],
+            },
+          ]}
+        />
+      );
+    },
+  },
 };
 
 export const tplComplie = (exp: string | undefined, props: any) => {
@@ -441,7 +479,7 @@ export const tplComplie = (exp: string | undefined, props: any) => {
   try {
     return new Function('$root', `with($root) { return (${matched[1]}); }`)(props);
   } catch (e) {
-    console.log('表达式错误，请重写', exp,props);
+    console.log('表达式错误，请重写', exp, props);
     return false;
   }
 };
@@ -486,6 +524,9 @@ export function log(...data: any) {
 }
 
 export const getFromObject = (record, dataIndex) => {
+  if (!record) {
+    return undefined;
+  }
   const value = Array.isArray(dataIndex) ? get(record, dataIndex) : record[dataIndex];
   return value;
 };

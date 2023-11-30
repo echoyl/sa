@@ -48,11 +48,13 @@ class FormItem
             $key = $key[0];
         }
 
-        if(in_array($key,['id','parent_id','created_at_s','displayorder']))
+        if(in_array($key,['id','parent_id','created_at_s']))
         {
             $this->data = $key;
             return;
         }
+
+
         $columns = json_decode($model['columns'],true);
         $columns[] = [
             'name'=>'created_at',
@@ -63,6 +65,11 @@ class FormItem
             'name'=>'updated_at',
             'title'=>'更新时间',
             'form_type'=>'datetime'
+        ];
+        $columns[] = [
+            'name'=>'displayorder',
+            'title'=>'排序',
+            'form_type'=>'digit'
         ];
         $schema = Utils::arrGet($columns,'name',$key);
         $this->schema = $schema;
@@ -113,7 +120,6 @@ class FormItem
         $form_type = $config['type']??'';
         if($form_type)
         {
-            $d['valueType'] = $form_type;
             $this->form_type = $form_type;
         }else
         {
@@ -122,9 +128,13 @@ class FormItem
             if(isset(Utils::$value_type_map[$form_type]))
             {
                 $form_type = Utils::$value_type_map[$form_type];
-                $d['valueType'] = $form_type;
             }
         }
+        if($form_type)
+        {
+            $d['valueType'] = $form_type;
+        }
+        
 
         if($relation && $set_label)
         {

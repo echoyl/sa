@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from 'antd';
 import React, { useContext, useEffect, useState } from 'react';
-import { inArray } from '../../checkers';
+import { inArray, isArr } from '../../checkers';
 import { parseIcon, tplComplie, uid } from '../../helpers';
 import { SaContext } from '../../posts/table';
 import TableFromBread from '../../tableFromBread';
@@ -21,7 +21,7 @@ import ButtonModal from '../buttonModal';
 import Confirm, { ConfirmTriggerClick } from '../confirm';
 import ConfirmForm from '../confirmForm';
 import Print from '../print';
-import ItemsTag from './items/tag';
+import ItemTags from './items/tag';
 
 const CustomerColumnRender = (props) => {
   const {
@@ -32,6 +32,7 @@ const CustomerColumnRender = (props) => {
     direction = 'horizontal',
     dropdown = { num: 1, text: '···' },
     type = 'table',
+    dataindex,
   } = props;
   const { initialState } = useModel('@@initialState');
   //console.log('props ', props);
@@ -134,8 +135,8 @@ const CustomerColumnRender = (props) => {
         );
       }
     } else if (item.domtype == 'tag') {
-      //console.log('tag text', text);
-      return text ? <ItemsTag key={i} color={text?.color} title={text?.title} /> : null;
+      //console.log('tag text', text, item);
+      return <ItemTags key={i} dataindex={dataindex} tags={isArr(text) ? text : [text]} />;
     }
     return '';
   };

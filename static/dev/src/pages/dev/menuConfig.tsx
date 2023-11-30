@@ -82,6 +82,7 @@ export default (props) => {
     { label: '穿梭框 - saTransfer', value: 'saTransfer' },
     { label: 'html显示', value: 'html' },
     { label: '地图点显示 - tmapShow', value: 'tmapShow' },
+    { label: '拾色器 - colorPicker', value: 'colorPicker' },
   ];
   const dfColumns: saFormColumnsType = [
     {

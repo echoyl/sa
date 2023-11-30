@@ -99,6 +99,7 @@ export const SaContext = createContext<{
   actionRef?: any;
   formRef?: any;
   columnData?: { [key: string]: any };
+  searchData?: { [key: string]: any };
   url?: string;
   saTableContext?: saTableContextProps;
   searchFormRef?: any;
@@ -444,7 +445,15 @@ const SaTable: React.FC<saTablePros> = (props) => {
 
   return (
     <SaContext.Provider
-      value={{ actionRef, searchFormRef, formRef, columnData, url, saTableContext }}
+      value={{
+        actionRef,
+        searchFormRef,
+        formRef,
+        searchData: enums,
+        columnData,
+        url,
+        saTableContext,
+      }}
     >
       <>
         <ProTable

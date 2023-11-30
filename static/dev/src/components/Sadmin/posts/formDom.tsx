@@ -1,6 +1,5 @@
 import request from '@/services/ant-design-pro/sadmin';
 import { BetaSchemaForm, ProFormColumnsType } from '@ant-design/pro-components';
-import { Cascader } from 'antd';
 import dayjs from 'dayjs';
 import { ReactNode } from 'react';
 import { isArr, isStr } from '../checkers';
@@ -97,31 +96,6 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
   //const { initialState } = useModel('@@initialState');
 
   const defaulColumns: { [key: string]: any } = {
-    category_id: {
-      title: allLabels.category_id,
-      valueType: categoryType,
-      dataIndex: 'category_id',
-      fieldProps:
-        categoryType == 'select'
-          ? {
-              ...categoryProps,
-              mode: 'multiple',
-            }
-          : {
-              ...categoryProps,
-              multiple: true,
-              showCheckedStrategy: Cascader.SHOW_CHILD,
-            },
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-            message: '请选择' + allLabels.category_id,
-          },
-        ],
-      },
-    },
-
     id: {
       dataIndex: 'id',
       formItemProps: { hidden: true },
@@ -190,10 +164,8 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         });
       }
 
-      if (v.valueType == 'saFormList') {
-        //将name设置到属性当中 因为 valueTypeMap 中会丢失name 先在这里添加修改下
-        v.fieldProps = { ...v.fieldProps, dataIndex: v.dataIndex };
-      }
+      //将name设置到属性当中 因为 valueTypeMap 中会丢失name 先在这里添加修改下
+      v.fieldProps = { ...v.fieldProps, dataindex: v.dataIndex };
       if (v.valueType == 'modalSelect' && !v.fieldProps.name) {
         //将name设置到属性当中 因为 valueTypeMap 中会丢失name 先在这里添加修改下
         v.fieldProps = { ...v.fieldProps, name: v.dataIndex };

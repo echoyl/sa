@@ -121,7 +121,6 @@ class TableColumn
         $form_type = $config['type']??'';
         if($form_type)
         {
-            $d['valueType'] = $form_type;
             $this->form_type = $form_type;
         }else
         {
@@ -130,8 +129,12 @@ class TableColumn
             if(isset(Utils::$value_type_map[$form_type]))
             {
                 $form_type = Utils::$value_type_map[$form_type];
-                $d['valueType'] = $form_type;
             }
+        }
+
+        if($form_type)
+        {
+            $d['valueType'] = $form_type;
         }
 
         //前端使用cascader自动获取key 这里后端不再检测
@@ -224,6 +227,10 @@ class TableColumn
         if($if)
         {
             $this->data['fieldProps'] = array_merge(['if'=>$if],$this->data['fieldProps']);
+        }
+        if(isset($this->data['fieldProps']) && empty($this->data['fieldProps']))
+        {
+            unset($this->data['fieldProps']);
         }
 
         if($formItemProps && !is_string($formItemProps))
