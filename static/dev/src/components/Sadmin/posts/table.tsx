@@ -728,7 +728,7 @@ const InnerForm = (props) => {
       paramExtra={{ ...currentRow, ...paramExtra }}
       postExtra={{ ...currentRow, ...postExtra }}
       url={url}
-      showTabs={false}
+      showTabs={tabs?.length > 1 ? true : false}
       formProps={{
         contentRender,
         submitter:

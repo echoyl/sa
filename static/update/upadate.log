@@ -1,0 +1,33 @@
+
+ALTER TABLE `la_dev_model_relation` 
+ADD COLUMN `order_by` varchar(255) NOT NULL DEFAULT '' COMMENT '关联数据排序方式' AFTER `filter`;
+
+ALTER TABLE `la_setting` 
+ADD COLUMN `app_name` varchar(255) NOT NULL DEFAULT '' COMMENT '项目名称' AFTER `value`;
+
+ALTER TABLE `la_dev_model` 
+ADD COLUMN `unique_fields` varchar(255) NOT NULL DEFAULT '' COMMENT '模型的唯一索引字段' AFTER `search_columns`,
+ADD COLUMN `setting` text NULL COMMENT '其它设置都放这' AFTER `unique_fields`;
+
+ALTER TABLE `la_perm_role` 
+ADD COLUMN `displayorder` int NOT NULL DEFAULT 0 AFTER `deleted_at`;
+
+2023-10-31
+
+ALTER TABLE `la_dev_menu` 
+ADD COLUMN `setting` text NULL COMMENT '其它设置都放这' AFTER `deleteable`;
+
+2023-11-10
+
+ALTER TABLE `la_perm_role` ADD COLUMN `sync_user`  int(11) NOT NULL DEFAULT 0 COMMENT '同步用户';
+
+
+2023-11-22
+ALTER TABLE `echoyl`.`la_dev_model_relation` 
+MODIFY COLUMN `select_columns` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联模型包含字段 可以包含多级' AFTER `is_with`;
+
+2023-12-02
+
+ALTER TABLE `la_wechat_offiaccount_account`
+ ADD COLUMN `subscribe_reply`  varchar(255) NOT NULL DEFAULT '' COMMENT '关注时回复',
+ ADD COLUMN `auto_reply`  varchar(255) NOT NULL DEFAULT '' COMMENT '自动回复';

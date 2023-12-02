@@ -15,6 +15,7 @@ class AccountController extends CrudController
 		$this->with_column = [
 		    'menus',
 		];
+		$this->can_be_null_columns = ["subscribe_reply","auto_reply"];
 		$this->model = new Account();
 		//customer construct start
 		

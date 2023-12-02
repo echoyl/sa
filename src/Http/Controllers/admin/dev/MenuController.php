@@ -145,7 +145,7 @@ class MenuController extends CrudController
                     }
                 }else
                 {
-                    $item['tabs'][] = [['title'=>'基础信息']];
+                    $item['tabs'][] = ['title'=>'基础信息'];
                 }
                 
             }else

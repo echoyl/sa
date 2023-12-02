@@ -154,26 +154,43 @@ class WechatService
     }
 
 
-    public static function createWxaQrcode($scene, $page = '', $app)
+    /**
+     * 生成小程序二维码
+     *
+     * @param [type] $scene
+     * @param \EasyWeChat\MiniApp\Application $app
+     * @param string $page
+     * @param string $path
+     * @return void
+     */
+    public static function createWxaQrcode($scene, $app, $page = '',$path = '')
     {
-        if ($page) {
-            $result = $app->app_code->getUnlimit($scene, ['page' => $page]);
-        } else {
-            $result = $app->app_code->getUnlimit($scene);
+        if(is_array($scene))
+        {
+            $scene = http_build_query($scene);
         }
-        //d($result);
+        $post = ['scene'=>$scene];
 
-        if (is_array($result) && isset($result['errcode'])) {
-            Log::channel('daily')->info('wechat createWxaQrcode:', $result);
-            return [1, $result['errmsg']];
-        }
-
-        if ($result) {
-            return [0, $result];
+        if ($page) 
+        {
+            $post['page'] = $page;
         }
 
+        try {
+            $response = $app->getClient()->postJson('/wxa/getwxacodeunlimit', $post);
+            if($path)
+            {
+                $response->saveAs($path);
+                return [0,'success'];
+            }else
+            {
+                return [0,$response];
+            }
+            
+        }catch (Exception $e) {
 
-        return [1, '生成错误'];;
+            return [10,$e->getMessage()];
+        }
     }
 
     public function wxnotify()
@@ -185,7 +202,7 @@ class WechatService
     public static function createMenu($content, $wechat_offiaccount_id)
     {
         try {
-            $app = self::getOffiaccount($wechat_offiaccount_id);
+            $app = self::getOffiaccountApp($wechat_offiaccount_id);
         } catch (Exception $e) {
             return ['code' => 1, 'msg' => $e->getMessage()];
         }
@@ -204,14 +221,7 @@ class WechatService
         }
     }
 
-    /**
-     * 通过账号id获取app
-     *
-     * @param integer $account_id
-     * @param array $params
-     * @return \EasyWeChat\OfficialAccount\Application
-     */
-    public static function getOffiaccount($account_id = 0, $params = []): OfficialAccountApplication
+    public static function getOffiaccount($account_id)
     {
         if ($account_id) {
             $account = (new Account())->where(['id' => $account_id, 'state' => 1])->first();
@@ -219,9 +229,28 @@ class WechatService
             $account = (new Account())->where(['state' => 1])->orderBy('id', 'desc')->first();
         }
         if (!$account) {
-            throw new Exception('请先配置或开启公众号');
+            return [1,'请先配置或开启公众号'];
         }
+        return [0,$account];
+    }
 
+    /**
+     * 通过账号id获取app
+     *
+     * @param integer $account_id
+     * @param array $params
+     * @return \EasyWeChat\OfficialAccount\Application
+     */
+    public static function getOffiaccountApp($account_id = 0, $params = []): OfficialAccountApplication
+    {
+        [$code,$account] = self::getOffiaccount($account_id);
+
+        if($code)
+        {
+            throw new Exception($account);
+        }
+        
+        
         $account_id = $account['id'];
 
         $config = [
@@ -275,63 +304,10 @@ class WechatService
         return $account;
     }
 
-    public static function wxuserlist($nextid = null, $account_id)
-    {
-        [$code, $app] = self::getOffiaccount($account_id);
-
-        if ($code) {
-            return [$code, $app];
-        }
-
-        $model = new User();
-        $list = $app->user->list($nextid);
-        //Log::channel('daily')->info('list:',$list);
-
-        if ($list['count'] > 0) {
-            $openids = array_chunk($list['data']['openid'], 100);
-            foreach ($openids as $_openids) {
-                $users = $app->user->select($_openids);
-                //Log::channel('daily')->info('users:',$users); 
-                if (!isset($users['user_info_list'])) {
-                    continue;
-                }
-                foreach ($users['user_info_list'] as $user) {
-                    $has = $model->where(['openid' => $user['openid'], 'appid' => $app->config->app_id])->first();
-                    $data = [
-                        'subscribe' => $user['subscribe'],
-                        'openid' => $user['openid'],
-                        //微信接口不返回以下信息了
-                        //'nickname'=>$user['nickname'],
-                        //'gender'=>$user['sex'],
-                        //'city'=>$user['city'],
-                        //'province'=>$user['province'],
-                        //'country'=>$user['country'],
-                        //'avatar'=>$user['headimgurl'],
-                        'subscribe_at' => $user['subscribe_time'],
-                        'unionid' => $user['unionid'] ?? '',
-                        'subscribe_scene' => $user['subscribe_scene'],
-                        'appid' => $app->config->app_id
-                    ];
-                    if ($has) {
-                        $model->where(['id' => $has['id']])->update($data);
-                    } else {
-                        $data['created_at'] = now();
-                        $model->insert($data);
-                    }
-                }
-            }
-        }
-
-        if ($list['next_openid']) {
-            self::wxuserlist($list['next_openid'], $account_id);
-        }
-        return ['code' => 0, 'msg' => '同步完成'];
-    }
-
     public static function getMenu($wechat_offiaccount_id)
     {
         try {
-            $app = self::getOffiaccount($wechat_offiaccount_id);
+            $app = self::getOffiaccountApp($wechat_offiaccount_id);
         } catch (Exception $e) {
             return ['code' => 1, 'msg' => $e->getMessage()];
         }
@@ -447,7 +423,8 @@ class WechatService
             //'country'=>$original['country'],
             'unionid' => $original['unionid'] ?? '',
             'last_used_at' => now(),
-            'appid' => $app_id
+            'appid' => $app_id,
+            'state'=>1
         ];
         if ($has) {
             //更新 - 更新的话只更新最后使用时间了
@@ -523,7 +500,8 @@ class WechatService
                 'unionid' => $original['unionid'] ?? '',
                 'subscribe' => $original['subscribe'] ?? 0,
                 'created_at' => date("Y-m-d H:i:s"),
-                'appid' => $app_id
+                'appid' => $app_id,
+                'state'=>1
             ];
             if (isset($original['subscribe_time'])) {
                 $data['subscribe_at'] = date("Y-m-d H:i:s", $original['subscribe_time']);

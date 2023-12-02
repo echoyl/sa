@@ -1,4 +1,4 @@
-import { CloseCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, MenuOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProCard, ProForm, ProFormDependency, ProFormText } from '@ant-design/pro-components';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
@@ -6,6 +6,7 @@ import { SortableContext, arrayMove, useSortable } from '@dnd-kit/sortable';
 import { css } from '@emotion/css';
 import { Button, Divider, Form, Popover, Select, Space } from 'antd';
 import React, { useEffect, useState } from 'react';
+import ButtonModal from '../action/buttonModal';
 import { inArray } from '../checkers';
 import { uid } from '../helpers';
 
@@ -30,7 +31,7 @@ const DraggableUploadListItem = ({ originNode, item }: DraggableUploadListItemPr
     cursor: 'move',
     transition: 'unset', // Prevent element from shaking after drag
     height: '100%',
-    width: '100%',
+    ...originNode?.props?.style,
   };
   // const style: React.CSSProperties = {
   //   transform: CSS.Transform.toString(transform),
@@ -138,7 +139,7 @@ export const SecondMenu: React.FC<{
                 <React.Fragment key={index}>
                   <DraggableUploadListItem
                     originNode={
-                      <div>
+                      <div style={{ width: '100%' }}>
                         <div
                           style={{
                             background: !selected && thisMenu?.uid == item.uid ? '#eee' : 'none',
@@ -190,7 +191,9 @@ const FormPanel: React.FC<{
     //     return;
     //   }
     // }
-    form.submit();
+    // console.log('valuechange', value, allvalues);
+    // form.submit();
+    onFinish(allvalues);
   };
   const onFinish = (values: FormData) => {
     //const fieldsValue = formRef.current?.getFieldsValue();
@@ -216,75 +219,70 @@ const FormPanel: React.FC<{
     },
   ];
   const formTailLayout = {
-    labelCol: { span: 4 },
-    wrapperCol: { span: 12, offset: 0 },
+    labelCol: { span: 12 },
+    wrapperCol: { span: 24, offset: 0 },
   };
-  return (
-    menu && (
-      <ProForm
-        onFinish={onFinish}
-        form={form}
-        submitter={false}
-        initialValues={menu}
-        onValuesChange={onValuesChange}
-        {...formTailLayout}
-      >
-        <ProFormText
-          label="菜单名称"
-          name="name"
-          required
-          rules={[
-            {
-              max: 5,
-            },
-          ]}
-          onChange={() => {
-            form.submit();
-          }}
-        />
-        {(!menu.sub_button || menu.sub_button.length < 1) && (
-          <>
-            <ProForm.Item label="类型" name="type" required>
-              <Select options={types} />
-            </ProForm.Item>
-            <ProFormDependency name={['type']}>
-              {({ type }) => {
-                const ret = [];
-                if (inArray(type, ['view', 'miniprogram']) > -1) {
-                  ret.push(<ProFormText key="url" label="链接地址" name="url" required />);
-                }
-                if (inArray(type, ['miniprogram']) > -1) {
-                  ret.push(
-                    <>
-                      <ProFormText key="appid" label="小程序appid" name="appid" required />
-                      <ProFormText key="pagepath" label="小程序页面地址" name="pagepath" required />
-                    </>,
-                  );
-                }
-                if (inArray(type, ['click']) > -1) {
-                  ret.push(
-                    <>
-                      <ProFormText key="key" label="关键字" name="key" required />
-                    </>,
-                  );
-                }
-                return ret;
-              }}
-            </ProFormDependency>
-          </>
-        )}
-      </ProForm>
-    )
-  );
+  return menu ? (
+    <ProForm
+      onFinish={onFinish}
+      form={form}
+      request={async (params) => {
+        return menu;
+      }}
+      onValuesChange={onValuesChange}
+      {...formTailLayout}
+      submitter={false}
+    >
+      <ProFormText
+        key="name"
+        label="菜单名称"
+        name="name"
+        required
+        rules={[
+          {
+            max: 5,
+          },
+        ]}
+        // onChange={() => {
+        //   form.submit();
+        // }}
+      />
+      {(!menu.sub_button || menu.sub_button.length < 1) && (
+        <>
+          <ProForm.Item key="type" label="类型" name="type" required>
+            <Select options={types} />
+          </ProForm.Item>
+          <ProFormDependency key="dependency" name={['type']}>
+            {({ type }) => {
+              const ret = [];
+              if (inArray(type, ['view', 'miniprogram']) > -1) {
+                ret.push(<ProFormText key="url" label="链接地址" name="url" required />);
+              }
+              if (inArray(type, ['miniprogram']) > -1) {
+                ret.push(<ProFormText key="appid" label="小程序appid" name="appid" required />);
+                ret.push(
+                  <ProFormText key="pagepath" label="小程序页面地址" name="pagepath" required />,
+                );
+              }
+              if (inArray(type, ['click']) > -1) {
+                ret.push(<ProFormText key="key" label="关键字" name="key" required />);
+              }
+              return ret;
+            }}
+          </ProFormDependency>
+        </>
+      )}
+    </ProForm>
+  ) : null;
 };
 
-const WxMenu: React.FC<{ value?: wxMenu[]; onChange?: (v: any) => void }> = ({
-  value = [],
-  onChange,
-}) => {
+const WxMenu: React.FC<{
+  value?: wxMenu[];
+  onChange?: (v: any) => void;
+}> = ({ value = [], onChange }) => {
   const [menus, setMenus] = useState<wxMenu[]>(value);
   const [formMenu, setFormMenu] = useState<wxMenu>();
-  const [thisMenu, setThisMenu] = useState<wxMenu>();
+  const [thisMenu, setThisMenu] = useState<wxMenu | null>(menus?.[0]);
   const [selected, setSelected] = useState(false);
   const menuMaxLength = 3;
   const addMenu = () => {
@@ -310,22 +308,22 @@ const WxMenu: React.FC<{ value?: wxMenu[]; onChange?: (v: any) => void }> = ({
   };
   const changeMenu = (d: wxMenu[]) => {
     setMenus([...d]);
-    onChange?.(d);
+    onChange?.([...d]);
     //顺序变化
     //onChange?.([...d]);
   };
   const formChange = (menu: wxMenu) => {
-    console.log('formChange', menu);
+    //console.log('formChange', menu);
     menus.forEach((v, i) => {
       if (v.uid == menu.uid) {
         menus[i] = menu;
       } else {
-        console.log('inner find', v);
+        //console.log('inner find', v);
         if (v.sub_button) {
-          console.log('inner find', v.sub_button);
+          //console.log('inner find', v.sub_button);
           v.sub_button.forEach((vv, ii) => {
             if (vv.uid == menu.uid) {
-              console.log('inner find', vv);
+              //console.log('inner find', vv);
               menus[i].sub_button[ii] = menu;
             }
           });
@@ -336,64 +334,102 @@ const WxMenu: React.FC<{ value?: wxMenu[]; onChange?: (v: any) => void }> = ({
     setFormMenu(menu);
     changeMenu(menus);
   };
+
+  const sensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 10 },
+  });
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    const activeIndex = menus.findIndex((i) => i.uid === active.id);
+    if (active.id !== over?.id) {
+      const overIndex = menus.findIndex((i) => i.uid === over?.id);
+      const new_sort_data = arrayMove(menus, activeIndex, overIndex);
+      changeMenu(new_sort_data);
+    }
+    setSelected(true);
+    setThisMenu(menus[activeIndex]);
+  };
+
   return (
     <ProCard split="vertical">
-      <ProCard style={{ paddingTop: 300,backgroun:"#eee" }} colSpan={12} key="menupanel">
+      <ProCard style={{ paddingTop: 440, background: '#eee' }} colSpan={15} key="menupanel">
         {/* <SecondMenu
     data={sm}
     onChange={(v) => {
       console.log('子菜单顺序变化', v);
     }}
   /> */}
-        {menus?.map((item, index) => {
-          return (
-            <React.Fragment key={item.uid}>
-              <Popover
-                content={
-                  <SecondMenu
-                    data={item.sub_button}
-                    menuSelect={(menu) => {
-                      setFormMenu(menu);
-                      setSelected(false);
-                    }}
-                    onChange={(smenu) => {
-                      //二级菜单更新
-                      item.sub_button = smenu;
-                      changeMenu(menus);
-                    }}
-                    selected={selected}
+        <DndContext
+          sensors={[sensor]}
+          onDragEnd={onDragEnd}
+          onDragStart={() => {
+            setSelected(false);
+            setThisMenu(null);
+          }}
+        >
+          <SortableContext
+            items={menus?.map((i) => i.uid)}
+            //strategy={horizontalListSortingStrategy}
+          >
+            {menus?.map((item, index) => {
+              return (
+                <React.Fragment key={item.uid}>
+                  <DraggableUploadListItem
+                    originNode={
+                      <div style={{ display: 'inline-block' }}>
+                        <Popover
+                          content={
+                            <SecondMenu
+                              data={item.sub_button}
+                              menuSelect={(menu) => {
+                                setFormMenu(menu);
+                                setSelected(false);
+                              }}
+                              onChange={(smenu) => {
+                                //二级菜单更新
+                                item.sub_button = smenu;
+                                changeMenu(menus);
+                              }}
+                              selected={selected}
+                            />
+                          }
+                          trigger="click"
+                          placement="top"
+                          open={thisMenu && item.uid == thisMenu.uid ? true : false}
+                        >
+                          <Button
+                            type={thisMenu?.uid == item.uid ? 'dashed ' : 'text'}
+                            style={{ width: 150 }}
+                            onClick={() => {
+                              clickMenu(item);
+                              setSelected(true);
+                            }}
+                          >
+                            <Space>
+                              {item.name}
+                              <CloseCircleOutlined
+                                onClick={(e) => {
+                                  closeMenu(index);
+                                  e.stopPropagation();
+                                }}
+                              />
+                            </Space>
+                          </Button>
+                        </Popover>
+                      </div>
+                    }
+                    item={item}
                   />
-                }
-                trigger="click"
-                placement="top"
-                open={thisMenu && item.uid == thisMenu.uid ? true : false}
-              >
-                <Button
-                  type={thisMenu?.uid == item.uid ? 'dashed ' : 'text'}
-                  style={{ width: 150 }}
-                  onClick={() => {
-                    clickMenu(item);
-                    setSelected(true);
-                  }}
-                >
-                  <Space>
-                    {item.name}
-                    <CloseCircleOutlined
-                      onClick={(e) => {
-                        closeMenu(index);
-                        e.stopPropagation();
-                      }}
-                    />
-                  </Space>
-                </Button>
-              </Popover>
-              {index < menus.length - 1 ? <Divider type="vertical" /> : null}
-            </React.Fragment>
-          );
-        })}
+
+                  {index < menus.length - 1 ? <Divider type="vertical" /> : null}
+                </React.Fragment>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
         {menus?.length < menuMaxLength ? (
           <>
-            <Divider type="vertical" />
+            {menus?.length > 0 ? <Divider type="vertical" /> : null}
             <Button type="dashed" onClick={addMenu}>
               +
             </Button>
@@ -401,16 +437,51 @@ const WxMenu: React.FC<{ value?: wxMenu[]; onChange?: (v: any) => void }> = ({
         ) : null}
       </ProCard>
 
-      <ProCard colSpan={12} title="菜单设置" key="showpanel">
+      <ProCard colSpan={9} title="菜单设置" key="showpanel">
         <FormPanel key={formMenu?.uid} menu={formMenu} onChange={formChange} />
       </ProCard>
     </ProCard>
   );
 };
 
+/**
+ * form中不能嵌套form 所有将菜单编辑放入modal中
+ * @param props
+ * @returns
+ */
+export const WxMenuModal = (props) => {
+  const [value, setValue] = useState();
+  //当点击确认的时候才修改值
+  return (
+    <ButtonModal
+      trigger={
+        <Button icon={<MenuOutlined />} type="dashed">
+          配置自定义菜单
+        </Button>
+      }
+      title="配置自定义菜单"
+      width={1000}
+      formFooter={false}
+      onOk={() => {
+        console.log('ok submit', value);
+        props?.onChange?.([...value]);
+        return true;
+      }}
+    >
+      <WxMenu
+        value={props.value ? [...props.value] : []}
+        onChange={(v) => {
+          //console.log('just on change', v);
+          setValue([...v]);
+        }}
+      />
+    </ButtonModal>
+  );
+};
+
 export const wxMenuRender = (text, props) => {
-  console.log(props);
-  return <WxMenu {...props.fieldProps} />;
+  //console.log(props);
+  return <WxMenuModal {...props.fieldProps} />;
 };
 
 export default WxMenu;

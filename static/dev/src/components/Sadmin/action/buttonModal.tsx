@@ -5,12 +5,13 @@ interface actionConfirm {
   trigger?: JSX.Element;
   title?: string;
   open?: boolean;
-  onOk?: () => void;
+  onOk?: () => boolean | void;
   width?: number;
   modalProps?: ModalProps;
   children?: ReactNode;
   confirmLoading?: boolean;
   afterOpenChange?: (open: boolean) => void;
+  formFooter?: boolean; //是否使用 form的底部 设置false的话 使用自带的footer设置
 }
 
 const ButtonModal: FC<actionConfirm> = (props) => {
@@ -24,6 +25,7 @@ const ButtonModal: FC<actionConfirm> = (props) => {
     modalProps,
     afterOpenChange,
     confirmLoading = false,
+    formFooter = true,
   } = props;
   const [iopen, setOpen] = useState(open);
   //下面这段参考 drawerForm组件
@@ -86,7 +88,9 @@ const ButtonModal: FC<actionConfirm> = (props) => {
         open={iopen}
         onOk={async () => {
           if (onOk) {
-            onOk();
+            if (onOk()) {
+              close();
+            }
           } else {
             close();
           }
@@ -100,15 +104,22 @@ const ButtonModal: FC<actionConfirm> = (props) => {
         centered={true}
         destroyOnClose={true}
         confirmLoading={confirmLoading}
-        footer={
-          <div
-            ref={footerDomRef}
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          />
-        }
+        footer={(originNode) => {
+          //console.log(params);
+          if (formFooter) {
+            return (
+              <div
+                ref={footerDomRef}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                }}
+              />
+            );
+          } else {
+            return originNode;
+          }
+        }}
         maskClosable={false}
         styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
       >

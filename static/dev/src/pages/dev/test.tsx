@@ -1,17 +1,30 @@
-import { Layout, Typography } from 'antd';
-import { Content } from 'antd/es/layout/layout';
+import { WxMenuModal } from '@/components/Sadmin/wxMenu';
 
 export default () => {
-  const [show1, setShow1] = useState(false);
-  const [show2, setShow2] = useState(false);
-  const [show3, setShow3] = useState(false);
+  const content = [
+    {
+      uid: '5n2lrflbtnn',
+      sub_button: [
+        {
+          uid: 'payw1wqjrhw',
+          name: '\u65b0\u589e\u83dc\u5355x',
+          type: 'view',
+          url: '333',
+        },
+      ],
+      name: '\u65b0\u589e\u83dc\u53551',
+    },
+    {
+      uid: 'idzm0qai6zm',
+      sub_button: [],
+      name: '\u65b0\u589e\u83dc\u53552',
+      type: 'click',
+      key: '333',
+    },
+  ];
   return (
-    <Layout>
-      <Content>
-        <Typography.Text code style={{ width: 120 }} ellipsis={{ tooltip: 'test' }}>
-          Ant Design, a design language for background applications, is refined by Ant UED Team.
-        </Typography.Text>
-      </Content>
-    </Layout>
+    <>
+      <WxMenuModal value={content} />
+    </>
   );
 };
