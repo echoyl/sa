@@ -1,6 +1,6 @@
 import { iconMap } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
-import { CopyOutlined } from '@ant-design/icons';
+import { CopyOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { Space } from 'antd';
 import { useRef } from 'react';
@@ -45,6 +45,7 @@ export default () => {
       valueType: 'customerColumn',
       search: false,
       readonly: true,
+      width: 300,
       fieldProps: {
         items: [
           {
@@ -114,7 +115,34 @@ export default () => {
             //     <Button size="small" icon={<CopyOutlined />} />
             //   </Tooltip>
             // ),
-            btn: { text: '', size: 'small', icon: <CopyOutlined />, tooltip: '复制模型' },
+            btn: { text: '', size: 'small', icon: <CopyOutlined />, tooltip: '复制' },
+          },
+          {
+            domtype: 'button',
+            modal: {
+              msg: '请选择移动到',
+              formColumns: [
+                {
+                  dataIndex: 'toid',
+                  width: 'md',
+                  title: '移动到',
+                  valueType: 'treeSelect',
+                  fieldProps: {
+                    options: enums?.menus,
+                    treeLine: { showLeafIcon: true },
+                    treeDefaultExpandAll: true,
+                  },
+                },
+              ],
+            },
+            request: { postUrl: 'dev/menu/moveTo' },
+            action: 'confirmForm',
+            // btn: (
+            //   <Tooltip title="复制模型">
+            //     <Button size="small" icon={<CopyOutlined />} />
+            //   </Tooltip>
+            // ),
+            btn: { text: '', size: 'small', icon: <RollbackOutlined />, tooltip: '移动至' },
           },
         ],
       },

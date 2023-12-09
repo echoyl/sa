@@ -136,6 +136,7 @@ export const SaForm: FC<saFormPros> = (props) => {
     if (props.beforeGet) {
       props.beforeGet(data);
     }
+    //console.log('post get data ', data);
     setDetail(data);
     return data;
   };
@@ -159,25 +160,33 @@ export const SaForm: FC<saFormPros> = (props) => {
   //const formRef = useRef<ProFormInstance>();
   useEffect(() => {
     if (setting?.steps_form) {
-      //如果是分步表单 手动请求request
+      //如果是分步表单 手动请求request 同样设置一个 formRef
       get().then((data) => {
         //console.log('get data', data);
-        formMapRef?.current?.forEach((formInstanceRef) => {
+        formMapRef?.current?.forEach((formInstanceRef, findex) => {
           formInstanceRef?.current?.setFieldsValue(data);
         });
       });
     }
   }, []);
   const formMapRef = useRef<React.MutableRefObject<ProFormInstance<any> | undefined>[]>([]);
+  const [stepFormCurrent, setStepFormCurrent] = useState<number>(0);
   return (
-    <SaContext.Provider value={{ formRef, actionRef }}>
+    <SaContext.Provider
+      value={{ formRef: setting?.steps_form ? formMapRef?.current[0] : formRef, actionRef }}
+    >
       {setting?.steps_form ? (
         <StepsForm
+          current={stepFormCurrent}
+          onCurrentChange={(current) => {
+            setStepFormCurrent(current);
+          }}
           formMapRef={formMapRef}
           onFinish={async (values) => {
             //console.log(values);
             //message.success('提交成功');
             //提交操作 让分步表单中最后一步 接管
+            //return Promise.resolve(true);
           }}
           formProps={{
             validateMessages: {
@@ -202,11 +211,25 @@ export const SaForm: FC<saFormPros> = (props) => {
                     data,
                     index + 1 == tabs.length ? undefined : () => null,
                     index + 1 == tabs.length ? undefined : () => {},
-                  ).then(({ data }) => {
+                  ).then(({ code, data, msg }) => {
                     //将传回的数据又重新赋值一遍
+                    if (code) {
+                      message.error(msg);
+                      return false;
+                    }
+                    if(index + 1 == tabs.length)
+                    {
+                      //最后一步 重置表单
+                      setStepFormCurrent(0);
+                      formMapRef?.current?.forEach((formInstanceRef) => {
+                        formInstanceRef?.current?.resetFields();
+                      });
+                    }
                     formMapRef?.current?.forEach((formInstanceRef) => {
                       formInstanceRef?.current?.setFieldsValue(data);
                     });
+                    
+                    
                     return true;
                   });
                 }}

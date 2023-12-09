@@ -44,6 +44,27 @@ export const icons: { [key: string]: any } = {
 const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   const { ok, value, relationModel, allMenus = [] } = props;
   //console.log('relationModel', relationModel, allMenus);
+
+  const fieldPorpsColumn = {
+    dataIndex: 'fieldProps',
+    title: 'fieldProps',
+    valueType: 'confirmForm',
+    fieldProps: {
+      width: 1200,
+      btn: {
+        title: 'fieldProps',
+        size: 'middle',
+      },
+      formColumns: [
+        {
+          dataIndex: 'value',
+          title: 'fieldProps',
+          valueType: 'jsonEditor',
+        },
+      ],
+    },
+  };
+
   const columns: saFormColumnsType = [
     {
       valueType: 'group',
@@ -161,6 +182,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                   { label: 'actions', value: 'actions' },
                   { label: 'qrcode', value: 'qrcode' },
                   { label: 'tag', value: 'tag' },
+                  { label: 'table', value: 'table' },
                 ],
               },
             },
@@ -181,6 +203,9 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                       },
                     },
                   ];
+                }
+                if (domtype == 'table') {
+                  return [fieldPorpsColumn];
                 }
                 if (domtype == 'button' || domtype == 'text' || domtype == 'qrcode') {
                   const domExtColumns = [];
@@ -328,25 +353,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                             ],
                           },
                         },
-                        {
-                          dataIndex: 'fieldProps',
-                          title: 'fieldProps',
-                          valueType: 'confirmForm',
-                          fieldProps: {
-                            width: 1200,
-                            btn: {
-                              title: 'fieldProps',
-                              size: 'middle',
-                            },
-                            formColumns: [
-                              {
-                                dataIndex: 'value',
-                                title: 'fieldProps',
-                                valueType: 'jsonEditor',
-                              },
-                            ],
-                          },
-                        },
+                        fieldPorpsColumn,
                         {
                           valueType: 'dependency',
                           name: ['action'],

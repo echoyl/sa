@@ -8,12 +8,13 @@ import {
   Popover,
   QRCode,
   Space,
+  Table,
   Timeline,
   Tooltip,
 } from 'antd';
 import React, { useContext, useEffect, useState } from 'react';
 import { inArray, isArr } from '../../checkers';
-import { parseIcon, tplComplie, uid } from '../../helpers';
+import { parseIcon, tplComplie } from '../../helpers';
 import { SaContext } from '../../posts/table';
 import TableFromBread from '../../tableFromBread';
 import ButtonDrawer from '../buttonDrawer';
@@ -55,9 +56,9 @@ const CustomerColumnRender = (props) => {
   }, [orecord, formRef]);
 
   //console.log(formValue);
-  const parseDom = (item: any, i) => {
+  const parseDom = (item: any, i, percentNum = -1) => {
     let show = true;
-    const key = uid();
+    //const key = uid();
     //console.log('record is', record);
     if (item.if) {
       show = tplComplie(item.if, { record, user: initialState?.currentUser });
@@ -95,27 +96,32 @@ const CustomerColumnRender = (props) => {
         const tpl = tplComplie(item.btn.text, { record, user: initialState?.currentUser });
         if (item.domtype == 'button') {
           const icon = parseIcon(item.btn.icon);
+          const styleProps = percentNum >= 0 && i >= percentNum ? { style: { width: '100%' } } : {};
           if (tooltip) {
             return (
-              <Tooltip title={tooltip}>
-                <Button key={key} {...item.btn} icon={icon}>
+              <Tooltip key={i} title={tooltip}>
+                <Button {...styleProps} {...item.btn} icon={icon}>
                   {tpl}
                 </Button>
               </Tooltip>
             );
           } else {
             return (
-              <Button key={key} {...item.btn} icon={icon}>
+              <Button key={i} {...styleProps} {...item.btn} icon={icon}>
                 {tpl}
               </Button>
             );
           }
         } else {
           if (tooltip) {
-            return <Tooltip title={tooltip}>{tpl}</Tooltip>;
+            return (
+              <Tooltip key={i} title={tooltip}>
+                {tpl}
+              </Tooltip>
+            );
           } else {
             //console.log('i am text ', tpl, item, record);
-            return tpl;
+            return <span key={i}>{tpl}</span>;
           }
         }
       } else {
@@ -137,13 +143,16 @@ const CustomerColumnRender = (props) => {
     } else if (item.domtype == 'tag') {
       //console.log('tag text', text, item);
       return <ItemTags key={i} dataindex={dataindex} tags={isArr(text) ? text : [text]} />;
+    } else if (item.domtype == 'table') {
+      //console.log('tag text', text, item);
+      return <Table key={'table_' + i} dataSource={text} {...item.fieldProps?.value} />;
     }
     return '';
   };
-  const getItemsDom = (items) => {
+  const getItemsDom = (items, percentNum = -1) => {
     return items
       ?.map((item, i) => {
-        const dom = parseDom(item, i);
+        const dom = parseDom(item, i, percentNum);
         //key为固定值，之前用动态uid后导致一些bug
         const key = item.action + '.' + i;
         //console.log('dom', dom);
@@ -161,6 +170,7 @@ const CustomerColumnRender = (props) => {
               formColumns={item.modal?.formColumns}
               page={item.modal?.page}
               url={item.request?.url}
+              postUrl={item.request?.postUrl}
               data={item.request?.data}
               dataId={record?.[idName]}
               {...value}
@@ -365,19 +375,27 @@ const CustomerColumnRender = (props) => {
       .filter((v) => v);
   };
   //dropdown的设置 num 表示预留几个直接出现 text-显示的文字
-  const itemsDom = getItemsDom(items);
+  const itemsDom = getItemsDom(
+    items,
+    direction == 'dropdown' ? (dropdown.num ? dropdown.num : 0) : -1,
+  );
   return direction == 'dropdown' ? (
     dropdown.num ? (
       <Space>
         {itemsDom.filter((v, i) => i < dropdown.num)}
         {itemsDom.length > dropdown.num ? (
           <Dropdown
+            key="action_dropdown"
             trigger="click"
             menu={{
               items: itemsDom
                 .filter((v, i) => i >= dropdown.num)
                 .map((v, i) => {
-                  return { label: v, key: i };
+                  //console.log(label);
+                  return {
+                    label: v,
+                    key: i,
+                  };
                 }),
             }}
           >
@@ -387,6 +405,7 @@ const CustomerColumnRender = (props) => {
       </Space>
     ) : itemsDom.legnth ? (
       <Dropdown
+        key="action_dropdown"
         trigger="click"
         menu={{
           items: itemsDom.map((v, i) => {

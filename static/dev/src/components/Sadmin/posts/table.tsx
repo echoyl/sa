@@ -592,6 +592,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
                     setSelectedRows(selectedRows);
                     setSelectedRowKeys(newSelectedRowKeys);
                   },
+                  checkStrictly: false,
                 }
           }
           toolbar={
@@ -790,9 +791,9 @@ export const ToolBarDom = (props) => {
           <Button
             key={'state_' + k}
             size="small"
-            icon={k == 0 ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
-            type={k == 0 ? 'dashed' : 'primary'}
-            danger={k == 0 ? true : false}
+            icon={!stateButton.value ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
+            type={!stateButton.value ? 'dashed' : 'primary'}
+            danger={!stateButton.value ? true : false}
             onClick={async () => {
               //console.log(selectedRowsState);
               //await handleRemove(selectedRowsState);

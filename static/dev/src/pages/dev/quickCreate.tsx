@@ -1,4 +1,5 @@
 import ConfirmForm from '@/components/Sadmin/action/confirmForm';
+import { inArray } from '@/components/Sadmin/checkers';
 import { ThunderboltOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { FC } from 'react';
@@ -30,6 +31,8 @@ const QuickCreate: FC<{ menus: SaReord; models: SaReord; foldermodels: SaReord }
                 options: [
                   { label: '内容模块', value: 'posts' },
                   { label: '角色用户', value: 'perm' },
+                  { label: '门店', value: 'shop' },
+                  { label: '商品', value: 'goods' },
                 ],
               },
               formItemProps: {
@@ -45,7 +48,7 @@ const QuickCreate: FC<{ menus: SaReord; models: SaReord; foldermodels: SaReord }
               valueType: 'dependency',
               name: ['type'],
               columns: ({ type }) => {
-                if (type == 'posts') {
+                if (inArray(type, ['posts', 'shop', 'goods']) > -1) {
                   return [
                     {
                       title: '指定已有分类模型',

@@ -11,10 +11,11 @@ import { App, ConfigProvider } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { useContext } from 'react';
-import defaultSettings from '../config/defaultSettings';
+import defaultSettings, { lightDefaultToken } from '../config/defaultSettings';
 import ModalJson from './components/Sadmin/action/modalJson';
 import { loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
 import Refresh from './components/Sadmin/refresh';
+import { getTheme } from './components/Sadmin/themSwitch';
 import request, {
   loginPath,
   currentUser as queryCurrentUser,
@@ -56,17 +57,23 @@ export async function getInitialState(): Promise<{
   //   loginPath,
   //   history.location.pathname.replace(adminSetting.baseurl, '/'),
   // );
+  //check theme cache
+  const theme = getTheme(adminSetting);
+  const navTheme =
+    theme == 'light'
+      ? { navTheme: theme, token: { ...lightDefaultToken } }
+      : { navTheme: theme, token: { sider: {}, header: {} } };
   if (history.location.pathname.replace(adminSetting.baseurl, '/') !== loginPath) {
     const currentUser = await fetchUserInfo();
     return {
       fetchUserInfo,
       currentUser,
-      settings: { ...defaultSettings, ...adminSetting },
+      settings: { ...defaultSettings, ...adminSetting, ...navTheme },
     };
   }
   return {
     fetchUserInfo,
-    settings: { ...defaultSettings, ...adminSetting },
+    settings: { ...defaultSettings, ...adminSetting, ...navTheme },
   };
 }
 
@@ -158,14 +165,13 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       return (
         <App>
           <ConfigProvider
-            theme={{
-              components: {
-                Select: {
-                  controlItemBgActive: '#e6f4ff',
-                },
-              },
-              ...initialState?.settings.antdtheme,
-            }}
+            theme={
+              initialState?.settings?.navTheme == 'light'
+                ? {
+                    ...initialState?.settings.antdtheme,
+                  }
+                : {}
+            }
           >
             <ProConfigProvider {...values} valueTypeMap={{ ...saValueTypeMap }}>
               {children}

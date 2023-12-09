@@ -152,6 +152,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
           ...v.fieldProps,
           options: options ? options : [],
         };
+        delete v.fieldProps.requestDataName;
       }
 
       if (v.fieldProps?.requestNames) {

@@ -1,5 +1,4 @@
 import { PushpinOutlined } from '@ant-design/icons';
-import { ProFormText } from '@ant-design/pro-form';
 import { useModel } from '@umijs/max';
 import { Button, Col, Input, Modal, Row, Space } from 'antd';
 import React, { FC, useEffect, useState } from 'react';
@@ -113,37 +112,31 @@ export class TmapInput extends React.Component {
           //     };
           //   }}
         > */}
-        <Space.Compact>
-          <ProFormText
-            width="sm"
+        <Space.Compact style={{ width: '100%' }}>
+          <Input
             value={this.state.latlng?.lat}
             onChange={(e) => {
               const v = e.target.value;
-              console.log('i am change', v);
               const nv = { ...this.state.latlng, lat: v };
               this.setState({ latlng: nv, okLatlng: nv });
               //this.props.onChange?.({ ...nv });
               this.props.onChange?.([v, this.state.latlng?.lng]);
             }}
           />
-          <ProFormText
-            width="sm"
+          <Input
             value={this.state.latlng?.lng}
             onChange={(e) => {
               const v = e.target.value;
-              console.log('i am change', v);
               const nv = { ...this.state.latlng, lng: v };
               this.setState({ latlng: nv, okLatlng: nv });
               //this.props.onChange?.({ ...nv });
               this.props.onChange?.([this.state.latlng?.lat, v]);
             }}
           />
-          <Button type="primary" onClick={this.showModal} icon={<PushpinOutlined />}>
-            地图选点
-          </Button>
+          <Button type="primary" onClick={this.showModal} icon={<PushpinOutlined />} />
         </Space.Compact>
 
-        {this.state.latlng?.lat && (
+        {this.state.latlng?.lat && false && (
           <TampShow lat={this.state.latlng?.lat} lng={this.state.latlng?.lng} />
         )}
         <Modal

@@ -70,6 +70,7 @@ export default (props) => {
     { label: '自定义显示 - customerColumn', value: 'customerColumn' },
     { label: '属性配置 - jsonForm', value: 'jsonForm' },
     { label: '多行编辑 - formList', value: 'formList' },
+    { label: 'select', value: 'select' },
     { label: 'json编辑器 - jsonEditor', value: 'jsonEditor' },
     { label: 'jsonCode', value: 'jsonCode' },
     { label: '头像显示 - avatar', value: 'avatar' },
@@ -81,6 +82,7 @@ export default (props) => {
     { label: '微信自定义菜单 - wxMenu', value: 'wxMenu' },
     { label: '穿梭框 - saTransfer', value: 'saTransfer' },
     { label: 'html显示', value: 'html' },
+    { label: '地图选点 - tmapInput', value: 'tmapInput' },
     { label: '地图点显示 - tmapShow', value: 'tmapShow' },
     { label: '拾色器 - colorPicker', value: 'colorPicker' },
   ];

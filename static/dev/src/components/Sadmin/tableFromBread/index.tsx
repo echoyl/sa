@@ -16,6 +16,7 @@ const TableFromBread: FC<{
   const { formRef } = useContext(SaContext);
   //在form中渲染 必须是readonly 所以用formRef 获取当前表单的所有值
   const record = orecord ? orecord : formRef?.current?.getFieldsValue?.(true);
+  //console.log('record is', record, orecord, formRef);
   let readonlyProps = {};
   if (isUndefined(readonly)) {
     //如果未传参数 那么通过已设定的path菜单的设置

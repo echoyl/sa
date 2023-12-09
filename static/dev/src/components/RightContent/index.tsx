@@ -2,6 +2,7 @@ import { SelectLang as UmiSelectLang, useModel } from '@umijs/max';
 import { Space } from 'antd';
 import React from 'react';
 import NoticeIconView from '../NoticeIcon';
+import ThemeSwitch from '../Sadmin/themSwitch';
 import Avatar from './AvatarDropdown';
 import styles from './index.less';
 export type SiderTheme = 'light' | 'dark';
@@ -16,7 +17,7 @@ const GlobalHeaderRight: React.FC = () => {
   const { navTheme, layout, lang = true } = initialState.settings;
   let className = styles.right;
 
-  if ((navTheme === 'dark' && layout === 'top') || layout === 'mix') {
+  if ((navTheme === 'realDark' && layout === 'top') || layout === 'mix') {
     className = `${styles.right}  ${styles.dark}`;
   }
 
@@ -31,6 +32,8 @@ const GlobalHeaderRight: React.FC = () => {
           }}
         />
       )}
+      <ThemeSwitch />
+      <span> </span>
     </Space>
   );
 };

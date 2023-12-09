@@ -27,7 +27,7 @@ import {
   getMenuData,
 } from '@ant-design/pro-components';
 import { useModel, useRouteData } from '@umijs/max';
-import { ColorPicker, Image } from 'antd';
+import { ColorPicker, Image, Table } from 'antd';
 import { get } from 'rc-util';
 import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -399,7 +399,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
   },
   customerColumn: {
     render: (text, props) => {
-      //console.log(props);
+      //console.log(text);
       const { fieldProps } = props;
       const { items } = fieldProps;
       return (
@@ -534,7 +534,7 @@ export const getFromObject = (record, dataIndex) => {
 export function search2Obj(unsetNames: string[]): { [key: string]: any } {
   let search = window.location.search;
   if (search) {
-    console.log('search is', decodeURIComponent(search));
+    //console.log('search is', decodeURIComponent(search));
     search = decodeURIComponent(search);
     let search_arr: { [key: string]: any } = {};
     search

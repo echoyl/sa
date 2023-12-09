@@ -285,7 +285,7 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                           }}
                         >
                           <Tabs
-                            style={{ background: '#fff' }}
+                            style={{ background: 'none' }}
                             tabBarStyle={{ paddingLeft: 0, marginBottom: 0 }}
                             items={chart.tab.map((tab, i) => {
                               return {

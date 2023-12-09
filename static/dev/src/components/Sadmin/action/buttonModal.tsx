@@ -121,7 +121,7 @@ const ButtonModal: FC<actionConfirm> = (props) => {
           }
         }}
         maskClosable={false}
-        styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
+        styles={{ body: { maxHeight: 650, overflowY: 'auto', overflowX: 'hidden' } }}
       >
         {iopen &&
           React.Children.map(props.children, (c) => {

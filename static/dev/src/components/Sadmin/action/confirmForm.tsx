@@ -12,6 +12,7 @@ interface actionConfirm {
   btn?: ButtonProps;
   method?: 'post' | 'delete';
   url?: string;
+  postUrl?: string;
   data?: {};
   dataId?: number;
   formColumns?: saFormColumnsType;
@@ -33,6 +34,7 @@ const InnerForm = (props) => {
     formColumns,
     tabs: utabs,
     url: ourl,
+    postUrl,
     callback,
     value,
     dataid,
@@ -92,14 +94,14 @@ const InnerForm = (props) => {
         },
       }}
       url={url}
-      postUrl={ourl ? ourl : undefined}
+      postUrl={postUrl}
       align="left"
       pageType="drawer"
       msgcls={(ret) => {
         //setOpen(false);
         //console.log('finish', ret);
         const { code, data } = ret;
-        if (url) {
+        if (url || postUrl) {
           //有url提交
           if (!code) {
             //console.log('列表刷新 及关闭弹层');
@@ -137,6 +139,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
     btn,
     method = 'post',
     url = '',
+    postUrl,
     data = {},
     dataId = 0,
     callback,
@@ -171,6 +174,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
     >
       <InnerForm
         url={url}
+        postUrl={postUrl}
         formColumns={formColumns}
         page={page}
         callback={callback}
