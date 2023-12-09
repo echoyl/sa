@@ -34,8 +34,7 @@ class FormItem
 
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
-            $key = $props['dataIndex'];
-            $dataIndex = $props['dataIndex'];
+            $key = $dataIndex = explode('.',$props['dataIndex']);
             $has_customer_dataindex = true;
         }
 
@@ -85,7 +84,10 @@ class FormItem
         if(is_array($dataIndex) && count($dataIndex) > 1)
         {
             $this->data = $this->foreignModel($dataIndex);
-            return;
+            if($this->data)
+            {
+                return;
+            }
         }
         
 
@@ -334,6 +336,10 @@ class FormItem
         $first = array_shift($new_index);
         $config = $this->config;
         $relation = $this->relation;
+        if(!$relation)
+        {
+            return false;
+        }
         $new_config = $config;
         $new_config['key'] = $new_index;
         $new_model = (new Model())->where(['id'=>$relation['foreign_model_id']])->with(['relations.foreignModel.menu'])->first();
@@ -341,10 +347,6 @@ class FormItem
         $data = $formItem->data;
         
         $data['dataIndex'] = $dataIndex;
-        if($dataIndex == ['wuliu','type_id'])
-        {
-            //d($data);
-        }
 
         if(isset($data['requestDataName']))
         {
@@ -442,7 +444,7 @@ class FormItem
         $setting = $this->schema['setting']??[];
         $table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
-        if($this->relation)
+        if($this->relation && $this->schema)
         {
             $d['requestDataName'] = $this->schema['name'].'s';
             $label = $value = '';
@@ -491,7 +493,7 @@ class FormItem
                 $d['fieldProps']['mode'] = 'tags';
             }
         }
-        if($this->schema['form_type'] == 'select')
+        if($this->form_type == 'select' || $this->schema['form_type'] == 'select')
         {
             $d['fieldProps']['showSearch'] = true;
         }

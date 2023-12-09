@@ -158,6 +158,11 @@ class MenuController extends CrudController
         }
     }
 
+    /**
+     * 复制菜单至
+     *
+     * @return void
+     */
     public function copyTo()
     {
         $id = request('base.id');
@@ -165,22 +170,88 @@ class MenuController extends CrudController
         //当前菜单
         $data = $this->model->where(['id'=>$id])->first();
         $to = $this->model->where(['id'=>$toid])->first();
-        if(!$data || !$to)
+        if(!$data)
         {
             return $this->fail([1,'数据错误']);
+        }
+        if($to)
+        {
+            $parent_id = $to['parent_id'];
+            $type = $to['type'];
+        }else
+        {
+            //无目标菜单 复制到最外层
+            $parent_id = 0;
+            $type = $data['type'];
         }
 
         $data = $data->toArray();
         unset($data['id']);
-        $data['parent_id'] = $to['id'];
-        $data['title'] .= '-复制';
-        $data['type'] = $to['type'];
-
+        $data['parent_id'] = $parent_id;
+        $data['title'] .= ' - 复制';
+        $data['type'] = $type;
         $this->model->insert($data);
 
         return $this->success('操作成功');
+    }
 
+    /**
+     * 将菜单移动到
+     *
+     * @return void
+     */
+    public function moveTo()
+    {
+        $id = request('base.id');
+        $toid = request('base.toid');
+        //当前菜单
+        $data = $this->model->where(['id'=>$id])->first();
 
+        if(!$data)
+        {
+            return $this->fail([1,'数据错误']);
+        }
+
+        $to = $this->model->where(['id'=>$toid])->first();
+
+        if(!$to)
+        {
+            //无目标则 移动至最外层
+            $parent_id = 0;
+        }else
+        {
+            $parent_id = $to['id'];
+        }
+
+        $update = [
+            'parent_id'=>$parent_id
+        ];
+
+        $this->model->where(['id'=>$data['id']])->update($update);
+        $data['parent_id'] = $parent_id;
+        //将该菜单下的所有数据对应的url全部重新生成一遍
+        $this->clearCache();
+        $this->syncMenuUrl($data);
+
+        return $this->success('操作成功');
+    }
+
+    public function syncMenuUrl($item)
+    {
+        //更新当前菜单的url
+        //无数据或未指向模型 则返回
+        if($item && $item['admin_model_id'])
+        {
+            $desc = $item['desc']?json_decode($item['desc'],true):[];
+            $this->updateDesc($desc,$item);
+        }
+        //查找子菜单
+        $children = $this->model->where(['parent_id'=>$item['id']])->get()->toArray();
+        foreach($children as $val)
+        {
+            $this->syncMenuUrl($val);
+        }
+        return;
     }
 
     // public function postData(&$item)

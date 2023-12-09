@@ -714,8 +714,9 @@ class DevService
                     if($val['type'] == 'one')
                     {
                         //1对1时候 还需要关联对接 转换关联数据
+                        //name需要驼峰转下划线
                         $parse_columns[] = [
-                            'name'=>$val['name'],
+                            'name'=>Utils::uncamelize($val['name']),
                             'type'=>'model',
                             'class'=>'@php'.$f_model_name.'::class@endphp',
                             'foreign_key'=>$val['foreign_key']
@@ -828,7 +829,7 @@ class DevService
                         //$filter = $clo
                         if($table_menu && $label && $value)
                         {
-                            $d['columns'] = ["{$label} as label","{$value} as value"];
+                            $d['columns'] = ["{$label} as label","{$value} as value",$label,$value];
                         }
                         $d['no_category'] = true;
                     }else

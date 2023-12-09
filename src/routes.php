@@ -44,7 +44,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                     //开发工具使用
                     Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
                         Route::any('setting', 'SettingController@setting');
-                        
+                        Route::post('menu/moveTo', 'MenuController@moveTo');
                         Route::post('menu/copyTo', 'MenuController@copyTo');
                         Route::post('menu/tableConfig', 'MenuController@tableConfig');
                         Route::post('menu/formConfig', 'MenuController@formConfig');

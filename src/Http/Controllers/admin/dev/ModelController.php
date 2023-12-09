@@ -145,16 +145,14 @@ class ModelController extends CrudController
             return $this->fail([1,'环境错误！']); 
         }
 
-        $type = request('base.type');
         $c = new Creator;
-        if($type == 'posts')
-        {
-            $c->postsContent();
-        }elseif($type == 'perm')
-        {
-            $c->permContent();
-        }
+        
+        [$code,$msg] = $c->create(request('base.type'));
 
+        if($code)
+        {
+            return $this->fail([1,$msg]); 
+        }
         
         return $this->success('操作成功');
     }
