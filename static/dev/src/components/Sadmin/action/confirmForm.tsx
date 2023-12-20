@@ -48,12 +48,14 @@ const InnerForm = (props) => {
 
   let tabs = [];
   let url = ourl;
+  let setting = {};
   if (page) {
     const bread = getBread(page);
     if (bread) {
       tabs = bread?.data.tabs;
       url = bread?.data.postUrl ? bread?.data.postUrl : bread?.data.url + '/show';
       //console.log('bread', bread);
+      setting = bread?.data.setting;
     }
   } else {
     tabs = [{ title: '基础信息', formColumns: [...formColumns] }];
@@ -62,6 +64,7 @@ const InnerForm = (props) => {
   return (
     <SaForm
       tabs={tabs}
+      setting={setting}
       beforeGet={(data) => {
         if (!data) {
           //没有data自动关闭弹出层

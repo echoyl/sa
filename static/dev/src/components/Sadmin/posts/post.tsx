@@ -29,6 +29,7 @@ export interface saFormPros extends saTablePros {
   afterPost?: (ret: any) => void;
   onTabChange?: (index: string) => void; //tab切换后的回调
   setting?: { [key: string]: any }; //其它配置统一放这里
+  resetForm?:boolean;//提交数据后 是否重置表单
 }
 
 export const SaForm: FC<saFormPros> = (props) => {
@@ -63,6 +64,7 @@ export const SaForm: FC<saFormPros> = (props) => {
     formRef = useRef<ProFormInstance<any>>({} as any),
     onTabChange,
     setting,
+    resetForm = false
   } = props;
   //const url = 'posts/posts';
   //读取后台数据
@@ -100,6 +102,18 @@ export const SaForm: FC<saFormPros> = (props) => {
     });
 
     props.afterPost?.(ret);
+
+    if (setting?.steps_form) {
+    } else {
+      //console.log('re set data', ret.data, formRef?.current);
+      //setDetail({ ...ret.data });
+      if(resetForm)
+      {
+        formRef?.current?.resetFields();
+        //formRef?.current?.setFieldsValue({});
+        formRef?.current?.setFieldsValue({ ...ret.data });
+      }
+    }
 
     return ret;
   };
@@ -152,6 +166,7 @@ export const SaForm: FC<saFormPros> = (props) => {
         categoryType,
         columns: tab.formColumns,
         user: initialState?.currentUser,
+        formRef,
       });
     });
     //console.log('get,data', tabs);
@@ -217,8 +232,7 @@ export const SaForm: FC<saFormPros> = (props) => {
                       message.error(msg);
                       return false;
                     }
-                    if(index + 1 == tabs.length)
-                    {
+                    if (index + 1 == tabs.length) {
                       //最后一步 重置表单
                       setStepFormCurrent(0);
                       formMapRef?.current?.forEach((formInstanceRef) => {
@@ -228,8 +242,7 @@ export const SaForm: FC<saFormPros> = (props) => {
                     formMapRef?.current?.forEach((formInstanceRef) => {
                       formInstanceRef?.current?.setFieldsValue(data);
                     });
-                    
-                    
+
                     return true;
                   });
                 }}
@@ -287,7 +300,7 @@ export const SaForm: FC<saFormPros> = (props) => {
               items={_formColumns.map((cl, index) => {
                 return {
                   label: tabs[index]?.title ? tabs[index]?.title : tabs[index]?.tab?.title,
-                  key: index,
+                  key: index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
                   children: <GetFormFields columns={cl} />,
                   forceRender: true,
                 };

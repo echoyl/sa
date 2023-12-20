@@ -98,36 +98,6 @@ export default () => {
           formColumns: [
             {
               valueType: 'group',
-              title: '登录设置',
-              columns: [
-                { title: '登录页背景图', valueType: 'uploader', dataIndex: 'loginBgImgage' },
-                {
-                  title: '登录方式',
-                  valueType: 'checkbox',
-                  dataIndex: 'loginType',
-                  fieldProps: {
-                    options: [
-                      { label: '账号密码', value: 'password' },
-                      { label: '手机号登录', value: 'phone' },
-                    ],
-                  },
-                },
-                {
-                  title: '默认登录方式',
-                  valueType: 'radio',
-                  dataIndex: 'loginTypeDefault',
-                  fieldProps: {
-                    options: [
-                      { label: '账号密码', value: 'password' },
-                      { label: '手机号登录', value: 'phone' },
-                    ],
-                  },
-                },
-              ],
-            },
-            {
-              valueType: 'group',
-              title: '主题配置',
               columns: [
                 {
                   valueType: 'switch',
@@ -160,6 +130,44 @@ export default () => {
             },
 
             { title: 'Antd主题配置', dataIndex: 'theme', valueType: 'jsonEditor' },
+          ],
+        },
+        {
+          title: '登录设置',
+          formColumns: [
+            {
+              valueType: 'group',
+              columns: [
+                { title: '登录页背景图', valueType: 'uploader', dataIndex: 'loginBgImgage' },
+              ],
+            },
+            {
+              title: '显示验证码登录错误次数',
+              dataIndex: 'login_error_times',
+              tooltip: '登录失败该次数后展示图形验证码输入框，默认数字为3次',
+            },
+            {
+              title: '登录方式',
+              valueType: 'checkbox',
+              dataIndex: 'loginType',
+              fieldProps: {
+                options: [
+                  { label: '账号密码', value: 'password' },
+                  { label: '手机号登录', value: 'phone' },
+                ],
+              },
+            },
+            {
+              title: '默认登录方式',
+              valueType: 'radio',
+              dataIndex: 'loginTypeDefault',
+              fieldProps: {
+                options: [
+                  { label: '账号密码', value: 'password' },
+                  { label: '手机号登录', value: 'phone' },
+                ],
+              },
+            },
           ],
         },
       ]}

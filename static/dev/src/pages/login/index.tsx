@@ -33,7 +33,8 @@ const LoginMessage: React.FC<{
 const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
   const [captchaReload, setCaptchaReload] = useState(0);
-
+  const [captchaPhoneReload, setCaptchaPhoneReload] = useState(0);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   // const fetchUserInfo = async () => {
   //   //const userInfo = await initialState?.fetchUserInfo?.();
   //   const userInfo = await currentUser();
@@ -56,9 +57,16 @@ const Login: React.FC = () => {
       duration: 1,
       msgcls: async (res) => {
         if (res.code) {
-          console.log('reload captcha');
-          setCaptchaReload(captchaReload + 1);
-          //setCaptchaReload(false);
+          if (loginType == 'phone' && res.code == 3) {
+            setCaptchaPhoneReload(captchaReload + 1);
+          }
+          if (showCaptcha) {
+            setCaptchaReload(captchaReload + 1);
+          }
+          if (res.code == 3 || res.code == 2) {
+            //需要输入图形验证码了
+            setShowCaptcha(true);
+          }
         } else {
           if (!res.code) {
             if (values.autoLogin) {
@@ -126,7 +134,7 @@ const Login: React.FC = () => {
               ]}
             />
             <ProForm.Item
-              name="captcha"
+              name="captchaPhone"
               rules={[
                 {
                   required: true,
@@ -134,10 +142,13 @@ const Login: React.FC = () => {
                 },
               ]}
             >
-              <CaptchaInput reload={captchaReload} placeholder="获取手机验证码请输入图形验证码" />
+              <CaptchaInput
+                reload={captchaPhoneReload}
+                placeholder="获取手机验证码请输入图形验证码"
+              />
             </ProForm.Item>
-            <ProFormDependency name={['captcha']}>
-              {({ captcha }) => {
+            <ProFormDependency name={['captchaPhone']}>
+              {({ captchaPhone }) => {
                 return (
                   <ProFormCaptcha
                     fieldProps={{
@@ -171,7 +182,7 @@ const Login: React.FC = () => {
                         throw new Error('表单验证失败');
                       }
                       const { code, msg } = await request.post('sms', {
-                        data: { mobile: phone, captcha },
+                        data: { mobile: phone, captcha: captchaPhone },
                       });
                       if (code) {
                         throw new Error(msg);
@@ -181,6 +192,19 @@ const Login: React.FC = () => {
                 );
               }}
             </ProFormDependency>
+            {showCaptcha && (
+              <ProForm.Item
+                name="captcha"
+                rules={[
+                  {
+                    required: true,
+                    message: '请输入图形验证码',
+                  },
+                ]}
+              >
+                <CaptchaInput reload={captchaReload} />
+              </ProForm.Item>
+            )}
           </>
         ),
     },
@@ -218,17 +242,19 @@ const Login: React.FC = () => {
                 },
               ]}
             />
-            <ProForm.Item
-              name="captcha"
-              rules={[
-                {
-                  required: true,
-                  message: '请输入验证码',
-                },
-              ]}
-            >
-              <CaptchaInput reload={captchaReload} />
-            </ProForm.Item>
+            {showCaptcha && (
+              <ProForm.Item
+                name="captcha"
+                rules={[
+                  {
+                    required: true,
+                    message: '请输入图形验证码',
+                  },
+                ]}
+              >
+                <CaptchaInput reload={captchaReload} />
+              </ProForm.Item>
+            )}
           </>
         ),
     },

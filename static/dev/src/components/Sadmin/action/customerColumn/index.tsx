@@ -38,13 +38,16 @@ const CustomerColumnRender = (props) => {
   const { initialState } = useModel('@@initialState');
   //console.log('props ', props);
   const { actionRef, formRef, columnData, url, saTableContext } = useContext(SaContext);
-  const { modal } = App.useApp();
+  const { modal: appModal } = App.useApp();
   //const formValue = formRef?.current?.getFieldsValue?.(true);
   const [record, setRecord] = useState(orecord);
   //console.log('CustomerColumnRender record is  ', orecord, !formRef.current);
   //console.log('formRef', formRef);
+  //console.log('dependencies', dependencies);
+  //console.log(items);
   useEffect(() => {
     //console.log('type is', type);
+    //console.log('record change', orecord);
     if (type == 'form' && formRef.current && Object.keys(formRef.current).length > 0) {
       //添加一个type判断 如果多层嵌套后 formRef 的context会错乱了
       //console.log('formRef is effect', orecord);
@@ -67,10 +70,14 @@ const CustomerColumnRender = (props) => {
       return '';
     }
 
+    const { fieldProps = {}, modal } = item;
+    const { value = {} } = fieldProps;
+
     if (item.domtype == 'divider') {
       return <Divider key={i} type="vertical" />;
     } else if (item.domtype == 'timeline') {
       //处理icon
+      console.log('timeline', item);
       const items = record?.[item.props?.name]?.map((it) => {
         if (it.icon) {
           it.dot = parseIcon(it.icon);
@@ -94,20 +101,37 @@ const CustomerColumnRender = (props) => {
           delete item.btn.errorLevel;
         }
         const tpl = tplComplie(item.btn.text, { record, user: initialState?.currentUser });
+        //console.log('tpl is ', tpl);
         if (item.domtype == 'button') {
+          //添加检测连接类型
+          const btnProps: { [key: string]: any } = {};
+          if (value?.btn?.href) {
+            btnProps.href = tplComplie(value.btn.href, {
+              record,
+              user: initialState?.currentUser,
+            });
+            //console.log('value.btn.href', href, record);
+          }
           const icon = parseIcon(item.btn.icon);
           const styleProps = percentNum >= 0 && i >= percentNum ? { style: { width: '100%' } } : {};
           if (tooltip) {
             return (
               <Tooltip key={i} title={tooltip}>
-                <Button {...styleProps} {...item.btn} icon={icon}>
+                <Button {...styleProps} {...item.btn} {...value?.btn} {...btnProps} icon={icon}>
                   {tpl}
                 </Button>
               </Tooltip>
             );
           } else {
             return (
-              <Button key={i} {...styleProps} {...item.btn} icon={icon}>
+              <Button
+                key={i}
+                {...styleProps}
+                {...item.btn}
+                {...value?.btn}
+                {...btnProps}
+                icon={icon}
+              >
                 {tpl}
               </Button>
             );
@@ -145,7 +169,15 @@ const CustomerColumnRender = (props) => {
       return <ItemTags key={i} dataindex={dataindex} tags={isArr(text) ? text : [text]} />;
     } else if (item.domtype == 'table') {
       //console.log('tag text', text, item);
-      return <Table key={'table_' + i} dataSource={text} {...item.fieldProps?.value} />;
+      if (item.fieldProps?.cal) {
+        const cal_data = tplComplie(item.fieldProps.cal, {
+          record,
+          user: initialState?.currentUser,
+        });
+        return <Table key={'table_' + i} dataSource={cal_data} {...item.fieldProps?.value} />;
+      } else {
+        return <Table key={'table_' + i} dataSource={text} {...item.fieldProps?.value} />;
+      }
     }
     return '';
   };
@@ -157,10 +189,11 @@ const CustomerColumnRender = (props) => {
         const key = item.action + '.' + i;
         //console.log('dom', dom);
         if (dom === '') return '';
+        const { fieldProps = {}, modal } = item;
+        const { value = {} } = fieldProps;
+
         if (item.action == 'confirmForm') {
           //console.log('confirmForm', record);
-          const { fieldProps = {} } = item;
-          const { value = {} } = fieldProps;
           const { idName = 'id' } = value;
           return (
             <ConfirmForm
@@ -199,7 +232,7 @@ const CustomerColumnRender = (props) => {
               title={item.modal?.title}
               callback={(ret) => {
                 if (!ret.code && ret.data?.ifram_url) {
-                  modal.info({
+                  appModal.info({
                     title: ret.data?.ifram_title ? ret.data?.ifram_title : '详情',
                     width: 1000, //两边padding48px
                     content: (
@@ -228,7 +261,6 @@ const CustomerColumnRender = (props) => {
             />
           );
         } else if (item.action == 'modalTable') {
-          const { fieldProps, modal } = item;
           //console.log('modalTable record', record);
           if (!fieldProps) {
             return dom;
@@ -238,7 +270,7 @@ const CustomerColumnRender = (props) => {
             <ButtonModal
               key={key}
               trigger={dom}
-              title={modal.title}
+              title={modal?.title}
               modalProps={{ footer: null }}
               onCancel={() => {
                 actionRef.current?.reload();
@@ -248,7 +280,6 @@ const CustomerColumnRender = (props) => {
             </ButtonModal>
           );
         } else if (item.action == 'drawerTable') {
-          const { fieldProps, modal } = item;
           //console.log('modalTable', fieldProps);
           if (!fieldProps) {
             return dom;
@@ -318,7 +349,7 @@ const CustomerColumnRender = (props) => {
                         </Space>
                       ),
                     },
-                    modal,
+                    appModal,
                     actionRef,
                   );
                 },
@@ -360,11 +391,12 @@ const CustomerColumnRender = (props) => {
           );
         } else if (inArray(item.action, ['edit', 'delete', 'view']) > -1) {
           const xkey = key + '_' + item.action;
+
           return dom
             ? React.cloneElement(dom, {
                 key: xkey,
                 onClick: async (e: any) => {
-                  saTableContext?.[item.action](record);
+                  saTableContext?.[item.action](record, value);
                 },
               })
             : null;
@@ -374,6 +406,9 @@ const CustomerColumnRender = (props) => {
       })
       .filter((v) => v);
   };
+  if (!record || Object.keys(record).length < 1) {
+    return null;
+  }
   //dropdown的设置 num 表示预留几个直接出现 text-显示的文字
   const itemsDom = getItemsDom(
     items,

@@ -1,8 +1,8 @@
 import request from '@/services/ant-design-pro/sadmin';
-import { BetaSchemaForm, ProFormColumnsType } from '@ant-design/pro-components';
+import { BetaSchemaForm, ProFormColumnsType, ProFormInstance } from '@ant-design/pro-components';
 import dayjs from 'dayjs';
 import { ReactNode } from 'react';
-import { isArr, isStr } from '../checkers';
+import { inArray, isArr, isStr } from '../checkers';
 import { getFromObject, saFormColumnsType, tplComplie } from '../helpers';
 export const defaultColumnsLabel = {
   id: '序号',
@@ -44,6 +44,7 @@ interface formFieldsProps {
   enums?: Record<string, any>;
   initRequest?: boolean;
   user?: any; //后台用户信息
+  formRef?: ProFormInstance;
 }
 
 export const GetFormFields: React.FC<{ columns: ProFormColumnsType[] | saFormColumnsType }> = ({
@@ -72,27 +73,21 @@ export const GetFormFields: React.FC<{ columns: ProFormColumnsType[] | saFormCol
 export const getFormFieldColumns = (props: formFieldsProps) => {
   const {
     labels = {},
-    categoryType,
     detail = {},
     columns = [],
     enums = {},
     initRequest = false,
     user,
+    formRef,
   } = props;
 
   if (!initRequest) return [];
   const allLabels = { ...defaultColumnsLabel, ...labels };
 
   //console.log('inner detail', detail);
-  //console.log('categoryType', categoryType);
   const customerColumns =
     typeof columns == 'function' ? columns(detail) : isArr(columns) ? [...columns] : [];
   //console.log(detail);
-  const categoryProps = {
-    placeholder: '请选择' + allLabels.category_id,
-    options: detail.categorys ? detail.categorys : enums.categorys,
-  };
-
   //const { initialState } = useModel('@@initialState');
 
   const defaulColumns: { [key: string]: any } = {
@@ -104,6 +99,44 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
       dataIndex: 'parent_id',
       formItemProps: { hidden: true },
     },
+  };
+  const checkCondition = (vals: { [key: string]: any }, dependency: { [key: string]: any }) => {
+    let ret = true;
+    const { condition = [], condition_type = 'all' } = dependency;
+    for (var i in condition) {
+      let cd = condition[i];
+      let cname = cd.name;
+      let cvalue = cd.value;
+      let rvalue = getFromObject(vals, cname);
+      if (cd.exp) {
+        //有表达式优先检测表达式
+        ret = tplComplie(cd.exp, {
+          record: detail,
+          user,
+        });
+      } else {
+        if (cvalue?.indexOf(',') < 0) {
+          ret = rvalue == cvalue;
+        } else {
+          ret = inArray(rvalue, cvalue.split(',')) >= 0;
+        }
+      }
+      if (condition_type == 'all') {
+        //全部满足
+        if (!ret) {
+          //一项不符合的话 直接返回错误
+          return false;
+        }
+      } else {
+        //任一满足
+        if (ret) {
+          //一项不符合的话 直接返回错误
+          return true;
+        }
+      }
+    }
+
+    return condition_type == 'all' ? true : false;
   };
   const parseColumns = (v) => {
     if (typeof v == 'string') {
@@ -181,6 +214,35 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
           return new Function(`return ${body}`)();
         })(v.columns);
         //console.log('cdependency', v);
+      }
+      //支持 dependencyOn 控制表单项的显示隐藏
+      if (v.dependencyOn) {
+        //console.log('v.dependencyOn', v.dependencyOn);
+        //console.log('cdependency', v);
+        //将数据设置为dependency
+        const dependencyOn = v.dependencyOn;
+        const names = dependencyOn?.condition?.map((cv) => {
+          return cv.name;
+        });
+        //delete v.dependencyOn;
+        //克隆变量
+        if (dependencyOn.type == 'render') {
+          v.dependencies = names;
+        } else {
+          const new_column = JSON.parse(JSON.stringify(v));
+          v = {
+            valueType: 'dependency',
+            name: names,
+            columns: (dependencyOnName: string[]) => {
+              //检测条件是否符合 condition 全部符合才返回数据
+              if (checkCondition(dependencyOnName, dependencyOn)) {
+                return [new_column];
+              } else {
+                return [];
+              }
+            },
+          };
+        }
       }
       //支持日期中的presets的value的字符串格式日期
       if (v.fieldProps?.presets) {

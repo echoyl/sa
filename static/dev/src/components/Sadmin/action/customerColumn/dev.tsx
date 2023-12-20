@@ -3,12 +3,19 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
+  CopyOutlined,
+  DeleteOutlined,
   DownloadOutlined,
   DownOutlined,
   EditOutlined,
   EnvironmentOutlined,
+  ExceptionOutlined,
+  FormOutlined,
+  PayCircleOutlined,
   PlusCircleOutlined,
   PrinterOutlined,
+  RollbackOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { ProCard, ProForm } from '@ant-design/pro-components';
 import { Button, Modal, Typography } from 'antd';
@@ -16,6 +23,7 @@ import { ButtonType } from 'antd/es/button';
 import { FC, useState } from 'react';
 import CustomerColumnRender from '.';
 import { inArray } from '../../checkers';
+import { dependencyOn } from '../../dev/vars/dependencyOn';
 import { parseIcon, saFormColumnsType } from '../../helpers';
 import { GetFormFields } from '../../posts/formDom';
 interface CustomerColumnProps {
@@ -23,6 +31,7 @@ interface CustomerColumnProps {
   value?: any;
   relationModel?: any;
   allMenus?: any;
+  modelColumns?: any;
 }
 const defaultBtn = {
   domtype: 'button',
@@ -40,11 +49,18 @@ export const icons: { [key: string]: any } = {
   printer: <PrinterOutlined />,
   car: <CarOutlined />,
   environment: <EnvironmentOutlined />,
+  search: <SearchOutlined />,
+  form: <FormOutlined />,
+  copy: <CopyOutlined />,
+  exception: <ExceptionOutlined />,
+  delete: <DeleteOutlined />,
+  rollback: <RollbackOutlined />,
+  paycircle: <PayCircleOutlined />,
 };
 const CustomerColumn: FC<CustomerColumnProps> = (props) => {
-  const { ok, value, relationModel, allMenus = [] } = props;
+  const { ok, value, relationModel, allMenus = [], modelColumns = [] } = props;
   //console.log('relationModel', relationModel, allMenus);
-
+  const dependencyOnVars = dependencyOn(modelColumns);
   const fieldPorpsColumn = {
     dataIndex: 'fieldProps',
     title: 'fieldProps',
@@ -60,6 +76,11 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
           dataIndex: 'value',
           title: 'fieldProps',
           valueType: 'jsonEditor',
+        },
+        {
+          dataIndex: 'cal',
+          title: '运算表达式',
+          valueType: 'textarea',
         },
       ],
     },
@@ -98,6 +119,24 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             ],
           },
         },
+        {
+          title: 'dependencyOn',
+          dataIndex: 'dependencyOn',
+          valueType: 'confirmForm',
+          fieldProps: {
+            btn: {
+              title: 'dependencyOn',
+              size: 'middle',
+            },
+            msg: '依赖项配置，只控制表单项的显隐',
+            formColumns: dependencyOnVars,
+          },
+        },
+      ],
+    },
+    {
+      valueType: 'group',
+      columns: [
         {
           title: '模拟数据',
           valueType: 'modalJson',
@@ -226,11 +265,10 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                   }
                   const domFormColumns = [
                     {
-                      valueType: 'group',
-                      columns: [
-                        { dataIndex: 'text', title: '文字', width: 'md' },
-                        { dataIndex: 'tooltip', title: 'tooltip', width: 'md' },
-                      ],
+                      dataIndex: 'text',
+                      title: '文字',
+                      valueType: 'textarea',
+                      tooltip: '可写{{record,user}}表达式显示',
                     },
                     {
                       valueType: 'group',
@@ -249,7 +287,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                               { label: 'text', value: 'text' },
                             ],
                           },
-                          width: 'sm',
+                          width: 'xs',
                         },
                         {
                           dataIndex: 'size',
@@ -262,7 +300,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                               { label: 'large', value: 'large' },
                             ],
                           },
-                          width: 'sm',
+                          width: 'xs',
                         },
                         {
                           dataIndex: 'icon',
@@ -273,8 +311,9 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                               return { label: icons[k], value: k };
                             }),
                           },
-                          width: 'sm',
+                          width: 'xs',
                         },
+                        { dataIndex: 'tooltip', title: 'tooltip', width: 'xs' },
                         ...domExtColumns,
                       ],
                     },
@@ -677,7 +716,14 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
 const CustomerColumnRenderDevReal = (props) => {
   const { fieldProps } = props;
   const [open, setOpen] = useState(false);
-  const { value, onChange, relationModel, btnText = '点击配置', allMenus } = fieldProps;
+  const {
+    value,
+    onChange,
+    relationModel,
+    btnText = '点击配置',
+    allMenus,
+    modelColumns,
+  } = fieldProps;
   const [values, setValues] = useState(value);
 
   //原本项获取整行的值但是好像formlist没法获取当前行的值 只有当前字段的值
@@ -706,6 +752,7 @@ const CustomerColumnRenderDevReal = (props) => {
           value={value}
           relationModel={relationModel}
           allMenus={allMenus}
+          modelColumns={modelColumns}
           ok={(values) => {
             //console.log(values);
             setValues(values);

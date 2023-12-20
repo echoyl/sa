@@ -106,12 +106,31 @@ export default (props) => {
               },
             },
             {
+              valueType: 'dependency',
+              name: ['props'],
+              columns: ({ props }: any) => {
+                //console.log(props);
+                //return [];
+                return [
+                  {
+                    dataIndex: '',
+                    title: '自定义Title',
+                    readonly: true,
+                    render: () => {
+                      return <div style={{ width: 100 }}>{props?.title ? props.title : ' - '}</div>;
+                    },
+                  },
+                ];
+              },
+            },
+            {
               dataIndex: 'props',
               title: '更多配置',
               valueType: 'customerColumnDev',
               fieldProps: {
                 relationModel,
                 allMenus,
+                modelColumns,
               },
               width: 160,
             },
@@ -224,7 +243,7 @@ export default (props) => {
     //     }
     //   });
     // }
-    console.log('now tags is', tags);
+    //console.log('now tags is', tags);
     const newTabs = tags
       ?.map((tag, i) => {
         if (tag.hidden) {

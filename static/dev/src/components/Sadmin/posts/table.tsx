@@ -386,7 +386,14 @@ const SaTable: React.FC<saTablePros> = (props) => {
         btns.push(importButton(btn, index));
       }
       if (btn.valueType == 'toolbar') {
-        btns.push(<CustomerColumnRender items={btn.fieldProps?.items} paramExtra={paramExtra} />);
+        //console.log('toolbar btn', btn);
+        btns.push(
+          <CustomerColumnRender
+            items={btn.fieldProps?.items}
+            paramExtra={paramExtra}
+            record={enums}
+          />,
+        );
       }
     });
     typeof toolBar == 'function' && btns.push(toolBar({ data, enums }));
@@ -629,6 +636,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
           scroll={{ x: 900 }}
           pagination={{
             showSizeChanger: true,
+            showQuickJumper: true,
           }}
           {...props.tableProps}
           rowKey="id"

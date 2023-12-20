@@ -241,15 +241,17 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
               {row.form ? (
                 <Col span={24} key={rowkey + 'form'}>
                   <ProCard
-                    style={{
-                      marginBottom: -16,
-                      borderBottomRightRadius: 0,
-                      borderBottomLeftRadius: 0,
-                    }}
-                    bodyStyle={{ paddingBottom: 0 }}
+                    //style={{ padding: 0 }}
+                    bodyStyle={{ padding: 0 }}
+                    // style={{
+                    //   marginBottom: -16,
+                    //   borderBottomRightRadius: 0,
+                    //   borderBottomLeftRadius: 0,
+                    // }}
+                    // bodyStyle={{ paddingBottom: 0 }}
                   >
                     <BetaSchemaForm
-                      layoutType="LightFilter"
+                      layoutType="QueryFilter"
                       bordered
                       columns={getFormFieldColumns({
                         initRequest: true,
@@ -257,7 +259,7 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                       })}
                       initialValues={formData ? formData : row.form.value}
                       onFinish={(data: { [key: string]: any }) => {
-                        setFormData(data);
+                        //setFormData(data);
                         getData(data);
                         console.log('onFinish', data);
                       }}

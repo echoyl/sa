@@ -27,7 +27,7 @@ import {
   getMenuData,
 } from '@ant-design/pro-components';
 import { useModel, useRouteData } from '@umijs/max';
-import { ColorPicker, Image, Table } from 'antd';
+import { ColorPicker, Image } from 'antd';
 import { get } from 'rc-util';
 import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -255,12 +255,12 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
   },
   pca: {
     render: (text, props) => {
-      //console.log('pca props', props);
+      console.log('pca props', props);
       const { fieldProps } = props;
       return <PcaRender text={text} level={fieldProps.level} topcode={fieldProps.topCode} />;
     },
     renderFormItem: (text, props) => {
-      // console.log('pca props', props, topCode, props.fieldProps);
+      console.log('pca props', props, props?.fieldProps);
       // return <SaPcaRender {...props.fieldProps} />;
       const level = props.fieldProps.level ? props.fieldProps.level : 3;
       const topCode = props.fieldProps.topCode ? props.fieldProps.topCode : '';
@@ -399,7 +399,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
   },
   customerColumn: {
     render: (text, props) => {
-      //console.log(text);
+      //console.log('customerColumn', text, props);
       const { fieldProps } = props;
       const { items } = fieldProps;
       return (
@@ -407,9 +407,9 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       );
     },
     renderFormItem: (text, props) => {
-      //console.log(props);
       const { fieldProps } = props;
       const { items } = fieldProps;
+      //console.log('renderFormItem here');
       return <CustomerColumnRender {...fieldProps} type="form" record={{}} text={text} />;
     },
   },
@@ -477,9 +477,19 @@ export const tplComplie = (exp: string | undefined, props: any) => {
   const matched = exp.match(ExpRE);
   if (!matched || !matched[1]) return exp;
   try {
-    return new Function('$root', `with($root) { return (${matched[1]}); }`)(props);
+    //检测是否有return
+    if (matched[1].indexOf('return') > -1) {
+      //console.log('has return', matched[1]);
+      const fuc = ((body) => {
+        return new Function(`return ${body}`)();
+      })(matched[1]);
+      //console.log('func body is', fuc);
+      return fuc(props);
+    } else {
+      return new Function('$root', `with($root) { return (${matched[1]}); }`)(props);
+    }
   } catch (e) {
-    console.log('表达式错误，请重写', exp, props);
+    console.log('表达式错误，请重写', exp, props, e);
     return false;
   }
 };
@@ -597,7 +607,6 @@ export const getBread = (path: string) => {
   }
   const { initialState } = useModel('@@initialState');
   const { breadcrumb } = getMenuData(initialState?.currentUser?.menuData);
-
   if (path == '/') {
     //首页默认跳转第一个菜单
     path = initialState?.currentUser?.menuData[0]?.path;

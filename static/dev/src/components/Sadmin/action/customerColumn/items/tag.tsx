@@ -22,7 +22,7 @@ const ItemTags: FC<{
 
   const { searchData } = useContext(SaContext);
 
-  //console.log('dataindex', dataindex, searchData);
+  // console.log('dataindex', dataindex, searchData, tags);
 
   //读取配置参数 dataindex 或复数 s是否有
   const option = getFromObject(searchData, dataindex);
@@ -34,6 +34,7 @@ const ItemTags: FC<{
           const opt = options?.find((v) => v.id == tag);
           return opt ? <ItemTag key={i} color={opt.color} title={opt.title} /> : null;
         } else {
+          //console.log('one tag', dataindex, searchData, tag);
           return <ItemTag key={i} color={tag.color} title={tag.title} />;
         }
       })}
