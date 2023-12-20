@@ -7,6 +7,7 @@ use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 
 class AdminService
 {
@@ -429,5 +430,42 @@ class AdminService
             }
         }
         return $data;
+    }
+
+    public function loginCheck()
+    {
+        $ss = new SetsService();
+        $setting = $ss->getSet('setting');
+        $times = Arr::get($setting,'login_error_times',3);
+        $error_times = $this->getLoginErrorTimes();
+        if($error_times >= $times)
+        {
+            //超过登录失败次数
+            return false;
+        }else
+        {
+            return true;
+        }
+    }
+
+    public function getLoginErrorTimes()
+    {
+        $key = $this->getLoginErrorKey();
+        $error_times = Cache::get($key);
+        return $error_times?:0;
+    }
+
+    public function getLoginErrorKey()
+    {
+        $ip = request()->ip();
+        return implode('_',['login_error',date("Ymd"),$ip]);
+    }
+
+    public function loginErrorLog($type = 'add')
+    {
+        $key = $this->getLoginErrorKey();
+        $times = $this->getLoginErrorTimes();
+        Cache::put($key,$type == 'add'? $times + 1 : 0,now()->addDays(1));
+        return;
     }
 }

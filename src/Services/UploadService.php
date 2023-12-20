@@ -15,6 +15,8 @@ class UploadService
         'jpg', 'jpeg', 'png', 'gif','ico'
     ];
 
+    
+
     public function store(Request $request, $formname = 'file', $type = 0, $insert_db = false,$toSize = false)
     {
         $file = $request->file($formname);
@@ -45,7 +47,7 @@ class UploadService
             $path_parts = pathinfo($new_path);
             $height = Image::make($new_path)->getHeight();
             $width = Image::make($new_path)->getWidth();
-
+            //d($height,$width,$toSize);
             //$thumb_url = $folder_name . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
 
             //$thumbnail_file_path = storage_path('app/public/' . $thumb_url);
@@ -74,7 +76,7 @@ class UploadService
             {
                 //没有size 那么默认图片最大为1200
                 
-                $max_size = 2000;
+                $max_size = 1000;
                 if($height > $max_size || $width > $max_size)
                 {
                     Image::make($new_path)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
@@ -83,7 +85,7 @@ class UploadService
 
             $height = Image::make($new_path)->getHeight();
             $width = Image::make($new_path)->getWidth();
-
+            //d($height,$width);
             $base_set = (new SetsService)->get('base');
 
             if (isset($base_set['image_water']) && $base_set['image_water'] && isset($base_set['image_water_url']) && $base_set['image_water_url']) {
@@ -180,10 +182,11 @@ class UploadService
         if ($isImage && $thumb) {
             $path_parts = pathinfo($newPath);
             $thumbnail_file_path = storage_path('app/public/user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']));
-            Image::make($newPath)->resize(1000, 1000, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
+            Image::make($newPath)->resize(800, 800, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
             $thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
             $height = Image::make($newPath)->getHeight();
             $width = Image::make($newPath)->getWidth();
+            //检测图片如果大小还大于500kb 再次压缩图片至 600*600
 
             if ($rewrite) {
                 //删除原始图片
@@ -391,6 +394,95 @@ class UploadService
             return $result;
         }
 
+    }
+
+    public function isImage($file)
+    {
+        if(!is_file($file))
+        {
+            return false;
+        }
+        $pathinfo = pathinfo($file);
+        $ext = $pathinfo['extension']??'';
+
+        return in_array($ext, $this->image_ext_arr);
+    }
+
+    /**
+     * 是否需要压缩
+     *
+     * @param [type] $file 文件路径
+     * @param array $size 图片尺寸 像素
+     * @param integer $quality 图片大小限制 kb
+     * @return boolean
+     */
+    public function shouldBeCompressed($file,$size = [1000,1000],$quality = 512)
+    {
+        if(!$this->isImage($file))
+        {
+            return false;
+        }
+        $filesize = filesize($file);
+
+        //修改为大于某个大小后直接是需要压缩
+        if($filesize < $quality * 1024)
+        {
+            return false;
+        }
+
+        $height = Image::make($file)->getHeight();
+        $width = Image::make($file)->getWidth();
+
+        if($height <= $size[1] && $width <= $size[0])
+        {
+            return false;
+        }
+
+        //图片大小小于设定值 或者 长宽都小于设定值时 都不压缩
+        return true;
+
+    }
+
+    /**
+     * resize图片尺寸
+     *
+     * @param [type] $file 图片路径
+     * @param [number[],number] $toSize 改变后的大小 
+     * @return void
+     */
+    public function resizeImage($file,$toSize)
+    {
+        if(is_numeric($toSize))
+        {
+            $toWitdh = $toHeight = $toSize;
+            
+        }elseif(is_array($toSize) && isset($toSize[1]))
+        {
+            $toWitdh = $toSize[0];
+            $toHeight = $toSize[1];
+        }
+        Image::make($file)->resize($toWitdh, $toHeight, function ($constraint) {$constraint->aspectRatio();})->save($file);
+        return;
+    }
+
+    public function compressImagesInDir($dir)
+    {
+        $compressed = [];
+        $list = scandir($dir);
+        foreach($list as $file)
+        {
+            if ($file != "." && $file != "..") {
+                //检测是否是image
+                $filepath = $dir.'/'.$file;
+                if($this->shouldBeCompressed($filepath))
+                {
+                    //压缩图片
+                    $this->resizeImage($filepath,1000);
+                    $compressed[] = $file;
+                }
+            }
+        }
+        return $compressed;
     }
 
 }

@@ -260,6 +260,12 @@ class FormItem
             $this->data['width'] = is_numeric($props['width'])?intval($props['width']):$props['width'];
         }
 
+        //新增dependencyOn 功能
+        if(isset($props['dependencyOn']))
+        {
+            $this->data['dependencyOn'] = $props['dependencyOn'];
+        }
+
         return;
     }
 
@@ -583,7 +589,7 @@ class FormItem
         //switch开关
         if($open && $close)
         {
-            $default = $this->schema['default']??1;
+            $default = $this->schema['default']??0;
             $this->data['fieldProps'] = [
                 "checkedChildren"=>$open,
                 "unCheckedChildren"=>$close,

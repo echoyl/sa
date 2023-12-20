@@ -17,7 +17,7 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 Route::get('menu/clearCache', 'MenuController@clearCache');//删除菜单缓存
             });
             
-            //Route::post('sms', 'SmsController@sms');
+            Route::post('sms', 'SmsController@sms');
 
             //需要登录的路由
             Route::middleware(['echoyl.sa'])->group(function () {

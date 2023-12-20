@@ -18,6 +18,20 @@ class LoginController extends ApiBaseController
         //提交登录信息
         $loginType = request('loginType');
 
+        $code = $request->input('captcha.captchaCode');
+        $code = $code?:$request->input('vercode');
+        $key = $request->input('captcha.captchaKey');
+        $key = $key?:$request->input('key');
+        $as = new AdminService;
+        
+        if(!$as->loginCheck())
+        {
+            if(!CaptchaService::check($key,$code))
+            {
+                return $this->fail([2,'图形验证码错误']);
+            }
+        }
+
         if($loginType == 'phone')
         {
             //手机号码登录
@@ -25,29 +39,19 @@ class LoginController extends ApiBaseController
             $mobile = request('mobile');
             if(!$code || !$mobile)
             {
-                return $this->fail([1,'请输入验证码']);
+                return $this->fail([1,'请输入手机验证码']);
             }
             $ss = new SmsService($mobile);
             if(!$ss->checkCode($code))
             {
-                return $this->fail([1,'验证码错误']);
+                $as->loginErrorLog();
+                return $this->fail([$as->loginCheck() ? 1:3,'手机验证码错误']);
             }
 
             //验证码正确 登录账号
             $info = AdminService::doLoginByMobile($mobile);
-
         }else
         {
-            $code = $request->input('captcha.captchaCode');
-            $code = $code?:$request->input('vercode');
-            $key = $request->input('captcha.captchaKey');
-            $key = $key?:$request->input('key');
-    
-            if(!CaptchaService::check($key,$code))
-            {
-                return $this->fail([1,'验证码错误']);
-            }
-    
             $username = $request->input('username');
             $pwd = $request->input('password');
     
@@ -60,10 +64,12 @@ class LoginController extends ApiBaseController
         {
             $info['userinfo'] = $this->service->parseUserInfo($info['userinfo'],$info['user']);
             unset($info['user']);
+            $as->loginErrorLog('clear');
             return $this->success($info,[0,'登录成功，页面跳转中...']);
         }else
         {
-            return $this->fail([1,'账号或密码错误，请重新输入']);
+            $as->loginErrorLog();
+            return $this->fail([$as->loginCheck() ? 1:3,'账号或密码错误，请重新输入']);
         }
     }
 
