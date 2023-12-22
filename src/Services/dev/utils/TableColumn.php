@@ -297,6 +297,12 @@ class TableColumn
         return;
     }
 
+    public function selectbar()
+    {
+        $this->customerColumn();
+        return;
+    }
+
     public function getRelation($names,$relations)
     {
         if(is_array($names))

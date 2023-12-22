@@ -306,7 +306,8 @@ class MenuController extends CrudController
 
         //根据form配置生成json配置
         $left_menu = false;
-        $tool_bar_button = [];
+        $tool_bar_button = [];//头部操作栏
+        $select_bar_button = [];//底部选择操作栏
         $json = [];
 
         
@@ -324,6 +325,9 @@ class MenuController extends CrudController
             if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
                 $tool_bar_button[] = $columns;
+            }elseif(isset($columns['valueType']) && in_array($columns['valueType'],['selectbar']))
+            {
+                $select_bar_button[] = $columns;
             }else
             {
                 $json[] = $columns;
@@ -378,6 +382,8 @@ class MenuController extends CrudController
 
         //工具菜单
         $desc['toolBarButton'] = $tool_bar_button;
+
+        $desc['selectRowBtns'] = $select_bar_button;
         
         $desc['tableColumns'] = $tableColumns;
 
@@ -513,7 +519,7 @@ class MenuController extends CrudController
 
         //这里需要 合并之前的配置 将生成的配置都保留 其它全部删除 然后合并现有的other 配置
         $_desc = [];
-        $keep_column = ['formColumns','toolBarButton','leftMenu','table_menu_key','tableColumns','tabs'];
+        $keep_column = ['formColumns','toolBarButton','selectRowBtns','leftMenu','table_menu_key','tableColumns','tabs'];
         foreach($keep_column as $kc)
         {
             if(isset($desc[$kc]))
