@@ -11,11 +11,10 @@
     "require": {
         "php": "^8.0.2",
         "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^9.0",
+        "laravel/framework": "^9.0 | ^10.0",
         "laravel/sanctum": "^3.0",
         "mews/captcha": "^3.2",
-        "league/glide-laravel": "^1.0",
-        "symfony/var-exporter": "^6.3"
+        "league/glide-laravel": "^1.0"
     },
     "license": "MIT",
     "autoload": {
