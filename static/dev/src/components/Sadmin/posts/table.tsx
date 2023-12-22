@@ -293,6 +293,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
         if (table_menu_key) {
           values[table_menu_key] = tableMenuId;
         }
+        values.ids = selectedRowsState?.map((v) => v.id);
         await request.post(url + '/export', { data: { ...values, ...paramExtra, ...post } });
         setButtonLoading(index, false);
       }}
@@ -450,6 +451,13 @@ const SaTable: React.FC<saTablePros> = (props) => {
     },
   };
 
+  const onTableReload = () => {
+    //重载后的动作 清除checkbox值
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+    return false;
+  }
+
   return (
     <SaContext.Provider
       value={{
@@ -468,10 +476,9 @@ const SaTable: React.FC<saTablePros> = (props) => {
           className="sa-pro-table"
           rowClassName={() => 'editable-row'}
           actionRef={actionRef}
-          // onLoad={() => {
-          //   console.log('i am reload ', url);
-          //   return false;
-          // }}
+          onLoad={() => {
+            return onTableReload();
+          }}
           params={{
             ...paramExtra,
             ...(table_menu_key ? { [table_menu_key]: tableMenuId } : {}),
@@ -773,7 +780,7 @@ export const ToolBarDom = (props) => {
     switchState,
     deleteable = true,
   } = props;
-  //log('props.btns', btns);
+  //console.log('props.btns', selectRowBtns);
   let n_btns = [];
   if (isObj(btns)) {
     if (!Array.isArray(btns)) {
@@ -817,14 +824,16 @@ export const ToolBarDom = (props) => {
           </Button>
         );
       })}
-      {selectRowBtns.length > 0 ? (
-        <CustomerColumnRender
-          key="selectRowBtns"
-          items={selectRowBtns}
-          paramExtra={{ ids: selectedIds }}
-          record={{ ids: selectedIds }}
-        />
-      ) : null}
+      {selectRowBtns?.map((cbtn, ci) => {
+        return (
+          <CustomerColumnRender
+            key={'customer_' + ci}
+            items={cbtn.fieldProps?.items}
+            paramExtra={{ ids: selectedIds }}
+            record={{ ids: selectedIds }}
+          />
+        );
+      })}
       {deleteable ? (
         <Button
           danger

@@ -1,4 +1,24 @@
 import PostsForm from '@/components/Sadmin/posts/post';
+import request from '@/services/ant-design-pro/sadmin';
+import { App, Button } from 'antd';
+import { useState } from 'react';
+
+const ClearDevCache = () => {
+  const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
+  const clear = async () => {
+    setLoading(true);
+    const { code, msg } = await request.get('dev/menu/clearCache');
+    message.info(msg);
+    setLoading(false);
+  };
+
+  return (
+    <Button onClick={clear} loading={loading}>
+      清除缓存
+    </Button>
+  );
+};
 
 export default () => {
   return (
@@ -166,6 +186,17 @@ export default () => {
                   { label: '账号密码', value: 'password' },
                   { label: '手机号登录', value: 'phone' },
                 ],
+              },
+            },
+          ],
+        },
+        {
+          title: '缓存设置',
+          formColumns: [
+            {
+              title: '清除缓存',
+              renderFormItem: (props) => {
+                return <ClearDevCache />;
               },
             },
           ],

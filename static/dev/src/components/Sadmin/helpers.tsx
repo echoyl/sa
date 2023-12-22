@@ -255,12 +255,12 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
   },
   pca: {
     render: (text, props) => {
-      console.log('pca props', props);
+      //console.log('pca props', props);
       const { fieldProps } = props;
       return <PcaRender text={text} level={fieldProps.level} topcode={fieldProps.topCode} />;
     },
     renderFormItem: (text, props) => {
-      console.log('pca props', props, props?.fieldProps);
+      //console.log('pca props', props, props?.fieldProps);
       // return <SaPcaRender {...props.fieldProps} />;
       const level = props.fieldProps.level ? props.fieldProps.level : 3;
       const topCode = props.fieldProps.topCode ? props.fieldProps.topCode : '';
