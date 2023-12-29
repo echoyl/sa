@@ -30,10 +30,6 @@ export default () => {
       ),
     },
     {
-      title: 'ID',
-      dataIndex: 'id',
-    },
-    {
       title: 'path',
       dataIndex: 'path',
       key: 'path',
@@ -56,7 +52,7 @@ export default () => {
                 width: 1600,
               },
               childrenRender: (record) => (
-                <MenuTable model={{ id: record?.id }} actionRef={actionRef} />
+                <MenuTable model={record} actionRef={actionRef} />
               ),
             },
             action: 'drawer',

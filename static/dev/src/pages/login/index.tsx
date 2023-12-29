@@ -13,7 +13,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { Helmet, history, useModel, useSearchParams } from '@umijs/max';
-import { Alert, Tabs, message } from 'antd';
+import { Alert, App, Tabs, message } from 'antd';
 import React, { CSSProperties, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import styles from './index.less';
@@ -260,72 +260,74 @@ const Login: React.FC = () => {
     },
   ];
   return (
-    <div className={styles.container} style={{ ...containerStyle }}>
-      <Helmet>
-        <title>登录 - {initialState?.settings?.title}</title>
-      </Helmet>
-      <div className={styles.content}>
-        <ProCard
-          style={{
-            //maxWidth: 440,
-            margin: '60px auto',
-            padding: '20px 0',
-            background: containerStyle.backgroundImage ? '#fff' : 'none',
-          }}
-        >
-          {contextHolder}
-          <LoginForm
-            contentStyle={{
-              minWidth: 280,
-              maxWidth: '75vw',
-            }}
-            containerStyle={{
-              paddingInline: 0,
-            }}
-            formRef={formRef}
-            logo={initialState?.settings.logo}
-            title={initialState?.settings.title}
-            subTitle={initialState?.settings.subtitle}
-            initialValues={{
-              autoLogin: true,
-            }}
-            onFinish={async (values) => {
-              await handleSubmit(values as API.LoginParams);
+    <App>
+      <div className={styles.container} style={{ ...containerStyle }}>
+        <Helmet>
+          <title>登录 - {initialState?.settings?.title}</title>
+        </Helmet>
+        <div className={styles.content}>
+          <ProCard
+            style={{
+              //maxWidth: 440,
+              margin: '60px auto',
+              padding: '20px 0',
+              background: containerStyle.backgroundImage ? '#fff' : 'none',
             }}
           >
-            <Tabs
-              centered
-              activeKey={loginType}
-              onChange={(activeKey) => setLoginType(activeKey)}
-              items={initialState?.settings.loginType?.map((v) => {
-                return loginTypeItems.find((item) => item.key == v);
-              })}
-            />
-            <div
-              style={{
-                marginBottom: 24,
+            {contextHolder}
+            <LoginForm
+              contentStyle={{
+                minWidth: 280,
+                maxWidth: '75vw',
+              }}
+              containerStyle={{
+                paddingInline: 0,
+              }}
+              formRef={formRef}
+              logo={initialState?.settings.logo}
+              title={initialState?.settings.title}
+              subTitle={initialState?.settings.subtitle}
+              initialValues={{
+                autoLogin: true,
+              }}
+              onFinish={async (values) => {
+                await handleSubmit(values as API.LoginParams);
               }}
             >
-              <ProFormCheckbox noStyle name="autoLogin">
-                自动登录
-              </ProFormCheckbox>
-              <a
+              <Tabs
+                centered
+                activeKey={loginType}
+                onChange={(activeKey) => setLoginType(activeKey)}
+                items={initialState?.settings.loginType?.map((v) => {
+                  return loginTypeItems.find((item) => item.key == v);
+                })}
+              />
+              <div
                 style={{
-                  float: 'right',
-                }}
-                onClick={() => {
-                  messageApi.info('请使用手机号登录后修改,或联系后台管理员修改账号密码！');
+                  marginBottom: 24,
                 }}
               >
-                忘记密码
-              </a>
-            </div>
-          </LoginForm>
-        </ProCard>
-      </div>
+                <ProFormCheckbox noStyle name="autoLogin">
+                  自动登录
+                </ProFormCheckbox>
+                <a
+                  style={{
+                    float: 'right',
+                  }}
+                  onClick={() => {
+                    messageApi.info('请使用手机号登录后修改,或联系后台管理员修改账号密码！');
+                  }}
+                >
+                  忘记密码
+                </a>
+              </div>
+            </LoginForm>
+          </ProCard>
+        </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </App>
   );
 };
 

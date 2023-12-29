@@ -1,7 +1,7 @@
 // @ts-ignore
 /* eslint-disable */
+import { message } from '@/components/Sadmin/message';
 import { history, request as orequest } from '@umijs/max';
-import { message, notification } from 'antd';
 import { extend } from 'umi-request';
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -32,22 +32,15 @@ function errorHandler(error) {
   if (error.response) {
     const { status, statusText } = error.response;
     const description = codeMessage[status] || statusText;
-    notification.error({
-      message: '服务器错误:' + status,
-      description,
-      placement: 'top',
+    message?.error?.({
+      content: '服务器错误:' + description,
     });
     // 请求初始化时出错或者没有响应返回的异常
     throw error;
   } else {
     const description = error.message || error.errDesc || '系统异常';
-    // notification.error({
-    //   message: '系统异常',
-    //   description,
-    //   placement: 'top',
-    // });
     if (description != 'error') {
-      message.error(description);
+      message?.error?.(description);
     }
     throw error;
   }

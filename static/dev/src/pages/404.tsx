@@ -68,7 +68,7 @@ const Page: React.FC = () => {
 
 const PageTypes = ({ menu, match, pathname }) => {
   const { data, page_type, name } = menu;
-
+  //console.log('menu is', menu);
   if (match || page_type == 'form') {
     //post 页面
     //console.log('post page param is', data, page_type);
@@ -100,7 +100,14 @@ const PageTypes = ({ menu, match, pathname }) => {
         return <Category key={pathname} path={pathname} name={name} {...data} tableTitle={false} />;
       case 'table':
         return (
-          <PostsList key={pathname} path={pathname} name={name} {...data} tableTitle={false} />
+          <PostsList
+            key={pathname}
+            path={pathname}
+            name={name}
+            pageMenu={menu}
+            {...data}
+            tableTitle={false}
+          />
         );
       case 'panel':
         return <PagePanel {...data} />;

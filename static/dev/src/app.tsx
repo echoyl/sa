@@ -13,6 +13,7 @@ import 'dayjs/locale/zh-cn';
 import { useContext } from 'react';
 import defaultSettings, { lightDefaultToken } from '../config/defaultSettings';
 import ModalJson from './components/Sadmin/action/modalJson';
+import { SaDevContext } from './components/Sadmin/dev';
 import { loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
 import Refresh from './components/Sadmin/refresh';
 import { getTheme } from './components/Sadmin/themSwitch';
@@ -31,6 +32,7 @@ export async function getInitialState(): Promise<{
     baseurl?: string;
     loginTypeDefault?: string;
     loginBgImgage?: string;
+    dev?: { [key: string]: any };
   };
   currentUser?: API.CurrentUser;
   loading?: boolean;
@@ -99,7 +101,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     waterMarkProps: {
       content: checkWaterMark(),
     },
-    footerRender: () => <Footer />,
+    footerRender: () => (
+      <App>
+        <Footer />
+      </App>
+    ),
     onPageChange: () => {
       // 如果没有登录，重定向到 login
       const pathname = history.location.pathname.replace(initialState?.settings?.baseurl, '/');
@@ -174,20 +180,26 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
             }
           >
             <ProConfigProvider {...values} valueTypeMap={{ ...saValueTypeMap }}>
-              {children}
-              {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
-                <SettingDrawer
-                  disableUrlParams
-                  enableDarkTheme
-                  settings={initialState?.settings}
-                  onSettingChange={(settings) => {
-                    setInitialState((preInitialState) => ({
-                      ...preInitialState,
-                      settings: { ...preInitialState.settings, ...settings },
-                    }));
-                  }}
-                />
-              )}
+              <SaDevContext.Provider
+                value={{
+                  setting: initialState?.settings,
+                }}
+              >
+                {children}
+                {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
+                  <SettingDrawer
+                    disableUrlParams
+                    enableDarkTheme
+                    settings={initialState?.settings}
+                    onSettingChange={(settings) => {
+                      setInitialState((preInitialState) => ({
+                        ...preInitialState,
+                        settings: { ...preInitialState.settings, ...settings },
+                      }));
+                    }}
+                  />
+                )}
+              </SaDevContext.Provider>
             </ProConfigProvider>
           </ConfigProvider>
         </App>

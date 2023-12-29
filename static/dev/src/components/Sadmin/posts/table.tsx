@@ -1,13 +1,4 @@
-import request, { getFullUrl, requestHeaders } from '@/services/ant-design-pro/sadmin';
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  LoadingOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from '@ant-design/icons';
+import request from '@/services/ant-design-pro/sadmin';
 import type {
   ActionType,
   ProFormInstance,
@@ -15,14 +6,18 @@ import type {
   ProTableProps,
 } from '@ant-design/pro-components';
 import { FooterToolbar, ProTable } from '@ant-design/pro-components';
-import { FormattedMessage, Link, history, useModel, useSearchParams } from '@umijs/max';
-import { App, Button, Space, Upload } from 'antd';
-import React, { createContext, useContext, useMemo, useRef, useState } from 'react';
-import ButtonDrawer from '../action/buttonDrawer';
-import ButtonModal from '../action/buttonModal';
-import CustomerColumnRender from '../action/customerColumn';
-import { isArr, isFn, isObj, isStr, isUndefined } from '../checkers';
+import { history, useModel, useSearchParams } from '@umijs/max';
+import { App } from 'antd';
+import React, { createContext, useEffect, useMemo, useRef, useState } from 'react';
+import { inArray, isArr, isFn, isObj, isStr, isUndefined } from '../checkers';
+import { TableForm } from '../dev/table/form';
+import TableIndex from '../dev/table/tableIndex';
+import { ToolBarDom, toolBarRender } from '../dev/table/toolbar';
 //import _ from 'underscore';
+import { css } from '@emotion/css';
+import { default as cls } from 'classnames';
+import { DndContext } from '../dev/dnd-context';
+import { tableDesignerInstance, useTableDesigner } from '../dev/table/designer';
 import {
   getFromObject,
   isJsonString,
@@ -31,7 +26,6 @@ import {
   search2Obj,
 } from '../helpers';
 import { EditableCell, EditableRow } from './editable';
-import { SaForm } from './post';
 import './style.less';
 import { getTableColumns } from './tableColumns';
 export interface saTablePros {
@@ -43,7 +37,6 @@ export interface saTablePros {
   toolBar?: (value: any) => void;
   openType?: 'page' | 'drawer' | 'modal';
   openWidth?: number;
-  categoryType?: 'select' | 'cascader';
   tableTitle?: string | boolean;
   formTitle?: string | boolean;
   labels?: Record<string, any>;
@@ -80,12 +73,39 @@ export interface saTablePros {
   toolBarButton?: Array<{ title?: string; valueType?: string; [key: string]: any }>; //操作栏按钮设置
   selectRowRender?: (rowdom: any) => void | boolean;
   selectRowBtns?: Array<{ [key: string]: any }>;
+  pageMenu?: { [key: string]: any }; //当前菜单信息
 }
 
 const components = {
   body: {
     row: EditableRow,
     cell: EditableCell,
+  },
+  header: {
+    wrapper: (props) => {
+      return (
+        <DndContext>
+          <thead {...props} />
+        </DndContext>
+      );
+    },
+    cell: (props) => {
+      return (
+        <th
+          {...props}
+          className={cls(
+            props.className,
+            css`
+              max-width: 300px;
+              white-space: nowrap;
+              &:hover .general-schema-designer {
+                display: block;
+              }
+            `,
+          )}
+        />
+      );
+    },
   },
 };
 
@@ -94,31 +114,23 @@ interface saTableContextProps {
   view: (id: any) => void;
   delete: (id: any) => void;
 }
-
 export const SaContext = createContext<{
   actionRef?: any;
   formRef?: any;
   columnData?: { [key: string]: any };
   searchData?: { [key: string]: any };
   url?: string;
+  tableDesigner?: tableDesignerInstance;
   saTableContext?: saTableContextProps;
   searchFormRef?: any;
 }>({});
 
 const SaTable: React.FC<saTablePros> = (props) => {
   const {
-    name,
     url = '',
-    //tableColumns = [],
     level = 1,
-    //formColumns,
     tableColumns = [],
-    toolBar,
     openType = 'page',
-    openWidth = props.openType == 'drawer' ? 754 : 754,
-    formColumns = [],
-    tabs,
-    categoryType = 'select',
     labels = {},
     beforeTableGet,
     titleField = 'title',
@@ -127,27 +139,28 @@ const SaTable: React.FC<saTablePros> = (props) => {
     table_menu_default = '',
     pageType = 'page',
     paramExtra = {},
-    postExtra = {},
-    addable = true,
     editable = true,
     deleteable = true,
     path,
     checkEnable = true,
     actionRef = useRef<ActionType>(),
-    toolBarButton = [],
     tableTitle = '列表',
     selectRowRender,
     selectRowBtns = [],
     formRef = useRef<ProFormInstance>(),
+    tableProps = {
+      size: 'large',
+    },
+    pageMenu,
   } = props;
   //console.log('tableprops', props);
+  const [tbColumns, setTbColumns] = useState([]);
   const [enums, setEnums] = useState({ categorys: [] });
   const [summary, setSummary] = useState();
   const [columnData, setColumnData] = useState({});
   const [data, setData] = useState([]);
   const [initRequest, setInitRequest] = useState(false);
   //const url = 'posts/posts';
-  const [selectedRowsState, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   //const actionRef = props.actionRef ? props.actionRef : useRef<ActionType>();
@@ -214,15 +227,6 @@ const SaTable: React.FC<saTablePros> = (props) => {
       } else {
         setTableMenu(ret.search.table_menu[table_menu_key]);
         //不再需要默认设置第一个菜单的id了，需要自己在后端实现 未传参数是默认读取第一个参数 (会产生两次请求)
-        // const first_value = ret.search.table_menu[table_menu_key][0]['value'];
-        // console.log(tableMenuId, first_value, table_menu_default);
-        // if (
-        //   (!table_menu_default && !tableMenuId) ||
-        //   (tableMenuId != first_value && table_menu_default && tableMenuId != table_menu_default)
-        // ) {
-        //   ret.data = [];
-        //   setTableMenuId(first_value);
-        // }
       }
       //如果后端传了tab id 那么主动重新设置一次
       if (ret.search?.table_menu_id) {
@@ -251,7 +255,6 @@ const SaTable: React.FC<saTablePros> = (props) => {
         modals.destroy();
         if (!ret.code) {
           actionRef.current?.reload();
-          setSelectedRows([]);
           setSelectedRowKeys([]);
         }
       },
@@ -269,152 +272,27 @@ const SaTable: React.FC<saTablePros> = (props) => {
         modals.destroy();
         if (!ret.code) {
           actionRef.current?.reload();
-          setSelectedRows([]);
           setSelectedRowKeys([]);
         }
       },
     });
   };
 
-  //导出按钮
-  const [exportLoading, setExportLoading] = useState<Array<boolean>>(
-    toolBarButton?.map((v) => false),
-  );
-  const exportButton = ({ title = '导出', fieldProps = { post: {} } }, index) => (
-    <Button
-      key="exportButton"
-      icon={<DownloadOutlined />}
-      loading={exportLoading[index]}
-      onClick={async () => {
-        setButtonLoading(index, true);
-        console.log('exportLoading', exportLoading);
-        const { post = {} } = fieldProps;
-        const values = searchFormRef?.current?.getFieldsFormatValue();
-        if (table_menu_key) {
-          values[table_menu_key] = tableMenuId;
-        }
-        values.ids = selectedRowsState?.map((v) => v.id);
-        await request.post(url + '/export', { data: { ...values, ...paramExtra, ...post } });
-        setButtonLoading(index, false);
-      }}
-    >
-      {title}
-    </Button>
-  );
-  //导入按钮
-  const uploadProps = {
-    name: 'file',
-    action: getFullUrl(url + '/import'),
-    headers: requestHeaders(),
-    itemRender: () => '',
-  };
-  const setButtonLoading = (index: number, flag: boolean) => {
-    exportLoading[index] = flag;
-    setExportLoading([...exportLoading]);
-  };
-  const importButton = ({ title = '导入' }, index: number) => (
-    <Upload
-      key="importButton"
-      {...uploadProps}
-      onChange={(info) => {
-        setButtonLoading(index, true);
-        if (info.file.status !== 'uploading') {
-          //console.log(info.file, info.fileList);
-        }
-        if (info.file.status === 'done') {
-          //console.log('donenenene');
-          setButtonLoading(index, false);
-          const { code, msg, data } = info.file.response;
-          if (!code) {
-            //设置预览图片路径未服务器路径
-            message.success(`${info.file.name} ${msg}`);
-            actionRef.current?.reload();
-          } else {
-            //上传失败了
-            message.error(msg);
-          }
-        } else if (info.file.status === 'error') {
-          setButtonLoading(index, false);
-          message.error(`${info.file.name} file upload failed.`);
-        }
-      }}
-    >
-      <Button icon={exportLoading[index] ? <LoadingOutlined /> : <UploadOutlined />}>
-        {title}
-      </Button>
-    </Upload>
-  );
-
-  const toolBarRender = () => {
-    const btns = [];
-    if (addable) {
-      if (openType == 'drawer' || openType == 'modal') {
-        btns.push(
-          <Button
-            type="primary"
-            key="primary"
-            onClick={() => {
-              setCurrentRow({ id: 0 });
-              handleModalVisible(true);
-            }}
-          >
-            <Space>
-              <PlusOutlined />
-              <FormattedMessage id="pages.searchTable.new" />
-            </Space>
-          </Button>,
-        );
-      } else {
-        btns.push(
-          <Link key="add" to={path ? path + '/0' : './0'}>
-            <Button type="primary" key="primary">
-              <Space>
-                <PlusOutlined />
-                <FormattedMessage id="pages.searchTable.new" />
-              </Space>
-            </Button>
-          </Link>,
-        );
-      }
-    }
-    toolBarButton?.forEach((btn, index) => {
-      //console.log('btn', btn);
-
-      if (btn.valueType == 'export') {
-        btns.push(exportButton(btn, index));
-      }
-      if (btn.valueType == 'import') {
-        btns.push(importButton(btn, index));
-      }
-      if (btn.valueType == 'toolbar') {
-        //console.log('toolbar btn', btn);
-        btns.push(
-          <CustomerColumnRender
-            items={btn.fieldProps?.items}
-            paramExtra={paramExtra}
-            record={enums}
-          />,
-        );
-      }
-    });
-    typeof toolBar == 'function' && btns.push(toolBar({ data, enums }));
-    return btns;
-  };
-
   const rowNode = useMemo(() => {
-    if (selectedRowsState.length <= 0) return undefined;
+    if (selectedRowKeys.length <= 0) return undefined;
     return (
       <ToolBarDom
         key="table_row_select_bar"
-        btns={enums.states}
         selectRowBtns={selectRowBtns}
-        selectedRowsState={selectedRowsState}
+        selectedRows={data.filter((v) => {
+          return inArray(v.id, selectedRowKeys) > -1;
+        })}
         remove={remove}
         switchState={switchState}
         deleteable={deleteable}
       />
     );
-  }, [selectedRowsState, enums]);
+  }, [selectedRowKeys, enums]);
 
   const rowDom = useMemo(() => {
     if (selectRowRender) {
@@ -454,10 +332,33 @@ const SaTable: React.FC<saTablePros> = (props) => {
   const onTableReload = () => {
     //重载后的动作 清除checkbox值
     setSelectedRowKeys([]);
-    setSelectedRows([]);
     return false;
-  }
+  };
 
+  const getTableColumnsRender = (columns) => {
+    return getTableColumns({
+      setData,
+      data,
+      post,
+      enums,
+      initRequest,
+      columns,
+      actionRef,
+      initialState,
+      message,
+      ...props,
+    });
+  };
+
+  useEffect(() => {
+    setTbColumns(getTableColumnsRender(tableColumns));
+  }, [tableColumns, initRequest]);
+
+  const tableDesigner = useTableDesigner({
+    pageMenu,
+    setTbColumns,
+    getTableColumnsRender,
+  });
   return (
     <SaContext.Provider
       value={{
@@ -468,6 +369,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
         columnData,
         url,
         saTableContext,
+        tableDesigner,
       }}
     >
       <>
@@ -483,29 +385,22 @@ const SaTable: React.FC<saTablePros> = (props) => {
             ...paramExtra,
             ...(table_menu_key ? { [table_menu_key]: tableMenuId } : {}),
           }}
-          columns={getTableColumns({
-            setData,
-            data,
-            post,
-            categoryType,
-            enums,
-            initRequest,
-            openType,
-            columns: tableColumns,
-            labels,
-            level,
-            actionRef,
-            path,
-            editable,
-            deleteable,
-            initialState,
-            message,
-          })}
+          columns={tbColumns}
           request={rq}
           formRef={searchFormRef}
+          searchFormRender={(p, d) => {
+            return <DndContext>{d}</DndContext>;
+          }}
           search={
             search_config.length > 0
-              ? { span: 6, className: 'posts-table posts-table-' + pageType, labelWidth: 'auto' }
+              ? {
+                  span: 6,
+                  className: 'posts-table posts-table-' + pageType,
+                  labelWidth: 'auto',
+                  optionRender: (searchConfig, formProps, dom) => {
+                    return <DndContext>{dom}</DndContext>;
+                  },
+                }
               : false
           }
           revalidateOnFocus={false}
@@ -519,21 +414,9 @@ const SaTable: React.FC<saTablePros> = (props) => {
                     //console.log('syncToUrl', values, type);
                     if (pageType != 'page') {
                       //只有在页面显示的table 搜索数据才会同步到url中
-
                       return false;
                     }
                     if (type === 'get') {
-                      // let pca = [];
-                      // if (values.province) {
-                      //   pca.push(parseInt(values.province));
-                      // }
-                      // if (values.city) {
-                      //   pca.push(parseInt(values.city));
-                      // }
-                      // if (values.area) {
-                      //   pca.push(parseInt(values.area));
-                      // }
-                      //console.log('table values', values);
                       for (var i in values) {
                         if (/^\d+$/.test(values[i])) {
                           if (!enumNames || enumNames.findIndex((v) => v == i) < 0) {
@@ -567,46 +450,49 @@ const SaTable: React.FC<saTablePros> = (props) => {
                           }
                         }
                       }
-                      //console.log('table format values is', values);
                       const ret = { ...values };
-                      // if (values.startTime || values.endTime) {
-                      //   ret.created_at = [values.startTime, values.endTime];
-                      // }
-                      //log('GET', values);
                       return ret;
                     }
-                    //console.log('syncToUrl old', values);
-                    // if (category_id) {
-                    //   values.category_id = category_id.length > 0 ? JSON.stringify(category_id) : '';
-                    // }
 
                     for (var i in values) {
                       if (typeof values[i] == 'object') {
                         values[i] = JSON.stringify(values[i]);
-                        // if (!Array.isArray(values[i])) {
-                        //   console.log(i, 'is not array should be stringify');
-                        //   values[i] = JSON.stringify(values[i]);
-                        // } else {
-                        //   //array data should be joined by string ,
-                        //   values[i] = values[i].join(',');
-                        // }
                       }
                     }
                     return values;
                   },
                 }
           }
-          toolBarRender={toolBarRender}
+          toolBarRender={toolBarRender({
+            setCurrentRow,
+            handleModalVisible,
+            paramExtra,
+            enums,
+            tableMenuId,
+            table_menu_key,
+            selectedRowKeys,
+            ...props,
+          })}
           rowSelection={
             !checkEnable
               ? false
               : {
                   selectedRowKeys,
                   onChange: (newSelectedRowKeys, selectedRows) => {
-                    setSelectedRows(selectedRows);
                     setSelectedRowKeys(newSelectedRowKeys);
                   },
                   checkStrictly: false,
+                  columnWidth: 80,
+                  renderCell: (checked, record, index, originNode) => {
+                    return (
+                      <TableIndex
+                        checked={checked}
+                        record={record}
+                        index={index}
+                        originNode={originNode}
+                      />
+                    );
+                  },
                 }
           }
           toolbar={
@@ -645,212 +531,21 @@ const SaTable: React.FC<saTablePros> = (props) => {
             showSizeChanger: true,
             showQuickJumper: true,
           }}
-          {...props.tableProps}
+          {...tableProps}
           rowKey="id"
         />
-        {openType == 'modal' && (
-          <ButtonModal
-            open={createModalVisible}
-            title={
-              (currentRow.id ? (currentRow.readonly ? '查看' : '编辑') : '新增') +
-              (name ? ' - ' + name : '')
-            }
-            width={openWidth}
-            afterOpenChange={(open) => {
-              handleModalVisible(open);
-            }}
-          >
-            <InnerForm
-              {...props}
-              formColumns={formColumns}
-              url={url + '/show'}
-              currentRow={currentRow}
-              paramExtra={paramExtra}
-              tabs={tabs}
-              postExtra={postExtra}
-              editable={editable}
-              addable={addable}
-            />
-          </ButtonModal>
-        )}
-        {openType == 'drawer' && (
-          <ButtonDrawer
-            open={createModalVisible}
-            title={
-              (currentRow.id ? (currentRow.readonly ? '查看' : '编辑') : '新增') +
-              (name ? ' - ' + name : '')
-            }
-            width={openWidth}
-            afterOpenChange={(open) => {
-              handleModalVisible(open);
-            }}
-          >
-            <InnerForm
-              {...props}
-              formColumns={formColumns}
-              url={url + '/show'}
-              currentRow={currentRow}
-              paramExtra={paramExtra}
-              tabs={tabs}
-              postExtra={postExtra}
-              editable={editable}
-              addable={addable}
-            />
-          </ButtonDrawer>
-        )}
+        <TableForm
+          {...props}
+          createModalVisible={createModalVisible}
+          handleModalVisible={handleModalVisible}
+          paramExtra={paramExtra}
+          currentRow={currentRow}
+        />
 
         {pageType == 'page' && rowNode && <FooterToolbar>{rowNode}</FooterToolbar>}
         {rowDom}
       </>
     </SaContext.Provider>
-  );
-};
-
-const InnerForm = (props) => {
-  const {
-    setOpen,
-    contentRender,
-    formColumns,
-    url,
-    currentRow,
-    paramExtra,
-    tabs,
-    postExtra,
-    addable,
-    editable,
-  } = props;
-  const { actionRef, formRef } = useContext(SaContext);
-  return (
-    <SaForm
-      {...props}
-      msgcls={({ code }) => {
-        if (!code) {
-          actionRef.current?.reload();
-          //设置弹出层关闭，本来会触发table重新加载数据后会关闭弹层，但是如果数据重载过慢的话，这个会感觉很卡所以在这里直接设置弹层关闭
-          setOpen(false);
-          return;
-        }
-      }}
-      beforeGet={(data) => {
-        if (!data) {
-          //没有data自动关闭弹出层
-          setOpen?.(false);
-        }
-      }}
-      formColumns={formColumns}
-      tabs={tabs}
-      formRef={formRef}
-      actionRef={actionRef}
-      paramExtra={{ ...currentRow, ...paramExtra }}
-      postExtra={{ ...currentRow, ...postExtra }}
-      url={url}
-      showTabs={tabs?.length > 1 ? true : false}
-      formProps={{
-        contentRender,
-        submitter:
-          (!editable && currentRow.id) ||
-          (currentRow.readonly && currentRow.id) ||
-          (!currentRow.id && !addable)
-            ? false
-            : {
-                //移除默认的重置按钮，点击重置按钮后会重新请求一次request
-                render: (props, doms) => {
-                  return [
-                    <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
-                      关闭
-                    </Button>,
-                    doms[1],
-                  ];
-                },
-              },
-      }}
-      align="left"
-      dataId={currentRow.id}
-      pageType="drawer"
-    />
-  );
-};
-
-export const ToolBarDom = (props) => {
-  const {
-    btns,
-    selectedRowsState,
-    selectRowBtns = [],
-    remove,
-    switchState,
-    deleteable = true,
-  } = props;
-  //console.log('props.btns', selectRowBtns);
-  let n_btns = [];
-  if (isObj(btns)) {
-    if (!Array.isArray(btns)) {
-      n_btns = [
-        { label: '禁用', value: 0 },
-        { label: '启用', value: 1 },
-      ];
-    } else {
-      n_btns = btns;
-    }
-  }
-  const selectedIds = selectedRowsState.map((item) => item.id);
-
-  return (
-    <Space>
-      <Space>
-        <span>选择</span>
-        <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a>
-        <span>项</span>
-      </Space>
-      {n_btns?.map((stateButton, k) => {
-        return (
-          <Button
-            key={'state_' + k}
-            size="small"
-            icon={!stateButton.value ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
-            type={!stateButton.value ? 'dashed' : 'primary'}
-            danger={!stateButton.value ? true : false}
-            onClick={async () => {
-              //console.log(selectedRowsState);
-              //await handleRemove(selectedRowsState);
-
-              switchState(
-                selectedIds,
-                '确定要' + stateButton.label + ':' + selectedRowsState.length + '条记录吗？',
-                stateButton.value,
-              );
-            }}
-          >
-            批量{stateButton.label}
-          </Button>
-        );
-      })}
-      {selectRowBtns?.map((cbtn, ci) => {
-        return (
-          <CustomerColumnRender
-            key={'customer_' + ci}
-            items={cbtn.fieldProps?.items}
-            paramExtra={{ ids: selectedIds }}
-            record={{ ids: selectedIds }}
-          />
-        );
-      })}
-      {deleteable ? (
-        <Button
-          danger
-          type="primary"
-          size="small"
-          icon={<DeleteOutlined />}
-          onClick={async () => {
-            //console.log(selectedRowsState);
-            //await handleRemove(selectedRowsState);
-
-            remove(selectedIds, '确定要删除:' + selectedRowsState.length + '条记录吗？');
-          }}
-        >
-          批量删除
-        </Button>
-      ) : null}
-    </Space>
   );
 };
 

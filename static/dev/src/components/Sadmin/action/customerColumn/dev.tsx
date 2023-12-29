@@ -20,7 +20,7 @@ import {
 import { ProCard, ProForm } from '@ant-design/pro-components';
 import { Button, Modal, Typography } from 'antd';
 import { ButtonType } from 'antd/es/button';
-import { FC, useState } from 'react';
+import React, { FC, useState } from 'react';
 import CustomerColumnRender from '.';
 import { inArray } from '../../checkers';
 import { dependencyOn } from '../../dev/vars/dependencyOn';
@@ -713,7 +713,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   );
 };
 
-const CustomerColumnRenderDevReal = (props) => {
+export const CustomerColumnRenderDevReal = (props) => {
   const { fieldProps } = props;
   const [open, setOpen] = useState(false);
   const {
@@ -727,13 +727,13 @@ const CustomerColumnRenderDevReal = (props) => {
   const [values, setValues] = useState(value);
 
   //原本项获取整行的值但是好像formlist没法获取当前行的值 只有当前字段的值
-  const onOk = () => {
+  const onOk = async () => {
     //console.log('值变化了', values, props.onChange, 'props is', props);
-    onChange?.(values);
+    await onChange?.(values);
     setOpen(false);
   };
-  return (
-    <>
+  const btnDom =
+    typeof btnText == 'string' ? (
       <Button
         onClick={() => {
           setOpen(true);
@@ -741,6 +741,18 @@ const CustomerColumnRenderDevReal = (props) => {
       >
         {btnText}
       </Button>
+    ) : (
+      React.cloneElement(btnText, {
+        key: 'trigger',
+        ...btnText.props,
+        onClick: async (e: any) => {
+          setOpen(true);
+        },
+      })
+    );
+  return (
+    <>
+      {btnDom}
       <Modal
         open={open}
         onCancel={() => setOpen(false)}

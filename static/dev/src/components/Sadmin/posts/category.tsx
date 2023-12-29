@@ -16,10 +16,9 @@ const Category: React.FC<CategoryProps> = (props) => {
   const defaultProps = {
     level: 1,
     openType: 'drawer',
-    tableColumns: ['id', 'title', 'displayorder', 'created_at', 'state', 'option'],
-    formColumns: ['title', 'displayorder', 'state', 'parent_id'],
+    tableColumns: ['displayorder', 'option'],
+    formColumns: ['parent_id'],
     expandAll: true,
-    labels: { title: '名称', created_at: '创建时间' },
     ...props,
   };
   //console.log('props', props);

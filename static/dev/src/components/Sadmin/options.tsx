@@ -157,7 +157,7 @@ const SaOptions: React.FC<SaOptionsProps> = (props) => {
       //   return <ProForm.Group>{doms}</ProForm.Group>;
       // }}
       creatorRecord={() => {
-        return { id: uid() };
+        return { uid: uid() };
       }}
       itemRender={({ listDom, action }, { index }) => {
         return (

@@ -3,8 +3,10 @@ import { TableDropdown } from '@ant-design/pro-components';
 import { history, Link, useModel } from '@umijs/max';
 import { Button, Space } from 'antd';
 import dayjs from 'dayjs';
+import { cloneDeep } from 'lodash';
 import { useContext } from 'react';
-import { isArr, isUndefined } from '../checkers';
+import { isArr, isStr, isUndefined } from '../checkers';
+import { TableColumnTitle } from '../dev/table/title';
 import { getFromObject, tplComplie } from '../helpers';
 import { defaultColumnsLabel } from './formDom';
 import { SaContext } from './table';
@@ -140,22 +142,20 @@ export const getTableColumns = (props) => {
     data,
     initRequest = false,
     post,
-    categoryType,
     enums,
-    openType,
+    openType = 'page',
     columns,
     labels,
-    level,
+    level = 1,
     actionRef,
     path,
-    editable,
+    editable = true,
     deleteable = true,
     initialState,
     message,
   } = props;
 
   if (!initRequest) return [];
-
   const allLabels = { ...defaultColumnsLabel, ...labels };
   const defaulColumns = {
     displayorder: {
@@ -218,6 +218,12 @@ export const getTableColumns = (props) => {
   //const allColumns = [...defaulColumns, ...customerColumns];
 
   const parseColumns = (v) => {
+    const df = v.valueType ? defaulColumnsRender(v.valueType) : false;
+    if (df) {
+      df.uid = v.uid;
+      v = cloneDeep(df);
+    }
+
     //加入if条件控制
     if (v.fieldProps?.if) {
       const show = tplComplie(v.fieldProps?.if, { record: enums, user: initialState?.currentUser });
@@ -276,20 +282,34 @@ export const getTableColumns = (props) => {
       dataindex: v.dataIndex,
     };
 
-    return { ...v };
+    if (isStr(v.title)) {
+      v.title = <TableColumnTitle {...v} />;
+    }
+
+    return v;
+  };
+  const defaulColumnsRender = (type: string) => {
+    if (type == 'coption') {
+      type = 'option';
+    }
+    if (defaulColumns[type]) {
+      //console.log(defaulColumns[c]);
+      return defaulColumns[type];
+    }
+    return false;
   };
   const _columns = customerColumns
     .map((c) => {
       if (typeof c == 'string') {
-        if (c == 'coption') {
-          c = 'option';
-        }
-        if (defaulColumns[c]) {
-          //console.log(defaulColumns[c]);
-          return defaulColumns[c];
-        } else {
-          return { title: allLabels[c], dataIndex: c, search: false };
-        }
+        const dr = defaulColumnsRender(c);
+        return dr
+          ? dr
+          : {
+              //title: allLabels[c],
+              title: <TableColumnTitle id={c} title={allLabels[c]} />,
+              dataIndex: c,
+              search: false,
+            };
       } else {
         return parseColumns(c);
       }

@@ -252,7 +252,6 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                   >
                     <BetaSchemaForm
                       layoutType="QueryFilter"
-                      bordered
                       columns={getFormFieldColumns({
                         initRequest: true,
                         columns: row.form.columns,
