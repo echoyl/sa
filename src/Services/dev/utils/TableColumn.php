@@ -33,6 +33,7 @@ class TableColumn
         $this->props = $props;
 
         $key = $dataIndex = $config['key']??'';
+        $uid = $config['uid'];
 
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
@@ -52,8 +53,11 @@ class TableColumn
 
         if(in_array($key,['option','coption','created_at_s','displayorder']))
         {
-            $this->data = $key;
-            return;
+            $this->data = [
+                'valueType'=>$key,
+                'uid'=>$uid
+            ];
+            return $this->data;
         }
 
         $columns = json_decode($model['columns'],true);
@@ -112,7 +116,7 @@ class TableColumn
             $relation_title = implode(' - ',$_relation_title);
         }
 
-        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation_title?:Utils::$title_arr[$key]??''))];
+        $d = ['dataIndex'=>$dataIndex,'uid'=>$uid,'title'=>$title?:($schema?$schema['title']:($relation_title?:Utils::$title_arr[$key]??''))];
         if($width)
         {
             $d['width'] = is_numeric($width)?intval($width):$width;

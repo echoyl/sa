@@ -6,6 +6,7 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Services\dev\utils\Utils;
+use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
 class MenuController extends CrudController
@@ -79,24 +80,6 @@ class MenuController extends CrudController
 
     }
 
-    public function allModels()
-    {
-        $model = new Model();
-        $data = [];
-        $list = $model->where(['type'=>1])->with(['relations'=>function($query){
-            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
-        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
-        foreach($list as $val)
-        {
-            $data[] = [
-                'id'=>$val['id'],
-                'columns'=>$val['columns']?json_decode($val['columns'],true):[],
-                'relations'=>$val['relations']?:[]
-            ];
-        }
-        return $data;
-    }
-
     public function clearCache()
     {
         $ds = new DevService;
@@ -118,7 +101,7 @@ class MenuController extends CrudController
             $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'],array_values(collect(Utils::$title_arr)->map(function($v,$k){
                 return ['title'=>$v,'name'=>$k];
             })->toArray()));
-            $item['allModels'] = $this->allModels();
+            $item['allModels'] = DevService::allModels();
 
         }
         if(!$this->is_post)
@@ -288,7 +271,7 @@ class MenuController extends CrudController
     /**
      * 列表配置信息
      *
-     * @return void
+     * @return string
      */
     public function tableConfig($id = 0)
     {
@@ -311,16 +294,25 @@ class MenuController extends CrudController
         $json = [];
 
         
-
+        $need_update_config = false;
         
-        foreach($config as $val)
+        foreach($config as $kv=>$val)
         {
             $key = Arr::get($val,'key');
             if($item['page_type'] == 'category' && $key == 'id')
             {
                 //这里注入一个 如果是分类页面 自动将第一列改成 title + id 显示
-                $val = json_decode('{"key":"id","props":{"items":[{"id":"02bhysgdg9s","domtype":"text","btn":{"text":"{{record.title+ \' - \' + record.id}}"}}]},"type":"customerColumn"}',true);
+                //20231227 checkbox改成了鼠标悬浮后显示 这里不用了 应该需要删除id这个列表字段了 当不能checkable后才显示id
+                //$val = json_decode('{"key":"id","props":{"items":[{"id":"02bhysgdg9s","domtype":"text","btn":{"text":"{{record.title+ \' - \' + record.id}}"}}]},"type":"customerColumn"}',true);
             }
+            //加入uid设置 如果没有uid 后台自动加入uid
+            if(!isset($val['uid']) || !$val['uid'])
+            {
+                $val['uid'] = HelperService::uuid();
+                $need_update_config = true;
+                $config[$kv] = $val;
+            }
+
             $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
             if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
@@ -365,6 +357,10 @@ class MenuController extends CrudController
                 }
             }
 
+        }
+        if($need_update_config)
+        {
+            $this->model->where(['id'=>$item['id']])->update(['table_config'=>json_encode($config)]);
         }
         
         $tableColumns = $json;
@@ -546,5 +542,127 @@ class MenuController extends CrudController
         $data['desc'] = json_encode($desc);
         $this->model->where(['id'=>$item['id']])->update($data);
         return $this->success('操作成功');
+    }
+
+    /**
+     * 列表列字段的排序设置
+     *
+     * @return void
+     */
+    public function sortTableColumns()
+    {
+        $id = request('id');
+        $item_data = $this->getItem('table_config',$id);
+
+        if(!is_array($item_data))
+        {
+            return $item_data;
+        }
+        $config = $item_data['config'];
+        $config_uids = [];
+
+        foreach($config as $val)
+        {
+            $config_uids[$val['uid']] = $val;
+        }
+
+        $columns = request('columns');
+        //按照列表排序
+        $new_config = [];
+        foreach($columns as $val)
+        {
+            $uid = $val['uid'];
+            if(!isset($config_uids[$uid]))
+            {
+                continue;
+            }
+            $new_config[] = $config_uids[$uid];
+        }
+        $this->model->where(['id'=>$id])->update(['table_config'=>json_encode($new_config)]);
+
+        return $this->tableConfig($id);
+
+    }
+
+    /**
+     * 编辑列表字段
+     *
+     * @return void
+     */
+    public function editTableColumn($type = 'edit')
+    {
+        $id = request('base.id');
+
+        $uid = request('base.uid');
+
+        $afterUid = request('base.afterUid');
+
+        $base = request('base');
+
+        unset($base['id']);
+        if($afterUid)
+        {
+            unset($base['afterUid']);
+        }
+
+        $item_data = $this->getItem('table_config',$id);
+
+        if(!is_array($item_data))
+        {
+            return $item_data;
+        }
+        $config = $item_data['config'];
+
+        $find = false;
+
+        foreach($config as $key=>$val)
+        {
+            if($uid)
+            {
+                //编辑
+                if($val['uid'] == $uid)
+                {
+                    if($type == 'delete')
+                    {
+                        //删除
+                        unset($config[$key]);
+                    }else
+                    {
+                        //编辑
+                        $config[$key] = $base;
+                    }
+                    
+                    $find = true;
+                    break;
+                }
+            }else{
+                //插入
+                if($val['uid'] == $afterUid)
+                {
+                    array_splice($config,$key + 1,0,[$base]);
+                    $find = true;
+                    break;
+                }
+            }
+            
+        }
+
+        if(!$find)
+        {
+            return $this->fail([1,'字段信息错误']);
+        }
+
+        $this->model->where(['id'=>$id])->update(['table_config'=>json_encode(array_values($config))]);
+
+        $this->tableConfig($id);
+
+        $item = $this->model->where(['id'=>$id])->first();
+        $desc = json_decode($item['desc'],true);
+        return $this->success(['tableColumns'=>$desc['tableColumns'],'schema'=>$item->toArray()]);
+    }
+
+    public function deleteTableColumn()
+    {
+        return $this->editTableColumn('delete');
     }
 }

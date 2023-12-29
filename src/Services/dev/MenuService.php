@@ -60,7 +60,10 @@ class MenuService
                 'routes' => $this->getMenuData($val['id'],$auth_ids),
                 //'data' => (new stdClass),
                 'data'=>[],
-                'page_type'=>$val['page_type']
+                'page_type'=>$val['page_type'],
+                'id'=>$val['id'],
+                'model_id'=>$val['admin_model_id'],
+                'schema'=>$val
             ];
             if($val['status'] == 0)
             {

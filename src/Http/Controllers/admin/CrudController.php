@@ -13,6 +13,7 @@ use Illuminate\Support\Arr;
  * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
  * @method mixed beforePost(&$data,$id = 0,$item)  提交数据前的检测数据
+ * @method mixed beforeMultiplePost(&$data,$id = []) 批量操作前检测
  * @method mixed handleSearch($search = []) 数据列表中额外的搜索调价等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
@@ -584,21 +585,25 @@ class CrudController extends ApiBaseController
                     //批量操作
                     //$this->parseData($data, 'encode', 'update');
                     //d($data);
-                    if (method_exists($this, 'beforePost')) {
-                        $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
-                        if ($ret) {
-                            return $ret;
-                        }
-                    }
-
                     if(is_array($id))
                     {
+                        if (method_exists($this, 'beforeMultiplePost')) {
+                            $ret = $this->beforeMultiplePost($data, $id); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+                            if ($ret) {
+                                return $ret;
+                            }
+                        }
                         $this->model->whereIn('id',$id)->update($data);
                     }else
                     {
+                        if (method_exists($this, 'beforePost')) {
+                            $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+                            if ($ret) {
+                                return $ret;
+                            }
+                        }
                         $this->model->where('id',$id)->update($data);
                     }
-                    
                     return $this->success();
                     break;
                 case 'displayorder':

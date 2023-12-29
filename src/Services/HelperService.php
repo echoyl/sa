@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class HelperService
 {
@@ -679,5 +680,9 @@ class HelperService
       
         return str_pad($hours, 2, '0', STR_PAD_LEFT).':'.str_pad($minutes, 2, '0', STR_PAD_LEFT).':'.str_pad($seconds, 2, '0', STR_PAD_LEFT);
       
+    }
+    public static function uuid()
+    {
+        return Str::random(10);
     }
 }

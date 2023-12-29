@@ -1298,4 +1298,28 @@ class DevService
     {
         return (new Model())->where(['parent_id'=>$pid])->orderBy('type','asc')->get()->toArray();
     }
+
+    /**
+     * 获取所有模型数据处理相应的格式 前端使用
+     *
+     * @return void
+     */
+    public static function allModels()
+    {
+        $model = new Model();
+        $data = [];
+        $list = $model->where(['type'=>1])->with(['relations'=>function($query){
+            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
+        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
+        foreach($list as $val)
+        {
+            $data[] = [
+                'id'=>$val['id'],
+                'columns'=>$val['columns']?json_decode($val['columns'],true):[],
+                'search_columns'=>$val['search_columns']?json_decode($val['search_columns'],true):[],
+                'relations'=>$val['relations']?:[]
+            ];
+        }
+        return $data;
+    }
 }

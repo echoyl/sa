@@ -157,6 +157,17 @@ class AdminService
         $setting['dev'] = $dev && ($is_super || $is_dev);
         $setting['lang'] = Arr::get($setting,'lang',true);
         $setting['splitMenus'] = Arr::get($setting,'splitMenus',false);
+
+        //加入开发环境时 全局数据
+        if($dev)
+        {
+            $ds = new DevService;
+            $setting['dev'] = [
+                'allMenus' => $ds->getMenusTree(),
+                'allModels'=> DevService::allModels(),
+            ];
+        }
+
         return $setting;
     }
 
@@ -196,6 +207,14 @@ class AdminService
         ];
         return $info;
     }
+    public static function deving()
+    {
+        $ss = new SetsService();
+        $setting = $ss->getSet('setting');
+        $dev = Arr::get($setting,'dev',true);
+        return $dev;
+    }
+
 
     public static function logout()
     {

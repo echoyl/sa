@@ -49,6 +49,12 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         Route::post('menu/tableConfig', 'MenuController@tableConfig');
                         Route::post('menu/formConfig', 'MenuController@formConfig');
                         Route::post('menu/otherConfig', 'MenuController@otherConfig');
+                        //table排序
+                        Route::post('menu/sortTableColumns', 'MenuController@sortTableColumns');
+                        //table 编辑或新增单个列
+                        Route::post('menu/editTableColumn', 'MenuController@editTableColumn');
+                        //table 删除列
+                        Route::post('menu/deleteTableColumn', 'MenuController@deleteTableColumn');
 
                         Route::resource('menu', 'MenuController');
                         Route::post('model/quickCreate', 'ModelController@quickCreate');
