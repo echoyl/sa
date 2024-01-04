@@ -97,7 +97,16 @@ const PageTypes = ({ menu, match, pathname }) => {
   } else {
     switch (page_type) {
       case 'category':
-        return <Category key={pathname} path={pathname} name={name} {...data} tableTitle={false} />;
+        return (
+          <Category
+            pageMenu={menu}
+            key={pathname}
+            path={pathname}
+            name={name}
+            {...data}
+            tableTitle={false}
+          />
+        );
       case 'table':
         return (
           <PostsList

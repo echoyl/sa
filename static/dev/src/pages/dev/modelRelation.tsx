@@ -54,7 +54,6 @@ export default (props) => {
       tableProps={{ params: { model_id: model?.id }, search: false }}
       //toolBarRender={false}
       tableColumns={[
-        'id',
         { dataIndex: 'title', title: '名称' },
         { dataIndex: 'name', title: 'name' },
         { dataIndex: 'type', title: '类型' },

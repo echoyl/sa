@@ -2,11 +2,11 @@ import request, { getFullUrl, requestHeaders } from '@/services/ant-design-pro/s
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
   DeleteOutlined,
-  DownloadOutlined,
   LoadingOutlined,
   PlusOutlined,
-  UploadOutlined,
 } from '@ant-design/icons';
 import { FormattedMessage, Link } from '@umijs/max';
 import { App, Button, Space, Upload } from 'antd';
@@ -80,7 +80,7 @@ const ExportButton = ({ title = '导出', fieldProps = { post: {} }, values = {}
   return (
     <Button
       key="exportButton"
-      icon={<DownloadOutlined />}
+      icon={<CloudDownloadOutlined />}
       onClick={async () => {
         modal.confirm({
           title: '温馨提示！',
@@ -100,12 +100,13 @@ const ExportButton = ({ title = '导出', fieldProps = { post: {} }, values = {}
 
 //导入按钮
 
-const ImportButton = ({ title = '导入', url = '' }) => {
+const ImportButton = ({ title = '导入', url = '', uploadProps: ups = {} }) => {
   const uploadProps = {
     name: 'file',
     action: getFullUrl(url + '/import'),
     headers: requestHeaders(),
     itemRender: () => '',
+    ...ups,
   };
   const [loading, setLoading] = useState(false);
   const { message } = App.useApp();
@@ -137,7 +138,7 @@ const ImportButton = ({ title = '导入', url = '' }) => {
         }
       }}
     >
-      <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />}>{title}</Button>
+      <Button icon={loading ? <LoadingOutlined /> : <CloudUploadOutlined />}>{title}</Button>
     </Upload>
   );
 };
@@ -206,7 +207,7 @@ export const toolBarRender = (props) => {
         );
       }
     });
-    //typeof toolBar == 'function' && btns.push(toolBar({ data, enums }));
+    typeof props.toolBar == 'function' && btns.push(props.toolBar({ enums }));
     return btns;
   };
   return render;

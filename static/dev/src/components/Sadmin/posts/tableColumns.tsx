@@ -315,7 +315,7 @@ export const getTableColumns = (props) => {
       }
     })
     .filter((c) => {
-      return typeof c != 'undefined';
+      return typeof c != 'undefined' && c.dataIndex != 'id';
     });
   //console.log('_columns is', _columns);
   return _columns;

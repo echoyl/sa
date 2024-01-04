@@ -397,9 +397,6 @@ const SaTable: React.FC<saTablePros> = (props) => {
                   span: 6,
                   className: 'posts-table posts-table-' + pageType,
                   labelWidth: 'auto',
-                  optionRender: (searchConfig, formProps, dom) => {
-                    return <DndContext>{dom}</DndContext>;
-                  },
                 }
               : false
           }

@@ -747,6 +747,7 @@ export const CustomerColumnRenderDevReal = (props) => {
         ...btnText.props,
         onClick: async (e: any) => {
           setOpen(true);
+          btnText?.props?.onClick?.();
         },
       })
     );

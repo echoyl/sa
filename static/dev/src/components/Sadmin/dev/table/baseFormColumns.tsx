@@ -107,6 +107,7 @@ export const getModelRelations = (model_id: number, dev: { [key: string]: any })
 
 export const getModelColumns = (model_id: number, dev: { [key: string]: any }) => {
   const { allModels = [] } = dev;
+  //console.log('model_id', model_id, allModels);
   const model = getModelById(model_id, allModels);
   const allColumns = getModelColumnsSelect(model_id, allModels);
 

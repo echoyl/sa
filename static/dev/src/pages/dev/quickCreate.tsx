@@ -33,6 +33,7 @@ const QuickCreate: FC<{ menus: SaReord; models: SaReord; foldermodels: SaReord }
                   { label: '角色用户', value: 'perm' },
                   { label: '门店', value: 'shop' },
                   { label: '商品', value: 'goods' },
+                  { label: '订单', value: 'order' },
                 ],
               },
               formItemProps: {

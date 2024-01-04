@@ -1,4 +1,3 @@
-import ConfirmForm from '@/components/Sadmin/action/confirmForm';
 import { saTableColumnsType } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
 import { CopyOutlined, FileOutlined, FolderOutlined, PlusCircleOutlined } from '@ant-design/icons';
@@ -236,6 +235,17 @@ export default () => {
         tableProps={{
           scroll: { y: 600 },
         }}
+        toolBarButton={[
+          {
+            valueType: 'export',
+          },
+          {
+            valueType: 'import',
+            uploadProps: {
+              accept: '.sql',
+            },
+          },
+        ]}
         toolBar={() => {
           return (
             <>
@@ -243,33 +253,6 @@ export default () => {
                 menus={allData?.search.menus}
                 models={allData?.search.models}
                 foldermodels={allData?.search.foldermodels}
-              />
-              <ConfirmForm
-                key="export_button"
-                trigger={<Button>导出</Button>}
-                url="dev/model/export"
-                msg="确定要导出数据吗？"
-                callback={(ret) => {
-                  return;
-                }}
-                formColumns={[
-                  {
-                    title: '导出配置',
-                    dataIndex: 'check',
-                    valueType: 'checkbox',
-                    fieldProps: {
-                      options: [
-                        { label: 'Create table', value: 'create' },
-                        { label: 'Drop table', value: 'drop' },
-                        { label: 'Truncate table', value: 'truncate' },
-                        { label: 'REPLACE INTO', value: 'replace' },
-                        { label: 'INSERT INTO', value: 'insert' },
-                        { label: '全部数据', value: 'all' },
-                        { label: '仅项目数据', value: 'app' },
-                      ],
-                    },
-                  },
-                ]}
               />
             </>
           );

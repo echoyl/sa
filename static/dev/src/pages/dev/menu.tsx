@@ -51,9 +51,7 @@ export default () => {
               drawerProps: {
                 width: 1600,
               },
-              childrenRender: (record) => (
-                <MenuTable model={record} actionRef={actionRef} />
-              ),
+              childrenRender: (record) => <MenuTable model={record} actionRef={actionRef} />,
             },
             action: 'drawer',
             btn: { text: '列表', size: 'small' },
@@ -188,6 +186,17 @@ export default () => {
       table_menu_key="state"
       table_menu_all={false}
       tableColumns={tableColumns}
+      toolBarButton={[
+        {
+          valueType: 'export',
+        },
+        {
+          valueType: 'import',
+          uploadProps: {
+            accept: '.sql',
+          },
+        },
+      ]}
       formColumns={[
         {
           valueType: 'group',

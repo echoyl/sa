@@ -90,7 +90,7 @@ const BaseForm = (props) => {
     },
   });
   //无uid表示插入列
-  const value = uid ? {} : JSON.parse(pageMenu?.schema?.table_config)?.find((v) => v.uid == uid);
+  const value = !uid ? {} : JSON.parse(pageMenu?.schema?.table_config)?.find((v) => v.uid == uid);
 
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
 
@@ -113,6 +113,7 @@ const MoreForm = (props) => {
   const {
     tableDesigner: { pageMenu, edit },
   } = useContext(SaContext);
+  const { setVisible } = useContext(SchemaSettingsContext);
   const { setting } = useContext(SaDevContext);
   const relations = getModelRelations(pageMenu?.model_id, setting?.dev);
   const { allMenus = [] } = setting?.dev;
@@ -125,10 +126,17 @@ const MoreForm = (props) => {
     await edit(data);
   };
   //console.log('value', value, uid, JSON.parse(pageMenu?.schema?.table_config));
+  const trigger = React.cloneElement(title, {
+    key: 'trigger',
+    ...title.props,
+    onClick: async (e: any) => {
+      setVisible(false);
+    },
+  });
   const fieldProps = {
     value: value?.props,
     onChange,
-    btnText: title,
+    btnText: trigger,
     relationModel: relations,
     allMenus,
   };
@@ -140,9 +148,17 @@ const DeleteColumn = (props) => {
   const {
     tableDesigner: { pageMenu, reflush, deleteUrl = '' },
   } = useContext(SaContext);
+  const { setVisible } = useContext(SchemaSettingsContext);
+  const trigger = React.cloneElement(title, {
+    key: 'trigger',
+    ...title.props,
+    onClick: async (e: any) => {
+      setVisible(false);
+    },
+  });
   return (
     <Confirm
-      trigger={title}
+      trigger={trigger}
       url={deleteUrl}
       data={{ base: { id: pageMenu?.id, uid } }}
       msg="确定要删除该列吗"
