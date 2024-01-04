@@ -484,7 +484,14 @@ class DevService
         return;
     }
 
-    public function customerCode($file_path)
+    /**
+     * 获取文件的自定义代码信息
+     *
+     * @param string $file_path 文件路径
+     * @param array $customer_init 初始化自定义代码设置 只在创建文件时检测
+     * @return void
+     */
+    public function customerCode($file_path,$customer_init = [])
     {
         $replace = [
             ['/customer code start(.*)\/\/customer code end/s'],//自定义代码
@@ -510,12 +517,18 @@ class DevService
             }
         }else
         {
-            $ret = ['','','',''];
+            if(!empty($customer_init))
+            {
+                $ret = $customer_init;
+            }else
+            {
+                $ret = ['','','',''];
+            }
         }
         return $ret;
     }
 
-    public function createControllerFile($data)
+    public function createControllerFile($data,$customer_init = [])
     {
         $all = $this->allModel(true);
 
@@ -549,7 +562,7 @@ class DevService
         $use_namespace = $parse_columns = [];
         
         //检测文件是否已经存在 存在的话将自定义代码带入
-        [$customer_code,$customer_construct,$customer_namespace,$customer_property] = $this->customerCode($model_file_path);
+        [$customer_code,$customer_construct,$customer_namespace,$customer_property] = $this->customerCode($model_file_path,$customer_init);
 
         $replace_arr = [
             '/\$namespace\$/'=>$namespace,

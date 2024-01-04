@@ -49,6 +49,10 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         Route::post('menu/tableConfig', 'MenuController@tableConfig');
                         Route::post('menu/formConfig', 'MenuController@formConfig');
                         Route::post('menu/otherConfig', 'MenuController@otherConfig');
+
+                        //导出导入
+                        Route::post('menu/export', 'MenuController@export');
+                        Route::post('menu/import', 'MenuController@import');
                         //table排序
                         Route::post('menu/sortTableColumns', 'MenuController@sortTableColumns');
                         //table 编辑或新增单个列
@@ -58,7 +62,10 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
 
                         Route::resource('menu', 'MenuController');
                         Route::post('model/quickCreate', 'ModelController@quickCreate');
+                        //导出导入
                         Route::post('model/export', 'ModelController@export');
+                        Route::post('model/import', 'ModelController@import');
+                        
                         Route::post('model/createModelSchema', 'ModelController@createModelSchema');
                         Route::post('model/createModelFile', 'ModelController@createModelFile');
                         Route::post('model/createControllerFile', 'ModelController@createControllerFile');

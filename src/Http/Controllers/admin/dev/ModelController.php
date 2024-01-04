@@ -8,6 +8,7 @@ use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Creator;
 use Echoyl\Sa\Services\dev\utils\Dump;
+use Echoyl\Sa\Services\HelperService;
 
 class ModelController extends CrudController
 {
@@ -157,59 +158,41 @@ class ModelController extends CrudController
         return $this->success('操作成功');
     }
 
-    
-
     /**
      * 导出开发配置sql文件 直接在服务器中运行更新
-     *
+     * 修改为导出json格式文件，做到导入导出同步线上线下的功能
      * @return void
      */
     public function export()
     {
-        //导出dev_menu表
-        if(request()->isMethod('post'))
+        $c = new Dump;
+        [$code,$msg] = $c->export(request('ids'));
+        if($code)
         {
-            $appname = DevService::appname();
-            $filename = 'update.sql';
-            $file = storage_path('app/public/'.$filename);
-            //file_put_contents($file,'');
-            $check = request('base.check',[]);
-            $export_table = [
-                ['dev_menu',''],
-                ['dev_model',''],
-                ['dev_model_relation',''],
-            ];
-            if(!in_array('all',$check))
-            {
-                //包含系统数据 + app数据
-                if(in_array('app',$check))
-                {
-                    $export_table[0][1] = "type = '{$appname}'";
-                    $export_table[1][1] = "admin_type = '{$appname}'";
-                    $model_ids = (new Model())->whereIn('admin_type',[$appname])->pluck('id')->toArray();
-                    $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
-                }else
-                {
-                    $export_table[0][1] = "type = 'system' or type = '{$appname}'";
-                    $export_table[1][1] = "admin_type = 'system' or admin_type = '{$appname}'";
-                    $model_ids = (new Model())->whereIn('admin_type',['system',$appname])->pluck('id')->toArray();
-                    $export_table[2][1] = "model_id in (".implode(',',$model_ids).")";
-                }
-            }
-            $c = new Dump;
-            foreach($export_table as $tb)
-            {
-                $c = $c->exportTable($tb[0],$tb[1],$check);
-            }
-            $c = $c->dumpToFile($file);
-    
-            //return $this->success();
-            return $this->success(['url'=>tomedia($filename),'download'=>$filename]);
+            return $this->fail([1,$msg]);
         }else
         {
-            return $this->success(['check'=>['replace','app']]);
+            return $this->success($msg);
         }
-        
+    }
+
+    public function import()
+    {
+        $file = request()->file('file');
+
+        $content = file_get_contents($file);
+
+        $dump = new Dump;
+
+        [$code,$msg] = $dump->import($content);
+
+        if($code)
+        {
+            return $this->fail([1,$msg]);
+        }else
+        {
+            return $this->success(null,[0,$msg]);
+        }
     }
 
     /**

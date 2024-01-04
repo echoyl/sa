@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
@@ -664,5 +665,37 @@ class MenuController extends CrudController
     public function deleteTableColumn()
     {
         return $this->editTableColumn('delete');
+    }
+
+    public function export()
+    {
+        $c = new Dump;
+        [$code,$msg] = $c->export(request('ids'),'menu');
+        if($code)
+        {
+            return $this->fail([1,$msg]);
+        }else
+        {
+            return $this->success($msg);
+        }
+    }
+
+    public function import()
+    {
+        $file = request()->file('file');
+
+        $content = file_get_contents($file);
+
+        $dump = new Dump;
+
+        [$code,$msg] = $dump->import($content);
+
+        if($code)
+        {
+            return $this->fail([1,$msg]);
+        }else
+        {
+            return $this->success(null,[0,$msg]);
+        }
     }
 }

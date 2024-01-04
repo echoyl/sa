@@ -6,6 +6,7 @@ use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\utils\creator\Goods;
 use Echoyl\Sa\Services\dev\utils\creator\Perm;
 use Echoyl\Sa\Services\dev\utils\creator\Posts;
 use Echoyl\Sa\Services\dev\utils\creator\Shop;
@@ -53,6 +54,13 @@ class Creator
         return;
     }
 
+    public function goods()
+    {
+        $c = new Goods;
+        $c->make();
+        return;
+    }
+
     public function getConfig($data,$search,$relpace)
     {
         if(is_string($data))
@@ -71,10 +79,10 @@ class Creator
         $json = json_decode($json,'true');
         if($key && isset($json[$key]))
         {
-            $json[$key] = array_merge($json[$key],$add);
+            $json[$key] = array_merge($add,$json[$key]);
         }else
         {
-            $json = array_merge($json,$add);
+            $json = array_merge($add,$json);
         }
         return json_encode($json);
     }
@@ -274,12 +282,13 @@ class Creator
         $has_relation = (new Relation())->where(['model_id'=>$model_id,'foreign_model_id'=>$relation_model['id'],'name'=>$relation['name']])->first();
         if(!$has_relation)
         {
-            (new Relation())->insert($relation);
+            $relation_id = (new Relation())->insertGetId($relation);
         }else
         {
             (new Relation())->where(['id'=>$has_relation['id']])->update($relation);
+            $relation_id = $has_relation['id'];
         }
-        return;
+        return $relation_id;
     }
 
 }
