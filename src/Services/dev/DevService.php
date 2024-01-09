@@ -1123,7 +1123,7 @@ class DevService
     public function modelColumn2JsonForm($model,$keys)
     {
         $data = [];
-        $key_len = count($keys);
+        
         $menus = $this->allMenu();
         $models = $this->allModel();
         foreach($keys as $row)
@@ -1136,21 +1136,21 @@ class DevService
             {
                 continue;
             }
-            if(!is_string($formItem->data) && !isset($d['width']))
-            {
-                if($key_len == 2)
-                {
-                    $d['width'] = 'md';
-                }elseif($key_len == 3)
-                {
-                    $d['width'] = 'sm';
-                }elseif($key_len > 4)
-                {
-                    $d['width'] = 'xs';
-                }
-            }
-            
             $data[] = $d;
+        }
+        $key_len = count($data);
+        if($key_len < 1)
+        {
+            return $data;
+        }
+        foreach($data as $key=>$val)
+        {
+            if(is_string($val))
+            {
+                continue;
+            }
+            $span = floor(24 / $key_len);
+            $data[$key]['colProps'] = ['span'=>$span];
         }
         return $data;
     }

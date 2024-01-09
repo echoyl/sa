@@ -26,11 +26,13 @@ class FormItem
         $this->model = $model;
 
         $key = $dataIndex = $config['key']??'';
+        $uid = $config['uid'];
 
         $props = $config['props']??'';
         $this->props = $props;
 
         $has_customer_dataindex = false;
+        $unset_dataindex = false;
 
         if(isset($props['dataIndex']) && $props['dataIndex'])
         {
@@ -46,10 +48,22 @@ class FormItem
             }
             $key = $key[0];
         }
+        if($key == 'customer_field')
+        {
+            $has_customer_dataindex = true;
+            $unset_dataindex = true;
+        }
 
         if(in_array($key,['id','parent_id','created_at_s']))
         {
-            $this->data = $key;
+            return;
+            $this->data = [
+                'dataIndex'=>$key,
+                'formItemProps'=>[
+                    'hidden'=>true
+                ],
+                'uid'=>$uid
+            ];
             return;
         }
 
@@ -108,7 +122,15 @@ class FormItem
         $placeholder = $fieldProps['placeholder']??'';
         //$extra = $config['name']??'';
 
-        $d = ['dataIndex'=>$dataIndex,'title'=>$title?:($schema?$schema['title']:($relation?$relation['title']:''))];
+        $d = ['dataIndex'=>$dataIndex,'uid'=>$uid,'title'=>$title?:($schema?$schema['title']:($relation?$relation['title']:''))];
+        if($unset_dataindex)
+        {
+            unset($d['dataIndex']);
+        }
+        if(!$d['title'])
+        {
+            unset($d['title']);
+        }
         // if($dataIndex == 'sn2')
         // {
         //     d($d);
@@ -643,7 +665,7 @@ class FormItem
 
     public function digit()
     {
-        $this->data['width'] = 'md';
+        $this->data['width'] = '100%';
     }
 
     public function textarea()

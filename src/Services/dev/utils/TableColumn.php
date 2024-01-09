@@ -55,7 +55,8 @@ class TableColumn
         {
             $this->data = [
                 'valueType'=>$key,
-                'uid'=>$uid
+                'uid'=>$uid,
+                'search'=>false
             ];
             return $this->data;
         }

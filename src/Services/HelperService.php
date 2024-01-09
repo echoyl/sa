@@ -685,4 +685,42 @@ class HelperService
     {
         return Str::random(10);
     }
+
+    /**
+     * 数组元素的移动
+     *
+     * @param [array] $arr 数组
+     * @param [number] $from 移动的元素键值
+     * @param [number] $to 移动到目标位置键值
+     * @return array
+     */
+    public static function arrayMove($arr,$from,$to)
+    {
+        if($from == $to)
+        {
+            return $arr;
+        }
+        $active_data = $arr[$from];
+        if($from < $to)
+        {
+            //往后
+            array_splice($arr,$to + 1,0,[$active_data]);
+            //将之前的数据删除
+            unset($arr[$from]);
+        }else
+        {
+            //往前
+            if($to == 0)
+            {
+                //已经是第一个了
+                array_unshift($arr,$active_data);
+            }else
+            {
+                array_splice($arr,$to - 1,0,[$active_data]);
+            }
+            //将之前的数据删除
+            unset($arr[$from+1]);
+        }
+        return array_values($arr);
+    }
 }
