@@ -29,7 +29,11 @@ export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = und
       m.destroy();
 
       if (callback) {
-        callback(ret);
+        const cbret = callback(ret);
+        if (cbret) {
+          //自定义回调返回true 后 阻断后续操作
+          return;
+        }
       }
       if (!ret) {
         return;

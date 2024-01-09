@@ -14,6 +14,7 @@ export const devDefaultFields = [
   { label: '创建时间 - created_at', value: 'created_at' },
   { label: '最后更新时间 - updated_at', value: 'updated_at' },
   { label: '排序权重 - displayorder', value: 'displayorder' },
+  { label: '自定义字段 - customer_field', value: 'customer_field' },
 ];
 
 /**

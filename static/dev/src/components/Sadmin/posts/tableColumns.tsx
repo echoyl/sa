@@ -5,7 +5,7 @@ import { Button, Space } from 'antd';
 import dayjs from 'dayjs';
 import { cloneDeep } from 'lodash';
 import { useContext } from 'react';
-import { isArr, isStr, isUndefined } from '../checkers';
+import { isArr, isUndefined } from '../checkers';
 import { TableColumnTitle } from '../dev/table/title';
 import { getFromObject, tplComplie } from '../helpers';
 import { defaultColumnsLabel } from './formDom';
@@ -153,6 +153,7 @@ export const getTableColumns = (props) => {
     deleteable = true,
     initialState,
     message,
+    devEnable = true,
   } = props;
 
   if (!initRequest) return [];
@@ -163,13 +164,13 @@ export const getTableColumns = (props) => {
       dataIndex: 'displayorder',
       search: false,
       sorter: (a, b) => a.displayorder - b.displayorder,
-      width: 150,
+      width: 120,
       onCell: (record, index) => ({
         record,
         editable: true,
         dataIndex: 'displayorder',
         title: '排序',
-        width: 150,
+        width: 120,
         handleSave: async (row) => {
           if (row.displayorder == record.displayorder) {
             return;
@@ -214,7 +215,8 @@ export const getTableColumns = (props) => {
       ),
     },
   };
-  const customerColumns = typeof columns == 'function' ? columns(enums, actionRef) : columns;
+  const customerColumns =
+    typeof columns == 'function' ? columns(enums, actionRef) : cloneDeep(columns);
   //const allColumns = [...defaulColumns, ...customerColumns];
 
   const parseColumns = (v) => {
@@ -282,7 +284,7 @@ export const getTableColumns = (props) => {
       dataindex: v.dataIndex,
     };
 
-    if (isStr(v.title)) {
+    if (devEnable) {
       v.title = <TableColumnTitle {...v} />;
     }
 
@@ -306,7 +308,7 @@ export const getTableColumns = (props) => {
           ? dr
           : {
               //title: allLabels[c],
-              title: <TableColumnTitle id={c} title={allLabels[c]} />,
+              title: devEnable ? <TableColumnTitle id={c} title={allLabels[c]} /> : allLabels[c],
               dataIndex: c,
               search: false,
             };

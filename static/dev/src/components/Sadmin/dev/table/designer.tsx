@@ -1,32 +1,51 @@
 import request from '@/services/ant-design-pro/sadmin';
 import { css } from '@emotion/css';
+import { useModel } from '@umijs/max';
 import { Dropdown, DropdownProps } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import React, { ReactNode, createContext, useContext, useState, useTransition } from 'react';
 import message from '../../message';
 
 export type tableDesignerInstance = {
+  type?: 'table' | 'form';
   pageMenu?: { [key: string]: any };
   sort?: (id: number, cls: any[]) => void;
-  setTbColumns?: any;
-  getTableColumnsRender?: any;
+  sortFormColumns?: (id: number, cls: any[]) => void;
+  setColumns?: any;
+  getColumnsRender?: any;
   edit?: (data: { [key: string]: any }) => void;
   editUrl?: string;
   reflush?: (data: { [key: string]: any }) => void;
   deleteUrl?: string;
   delete?: (data: { [key: string]: any }) => void;
+  devEnable?: boolean; //开启的必要条件
 };
 
 export function useTableDesigner(props: tableDesignerInstance) {
-  const { setTbColumns, getTableColumnsRender, pageMenu } = props;
-  const editUrl = 'dev/menu/editTableColumn';
-  const deleteUrl = 'dev/menu/deleteTableColumn';
-  const reflush = (data) => {
+  const { setColumns, getColumnsRender, pageMenu = {}, type = 'table', devEnable = true } = props;
+  const { setInitialState } = useModel('@@initialState');
+  const config = {
+    form: {
+      deleteUrl: 'dev/menu/deleteFormColumn',
+      editUrl: 'dev/menu/editFormColumn',
+    },
+    table: {
+      editUrl: 'dev/menu/editTableColumn',
+      deleteUrl: 'dev/menu/deleteTableColumn',
+    },
+  };
+  const editUrl = config[type].editUrl;
+  const deleteUrl = config[type].deleteUrl;
+  const reflush = (data: any) => {
     //重新设置列表列
-    setTbColumns?.(getTableColumnsRender?.(data.tableColumns));
+    setColumns?.(getColumnsRender?.(data.columns));
     //更新schema
     pageMenu.schema = data.schema;
-    pageMenu.data.tableColumns = data.tableColumns;
+    pageMenu.data = { ...pageMenu.data, ...data.data };
+    setInitialState((s) => ({
+      ...s,
+      currentUser: data.currentUser,
+    }));
   };
   return {
     ...props,
@@ -35,10 +54,16 @@ export function useTableDesigner(props: tableDesignerInstance) {
     reflush,
     sort: (id: number, columns: any) => {
       //后台请求
-      setTbColumns(getTableColumnsRender(columns));
+      setColumns(getColumnsRender(columns));
       request.post('dev/menu/sortTableColumns', {
         data: { columns, id },
-        then: () => {},
+        then: ({ data, code, msg }) => {
+          if (!code) {
+            data && reflush(data);
+          } else {
+            message?.error(msg);
+          }
+        },
       });
     },
     edit: async (data: { [key: string]: any }) => {
@@ -47,13 +72,27 @@ export function useTableDesigner(props: tableDesignerInstance) {
         data,
         then: ({ data, code, msg }) => {
           if (!code) {
-            reflush(data);
+            data && reflush(data);
           } else {
             message?.error(msg);
           }
         },
       });
       return;
+    },
+    sortFormColumns: async (id: number, columns: any) => {
+      //后台请求
+      //setTbColumns(getTableColumnsRender(columns));
+      await request.post('dev/menu/sortFormColumns', {
+        data: { columns, id },
+        then: ({ data, code, msg }) => {
+          if (!code) {
+            data && reflush(data);
+          } else {
+            message?.error(msg);
+          }
+        },
+      });
     },
   };
 }
@@ -124,7 +163,10 @@ export const SchemaSettingsDropdown: React.FC<SchemaSettingsProps> = (props) => 
         `}
         menu={{ items }}
       >
-        {typeof title === 'string' ? <span>{title}</span> : title}
+        <span onClick={(e) => e.preventDefault()}>
+          {typeof title === 'string' ? <span>{title}</span> : title}
+        </span>
+        {/* {typeof title === 'string' ? <span>{title}</span> : title} */}
       </Dropdown>
     </SchemaSettingsProvider>
   );

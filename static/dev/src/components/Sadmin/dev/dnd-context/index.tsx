@@ -29,23 +29,33 @@ const useDragEnd = (props?: any) => {
   const { tableDesigner } = useContext(SaContext);
   return (event: DragEndEvent) => {
     const { active, over } = event;
-    //console.log('dragging', active, over);
+    console.log('dragging', active, over, tableDesigner?.pageMenu);
+    if (!over) {
+      return;
+    }
     if (active?.id == over?.id) {
       return;
     }
+    console.log('dragsuccess');
     const page_menu = tableDesigner?.pageMenu;
     if (page_menu) {
-      //找到菜单 交换 tableColumns
-      const activeIndex = page_menu.data?.tableColumns.findIndex((i) => i.uid === active?.id);
-      const overIndex = page_menu.data?.tableColumns.findIndex((i) => i.uid === over?.id);
-      if (activeIndex > -1 && overIndex > -1) {
-        page_menu.data.tableColumns = arrayMove(
-          page_menu.data?.tableColumns,
-          activeIndex,
-          overIndex,
-        );
-        tableDesigner?.sort?.(page_menu.id, page_menu.data.tableColumns);
-        //console.log('dragging over', activeIndex, overIndex, page_menu.data.tableColumns);
+      if (active.data.current?.devData.type == 'table') {
+        //找到菜单 交换 tableColumns
+        const activeIndex = page_menu.data?.tableColumns.findIndex((i) => i.uid === active?.id);
+        const overIndex = page_menu.data?.tableColumns.findIndex((i) => i.uid === over?.id);
+        if (activeIndex > -1 && overIndex > -1) {
+          page_menu.data.tableColumns = arrayMove(
+            page_menu.data?.tableColumns,
+            activeIndex,
+            overIndex,
+          );
+          tableDesigner?.sort?.(page_menu.id, page_menu.data.tableColumns);
+          //console.log('dragging over', activeIndex, overIndex, page_menu.data.tableColumns);
+        }
+      } else {
+        //form
+        //提交到后端服务器排序
+        tableDesigner?.sortFormColumns?.(page_menu.id, [active?.id, over?.id]);
       }
     }
   };

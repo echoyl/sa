@@ -11,14 +11,18 @@ import { useModel } from '@umijs/max';
 import { Space } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import classNames from 'classnames';
-import React, { useContext } from 'react';
+import React, { FC, useContext } from 'react';
 import { SaDevContext } from '..';
 import Confirm from '../../action/confirm';
 import ConfirmForm from '../../action/confirmForm';
 import { CustomerColumnRenderDevReal } from '../../action/customerColumn/dev';
 import { SaContext } from '../../posts/table';
 import { DragHandler, SortableItem } from '../dnd-context/SortableItem';
-import { devBaseTableFormColumns, getModelRelations } from './baseFormColumns';
+import {
+  devBaseFormFormColumns,
+  devBaseTableFormColumns,
+  getModelRelations,
+} from './baseFormColumns';
 import { SchemaSettingsContext, SchemaSettingsDropdown } from './designer';
 export const designerCss = css`
   position: relative;
@@ -71,17 +75,52 @@ const overrideAntdCSS = css`
   }
 `;
 
+const getValue = (uid, pageMenu, type) => {
+  //无uid表示插入列
+  if (!uid) {
+    return {};
+  }
+  const config = type == 'table' ? pageMenu?.schema?.table_config : pageMenu?.schema?.form_config;
+  if (type == 'table') {
+    return JSON.parse(config)?.find((v) => v.uid == uid);
+  } else {
+    //form获取组或列信息
+    let value = {};
+    //console.log('config', config);
+    JSON.parse(config)?.tabs?.map((tab) => {
+      tab.config?.map((group) => {
+        if (group.uid == uid) {
+          value = group;
+        } else {
+          group.columns?.map((column) => {
+            if (column.uid == uid) {
+              value = column;
+            }
+          });
+        }
+      });
+    });
+    return value;
+  }
+};
+
 const BaseForm = (props) => {
   const { title, uid = '', afterUid = '' } = props;
   const {
-    tableDesigner: { pageMenu, reflush, editUrl = '' },
+    tableDesigner: { pageMenu, reflush, editUrl = '', type = 'table' },
   } = useContext(SaContext);
   const { setting } = useContext(SaDevContext);
   const { setVisible } = useContext(SchemaSettingsContext);
-  const columns = devBaseTableFormColumns({
-    model_id: pageMenu?.model_id,
-    dev: setting?.dev,
-  });
+  const columns =
+    type == 'table'
+      ? devBaseTableFormColumns({
+          model_id: pageMenu?.model_id,
+          dev: setting?.dev,
+        })
+      : devBaseFormFormColumns({
+          model_id: pageMenu?.model_id,
+          dev: setting?.dev,
+        });
   const trigger = React.cloneElement(title, {
     key: 'trigger',
     ...title.props,
@@ -89,11 +128,10 @@ const BaseForm = (props) => {
       setVisible(false);
     },
   });
-  //无uid表示插入列
-  const value = !uid ? {} : JSON.parse(pageMenu?.schema?.table_config)?.find((v) => v.uid == uid);
 
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
-
+  const value = getValue(uid, pageMenu, type);
+  //console.log('value is ', value, uid);
   return (
     <ConfirmForm
       trigger={trigger}
@@ -104,6 +142,7 @@ const BaseForm = (props) => {
       callback={({ data }) => {
         reflush(data);
       }}
+      saFormProps={{ devEnable: false }}
     />
   );
 };
@@ -111,17 +150,18 @@ const BaseForm = (props) => {
 const MoreForm = (props) => {
   const { title, uid } = props;
   const {
-    tableDesigner: { pageMenu, edit },
+    tableDesigner: { pageMenu, edit, type = 'table' },
   } = useContext(SaContext);
   const { setVisible } = useContext(SchemaSettingsContext);
   const { setting } = useContext(SaDevContext);
   const relations = getModelRelations(pageMenu?.model_id, setting?.dev);
   const { allMenus = [] } = setting?.dev;
   //获取值
-  const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
+  //const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
+  const value = getValue(uid, pageMenu, type);
   const onChange = async (values) => {
     value.props = values;
-    const data = { base: { ...value, id: pageMenu?.id, uid, props: values } };
+    const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
     //return;
     await edit(data);
   };
@@ -164,14 +204,16 @@ const DeleteColumn = (props) => {
       msg="确定要删除该列吗"
       callback={({ data }) => {
         reflush(data);
+        return true;
       }}
     />
   );
 };
 
 const DevTableColumnTitle = (props) => {
-  const { title, uid } = props;
-  const designable = true;
+  const { title, uid, devData } = props;
+  //console.log('title is title', title);
+  //const designable = true;
 
   const items: ItemType[] = [
     {
@@ -235,10 +277,16 @@ const DevTableColumnTitle = (props) => {
       danger: true,
     },
   ];
-  return !designable ? (
-    title
-  ) : (
-    <SortableItem className={designerCss} id={uid} eid={uid}>
+  //表单的话 加一个最小宽度
+  const designerStyle = devData?.type == 'table' ? {} : { minWidth: 150 };
+  return (
+    <SortableItem
+      className={designerCss}
+      id={uid}
+      eid={uid}
+      devData={devData}
+      style={designerStyle}
+    >
       <div className={classNames('general-schema-designer', overrideAntdCSS)}>
         <div className={'general-schema-designer-icons'}>
           <Space size={3} align={'center'}>
@@ -257,8 +305,20 @@ const DevTableColumnTitle = (props) => {
   );
 };
 
-export const TableColumnTitle = (props) => {
+export const TableColumnTitle: FC = (props) => {
   const { initialState } = useModel('@@initialState');
   const dev = initialState?.settings?.dev ? true : false;
-  return dev ? <DevTableColumnTitle {...props} /> : <>{props.title}</>;
+  return dev ? <DevTableColumnTitle {...props} devData={{ type: 'table' }} /> : <>{props.title}</>;
+};
+export const FormColumnTitle: FC = (props) => {
+  const { initialState } = useModel('@@initialState');
+  const dev = initialState?.settings?.dev ? true : false;
+
+  const title =
+    props.valueType == 'group' && !props.title ? ['分组', props.uid].join(' - ') : props.title;
+  return dev ? (
+    <DevTableColumnTitle {...props} title={title} devData={{ type: 'form' }} />
+  ) : (
+    props.title
+  );
 };

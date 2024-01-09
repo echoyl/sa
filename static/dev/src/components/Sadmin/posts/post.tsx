@@ -12,12 +12,14 @@ import { history, useModel, useParams, useSearchParams } from '@umijs/max';
 import { App, Col, Row, Space, Tabs } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
 import { saConfig } from '../config';
+import { DndContext } from '../dev/dnd-context';
+import { useTableDesigner } from '../dev/table/designer';
 import { SaBreadcrumbRender } from '../helpers';
 
 import { beforeGet, beforePost, getFormFieldColumns, GetFormFields } from './formDom';
-import { SaContext, saTablePros } from './table';
+import { SaContext, saTableProps } from './table';
 
-export interface saFormPros extends saTablePros {
+export interface saFormProps extends saTableProps {
   msgcls?: (value: { [key: string]: any }) => void; //提交数据后的 回调
   submitter?: string;
   showTabs?: boolean;
@@ -29,10 +31,11 @@ export interface saFormPros extends saTablePros {
   afterPost?: (ret: any) => void;
   onTabChange?: (index: string) => void; //tab切换后的回调
   setting?: { [key: string]: any }; //其它配置统一放这里
-  resetForm?:boolean;//提交数据后 是否重置表单
+  resetForm?: boolean; //提交数据后 是否重置表单
+  grid?: boolean; //form是否开启grid布局
 }
 
-export const SaForm: FC<saFormPros> = (props) => {
+export const SaForm: FC<saFormProps> = (props) => {
   const {
     url = '',
     postUrl,
@@ -64,8 +67,12 @@ export const SaForm: FC<saFormPros> = (props) => {
     formRef = useRef<ProFormInstance<any>>({} as any),
     onTabChange,
     setting,
-    resetForm = false
+    resetForm = false,
+    pageMenu,
+    grid = true,
+    devEnable: pdevEnable = true,
   } = props;
+
   //const url = 'posts/posts';
   //读取后台数据
   const [detail, setDetail] = useState<{ [key: string]: any } | boolean>(
@@ -73,6 +80,9 @@ export const SaForm: FC<saFormPros> = (props) => {
   );
   const [_formColumns, setFormColumns] = useState<any[]>([]);
   const { initialState } = useModel('@@initialState');
+  const [devEnable, setDevEnable] = useState(
+    pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev,
+  );
   //提交数据
   const post = async (base: any, callback?: (value: any) => void, then?: any) => {
     //log('post data is ', base);
@@ -107,8 +117,7 @@ export const SaForm: FC<saFormPros> = (props) => {
     } else {
       //console.log('re set data', ret.data, formRef?.current);
       //setDetail({ ...ret.data });
-      if(resetForm)
-      {
+      if (resetForm) {
         formRef?.current?.resetFields();
         //formRef?.current?.setFieldsValue({});
         formRef?.current?.setFieldsValue({ ...ret.data });
@@ -154,11 +163,8 @@ export const SaForm: FC<saFormPros> = (props) => {
     setDetail(data);
     return data;
   };
-  useEffect(() => {
-    if (!detail && url) {
-      return;
-    }
-    const newColumns = [...tabs].map((tab) => {
+  const getFormColumnsRender = (tabs) => {
+    return [...tabs].map((tab) => {
       return getFormFieldColumns({
         detail,
         labels,
@@ -167,11 +173,20 @@ export const SaForm: FC<saFormPros> = (props) => {
         columns: tab.formColumns,
         user: initialState?.currentUser,
         formRef,
+        devEnable,
       });
     });
+  };
+  useEffect(() => {
+    setDevEnable(pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev);
+  }, [initialState?.settings?.devDisable]);
+  useEffect(() => {
+    if (!detail && url) {
+      return;
+    }
     //console.log('get,data', tabs);
-    setFormColumns([...newColumns]);
-  }, [detail, formColumns, tabs.length]);
+    setFormColumns(getFormColumnsRender(tabs));
+  }, [detail, formColumns, tabs.length, devEnable]);
   //const formRef = useRef<ProFormInstance>();
   useEffect(() => {
     if (setting?.steps_form) {
@@ -186,133 +201,153 @@ export const SaForm: FC<saFormPros> = (props) => {
   }, []);
   const formMapRef = useRef<React.MutableRefObject<ProFormInstance<any> | undefined>[]>([]);
   const [stepFormCurrent, setStepFormCurrent] = useState<number>(0);
+
+  const tableDesigner = useTableDesigner({
+    pageMenu,
+    setColumns: setFormColumns,
+    getColumnsRender: getFormColumnsRender,
+    type: 'form',
+    devEnable,
+  });
+
   return (
     <SaContext.Provider
-      value={{ formRef: setting?.steps_form ? formMapRef?.current[0] : formRef, actionRef }}
+      value={{
+        formRef: setting?.steps_form ? formMapRef?.current[0] : formRef,
+        actionRef,
+        tableDesigner,
+      }}
     >
-      {setting?.steps_form ? (
-        <StepsForm
-          current={stepFormCurrent}
-          onCurrentChange={(current) => {
-            setStepFormCurrent(current);
-          }}
-          formMapRef={formMapRef}
-          onFinish={async (values) => {
-            //console.log(values);
-            //message.success('提交成功');
-            //提交操作 让分步表单中最后一步 接管
-            //return Promise.resolve(true);
-          }}
-          formProps={{
-            validateMessages: {
-              required: '此项为必填项',
-            },
-          }}
-        >
-          {tabs.map((cl, index) => {
-            //console.log('cl', cl);
-            return (
-              <StepsForm.StepForm
-                key={index}
-                name={'step_' + index}
-                title={cl.title ? cl.title : cl.tab?.title}
-                onFinish={async () => {
-                  //每一步都将之前的表单信息提交到url
-                  let data = { step_index: index };
-                  formMapRef?.current?.forEach((formInstanceRef) => {
-                    data = { ...data, ...formInstanceRef?.current?.getFieldsFormatValue() };
-                  });
-                  return post(
-                    data,
-                    index + 1 == tabs.length ? undefined : () => null,
-                    index + 1 == tabs.length ? undefined : () => {},
-                  ).then(({ code, data, msg }) => {
-                    //将传回的数据又重新赋值一遍
-                    if (code) {
-                      message.error(msg);
-                      return false;
-                    }
-                    if (index + 1 == tabs.length) {
-                      //最后一步 重置表单
-                      setStepFormCurrent(0);
-                      formMapRef?.current?.forEach((formInstanceRef) => {
-                        formInstanceRef?.current?.resetFields();
-                      });
-                    }
+      <DndContext>
+        {setting?.steps_form ? (
+          <StepsForm
+            current={stepFormCurrent}
+            onCurrentChange={(current) => {
+              setStepFormCurrent(current);
+            }}
+            formMapRef={formMapRef}
+            onFinish={async (values) => {
+              //console.log(values);
+              //message.success('提交成功');
+              //提交操作 让分步表单中最后一步 接管
+              //return Promise.resolve(true);
+            }}
+            formProps={{
+              validateMessages: {
+                required: '此项为必填项',
+              },
+            }}
+          >
+            {tabs.map((cl, index) => {
+              //console.log('cl', cl);
+              return (
+                <StepsForm.StepForm
+                  key={index}
+                  name={'step_' + index}
+                  title={cl.title ? cl.title : cl.tab?.title}
+                  onFinish={async () => {
+                    //每一步都将之前的表单信息提交到url
+                    let data = { step_index: index };
                     formMapRef?.current?.forEach((formInstanceRef) => {
-                      formInstanceRef?.current?.setFieldsValue(data);
+                      data = { ...data, ...formInstanceRef?.current?.getFieldsFormatValue() };
                     });
+                    return post(
+                      data,
+                      index + 1 == tabs.length ? undefined : () => null,
+                      index + 1 == tabs.length ? undefined : () => {},
+                    ).then(({ code, data, msg }) => {
+                      //将传回的数据又重新赋值一遍
+                      if (code) {
+                        message.error(msg);
+                        return false;
+                      }
+                      if (index + 1 == tabs.length) {
+                        //最后一步 重置表单
+                        setStepFormCurrent(0);
+                        formMapRef?.current?.forEach((formInstanceRef) => {
+                          formInstanceRef?.current?.resetFields();
+                        });
+                      }
+                      formMapRef?.current?.forEach((formInstanceRef) => {
+                        formInstanceRef?.current?.setFieldsValue(data);
+                      });
 
-                    return true;
-                  });
+                      return true;
+                    });
+                  }}
+                  style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
+                >
+                  {_formColumns[index] ? <GetFormFields columns={_formColumns[index]} /> : null}
+                </StepsForm.StepForm>
+              );
+            })}
+          </StepsForm>
+        ) : (
+          <ProForm
+            form={props.form}
+            formRef={formRef}
+            style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
+            //style={pageType == 'page' ? { maxWidth: 688 } : {}}
+            //layout="vertical"
+            //layout="horizontal"
+            //labelCol={{ lg: { span: 7 }, sm: { span: 7 } }}
+            //wrapperCol={{ lg: { span: 10 }, sm: { span: 17 } }}
+            //initialValues={detail}
+            grid={grid}
+            rowProps={{
+              gutter: [0, 0],
+            }}
+            onFinish={post}
+            request={get}
+            submitter={
+              (!editable && dataId != 0) || (dataId == 0 && readonly) || params.readonly == 1
+                ? false
+                : {
+                    render: (props, dom) => {
+                      return submitter == 'toolbar' ? (
+                        <FooterToolbar>{dom}</FooterToolbar>
+                      ) : submitter == 'dom' ? (
+                        dom
+                      ) : (
+                        <Row>
+                          <Col span={7} offset={0}>
+                            <Space>{dom}</Space>
+                          </Col>
+                        </Row>
+                      );
+                    },
+                  }
+            }
+            validateMessages={{
+              required: '此项为必填项',
+            }}
+            {...props.formProps}
+          >
+            {showTabs ? (
+              <Tabs
+                style={{ width: '100%' }}
+                defaultActiveKey="0"
+                // centered={true}
+                onChange={(activeKey) => {
+                  onTabChange?.(activeKey);
                 }}
-                style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
-              >
-                {_formColumns[index] ? <GetFormFields columns={_formColumns[index]} /> : null}
-              </StepsForm.StepForm>
-            );
-          })}
-        </StepsForm>
-      ) : (
-        <ProForm
-          form={props.form}
-          formRef={formRef}
-          style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
-          //style={pageType == 'page' ? { maxWidth: 688 } : {}}
-          //layout="vertical"
-          //layout="horizontal"
-          //labelCol={{ lg: { span: 7 }, sm: { span: 7 } }}
-          //wrapperCol={{ lg: { span: 10 }, sm: { span: 17 } }}
-          //initialValues={detail}
-          onFinish={post}
-          request={get}
-          submitter={
-            (!editable && dataId != 0) || (dataId == 0 && readonly) || params.readonly == 1
-              ? false
-              : {
-                  render: (props, dom) => {
-                    return submitter == 'toolbar' ? (
-                      <FooterToolbar>{dom}</FooterToolbar>
-                    ) : submitter == 'dom' ? (
-                      dom
-                    ) : (
-                      <Row>
-                        <Col span={7} offset={0}>
-                          <Space>{dom}</Space>
-                        </Col>
-                      </Row>
-                    );
-                  },
-                }
-          }
-          validateMessages={{
-            required: '此项为必填项',
-          }}
-          {...props.formProps}
-        >
-          {showTabs ? (
-            <Tabs
-              defaultActiveKey="0"
-              // centered={true}
-              onChange={(activeKey) => {
-                onTabChange?.(activeKey);
-              }}
-              items={_formColumns.map((cl, index) => {
-                return {
-                  label: tabs[index]?.title ? tabs[index]?.title : tabs[index]?.tab?.title,
-                  key: index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
-                  children: <GetFormFields columns={cl} />,
-                  forceRender: true,
-                };
-              })}
-            />
-          ) : (
-            _formColumns.map((cl, index) => {
-              if (index == 0) return <GetFormFields key={index} columns={cl} />;
-            })
-          )}
-        </ProForm>
-      )}
+                items={_formColumns.map((cl, index) => {
+                  return {
+                    label: tabs[index]?.title ? tabs[index]?.title : tabs[index]?.tab?.title,
+                    key: index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
+                    children: <GetFormFields columns={cl} />,
+                    forceRender: true,
+                  };
+                })}
+              />
+            ) : (
+              _formColumns.map((cl, index) => {
+                if (index == 0) return <GetFormFields key={index} columns={cl} />;
+              })
+            )}
+          </ProForm>
+        )}
+      </DndContext>
     </SaContext.Provider>
   );
 };

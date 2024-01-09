@@ -78,6 +78,7 @@ const PageTypes = ({ menu, match, pathname }) => {
       <PostsForm
         key={pathname}
         formTitle={false}
+        pageMenu={menu}
         {...data}
         msgcls={({ code }) => {
           if (!data.noBack) {
@@ -119,7 +120,7 @@ const PageTypes = ({ menu, match, pathname }) => {
           />
         );
       case 'panel':
-        return <PagePanel {...data} />;
+        return <PagePanel pageMenu={menu} {...data} />;
       default:
         return null;
     }

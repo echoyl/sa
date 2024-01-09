@@ -71,6 +71,8 @@ export default (props) => {
       align="left"
       dataId={model.id}
       pageType="drawer"
+      grid={false}
+      devEnable={false}
     />
   );
 };

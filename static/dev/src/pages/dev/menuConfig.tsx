@@ -1,10 +1,11 @@
-import { saFormColumnsType } from '@/components/Sadmin/helpers';
 import { SaForm } from '@/components/Sadmin/posts/post';
 import { DeleteOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { ProFormInstance } from '@ant-design/pro-components';
 import { Input, InputRef, Space, Tag, theme, Tooltip } from 'antd';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useContext, useEffect, useRef, useState } from 'react';
 
+import { SaDevContext } from '@/components/Sadmin/dev';
+import { devBaseFormColumns } from '@/components/Sadmin/dev/table/baseFormColumns';
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core/dist/types/index';
 import {
@@ -62,166 +63,12 @@ export const MenuOther = (props) => {
 
 export default (props) => {
   const { model, setOpen, actionRef, contentRender } = props;
-  const [modelColumns, setModelColumns] = useState<[{ [key: string]: any }]>();
-  const [relationModel, setRelationModel] = useState([]);
-  const [allMenus, setAllMenus] = useState([]);
-  const formMoreType = [
-    { label: '编辑表格 - saFormTable', value: 'saFormTable' },
-    { label: '自定义显示 - customerColumn', value: 'customerColumn' },
-    { label: '属性配置 - jsonForm', value: 'jsonForm' },
-    { label: '多行编辑 - formList', value: 'formList' },
-    { label: 'select', value: 'select' },
-    { label: 'json编辑器 - jsonEditor', value: 'jsonEditor' },
-    { label: 'jsonCode', value: 'jsonCode' },
-    { label: '头像显示 - avatar', value: 'avatar' },
-    { label: '弹层选择器 - modalSelect', value: 'modalSelect' },
-    { label: '富文本 - tinyEditor', value: 'tinyEditor' },
-    { label: '规格编辑 - guigePanel', value: 'guigePanel' },
-    { label: '权限配置 - permGroup', value: 'permGroup' },
-    { label: '自定义 - cdependency', value: 'cdependency' },
-    { label: '微信自定义菜单 - wxMenu', value: 'wxMenu' },
-    { label: '穿梭框 - saTransfer', value: 'saTransfer' },
-    { label: 'html显示', value: 'html' },
-    { label: '地图选点 - tmapInput', value: 'tmapInput' },
-    { label: '地图点显示 - tmapShow', value: 'tmapShow' },
-    { label: '拾色器 - colorPicker', value: 'colorPicker' },
-  ];
-  const dfColumns: saFormColumnsType = [
-    {
-      dataIndex: 'columns',
-      valueType: 'formList',
-      columns: [
-        {
-          valueType: 'group',
-          columns: [
-            {
-              title: '字段选择',
-              valueType: 'cascader',
-              dataIndex: 'key',
-              width: 240,
-              fieldProps: {
-                options: modelColumns,
-                showSearch: true,
-                changeOnSelect: true,
-              },
-            },
-            {
-              valueType: 'dependency',
-              name: ['props'],
-              columns: ({ props }: any) => {
-                //console.log(props);
-                //return [];
-                return [
-                  {
-                    dataIndex: '',
-                    title: '自定义Title',
-                    readonly: true,
-                    render: () => {
-                      return <div style={{ width: 100 }}>{props?.title ? props.title : ' - '}</div>;
-                    },
-                  },
-                ];
-              },
-            },
-            {
-              dataIndex: 'props',
-              title: '更多配置',
-              valueType: 'customerColumnDev',
-              fieldProps: {
-                relationModel,
-                allMenus,
-                modelColumns,
-              },
-              width: 160,
-            },
-            {
-              dataIndex: 'type',
-              title: '表单类型',
-              width: 'sm',
-              valueType: 'select',
-              fieldProps: {
-                options: formMoreType,
-                placeholder: '请选择表单额外类型',
-              },
-            },
-            // {
-            //   title: '自定义title',
-            //   dataIndex: 'title',
-            //   width: 120,
-            // },
-            // {
-            //   title: '关联属性字段',
-            //   dataIndex: 'label',
-            //   width: 120,
-            // },
-            {
-              dataIndex: 'readonly',
-              title: '是否只读',
-              valueType: 'switch',
-              fieldProps: {
-                checkedChildren: 'readonly',
-                unCheckedChildren: 'readonly',
-                defaultChecked: false,
-              },
-            },
-            {
-              dataIndex: 'required',
-              title: '是否必填',
-              valueType: 'switch',
-              fieldProps: {
-                checkedChildren: 'required',
-                unCheckedChildren: 'required',
-                defaultChecked: false,
-              },
-            },
-            {
-              dataIndex: 'hidden',
-              title: '是否隐藏',
-              valueType: 'switch',
-              fieldProps: {
-                checkedChildren: 'hidden',
-                unCheckedChildren: 'hidden',
-                defaultChecked: false,
-              },
-            },
-            {
-              dataIndex: 'disabled',
-              title: '是否禁用',
-              valueType: 'switch',
-              fieldProps: {
-                checkedChildren: 'disabled',
-                unCheckedChildren: 'disabled',
-                defaultChecked: false,
-              },
-            },
-            // {
-            //   title: 'placeholder',
-            //   dataIndex: 'placeholder',
-            // },
+  const [columns, setColumns] = useState<any[]>();
+  const { setting } = useContext(SaDevContext);
+  useEffect(() => {
+    setColumns(devBaseFormColumns({ model_id: model.admin_model_id, dev: setting?.dev }));
+  }, []);
 
-            // {
-            //   dataIndex: 'name',
-            //   title: '额外信息',
-            //   valueType: 'modalJson',
-            //   fieldProps: {
-            //     placeholder:
-            //       '如果是with数据 请输入要显示关联数据的字段名称 多级用.拼接',
-            //   },
-            // },
-          ],
-        },
-      ],
-    },
-    // {
-    //   dataIndex: 'key',
-    //   valueType: 'select',
-    //   width: 'xl',
-    //   fieldProps: {
-    //     options: modelColumns,
-    //     mode: 'multiple',
-    //   },
-    // },
-  ];
   const [tabs, setTabs] = useState([]);
   const [tags, setTags] = useState<Array<{ [key: string]: any }>>([]);
   const [tabIndex, setTabIndex] = useState('0');
@@ -252,7 +99,7 @@ export default (props) => {
         const cl = {
           dataIndex: `form_config${i == 0 ? '' : i}`,
           valueType: 'saFormList',
-          columns: [...dfColumns],
+          columns: [...columns],
         };
         return {
           title: tag.title,
@@ -295,33 +142,11 @@ export default (props) => {
               return { columns: [{ key: v.name }] };
             });
           }
-          setAllMenus(data.menus);
 
           if (data.admin_model) {
-            const foreignOptions = oldModelColumns.map((v) => ({
-              label: [v.title, v.name].join(' - '),
-              value: v.name,
-            }));
-            const manyFields = data.admin_model.relations
-              ?.filter((v) => v.type == 'one' || v.type == 'many')
-              .map((v) => {
-                const foreign_model_columns = JSON.parse(v.foreign_model.columns);
-                const children = foreign_model_columns.map((v) => ({
-                  label: [v.title, v.name].join(' - '),
-                  value: v.name,
-                }));
-                return {
-                  label: [v.title, v.name, v.type == 'one' ? 'hasOne' : 'hasMany'].join(' - '),
-                  value: v.name,
-                  children: children,
-                };
-              });
-            //设置form表单需要选择的字段
-            setRelationModel(manyFields);
-            const modelColumns = [...foreignOptions, ...manyFields];
-            setModelColumns(modelColumns);
             setTags(data.tabs);
           }
+          return;
         }}
         msgcls={({ code }) => {
           if (!code) {
@@ -354,6 +179,8 @@ export default (props) => {
         align="left"
         dataId={model.id}
         pageType="drawer"
+        grid={false}
+        devEnable={false}
       />
     </>
   );

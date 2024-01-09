@@ -21,6 +21,31 @@ const columnType = [
   { label: 'select', value: 'select' },
 ];
 
+const formMoreType = [
+  { label: '编辑表格 - saFormTable', value: 'saFormTable' },
+  { label: '自定义显示 - customerColumn', value: 'customerColumn' },
+  { label: '属性配置 - jsonForm', value: 'jsonForm' },
+  { label: '多行编辑 - formList', value: 'formList' },
+  { label: 'select', value: 'select' },
+  { label: 'json编辑器 - jsonEditor', value: 'jsonEditor' },
+  { label: 'jsonCode', value: 'jsonCode' },
+  { label: '头像显示 - avatar', value: 'avatar' },
+  { label: '弹层选择器 - modalSelect', value: 'modalSelect' },
+  { label: '富文本 - tinyEditor', value: 'tinyEditor' },
+  { label: '规格编辑 - guigePanel', value: 'guigePanel' },
+  { label: '权限配置 - permGroup', value: 'permGroup' },
+  { label: '自定义 - cdependency', value: 'cdependency' },
+  { label: '微信自定义菜单 - wxMenu', value: 'wxMenu' },
+  { label: '穿梭框 - saTransfer', value: 'saTransfer' },
+  { label: 'html显示', value: 'html' },
+  { label: '地图选点 - tmapInput', value: 'tmapInput' },
+  { label: '地图点显示 - tmapShow', value: 'tmapShow' },
+  { label: '拾色器 - colorPicker', value: 'colorPicker' },
+  { label: '密码 - password', value: 'password' },
+  { label: '文本域 - textarea', value: 'textarea' },
+  { label: '上传 - uploader', value: 'uploader' },
+];
+
 export const getModelColumnsSelect = (id: number, allModels, level = 1) => {
   const select_data = allModels?.find((v) => v.id == id);
   //console.log(foreign_model_id, allModels, select_data);
@@ -155,6 +180,249 @@ type devTabelFieldsProps = {
   dev?: { allMenus: any[]; allModels: any[] };
 };
 
+export const devBaseFormColumns = (props: devTabelFieldsProps) => {
+  const { model_id = 0, dev = { allMenus: [] } } = props;
+  const { allMenus = [] } = dev;
+  const modelColumns2: any[] = getModelColumns(model_id, dev);
+  const relations = getModelRelations(model_id, dev);
+  const columns: saFormColumnsType = [
+    {
+      dataIndex: 'columns',
+      valueType: 'formList',
+      columns: [
+        {
+          valueType: 'group',
+          columns: [
+            {
+              title: '字段选择',
+              valueType: 'cascader',
+              dataIndex: 'key',
+              width: 240,
+              fieldProps: {
+                options: modelColumns2,
+                showSearch: true,
+                changeOnSelect: true,
+              },
+            },
+            {
+              valueType: 'dependency',
+              name: ['props'],
+              columns: ({ props }: any) => {
+                //console.log(props);
+                //return [];
+                return [
+                  {
+                    dataIndex: '',
+                    title: '自定义Title',
+                    readonly: true,
+                    render: () => {
+                      return <div style={{ width: 100 }}>{props?.title ? props.title : ' - '}</div>;
+                    },
+                  },
+                ];
+              },
+            },
+            {
+              dataIndex: 'props',
+              title: '更多',
+              valueType: 'customerColumnDev',
+              fieldProps: {
+                relationModel: relations,
+                allMenus,
+                modelColumns: modelColumns2,
+              },
+              width: 160,
+            },
+            {
+              dataIndex: 'type',
+              title: '表单类型',
+              valueType: 'select',
+              width: 'sm',
+              fieldProps: {
+                options: formMoreType,
+                placeholder: '请选择表单额外类型',
+              },
+            },
+            // {
+            //   title: '自定义title',
+            //   dataIndex: 'title',
+            //   width: 120,
+            // },
+            // {
+            //   title: '关联属性字段',
+            //   dataIndex: 'label',
+            //   width: 120,
+            // },
+            {
+              dataIndex: 'readonly',
+              title: '是否只读',
+              valueType: 'switch',
+              fieldProps: {
+                checkedChildren: 'readonly',
+                unCheckedChildren: 'readonly',
+                defaultChecked: false,
+              },
+            },
+            {
+              dataIndex: 'required',
+              title: '是否必填',
+              valueType: 'switch',
+              fieldProps: {
+                checkedChildren: 'required',
+                unCheckedChildren: 'required',
+                defaultChecked: false,
+              },
+            },
+            {
+              dataIndex: 'hidden',
+              title: '是否隐藏',
+              valueType: 'switch',
+              fieldProps: {
+                checkedChildren: 'hidden',
+                unCheckedChildren: 'hidden',
+                defaultChecked: false,
+              },
+            },
+            {
+              dataIndex: 'disabled',
+              title: '是否禁用',
+              valueType: 'switch',
+              fieldProps: {
+                checkedChildren: 'disabled',
+                unCheckedChildren: 'disabled',
+                defaultChecked: false,
+              },
+            },
+            // {
+            //   title: 'placeholder',
+            //   dataIndex: 'placeholder',
+            // },
+
+            // {
+            //   dataIndex: 'name',
+            //   title: '额外信息',
+            //   valueType: 'modalJson',
+            //   fieldProps: {
+            //     placeholder:
+            //       '如果是with数据 请输入要显示关联数据的字段名称 多级用.拼接',
+            //   },
+            // },
+          ],
+        },
+      ],
+    },
+    // {
+    //   dataIndex: 'key',
+    //   valueType: 'select',
+    //   width: 'xl',
+    //   fieldProps: {
+    //     options: modelColumns,
+    //     mode: 'multiple',
+    //   },
+    // },
+  ];
+  return columns;
+};
+
+export const devBaseFormFormColumns = (props: devTabelFieldsProps) => {
+  const { model_id = 0, dev = { allMenus: [] } } = props;
+  const modelColumns2: any[] = getModelColumns(model_id, dev);
+  const columns: saFormColumnsType = [
+    {
+      valueType: 'group',
+      columns: [
+        {
+          title: '字段选择',
+          valueType: 'cascader',
+          dataIndex: 'key',
+          colProps: { span: 12 },
+          fieldProps: {
+            options: modelColumns2,
+            showSearch: true,
+            changeOnSelect: true,
+          },
+        },
+        {
+          dataIndex: 'type',
+          title: '表单类型',
+          colProps: { span: 12 },
+          valueType: 'select',
+          fieldProps: {
+            options: formMoreType,
+            placeholder: '请选择表单额外类型',
+          },
+        },
+      ],
+    },
+    {
+      valueType: 'group',
+      columns: [
+        {
+          title: '自定义title',
+          dataIndex: ['props', 'title'],
+          colProps: { span: 12 },
+        },
+        {
+          title: '自定义字段',
+          tooltip: '如果选择器中无想要的字段名称，可定义填写，多层级使用.拼接',
+          dataIndex: ['props', 'dataIndex'],
+          colProps: { span: 12 },
+        },
+      ],
+    },
+    {
+      valueType: 'group',
+      columns: [
+        {
+          dataIndex: 'readonly',
+          title: '是否只读',
+          valueType: 'switch',
+          fieldProps: {
+            checkedChildren: 'readonly',
+            unCheckedChildren: 'readonly',
+            defaultChecked: false,
+          },
+          colProps: { span: 6 },
+        },
+        {
+          dataIndex: 'required',
+          title: '是否必填',
+          valueType: 'switch',
+          fieldProps: {
+            checkedChildren: 'required',
+            unCheckedChildren: 'required',
+            defaultChecked: false,
+          },
+          colProps: { span: 6 },
+        },
+        {
+          dataIndex: 'hidden',
+          title: '是否隐藏',
+          valueType: 'switch',
+          fieldProps: {
+            checkedChildren: 'hidden',
+            unCheckedChildren: 'hidden',
+            defaultChecked: false,
+          },
+          colProps: { span: 6 },
+        },
+        {
+          dataIndex: 'disabled',
+          title: '是否禁用',
+          valueType: 'switch',
+          fieldProps: {
+            checkedChildren: 'disabled',
+            unCheckedChildren: 'disabled',
+            defaultChecked: false,
+          },
+          colProps: { span: 6 },
+        },
+      ],
+    },
+  ];
+  return columns;
+};
+
 export const devBaseTableColumns = (props: devTabelFieldsProps) => {
   const { model_id = 0, dev = { allMenus: [] } } = props;
   const { allMenus = [] } = dev;
@@ -234,6 +502,7 @@ export const devBaseTableColumns = (props: devTabelFieldsProps) => {
       fieldProps: {
         relationModel: relations,
         allMenus,
+        modelColumns: modelColumns2,
       },
       width: 75,
     },
@@ -288,7 +557,7 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
         {
           dataIndex: 'key',
           title: '字段',
-          width: 'md',
+          colProps: { span: 12 },
           valueType: 'cascader',
           fieldProps: {
             options: modelColumns2,
@@ -298,7 +567,7 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
         },
         {
           dataIndex: 'type',
-          width: 'md',
+          colProps: { span: 12 },
           valueType: 'select',
           title: '字段类型',
           fieldProps: {
@@ -312,12 +581,28 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
       valueType: 'group',
       columns: [
         {
+          dataIndex: ['props', 'title'],
+          title: '自定义表头',
+          colProps: { span: 12 },
+        },
+        {
+          dataIndex: ['props', 'width'],
+          title: '自定义列宽',
+          colProps: { span: 12 },
+        },
+      ],
+    },
+    {
+      valueType: 'group',
+      columns: [
+        {
           dataIndex: 'can_search',
           valueType: 'checkbox',
           title: '搜索',
           fieldProps: {
             options: [{ label: '可搜索', value: 1 }],
           },
+          colProps: { span: 6 },
         },
         {
           dataIndex: 'hide_in_table',
@@ -326,6 +611,7 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
           fieldProps: {
             options: [{ label: '隐藏', value: 1 }],
           },
+          colProps: { span: 6 },
         },
         {
           dataIndex: 'table_menu',
@@ -334,6 +620,7 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
           fieldProps: {
             options: [{ label: 'tab', value: 1 }],
           },
+          colProps: { span: 6 },
         },
         {
           dataIndex: 'sort',
@@ -342,34 +629,42 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
           fieldProps: {
             options: [{ label: '排序', value: 1 }],
           },
+          colProps: { span: 6 },
         },
       ],
     },
-
     {
-      dataIndex: 'left_menu',
-      valueType: 'checkbox',
-      title: '左侧菜单',
-      fieldProps: {
-        options: [{ label: '左侧菜单', value: 1 }],
-      },
-    },
-    {
-      valueType: 'dependency',
-      name: ['left_menu'],
-      columns: ({ left_menu }: any) => {
-        if (left_menu && left_menu.length > 0) {
-          return [
-            {
-              dataIndex: 'left_menu_field',
-              fieldProps: {
-                placeholder: '请输入左侧菜单label，value字段名称',
-              },
-            },
-          ];
-        }
-        return [];
-      },
+      valueType: 'group',
+      columns: [
+        {
+          dataIndex: 'left_menu',
+          valueType: 'checkbox',
+          title: '左侧菜单',
+          fieldProps: {
+            options: [{ label: '左侧菜单', value: 1 }],
+          },
+          colProps: { span: 6 },
+        },
+        {
+          valueType: 'dependency',
+          name: ['left_menu'],
+          columns: ({ left_menu }: any) => {
+            if (left_menu && left_menu.length > 0) {
+              return [
+                {
+                  dataIndex: 'left_menu_field',
+                  title: '左侧菜单配置',
+                  fieldProps: {
+                    placeholder: '请输入左侧菜单label，value字段名称',
+                  },
+                  colProps: { span: 18 },
+                },
+              ];
+            }
+            return [];
+          },
+        },
+      ],
     },
   ];
   return columns;

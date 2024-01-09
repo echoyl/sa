@@ -1,8 +1,10 @@
 import request from '@/services/ant-design-pro/sadmin';
 import { BetaSchemaForm, ProFormColumnsType, ProFormInstance } from '@ant-design/pro-components';
 import dayjs from 'dayjs';
-import { ReactNode } from 'react';
+import { cloneDeep } from 'lodash';
+import React, { ReactNode } from 'react';
 import { inArray, isArr, isStr } from '../checkers';
+import { FormColumnTitle } from '../dev/table/title';
 import { getFromObject, saFormColumnsType, tplComplie } from '../helpers';
 export const defaultColumnsLabel = {
   id: '序号',
@@ -45,6 +47,7 @@ interface formFieldsProps {
   initRequest?: boolean;
   user?: any; //后台用户信息
   formRef?: ProFormInstance;
+  devEnable?: boolean;
 }
 
 export const GetFormFields: React.FC<{ columns: ProFormColumnsType[] | saFormColumnsType }> = ({
@@ -79,14 +82,14 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
     initRequest = false,
     user,
     formRef,
+    devEnable = true,
   } = props;
-
   if (!initRequest) return [];
   const allLabels = { ...defaultColumnsLabel, ...labels };
 
   //console.log('inner detail', detail);
   const customerColumns =
-    typeof columns == 'function' ? columns(detail) : isArr(columns) ? [...columns] : [];
+    typeof columns == 'function' ? columns(detail) : isArr(columns) ? cloneDeep(columns) : [];
   //console.log(detail);
   //const { initialState } = useModel('@@initialState');
 
@@ -138,7 +141,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
 
     return condition_type == 'all' ? true : false;
   };
-  const parseColumns = (v) => {
+  const parseColumns = (v, deep = 0) => {
     if (typeof v == 'string') {
       if (defaulColumns[v]) {
         //console.log(defaulColumns[c]);
@@ -273,11 +276,21 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
 
       if (v.columns && Array.isArray(v.columns)) {
         v.columns = v.columns
-          .map((_v) => parseColumns(_v))
+          .map((_v) => parseColumns(_v, deep + 1))
           .filter((c) => {
             return c !== false;
           });
       }
+      if (v.valueType == 'group') {
+        v.rowProps = { gutter: 16 };
+      }
+
+      if (devEnable && deep <= 1) {
+        if (!React.isValidElement(v.title)) {
+          v.title = <FormColumnTitle {...v} />;
+        }
+      }
+
       return v;
     }
 

@@ -153,14 +153,16 @@ const getColumns = (
       dataIndex: item.name,
       valueType: 'digit',
       fieldProps: { prefix: item.prefix, style: { width: '100%' } },
-      formItemProps: item.required?{
-        rules: [
-          {
-            required: true,
-            message: '此项必填',
-          },
-        ],
-      }:false,
+      formItemProps: item.required
+        ? {
+            rules: [
+              {
+                required: true,
+                message: '此项必填',
+              },
+            ],
+          }
+        : false,
     };
   });
 
@@ -422,7 +424,7 @@ export const Guiges = (props) => {
   return (
     <>
       {hidden && (
-        <ProForm.Group>
+        <ProForm.Group rowProps={{ gutter: 16 }}>
           {columnsName.map((item) => {
             return (
               <ProForm.Item
@@ -431,7 +433,7 @@ export const Guiges = (props) => {
                 required={item.required}
                 tooltip={item.tooltip}
               >
-                <ProFormDigit name={item.name} width="xs" />
+                <ProFormDigit name={item.name} colProps={{ span: 20 }} />
               </ProForm.Item>
             );
           })}

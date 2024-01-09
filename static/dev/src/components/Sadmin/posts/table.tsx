@@ -28,7 +28,7 @@ import {
 import { EditableCell, EditableRow } from './editable';
 import './style.less';
 import { getTableColumns } from './tableColumns';
-export interface saTablePros {
+export interface saTableProps {
   url?: string;
   name?: string;
   level?: number;
@@ -74,6 +74,7 @@ export interface saTablePros {
   selectRowRender?: (rowdom: any) => void | boolean;
   selectRowBtns?: Array<{ [key: string]: any }>;
   pageMenu?: { [key: string]: any }; //当前菜单信息
+  devEnable?: boolean; //是否开启开发模式
 }
 
 const components = {
@@ -152,6 +153,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
       size: 'large',
     },
     pageMenu,
+    devEnable: pdevEnable = true,
   } = props;
   //console.log('tableprops', props);
   const [tbColumns, setTbColumns] = useState([]);
@@ -185,6 +187,9 @@ const SaTable: React.FC<saTablePros> = (props) => {
   );
 
   const { initialState } = useModel('@@initialState');
+  const [devEnable, setDevEnable] = useState(
+    pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev,
+  );
   const { message } = App.useApp();
   // const [enumNames, setEnumNames] = useState<any[]>([]);
   // const [search_config, setSearch_config] = useState<any[]>([]);
@@ -346,18 +351,24 @@ const SaTable: React.FC<saTablePros> = (props) => {
       actionRef,
       initialState,
       message,
+      devEnable,
       ...props,
     });
   };
 
   useEffect(() => {
+    setDevEnable(pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev);
+  }, [initialState?.settings?.devDisable]);
+
+  useEffect(() => {
     setTbColumns(getTableColumnsRender(tableColumns));
-  }, [tableColumns, initRequest]);
+  }, [tableColumns, initRequest, devEnable]);
 
   const tableDesigner = useTableDesigner({
     pageMenu,
-    setTbColumns,
-    getTableColumnsRender,
+    setColumns: setTbColumns,
+    getColumnsRender: getTableColumnsRender,
+    devEnable,
   });
   return (
     <SaContext.Provider

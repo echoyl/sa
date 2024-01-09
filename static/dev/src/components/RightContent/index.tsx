@@ -2,6 +2,7 @@ import { SelectLang as UmiSelectLang, useModel } from '@umijs/max';
 import { Space } from 'antd';
 import React from 'react';
 import NoticeIconView from '../NoticeIcon';
+import DevSwitch from '../Sadmin/dev/switch';
 import ThemeSwitch from '../Sadmin/themSwitch';
 import Avatar from './AvatarDropdown';
 import styles from './index.less';
@@ -33,6 +34,7 @@ const GlobalHeaderRight: React.FC = () => {
         />
       )}
       <ThemeSwitch />
+      <DevSwitch />
       <span> </span>
     </Space>
   );

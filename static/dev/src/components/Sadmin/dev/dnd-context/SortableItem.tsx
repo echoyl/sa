@@ -47,16 +47,18 @@ export const Sortable = (props: any) => {
 interface SortableItemProps extends HTMLAttributes<HTMLDivElement> {
   eid?: string;
   removeParentsIfNoChildren?: boolean;
+  devData?: any;
 }
 
 export const SortableItem: React.FC<SortableItemProps> = (props) => {
-  const { id, eid, removeParentsIfNoChildren, ...others } = props;
+  const { id, eid, removeParentsIfNoChildren, devData, ...others } = props;
   return (
     <SortableProvider
       id={id}
       data={{
         insertAdjacent: 'afterEnd',
         removeParentsIfNoChildren: removeParentsIfNoChildren ?? true,
+        devData,
       }}
     >
       <Sortable id={eid} {...others}>

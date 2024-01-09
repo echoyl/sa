@@ -255,6 +255,7 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                       columns={getFormFieldColumns({
                         initRequest: true,
                         columns: row.form.columns,
+                        devEnable: false,
                       })}
                       initialValues={formData ? formData : row.form.value}
                       onFinish={(data: { [key: string]: any }) => {
@@ -362,6 +363,7 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                     initRequest: true,
                     columns: chart.columns,
                     initialState,
+                    devEnable:false
                   })}
                   dataSource={chart.data}
                   title={() => chart.title}

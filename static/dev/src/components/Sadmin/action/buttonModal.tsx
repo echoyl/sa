@@ -123,10 +123,16 @@ const ButtonModal: FC<actionConfirm> = (props) => {
         maskClosable={false}
         styles={{ body: { maxHeight: 650, overflowY: 'auto', overflowX: 'hidden' } }}
       >
-        {iopen &&
-          React.Children.map(props.children, (c) => {
-            return React.cloneElement(c, { setOpen, contentRender });
-          })}
+        <div
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {iopen &&
+            React.Children.map(props.children, (c) => {
+              return React.cloneElement(c, { setOpen, contentRender });
+            })}
+        </div>
       </Modal>
     </>
   );

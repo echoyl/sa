@@ -61,11 +61,9 @@ export default () => {
             modal: {
               title: '{{record.title + " - 表单配置"}}',
               drawerProps: {
-                width: 1600,
+                width: 1310,
               },
-              childrenRender: (record) => (
-                <MenuConfig model={{ id: record?.id }} actionRef={actionRef} />
-              ),
+              childrenRender: (record) => <MenuConfig model={record} actionRef={actionRef} />,
             },
             action: 'drawer',
             btn: { text: '表单', size: 'small' },
@@ -194,6 +192,26 @@ export default () => {
           valueType: 'import',
           uploadProps: {
             accept: '.sql',
+          },
+        },
+        {
+          valueType: 'toolbar',
+          fieldProps: {
+            items: [
+              {
+                domtype: 'button',
+                btn: {
+                  text: '生成配置'
+                },
+                action: 'confirm',
+                request: {
+                  url: 'dev/menu/remenu',
+                },
+                modal:{
+                  msg:'确定要重新生成配置吗？'
+                }
+              },
+            ],
           },
         },
       ]}
@@ -384,6 +402,8 @@ export default () => {
         scroll: { y: 600 },
       }}
       url="dev/menu"
+      grid={false}
+      devEnable={false}
     />
   );
 };

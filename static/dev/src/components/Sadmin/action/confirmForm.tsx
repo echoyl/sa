@@ -3,7 +3,7 @@ import { Button, ButtonProps } from 'antd';
 import { FC, ReactNode, useContext, useRef, useState } from 'react';
 import { history } from 'umi';
 import { getBread, saFormColumnsType, tplComplie } from '../helpers';
-import { SaForm } from '../posts/post';
+import { SaForm, saFormProps } from '../posts/post';
 import { SaContext } from '../posts/table';
 import ButtonModal from './buttonModal';
 
@@ -25,6 +25,7 @@ interface actionConfirm {
   page?: string;
   readonly?: boolean;
   xkey?: string;
+  saFormProps?: saFormProps;
 }
 
 const InnerForm = (props) => {
@@ -42,6 +43,7 @@ const InnerForm = (props) => {
     onChange,
     page,
     readonly = false,
+    saFormProps,
   } = props;
   const formRef = useRef<ProFormInstance>();
   const { actionRef, formRef: topFormRef } = useContext(SaContext);
@@ -63,6 +65,7 @@ const InnerForm = (props) => {
 
   return (
     <SaForm
+      {...saFormProps}
       tabs={tabs}
       setting={setting}
       beforeGet={(data) => {
@@ -153,6 +156,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
     onChange,
     readonly = false,
     xkey,
+    saFormProps = {},
   } = props;
   //console.log('ConfirmForm props ', props);
   const defaultButton = { title: '操作', type: 'primary', danger: false, size: 'small' };
@@ -186,6 +190,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
         dataid={dataId}
         onChange={onChange}
         readonly={readonly}
+        saFormProps={saFormProps}
       />
     </ButtonModal>
   );

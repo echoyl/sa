@@ -25,6 +25,8 @@ export default () => {
     <PostsForm
       url="dev/setting"
       formTitle={false}
+      grid={false}
+      devEnable={false}
       tabs={[
         {
           title: '基础配置',

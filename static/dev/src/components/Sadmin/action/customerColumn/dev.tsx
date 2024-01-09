@@ -130,6 +130,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             },
             msg: '依赖项配置，只控制表单项的显隐',
             formColumns: dependencyOnVars,
+            saFormProps: { grid: false },
           },
         },
       ],
@@ -343,6 +344,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                               size: 'middle',
                             },
                             formColumns: domFormColumns,
+                            saFormProps: { grid: false, devEnable: false },
                           },
                         },
                         {
@@ -688,7 +690,6 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             //   if (item.btn) {
             //     parseValues.btn = parseButton(item.btn);
             //   }
-
             //   let show = true;
             //   if (item.if) {
             //     show = tplComplie(item.if, { record: allValues.record });
@@ -725,11 +726,13 @@ export const CustomerColumnRenderDevReal = (props) => {
     modelColumns,
   } = fieldProps;
   const [values, setValues] = useState(value);
-
+  const [loading,setLoading] = useState(false);
   //原本项获取整行的值但是好像formlist没法获取当前行的值 只有当前字段的值
   const onOk = async () => {
     //console.log('值变化了', values, props.onChange, 'props is', props);
+    setLoading(true);
     await onChange?.(values);
+    setLoading(false);
     setOpen(false);
   };
   const btnDom =
@@ -756,21 +759,28 @@ export const CustomerColumnRenderDevReal = (props) => {
       {btnDom}
       <Modal
         open={open}
+        confirmLoading={loading}
         onCancel={() => setOpen(false)}
         onOk={onOk}
         width={1600}
         styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
       >
-        <CustomerColumn
-          value={value}
-          relationModel={relationModel}
-          allMenus={allMenus}
-          modelColumns={modelColumns}
-          ok={(values) => {
-            //console.log(values);
-            setValues(values);
+        <div
+          onKeyDown={(e) => {
+            e.stopPropagation();
           }}
-        />
+        >
+          <CustomerColumn
+            value={value}
+            relationModel={relationModel}
+            allMenus={allMenus}
+            modelColumns={modelColumns}
+            ok={(values) => {
+              //console.log(values);
+              setValues(values);
+            }}
+          />
+        </div>
       </Modal>
     </>
   );
