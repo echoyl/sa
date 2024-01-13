@@ -54,7 +54,7 @@ class FormItem
             $unset_dataindex = true;
         }
 
-        if(in_array($key,['id','parent_id','created_at_s']))
+        if(in_array($key,['id','created_at_s']))
         {
             return;
             $this->data = [
@@ -269,12 +269,19 @@ class FormItem
         }
 
         
-
+        
 
 
         if(isset($props['outside']))
         {
             $this->data = array_merge($this->data,$props['outside']);
+        }
+
+        //栅格数
+        $span = Arr::get($props,'span');
+        if($span)
+        {
+            $this->data['colProps'] = ['span'=>$span];
         }
 
         if(isset($props['width']))

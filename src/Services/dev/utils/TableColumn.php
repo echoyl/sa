@@ -48,6 +48,11 @@ class TableColumn
             }
             $key = $key[0];
         }
+        $unset_dataindex = false;
+        if($key == 'customer_field')
+        {
+            $unset_dataindex = true;
+        }
 
         $this->key = $key;
 
@@ -118,6 +123,10 @@ class TableColumn
         }
 
         $d = ['dataIndex'=>$dataIndex,'uid'=>$uid,'title'=>$title?:($schema?$schema['title']:($relation_title?:Utils::$title_arr[$key]??''))];
+        if($unset_dataindex)
+        {
+            unset($d['dataIndex']);
+        }
         if($width)
         {
             $d['width'] = is_numeric($width)?intval($width):$width;

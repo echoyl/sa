@@ -318,8 +318,14 @@ class MenuController extends CrudController
                 $need_update_config = true;
                 $config[$kv] = $val;
             }
-
-            $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
+            if($item['admin_model'])
+            {
+                $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
+            }else
+            {
+                $columns = [];
+            }
+            
             if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
                 $tool_bar_button[] = $columns;
@@ -423,8 +429,11 @@ class MenuController extends CrudController
                     }
                 }
                 $config[$kv]['columns'] = $keys;
-
-                $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
+                if($item['admin_model'])
+                {
+                    $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
+                }
+                
                 if(empty($columns))
                 {
                     $columns = false;
@@ -497,6 +506,13 @@ class MenuController extends CrudController
                 //$_config = $key?request('base.form_config'.$key):$config;
                 
                 [$formColumns,$update] = $this->formTabConfig($item,$tab['config']);
+                if(!isset($tab['tab']) && isset($tab['title']))
+                {
+                    $tab['tab'] = [
+                        'title'=>$tab['title']
+                    ];
+                    unset($tab['title']);
+                }
                 $_tabs[] = [
                     'tab'=>$tab['tab'],
                     'formColumns'=>$formColumns
@@ -596,26 +612,29 @@ class MenuController extends CrudController
             return $item_data;
         }
         $config = $item_data['config'];
-        $config_uids = [];
 
-        foreach($config as $val)
+        [$active_id,$over_id] = request('columns');
+        $active = $over = -1;
+        foreach($config as $key=>$val)
         {
-            $config_uids[$val['uid']] = $val;
-        }
-
-        $columns = request('columns');
-        //按照列表排序
-        $new_config = [];
-        foreach($columns as $val)
-        {
-            $uid = $val['uid'];
-            if(!isset($config_uids[$uid]))
+            if($val['uid'] == $active_id)
             {
-                continue;
+                $active = $key;
             }
-            $new_config[] = $config_uids[$uid];
+            if($val['uid'] == $over_id)
+            {
+                $over = $key;
+            }
         }
-        $this->model->where(['id'=>$id])->update(['table_config'=>json_encode($new_config)]);
+
+        if($active < 0 || $over < 0)
+        {
+            return $this->fail([1,'出错了，请刷新页面后重试']);
+        }
+
+        $config = HelperService::arrayMove($config,$active,$over);
+
+        $this->model->where(['id'=>$id])->update(['table_config'=>json_encode($config)]);
 
         $this->tableConfig($id);
 
@@ -689,12 +708,22 @@ class MenuController extends CrudController
                 }
             }else{
                 //插入
-                if($val['uid'] == $afterUid)
+                if($afterUid)
                 {
-                    array_splice($config,$key + 1,0,[$base]);
+                    if($val['uid'] == $afterUid)
+                    {
+                        array_splice($config,$key + 1,0,[$base]);
+                        $find = true;
+                        break;
+                    }
+                }else
+                {
+                    //在最后插入
+                    array_splice($config,count($config),0,[$base]);
                     $find = true;
                     break;
                 }
+                
             }
             
         }

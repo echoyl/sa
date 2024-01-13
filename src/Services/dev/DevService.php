@@ -1150,7 +1150,11 @@ class DevService
                 continue;
             }
             $span = floor(24 / $key_len);
-            $data[$key]['colProps'] = ['span'=>$span];
+            if(!isset($val['colProps']))
+            {
+                $data[$key]['colProps'] = ['span'=>$span];
+            }
+            
         }
         return $data;
     }
