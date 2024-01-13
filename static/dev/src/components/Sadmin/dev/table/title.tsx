@@ -126,6 +126,7 @@ const BaseForm = (props) => {
     ...title.props,
     onClick: async (e: any) => {
       setVisible(false);
+      e.stopPropagation();
     },
   });
 
@@ -133,17 +134,23 @@ const BaseForm = (props) => {
   const value = getValue(uid, pageMenu, type);
   //console.log('value is ', value, uid);
   return (
-    <ConfirmForm
-      trigger={trigger}
-      formColumns={columns}
-      value={value}
-      postUrl={editUrl}
-      data={{ id: pageMenu?.id, uid, afterUid }}
-      callback={({ data }) => {
-        reflush(data);
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
       }}
-      saFormProps={{ devEnable: false }}
-    />
+    >
+      <ConfirmForm
+        trigger={trigger}
+        formColumns={columns}
+        value={value}
+        postUrl={editUrl}
+        data={{ id: pageMenu?.id, uid, afterUid }}
+        callback={({ data }) => {
+          reflush(data);
+        }}
+        saFormProps={{ devEnable: false }}
+      />
+    </div>
   );
 };
 
@@ -171,6 +178,7 @@ const MoreForm = (props) => {
     ...title.props,
     onClick: async (e: any) => {
       setVisible(false);
+      e.stopPropagation();
     },
   });
   const fieldProps = {
@@ -180,7 +188,18 @@ const MoreForm = (props) => {
     relationModel: relations,
     allMenus,
   };
-  return <CustomerColumnRenderDevReal fieldProps={fieldProps} />;
+  return (
+    <div
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <CustomerColumnRenderDevReal fieldProps={fieldProps} />
+    </div>
+  );
 };
 
 const DeleteColumn = (props) => {
@@ -194,6 +213,8 @@ const DeleteColumn = (props) => {
     ...title.props,
     onClick: async (e: any) => {
       setVisible(false);
+      e.preventDefault();
+      e.stopPropagation();
     },
   });
   return (
@@ -278,14 +299,20 @@ const DevTableColumnTitle = (props) => {
     },
   ];
   //表单的话 加一个最小宽度
-  const designerStyle = devData?.type == 'table' ? {} : { minWidth: 150 };
+  const styles = {
+    form: {
+      minWidth: 150,
+    },
+    table: {},
+    toolbar: { display: 'inline-block' },
+  };
   return (
     <SortableItem
       className={designerCss}
       id={uid}
       eid={uid}
       devData={devData}
-      style={designerStyle}
+      style={styles[devData?.type]}
     >
       <div className={classNames('general-schema-designer', overrideAntdCSS)}>
         <div className={'general-schema-designer-icons'}>
@@ -320,5 +347,15 @@ export const FormColumnTitle: FC = (props) => {
     <DevTableColumnTitle {...props} title={title} devData={{ type: 'form' }} />
   ) : (
     props.title
+  );
+};
+
+export const ToolbarColumnTitle: FC = (props) => {
+  const { initialState } = useModel('@@initialState');
+  const dev = initialState?.settings?.dev ? true : false;
+  return dev ? (
+    <DevTableColumnTitle {...props} devData={{ type: 'toolbar' }} />
+  ) : (
+    <>{props.title}</>
   );
 };

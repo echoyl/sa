@@ -1,4 +1,5 @@
-import request, { getFullUrl, requestHeaders } from '@/services/ant-design-pro/sadmin';
+import { MenuFormColumn } from '@/pages/dev/menu';
+import request, { currentUser, getFullUrl, requestHeaders } from '@/services/ant-design-pro/sadmin';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -7,22 +8,37 @@ import {
   DeleteOutlined,
   LoadingOutlined,
   PlusOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
-import { FormattedMessage, Link } from '@umijs/max';
+import { FormattedMessage, Link, useModel } from '@umijs/max';
 import { App, Button, Space, Upload } from 'antd';
+import { cloneDeep, isString } from 'lodash';
 import React, { useContext, useState } from 'react';
+import ButtonDrawer from '../../action/buttonDrawer';
 import CustomerColumnRender from '../../action/customerColumn';
+import { SaForm } from '../../posts/post';
 import { SaContext } from '../../posts/table';
+import { DndContext } from '../dnd-context';
+import { ToolbarColumnTitle } from './title';
 
 export const ToolBarDom = (props) => {
-  const { selectedRows, selectRowBtns = [], remove, switchState, deleteable = true } = props;
+  const {
+    selectedRows,
+    selectRowBtns = [],
+    remove,
+    switchState,
+    deleteable = true,
+    devEnable: pdevEnable,
+  } = props;
   const { searchData } = useContext(SaContext);
   //console.log('props.btns', selectRowBtns);
   const selectedIds = selectedRows.map((item) => item.id);
-
+  const { initialState } = useModel('@@initialState');
+  const devEnable =
+    pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev;
   return (
     <Space>
-      <Space>
+      <Space key="selectbar_count">
         <span>选择</span>
         <a style={{ fontWeight: 600 }}>{selectedRows.length}</a>
         <span>项</span>
@@ -47,18 +63,10 @@ export const ToolBarDom = (props) => {
           </Button>
         );
       })}
-      {selectRowBtns?.map((cbtn, ci) => {
-        return (
-          <CustomerColumnRender
-            key={'customer_' + ci}
-            items={cbtn.fieldProps?.items}
-            paramExtra={{ ids: selectedIds }}
-            record={{ ids: selectedIds }}
-          />
-        );
-      })}
+
       {deleteable ? (
         <Button
+          key="selectbar_delete"
           danger
           type="primary"
           size="small"
@@ -70,6 +78,30 @@ export const ToolBarDom = (props) => {
           批量删除
         </Button>
       ) : null}
+
+      {selectRowBtns?.map((cbtn, ci) => {
+        return (
+          <Space key="selectbar" key={'customer_' + ci}>
+            {devEnable && (
+              <Button size="small" key={cbtn.uid + '_dev'} type="dashed">
+                <ToolbarColumnTitle {...cbtn} />
+              </Button>
+            )}
+            <CustomerColumnRender
+              key={'customer_' + ci}
+              items={cbtn.fieldProps?.items}
+              paramExtra={{ ids: selectedIds }}
+              record={{ ids: selectedIds }}
+            />
+          </Space>
+        );
+      })}
+
+      {devEnable && selectRowBtns.length < 1 && (
+        <Button key="toolbar_add_dev" type="dashed" size="small">
+          <ToolbarColumnTitle title="+" />
+        </Button>
+      )}
     </Space>
   );
 };
@@ -151,13 +183,15 @@ export const toolBarRender = (props) => {
     setCurrentRow,
     handleModalVisible,
     path,
-    toolBarButton,
+    toolBarButton = [],
     url,
     paramExtra,
     enums,
     table_menu_key,
     tableMenuId,
     selectedRowKeys,
+    devEnable: pdevEnable,
+    pageMenu,
   } = props;
   const createButton = (
     <Button type="primary" key="primary">
@@ -167,12 +201,129 @@ export const toolBarRender = (props) => {
       </Space>
     </Button>
   );
+  const { initialState, setInitialState } = useModel('@@initialState');
+  const devEnable =
+    pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev;
   const values = { ...paramExtra, ids: selectedRowKeys };
   if (table_menu_key) {
     values[table_menu_key] = tableMenuId;
   }
+  const _btns = cloneDeep(toolBarButton);
+  if (devEnable) {
+    _btns.push({
+      valueType: 'devsetting',
+      title: <SettingOutlined />,
+      key: 'devsetting',
+    });
+    if (_btns.length <= 1) {
+      _btns.push({
+        valueType: 'devadd',
+        title: '+',
+        key: 'devadd',
+      });
+    }
+  }
   const render = () => {
     const btns = [];
+
+    const MenuForm = (mprops) => {
+      const { contentRender, setOpen } = mprops;
+      return (
+        <SaForm
+          formColumns={MenuFormColumn}
+          url="dev/menu/show"
+          dataId={pageMenu?.id}
+          paramExtra={{ id: pageMenu?.id }}
+          postExtra={{ id: pageMenu?.id }}
+          showTabs={false}
+          grid={false}
+          devEnable={false}
+          width={1600}
+          msgcls={async ({ code, data }) => {
+            if (!code) {
+              setOpen(false);
+              const msg = await currentUser();
+              //const msg = await cuser();
+              setInitialState((s) => ({
+                ...s,
+                currentUser: msg.data,
+              }));
+            }
+            return;
+          }}
+          formProps={{
+            contentRender,
+            submitter: {
+              //移除默认的重置按钮，点击重置按钮后会重新请求一次request
+              render: (props, doms) => {
+                return [
+                  <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
+                    关闭
+                  </Button>,
+                  doms[1],
+                ];
+              },
+            },
+          }}
+        />
+      );
+    };
+
+    _btns?.forEach((btn, index) => {
+      //console.log('btn', btn);
+      if (devEnable && isString(btn.title)) {
+        btn.title = <ToolbarColumnTitle {...btn} />;
+      }
+
+      if (btn.valueType == 'export') {
+        btns.push(<ExportButton key="export" {...btn} url={url} values={values} />);
+      }
+      if (btn.valueType == 'import') {
+        btns.push(<ImportButton key="import" {...btn} url={url} />);
+      }
+      if (btn.valueType == 'devadd') {
+        btns.push(
+          <Button key={btn.key} type="dashed">
+            {btn.title}
+          </Button>,
+        );
+      }
+      if (btn.valueType == 'devsetting') {
+        btns.push(
+          <ButtonDrawer
+            key="devsetting"
+            trigger={
+              <Button type="dashed" danger>
+                {btn.title}
+              </Button>
+            }
+            width={1600}
+          >
+            <MenuForm />
+          </ButtonDrawer>,
+        );
+      }
+      if (btn.valueType == 'toolbar') {
+        //console.log('toolbar btn', btn);
+        if (devEnable) {
+          btns.push(
+            <Button key={btn.uid + '_dev'} type="dashed">
+              <ToolbarColumnTitle {...btn} />
+            </Button>,
+          );
+        }
+        btns.push(
+          <CustomerColumnRender
+            key={'ccrender_' + index}
+            items={btn.fieldProps?.items}
+            paramExtra={values}
+            record={enums}
+          />,
+        );
+      }
+    });
+
+    typeof props.toolBar == 'function' && btns.push(props.toolBar({ enums }));
     if (addable) {
       if (openType == 'drawer' || openType == 'modal') {
         btns.push(
@@ -191,24 +342,7 @@ export const toolBarRender = (props) => {
         );
       }
     }
-    toolBarButton?.forEach((btn, index) => {
-      //console.log('btn', btn);
-
-      if (btn.valueType == 'export') {
-        btns.push(<ExportButton {...btn} url={url} values={values} />);
-      }
-      if (btn.valueType == 'import') {
-        btns.push(<ImportButton {...btn} url={url} />);
-      }
-      if (btn.valueType == 'toolbar') {
-        //console.log('toolbar btn', btn);
-        btns.push(
-          <CustomerColumnRender items={btn.fieldProps?.items} paramExtra={values} record={enums} />,
-        );
-      }
-    });
-    typeof props.toolBar == 'function' && btns.push(props.toolBar({ enums }));
-    return btns;
+    return [<DndContext key="toolbar">{btns}</DndContext>];
   };
   return render;
 };

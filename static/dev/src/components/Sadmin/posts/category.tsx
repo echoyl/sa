@@ -3,26 +3,30 @@ import React, { useState } from 'react';
 import { saConfig } from '../config';
 import { SaBreadcrumbRender } from '../helpers';
 import './style.less';
-import type { saTablePros } from './table';
+import type { saTableProps } from './table';
 import SaTable from './table';
 type CategoryProps = {
   expandAll?: boolean;
-} & saTablePros;
+} & saTableProps;
 
 const Category: React.FC<CategoryProps> = (props) => {
   //console.log(url);
   const [ekeys, setEkeys] = useState<number[]>([]);
   const { tableProps: tp = {} } = props;
+  const { tableTitle = false, expandAll = true, setting = {}, path } = props;
+  const { fold, level } = setting;
   const defaultProps = {
     level: 1,
     openType: 'drawer',
     tableColumns: ['displayorder', 'option'],
     formColumns: ['parent_id'],
-    expandAll: true,
+    expandAll: fold ? false : true,
     ...props,
   };
+  if (level) {
+    defaultProps.level = level;
+  }
   //console.log('props', props);
-  const { tableTitle = false, expandAll = true, path } = props;
 
   const tableProps = {
     search: false,
@@ -78,7 +82,7 @@ const Category: React.FC<CategoryProps> = (props) => {
           };
           render(ret.data);
           //console.log(keys);
-          if (expandAll) {
+          if (expandAll && !fold) {
             setEkeys(keys);
           }
           if (props.beforeTableGet) {

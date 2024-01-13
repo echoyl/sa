@@ -233,6 +233,8 @@ export default () => {
           setAllData(data);
         }}
         openWidth={1500}
+        grid={false}
+        devEnable={false}
         tableProps={{
           scroll: { y: 600 },
         }}
@@ -417,32 +419,37 @@ export default () => {
                     valueType: 'confirmForm',
                     fieldProps: {
                       btn: { title: '配置' },
+                      saFormProps: {
+                        grid: false,
+                        devEnable: false,
+                      },
                       formColumns: [
                         {
                           valueType: 'group',
                           columns: [
-                            { title: '图片或视频数量限制', dataIndex: 'image_count' },
-                            { title: '省市区层级', dataIndex: 'pca_level' },
+                            { title: '图片或视频数量限制', dataIndex: 'image_count',colProps:{span:8} },
+                            { title: '省市区层级', dataIndex: 'pca_level',colProps:{span:8} },
                             {
                               title: '省市区前缀',
                               dataIndex: 'pca_topCode',
                               tooltip: '限定上级省市显示，逗号分割',
+                              colProps:{span:8}
                             },
                           ],
                         },
                         {
                           valueType: 'group',
                           columns: [
-                            { title: 'label', dataIndex: 'label' },
-                            { title: 'value', dataIndex: 'value' },
-                            { title: 'children', dataIndex: 'children' },
+                            { title: 'label', dataIndex: 'label',colProps:{span:8} },
+                            { title: 'value', dataIndex: 'value',colProps:{span:8} },
+                            { title: 'children', dataIndex: 'children',colProps:{span:8} },
                           ],
                         },
                         {
                           valueType: 'group',
                           columns: [
-                            { title: 'swtich开启', dataIndex: 'open' },
-                            { title: 'swtich关闭', dataIndex: 'close' },
+                            { title: 'swtich开启', dataIndex: 'open',colProps:{span:8} },
+                            { title: 'swtich关闭', dataIndex: 'close',colProps:{span:8} },
                           ],
                         },
                         { title: 'json可选数据', dataIndex: 'json', valueType: 'jsonEditor' },

@@ -51,6 +51,8 @@ export default (props) => {
     <SaTable
       name="relation"
       url="dev/relation"
+      grid={false}
+      devEnable={false}
       tableProps={{ params: { model_id: model?.id }, search: false }}
       //toolBarRender={false}
       tableColumns={[

@@ -44,12 +44,13 @@ const formMoreType = [
   { label: '密码 - password', value: 'password' },
   { label: '文本域 - textarea', value: 'textarea' },
   { label: '上传 - uploader', value: 'uploader' },
+  { label: 'markdown编辑器 - mdEditor', value: 'mdEditor' },
 ];
 
 export const getModelColumnsSelect = (id: number, allModels, level = 1) => {
   const select_data = allModels?.find((v) => v.id == id);
   //console.log(foreign_model_id, allModels, select_data);
-  const fields: Array<TreeNodeProps> = [...select_data?.columns].map((v) => ({
+  const fields: Array<TreeNodeProps> = select_data?.columns?.map((v) => ({
     label: v.label ? v.label : [v.title, v.name].join(' - '),
     value: v.name,
   }));
@@ -65,7 +66,7 @@ export const getModelColumnsSelect = (id: number, allModels, level = 1) => {
     value: v.name,
     children: getModelColumnsSelect(v.foreign_model_id, allModels, level),
   }));
-  return [...fields, ...guanlian];
+  return fields ? [...fields, ...guanlian] : [];
 };
 
 export const getModelRelationSelect = (id: number, allModels, level = 1) => {
@@ -141,7 +142,7 @@ export const getModelColumns = (model_id: number, dev: { [key: string]: any }) =
     label: [v.title, v.name].join(' - '),
     value: v.name,
   }));
-  model.relations?.forEach((v) => {
+  model?.relations?.forEach((v) => {
     if (v.type == 'many') {
       if (v.with_count) {
         foreignOptions.push({
@@ -161,8 +162,8 @@ export const getModelColumns = (model_id: number, dev: { [key: string]: any }) =
   });
 
   //检测模型搜索设置 提供给table列选择字段 20230904 可能存在重复键值导致组件错误，暂时不要这个功能
-  const existColumns = [...foreignOptions, ...devDefaultFields];
-  const search_columns = model.search_columns ? model.search_columns : [];
+  const existColumns = foreignOptions ? [...foreignOptions, ...devDefaultFields] : [];
+  const search_columns = model?.search_columns ? model.search_columns : [];
   const searchColumn = search_columns
     .filter((v) => {
       return existColumns.findIndex((val) => val.value == v.name) < 0;

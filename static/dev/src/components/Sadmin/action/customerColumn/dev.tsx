@@ -104,6 +104,11 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
           dataIndex: 'width',
         },
         {
+          title: '栅格',
+          dataIndex: 'span',
+          tooltip: '分为24格，不设置自动 = 24 / 列数',
+        },
+        {
           title: '提示语',
           dataIndex: 'tip',
           valueType: 'confirmForm',
@@ -726,7 +731,7 @@ export const CustomerColumnRenderDevReal = (props) => {
     modelColumns,
   } = fieldProps;
   const [values, setValues] = useState(value);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   //原本项获取整行的值但是好像formlist没法获取当前行的值 只有当前字段的值
   const onOk = async () => {
     //console.log('值变化了', values, props.onChange, 'props is', props);
@@ -750,13 +755,14 @@ export const CustomerColumnRenderDevReal = (props) => {
         ...btnText.props,
         onClick: async (e: any) => {
           setOpen(true);
-          btnText?.props?.onClick?.();
+          btnText?.props?.onClick?.(e);
         },
       })
     );
   return (
     <>
       {btnDom}
+
       <Modal
         open={open}
         confirmLoading={loading}
@@ -765,22 +771,16 @@ export const CustomerColumnRenderDevReal = (props) => {
         width={1600}
         styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
       >
-        <div
-          onKeyDown={(e) => {
-            e.stopPropagation();
+        <CustomerColumn
+          value={value}
+          relationModel={relationModel}
+          allMenus={allMenus}
+          modelColumns={modelColumns}
+          ok={(values) => {
+            //console.log(values);
+            setValues(values);
           }}
-        >
-          <CustomerColumn
-            value={value}
-            relationModel={relationModel}
-            allMenus={allMenus}
-            modelColumns={modelColumns}
-            ok={(values) => {
-              //console.log(values);
-              setValues(values);
-            }}
-          />
-        </div>
+        />
       </Modal>
     </>
   );

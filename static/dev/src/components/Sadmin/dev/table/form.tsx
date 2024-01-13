@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import ButtonDrawer from '../../action/buttonDrawer';
 import ButtonModal from '../../action/buttonModal';
 import { SaForm } from '../../posts/post';
-import { SaContext } from '../../posts/table';
+import { SaContext, saTableProps } from '../../posts/table';
 
 const InnerForm = (props) => {
   const {
@@ -70,14 +70,20 @@ const InnerForm = (props) => {
   );
 };
 
-export const TableForm = (props) => {
+export const TableForm = (
+  props: saTableProps & {
+    createModalVisible?: any;
+    currentRow?: any;
+    handleModalVisible?: any;
+  },
+) => {
   const {
     openType,
     createModalVisible,
     currentRow,
     handleModalVisible,
     name,
-    openWidth = props.openType == 'drawer' ? 754 : 754,
+    openWidth = 850,
     formColumns,
     url,
     paramExtra,
@@ -85,7 +91,9 @@ export const TableForm = (props) => {
     postExtra,
     editable = true,
     addable = true,
+    setting = {},
   } = props;
+  const { formWidth } = setting;
   return (
     <>
       {openType == 'modal' && (
@@ -95,7 +103,7 @@ export const TableForm = (props) => {
             (currentRow.id ? (currentRow.readonly ? '查看' : '编辑') : '新增') +
             (name ? ' - ' + name : '')
           }
-          width={openWidth}
+          width={formWidth ? formWidth : openWidth}
           afterOpenChange={(open) => {
             handleModalVisible(open);
           }}
@@ -120,7 +128,7 @@ export const TableForm = (props) => {
             (currentRow.id ? (currentRow.readonly ? '查看' : '编辑') : '新增') +
             (name ? ' - ' + name : '')
           }
-          width={openWidth}
+          width={formWidth ? formWidth : openWidth}
           afterOpenChange={(open) => {
             handleModalVisible(open);
           }}

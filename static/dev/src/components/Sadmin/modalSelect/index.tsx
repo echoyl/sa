@@ -138,7 +138,6 @@ const ModalSelect = (props) => {
   };
   const radioSelect = {
     title: '操作',
-    dataIndex: 'id',
     width: 120,
     search: false,
     render: (text, record, _, action) => {
@@ -238,6 +237,8 @@ const ModalSelect = (props) => {
             size: 'small',
             className: 'sa-modal-table',
           }}
+          grid={false}
+          devEnable={false}
         />
       </Modal>
     </>

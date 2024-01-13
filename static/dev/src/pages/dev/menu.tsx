@@ -1,4 +1,4 @@
-import { iconMap } from '@/components/Sadmin/helpers';
+import { iconMap, saFormColumnsType } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
 import { CopyOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
@@ -7,14 +7,271 @@ import { useRef } from 'react';
 import MenuConfig, { MenuOther } from './menuConfig';
 import MenuTable from './menuTable';
 
+const iconmap2Options = (map) => {
+  const ret = [];
+  for (let i in map) {
+    ret.push({ label: map[i], value: i });
+  }
+  return ret;
+};
+
+export const MenuFormColumn:saFormColumnsType = [
+  {
+    valueType: 'group',
+    columns: [
+      {
+        title: '菜单名称',
+        dataIndex: 'title',
+        width: 'md',
+        fieldProps: { placeholder: '为空时菜单会隐藏' },
+      },
+      {
+        title: 'path',
+        dataIndex: 'path',
+        width: 'sm',
+        fieldProps: { placeholder: '请输入路径' },
+      },
+      {
+        title: '图标',
+        dataIndex: 'icon',
+        valueType: 'select',
+        width: 'sm',
+        tooltip: '需要先将要使用到的图标配置到iconmap中才能选择',
+        fieldProps: {
+          placeholder: '请选择图标',
+          options: iconmap2Options(iconMap),
+        },
+      },
+      {
+        title: '菜单类型',
+        dataIndex: 'type',
+        valueType: 'select',
+        requestDataName: 'types',
+        width: 'sm',
+      },
+      {
+        title: '新增按钮',
+        dataIndex: 'addable',
+        valueType: 'switch',
+        tooltip: '开启后列表中无新建按钮',
+        fieldProps: {
+          checkedChildren: '显示',
+          unCheckedChildren: '隐藏',
+          defaultChecked: true,
+        },
+      },
+      {
+        title: 'form是否可编辑',
+        dataIndex: 'editable',
+        valueType: 'switch',
+        tooltip: '开启后表单无提交按钮',
+        fieldProps: {
+          checkedChildren: '可编辑',
+          unCheckedChildren: '只读',
+          defaultChecked: true,
+        },
+      },
+      {
+        title: '是否可删除',
+        dataIndex: 'deleteable',
+        valueType: 'switch',
+        tooltip: '数据是否可以删除',
+        fieldProps: {
+          checkedChildren: '可删除',
+          unCheckedChildren: '不可删',
+          defaultChecked: true,
+        },
+      },
+    ],
+  },
+  {
+    valueType: 'group',
+    columns: [
+      {
+        dataIndex: 'admin_model_id',
+        title: '关联模型',
+        valueType: 'treeSelect',
+        requestDataName: 'admin_model_ids',
+        fieldProps: {
+          treeLine: { showLeafIcon: true },
+          treeDefaultExpandAll: true,
+          allowClear: true,
+        },
+        width: 'md',
+      },
+      // {
+      //   title: 'model',
+      //   dataIndex: 'model',
+      //   fieldProps: { placeholder: '请输入模型名称' },
+      //   formItemProps: { tooltip: '暂时只支持posts一种模型' },
+      //   width: 'sm',
+      // },
+      // {
+      //   title: '分类选择',
+      //   dataIndex: 'category_id',
+      //   valueType: 'cascader',
+      //   request: searchCategory,
+      //   fieldProps: {
+      //     fieldNames: {
+      //       label: 'title',
+      //       value: 'id',
+      //     },
+      //     changeOnSelect: true,
+      //   },
+      //   width: 'sm',
+      // },
+      {
+        title: '页面类型',
+        dataIndex: 'page_type',
+        valueType: 'radioButton',
+        fieldProps: {
+          options: [
+            { label: '列表', value: 'table' },
+            { label: '分类', value: 'category' },
+            { label: '表单', value: 'form' },
+            { label: '面板', value: 'panel' },
+          ],
+        },
+      },
+      {
+        title: 'form打开方式',
+        dataIndex: 'open_type',
+        valueType: 'radioButton',
+        fieldProps: {
+          options: [
+            { label: 'page', value: 'page' },
+            { label: 'drawer', value: 'drawer' },
+            { label: 'modal', value: 'modal' },
+          ],
+        },
+      },
+
+      'displayorder',
+      'state',
+      {
+        title: '显示',
+        dataIndex: 'status',
+        valueType: 'switch',
+        tooltip: '隐藏后菜单不显示，但还是可以访问',
+        fieldProps: {
+          checkedChildren: '显示',
+          unCheckedChildren: '隐藏',
+          defaultChecked: true,
+        },
+      },
+      {
+        title: '设置',
+        dataIndex: 'setting',
+        valueType: 'confirmForm',
+        fieldProps: {
+          btn: {
+            title: '设置',
+            size: 'middle',
+          },
+          saFormProps: {
+            devEnable: false,
+          },
+          formColumns: [
+            {
+              valueType: 'group',
+              title: '分页设置',
+              columns: [
+                {
+                  dataIndex: ['pagination', 'pageSize'],
+                  title: '分页数量',
+                  valueType: 'digit',
+                  fieldProps: {
+                    defaultValue: 20,
+                  },
+                  width: '100%',
+                  colProps: { span: 12 },
+                },
+                {
+                  dataIndex: ['pagination', 'showQuickJumper'],
+                  title: '快速跳转',
+                  valueType: 'switch',
+                  fieldProps: {
+                    defaultValue: true,
+                  },
+                  colProps: { span: 12 },
+                },
+              ],
+            },
+            {
+              valueType: 'group',
+              title: '表单设置',
+              columns: [
+                {
+                  dataIndex: 'formWidth',
+                  title: '宽度',
+                  valueType: 'digit',
+                  width: '100%',
+                  colProps: { span: 12 },
+                },
+                {
+                  dataIndex: 'steps_form',
+                  title: '分步表单',
+                  valueType: 'switch',
+                  colProps: { span: 12 },
+                },
+              ],
+            },
+            {
+              valueType: 'group',
+              title: '分类设置',
+              columns: [
+                {
+                  dataIndex: 'level',
+                  title: '层级',
+                  colProps: { span: 12 },
+                },
+                {
+                  dataIndex: 'fold',
+                  title: '是否收缩',
+                  valueType: 'switch',
+                  colProps: { span: 12 },
+                },
+              ],
+            },
+            {
+              valueType: 'group',
+              title: '其它设置',
+              columns: [
+                {
+                  dataIndex: 'show_selectbar',
+                  title: '选择操作栏',
+                  valueType: 'switch',
+                  colProps: { span: 12 },
+                  fieldProps: {
+                    defaultValue: true,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  },
+
+  // {
+  //   title: 'router',
+  //   dataIndex: 'router',
+  //   fieldProps: { placeholder: '请输入router' },
+  // },
+
+  {
+    title: '属性设置',
+    dataIndex: 'desc',
+    valueType: 'jsonEditor',
+    fieldProps: { height: 600 },
+  },
+  { title: '子权限', dataIndex: 'perms', valueType: 'jsonEditor' },
+  'parent_id',
+];
+
 export default () => {
-  const iconmap2Options = (map) => {
-    const ret = [];
-    for (let i in map) {
-      ret.push({ label: map[i], value: i });
-    }
-    return ret;
-  };
+  
   const actionRef = useRef<ActionType>();
 
   const tableColumns = (enums) => [
@@ -201,200 +458,21 @@ export default () => {
               {
                 domtype: 'button',
                 btn: {
-                  text: '生成配置'
+                  text: '生成配置',
                 },
                 action: 'confirm',
                 request: {
                   url: 'dev/menu/remenu',
                 },
-                modal:{
-                  msg:'确定要重新生成配置吗？'
-                }
+                modal: {
+                  msg: '确定要重新生成配置吗？',
+                },
               },
             ],
           },
         },
       ]}
-      formColumns={[
-        {
-          valueType: 'group',
-          columns: [
-            {
-              title: '菜单名称',
-              dataIndex: 'title',
-              width: 'md',
-              fieldProps: { placeholder: '为空时菜单会隐藏' },
-            },
-            {
-              title: 'path',
-              dataIndex: 'path',
-              width: 'sm',
-              fieldProps: { placeholder: '请输入路径' },
-            },
-            {
-              title: '图标',
-              dataIndex: 'icon',
-              valueType: 'select',
-              width: 'sm',
-              tooltip: '需要先将要使用到的图标配置到iconmap中才能选择',
-              fieldProps: {
-                placeholder: '请选择图标',
-                options: iconmap2Options(iconMap),
-              },
-            },
-            {
-              title: '菜单类型',
-              dataIndex: 'type',
-              valueType: 'select',
-              requestDataName: 'types',
-              width: 'sm',
-            },
-            {
-              title: '新增按钮',
-              dataIndex: 'addable',
-              valueType: 'switch',
-              tooltip: '开启后列表中无新建按钮',
-              fieldProps: {
-                checkedChildren: '显示',
-                unCheckedChildren: '隐藏',
-                defaultChecked: true,
-              },
-            },
-            {
-              title: 'form是否可编辑',
-              dataIndex: 'editable',
-              valueType: 'switch',
-              tooltip: '开启后表单无提交按钮',
-              fieldProps: {
-                checkedChildren: '可编辑',
-                unCheckedChildren: '只读',
-                defaultChecked: true,
-              },
-            },
-            {
-              title: '是否可删除',
-              dataIndex: 'deleteable',
-              valueType: 'switch',
-              tooltip: '数据是否可以删除',
-              fieldProps: {
-                checkedChildren: '可删除',
-                unCheckedChildren: '不可删',
-                defaultChecked: true,
-              },
-            },
-          ],
-        },
-        {
-          valueType: 'group',
-          columns: [
-            {
-              dataIndex: 'admin_model_id',
-              title: '关联模型',
-              valueType: 'treeSelect',
-              requestDataName: 'admin_model_ids',
-              fieldProps: {
-                treeLine: { showLeafIcon: true },
-                treeDefaultExpandAll: true,
-                allowClear: true,
-              },
-              width: 'md',
-            },
-            // {
-            //   title: 'model',
-            //   dataIndex: 'model',
-            //   fieldProps: { placeholder: '请输入模型名称' },
-            //   formItemProps: { tooltip: '暂时只支持posts一种模型' },
-            //   width: 'sm',
-            // },
-            // {
-            //   title: '分类选择',
-            //   dataIndex: 'category_id',
-            //   valueType: 'cascader',
-            //   request: searchCategory,
-            //   fieldProps: {
-            //     fieldNames: {
-            //       label: 'title',
-            //       value: 'id',
-            //     },
-            //     changeOnSelect: true,
-            //   },
-            //   width: 'sm',
-            // },
-            {
-              title: '页面类型',
-              dataIndex: 'page_type',
-              valueType: 'radioButton',
-              fieldProps: {
-                options: [
-                  { label: '列表', value: 'table' },
-                  { label: '分类', value: 'category' },
-                  { label: '表单', value: 'form' },
-                  { label: '面板', value: 'panel' },
-                ],
-              },
-            },
-            {
-              title: 'form打开方式',
-              dataIndex: 'open_type',
-              valueType: 'radioButton',
-              fieldProps: {
-                options: [
-                  { label: 'page', value: 'page' },
-                  { label: 'drawer', value: 'drawer' },
-                  { label: 'modal', value: 'modal' },
-                ],
-              },
-            },
-
-            'displayorder',
-            'state',
-            {
-              title: '显示',
-              dataIndex: 'status',
-              valueType: 'switch',
-              tooltip: '隐藏后菜单不显示，但还是可以访问',
-              fieldProps: {
-                checkedChildren: '显示',
-                unCheckedChildren: '隐藏',
-                defaultChecked: true,
-              },
-            },
-            {
-              title: '设置',
-              dataIndex: 'setting',
-              valueType: 'confirmForm',
-              fieldProps: {
-                btn: {
-                  title: '设置',
-                  size: 'middle',
-                },
-                formColumns: [
-                  {
-                    dataIndex: 'steps_form',
-                    title: '分步表单',
-                    valueType: 'switch',
-                  },
-                ],
-              },
-            },
-          ],
-        },
-
-        // {
-        //   title: 'router',
-        //   dataIndex: 'router',
-        //   fieldProps: { placeholder: '请输入router' },
-        // },
-
-        {
-          title: '属性设置',
-          dataIndex: 'desc',
-          valueType: 'jsonEditor',
-          fieldProps: { height: 600 },
-        },
-        { title: '子权限', dataIndex: 'perms', valueType: 'jsonEditor' },
-        'parent_id',
-      ]}
+      formColumns={MenuFormColumn}
       expandAll={false}
       level={4}
       openWidth={1600}

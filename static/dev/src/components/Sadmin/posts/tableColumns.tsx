@@ -301,7 +301,7 @@ export const getTableColumns = (props) => {
     return false;
   };
   const _columns = customerColumns
-    .map((c) => {
+    ?.map((c) => {
       if (typeof c == 'string') {
         const dr = defaulColumnsRender(c);
         return dr

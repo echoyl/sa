@@ -9,7 +9,7 @@ import message from '../../message';
 export type tableDesignerInstance = {
   type?: 'table' | 'form';
   pageMenu?: { [key: string]: any };
-  sort?: (id: number, cls: any[]) => void;
+  sort?: (id: number, cls: any[], type: string) => void;
   sortFormColumns?: (id: number, cls: any[]) => void;
   setColumns?: any;
   getColumnsRender?: any;
@@ -28,10 +28,15 @@ export function useTableDesigner(props: tableDesignerInstance) {
     form: {
       deleteUrl: 'dev/menu/deleteFormColumn',
       editUrl: 'dev/menu/editFormColumn',
+      sortUrl: 'dev/menu/sortFormColumns',
     },
     table: {
       editUrl: 'dev/menu/editTableColumn',
       deleteUrl: 'dev/menu/deleteTableColumn',
+      sortUrl: 'dev/menu/sortTableColumns',
+    },
+    toolbar: {
+      sortUrl: 'dev/menu/sortTableColumns',
     },
   };
   const editUrl = config[type].editUrl;
@@ -52,10 +57,11 @@ export function useTableDesigner(props: tableDesignerInstance) {
     editUrl,
     deleteUrl,
     reflush,
-    sort: (id: number, columns: any) => {
+    sort: (id: number, columns: any, type: 'table' | 'form' | 'toolbar') => {
       //后台请求
-      setColumns(getColumnsRender(columns));
-      request.post('dev/menu/sortTableColumns', {
+      //setColumns(getColumnsRender(columns));
+      const url = config[type].sortUrl;
+      request.post(url, {
         data: { columns, id },
         then: ({ data, code, msg }) => {
           if (!code) {
@@ -79,20 +85,6 @@ export function useTableDesigner(props: tableDesignerInstance) {
         },
       });
       return;
-    },
-    sortFormColumns: async (id: number, columns: any) => {
-      //后台请求
-      //setTbColumns(getTableColumnsRender(columns));
-      await request.post('dev/menu/sortFormColumns', {
-        data: { columns, id },
-        then: ({ data, code, msg }) => {
-          if (!code) {
-            data && reflush(data);
-          } else {
-            message?.error(msg);
-          }
-        },
-      });
     },
   };
 }
@@ -163,7 +155,12 @@ export const SchemaSettingsDropdown: React.FC<SchemaSettingsProps> = (props) => 
         `}
         menu={{ items }}
       >
-        <span onClick={(e) => e.preventDefault()}>
+        <span
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           {typeof title === 'string' ? <span>{title}</span> : title}
         </span>
         {/* {typeof title === 'string' ? <span>{title}</span> : title} */}

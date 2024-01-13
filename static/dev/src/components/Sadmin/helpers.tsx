@@ -54,6 +54,7 @@ import TinyEditor from './tinyEditor';
 import { SaTransferRender } from './transfer';
 import Uploader from './uploader';
 import AliyunVideo from './uploader/video';
+import MDEditor from './valueTypeMap/mdEditor';
 import { wxMenuRender } from './wxMenu';
 
 export function findParents(array, id, fieldNames = { id: 'id', children: 'child' }) {
@@ -147,6 +148,7 @@ export declare type saValueTypeMapType<T = any, ValueType = 'text'> = ProFormCol
   | 'saTransfer'
   | 'html'
   | 'colorPicker'
+  | 'mdEditor'
 >;
 export declare type saFormColumnsType = Array<saValueTypeMapType | saColumnsExtend | string>;
 export declare type saTableColumnsType = Array<
@@ -466,6 +468,12 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
         />
       );
     },
+  },
+  mdEditor: {
+    render: (_, props) => {
+      return _;
+    },
+    renderFormItem: MDEditor,
   },
 };
 

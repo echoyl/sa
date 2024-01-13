@@ -149,7 +149,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
       }
     } else {
       //加入if条件控制
-      if (v.fieldProps?.if) {
+      if (v.fieldProps?.if && !devEnable) {
         const show = tplComplie(v.fieldProps?.if, {
           record: detail,
           user,
@@ -219,7 +219,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         //console.log('cdependency', v);
       }
       //支持 dependencyOn 控制表单项的显示隐藏
-      if (v.dependencyOn) {
+      if (v.dependencyOn && !devEnable) {
         //console.log('v.dependencyOn', v.dependencyOn);
         //console.log('cdependency', v);
         //将数据设置为dependency
@@ -239,7 +239,14 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
             columns: (dependencyOnName: string[]) => {
               //检测条件是否符合 condition 全部符合才返回数据
               if (checkCondition(dependencyOnName, dependencyOn)) {
-                return [new_column];
+                return [new_column].map((nv) => {
+                  if (devEnable && deep <= 1) {
+                    if (!React.isValidElement(nv.title)) {
+                      nv.title = <FormColumnTitle {...nv} />;
+                    }
+                  }
+                  return nv;
+                });
               } else {
                 return [];
               }

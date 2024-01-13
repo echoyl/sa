@@ -75,6 +75,7 @@ export interface saTableProps {
   selectRowBtns?: Array<{ [key: string]: any }>;
   pageMenu?: { [key: string]: any }; //当前菜单信息
   devEnable?: boolean; //是否开启开发模式
+  setting?: { [key: string]: any }; //其它配置统一放这里
 }
 
 const components = {
@@ -126,7 +127,7 @@ export const SaContext = createContext<{
   searchFormRef?: any;
 }>({});
 
-const SaTable: React.FC<saTablePros> = (props) => {
+const SaTable: React.FC<saTableProps> = (props) => {
   const {
     url = '',
     level = 1,
@@ -154,6 +155,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
     },
     pageMenu,
     devEnable: pdevEnable = true,
+    setting = {},
   } = props;
   //console.log('tableprops', props);
   const [tbColumns, setTbColumns] = useState([]);
@@ -284,7 +286,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
   };
 
   const rowNode = useMemo(() => {
-    if (selectedRowKeys.length <= 0) return undefined;
+    if (selectedRowKeys.length <= 0 || setting.show_selectbar === false) return undefined;
     return (
       <ToolBarDom
         key="table_row_select_bar"
@@ -295,9 +297,10 @@ const SaTable: React.FC<saTablePros> = (props) => {
         remove={remove}
         switchState={switchState}
         deleteable={deleteable}
+        devEnable={devEnable}
       />
     );
-  }, [selectedRowKeys, enums]);
+  }, [selectedRowKeys, enums, setting, selectRowBtns]);
 
   const rowDom = useMemo(() => {
     if (selectRowRender) {
@@ -479,6 +482,8 @@ const SaTable: React.FC<saTablePros> = (props) => {
             tableMenuId,
             table_menu_key,
             selectedRowKeys,
+            devEnable,
+            pageMenu,
             ...props,
           })}
           rowSelection={
@@ -538,6 +543,7 @@ const SaTable: React.FC<saTablePros> = (props) => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
+            ...setting?.pagination,
           }}
           {...tableProps}
           rowKey="id"
@@ -550,7 +556,11 @@ const SaTable: React.FC<saTablePros> = (props) => {
           currentRow={currentRow}
         />
 
-        {pageType == 'page' && rowNode && <FooterToolbar>{rowNode}</FooterToolbar>}
+        {pageType == 'page' && rowNode && (
+          <DndContext>
+            <FooterToolbar>{rowNode}</FooterToolbar>
+          </DndContext>
+        )}
         {rowDom}
       </>
     </SaContext.Provider>

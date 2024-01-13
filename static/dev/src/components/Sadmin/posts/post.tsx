@@ -30,7 +30,6 @@ export interface saFormProps extends saTableProps {
   width?: number;
   afterPost?: (ret: any) => void;
   onTabChange?: (index: string) => void; //tab切换后的回调
-  setting?: { [key: string]: any }; //其它配置统一放这里
   resetForm?: boolean; //提交数据后 是否重置表单
   grid?: boolean; //form是否开启grid布局
 }
@@ -63,7 +62,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     dataId = 0, //用户判断是编辑还是新增，通过网络请求有一定的延迟 还是通过参数判断
     actionRef,
     pageType = 'page',
-    width = 688,
+    width = 800,
     formRef = useRef<ProFormInstance<any>>({} as any),
     onTabChange,
     setting,
