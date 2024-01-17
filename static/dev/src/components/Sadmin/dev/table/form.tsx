@@ -83,7 +83,7 @@ export const TableForm = (
     currentRow,
     handleModalVisible,
     name,
-    openWidth = 850,
+    openWidth = 860,
     formColumns,
     url,
     paramExtra,

@@ -1,22 +1,4 @@
 import {
-  AccountBookOutlined,
-  BarChartOutlined,
-  CrownOutlined,
-  DashboardOutlined,
-  GiftOutlined,
-  GlobalOutlined,
-  LockOutlined,
-  MenuOutlined,
-  NodeIndexOutlined,
-  QuestionCircleOutlined,
-  SettingOutlined,
-  ShopOutlined,
-  TableOutlined,
-  TagOutlined,
-  UserOutlined,
-  WechatOutlined,
-} from '@ant-design/icons';
-import {
   MenuDataItem,
   ProBreadcrumb,
   ProColumns,
@@ -35,7 +17,7 @@ import DebounceSelect from './DebounceSelect';
 import { ConfirmRender } from './action/confirm';
 import { ConfirmFormRender } from './action/confirmForm';
 import CustomerColumnRender from './action/customerColumn';
-import CustomerColumnRenderDev, { icons } from './action/customerColumn/dev';
+import CustomerColumnRenderDev from './action/customerColumn/dev';
 import ModalJson from './action/modalJson';
 import CarBrand from './carBrand';
 import { isObj, isStr } from './checkers';
@@ -54,6 +36,7 @@ import TinyEditor from './tinyEditor';
 import { SaTransferRender } from './transfer';
 import Uploader from './uploader';
 import AliyunVideo from './uploader/video';
+import IconSelect, { iconToElement } from './valueTypeMap/iconSelect.tsx';
 import MDEditor from './valueTypeMap/mdEditor';
 import { wxMenuRender } from './wxMenu';
 
@@ -84,29 +67,10 @@ export function findParents(array, id, fieldNames = { id: 'id', children: 'child
   return parentArray;
 }
 
-export const iconMap = {
-  dashboard: <DashboardOutlined />,
-  table: <TableOutlined />,
-  setting: <SettingOutlined />,
-  questionCircle: <QuestionCircleOutlined />,
-  wechat: <WechatOutlined />,
-  menu: <MenuOutlined />,
-  lock: <LockOutlined />,
-  shop: <ShopOutlined />,
-  user: <UserOutlined />,
-  accountBook: <AccountBookOutlined />,
-  global: <GlobalOutlined />,
-  tag: <TagOutlined />,
-  crown: <CrownOutlined />,
-  nodeIndex: <NodeIndexOutlined />,
-  barChart: <BarChartOutlined />,
-  gift: <GiftOutlined />,
-};
-
 export const loopMenuItem = (menus: MenuDataItem[]): MenuDataItem[] =>
   menus.map(({ icon, routes, ...item }) => ({
     ...item,
-    icon: icon && iconMap[icon as string],
+    icon: icon && iconToElement(icon),
     routes: routes && loopMenuItem(routes),
   }));
 declare type saColumnsExtend = {
@@ -149,6 +113,7 @@ export declare type saValueTypeMapType<T = any, ValueType = 'text'> = ProFormCol
   | 'html'
   | 'colorPicker'
   | 'mdEditor'
+  | 'iconSelect'
 >;
 export declare type saFormColumnsType = Array<saValueTypeMapType | saColumnsExtend | string>;
 export declare type saTableColumnsType = Array<
@@ -475,6 +440,12 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
     },
     renderFormItem: MDEditor,
   },
+  iconSelect: {
+    render: (_, props) => {
+      return _;
+    },
+    renderFormItem: IconSelect,
+  },
 };
 
 export const tplComplie = (exp: string | undefined, props: any) => {
@@ -631,11 +602,7 @@ export const getBread = (path: string) => {
 export const parseIcon = (icon) => {
   if (icon) {
     if (isStr(icon)) {
-      if (icons[icon]) {
-        return icons[icon];
-      } else {
-        return null;
-      }
+      return iconToElement(icon);
     } else {
       return icon;
     }

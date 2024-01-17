@@ -8,6 +8,7 @@ export const MDEditorReal = (props) => {
   return (
     <UiwMDEditor
       {...props}
+      overflow={false}
       value={value}
       onChange={(v) => {
         setValue(v);
@@ -19,6 +20,6 @@ export const MDEditorReal = (props) => {
 
 const MDEditor = (_, props) => {
   const { fieldProps } = props;
-  return <MDEditorReal {...fieldProps} />;
+  return <MDEditorReal {...fieldProps} style={{ margin: '0 1px' }} />;
 };
 export default MDEditor;

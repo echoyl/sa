@@ -1,9 +1,5 @@
-import { MDEditorReal } from '@/components/Sadmin/valueTypeMap/mdEditor';
+import IconSelect from '@/components/Sadmin/valueTypeMap/iconSelect.tsx';
 
 export default function App() {
-  return (
-    <div className="container">
-      <MDEditorReal height={600} value={'hah'} />
-    </div>
-  );
+  return <IconSelect />;
 }

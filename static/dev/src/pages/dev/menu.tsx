@@ -1,5 +1,6 @@
-import { iconMap, saFormColumnsType } from '@/components/Sadmin/helpers';
+import { saFormColumnsType } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
+import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect.tsx';
 import { CopyOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { Space } from 'antd';
@@ -7,15 +8,7 @@ import { useRef } from 'react';
 import MenuConfig, { MenuOther } from './menuConfig';
 import MenuTable from './menuTable';
 
-const iconmap2Options = (map) => {
-  const ret = [];
-  for (let i in map) {
-    ret.push({ label: map[i], value: i });
-  }
-  return ret;
-};
-
-export const MenuFormColumn:saFormColumnsType = [
+export const MenuFormColumn: saFormColumnsType = [
   {
     valueType: 'group',
     columns: [
@@ -34,12 +27,10 @@ export const MenuFormColumn:saFormColumnsType = [
       {
         title: '图标',
         dataIndex: 'icon',
-        valueType: 'select',
-        width: 'sm',
-        tooltip: '需要先将要使用到的图标配置到iconmap中才能选择',
+        valueType: 'iconSelect',
         fieldProps: {
+          width: 200,
           placeholder: '请选择图标',
-          options: iconmap2Options(iconMap),
         },
       },
       {
@@ -271,7 +262,6 @@ export const MenuFormColumn:saFormColumnsType = [
 ];
 
 export default () => {
-  
   const actionRef = useRef<ActionType>();
 
   const tableColumns = (enums) => [
@@ -281,7 +271,7 @@ export default () => {
       key: 'title2',
       render: (dom, record) => (
         <Space>
-          {iconMap[record.icon]}
+          {iconToElement(record.icon)}
           {record.title}
         </Space>
       ),

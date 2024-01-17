@@ -1,22 +1,3 @@
-import {
-  CarOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-  CopyOutlined,
-  DeleteOutlined,
-  DownloadOutlined,
-  DownOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  ExceptionOutlined,
-  FormOutlined,
-  PayCircleOutlined,
-  PlusCircleOutlined,
-  PrinterOutlined,
-  RollbackOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
 import { ProCard, ProForm } from '@ant-design/pro-components';
 import { Button, Modal, Typography } from 'antd';
 import { ButtonType } from 'antd/es/button';
@@ -38,25 +19,6 @@ const defaultBtn = {
   //type: 'default',
 };
 
-export const icons: { [key: string]: any } = {
-  add: <PlusCircleOutlined />,
-  edit: <EditOutlined />,
-  download: <DownloadOutlined />,
-  check: <CheckCircleOutlined />,
-  close: <CloseCircleOutlined />,
-  clock: <ClockCircleOutlined />,
-  down: <DownOutlined />,
-  printer: <PrinterOutlined />,
-  car: <CarOutlined />,
-  environment: <EnvironmentOutlined />,
-  search: <SearchOutlined />,
-  form: <FormOutlined />,
-  copy: <CopyOutlined />,
-  exception: <ExceptionOutlined />,
-  delete: <DeleteOutlined />,
-  rollback: <RollbackOutlined />,
-  paycircle: <PayCircleOutlined />,
-};
 const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   const { ok, value, relationModel, allMenus = [], modelColumns = [] } = props;
   //console.log('relationModel', relationModel, allMenus);
@@ -311,11 +273,9 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                         {
                           dataIndex: 'icon',
                           title: 'icon',
-                          valueType: 'select',
+                          valueType: 'iconSelect',
                           fieldProps: {
-                            options: Object.keys(icons).map((k) => {
-                              return { label: icons[k], value: k };
-                            }),
+                            width: 180,
                           },
                           width: 'xs',
                         },
