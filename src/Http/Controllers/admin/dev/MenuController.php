@@ -301,7 +301,9 @@ class MenuController extends CrudController
 
         
         $need_update_config = false;
-        
+        $need_update_perms = false;
+        $perms = $item['perms']?json_decode($item['perms'],true):[];
+
         foreach($config as $kv=>$val)
         {
             $key = Arr::get($val,'key');
@@ -329,6 +331,12 @@ class MenuController extends CrudController
             if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
             {
                 $tool_bar_button[] = $columns;
+                //自动将导入导出加入到权限设置中
+                if(in_array($columns['valueType'],['import','export']))
+                {
+                    $perms[$columns['valueType']] = $columns['valueType'] == 'import'?'导入':'导出';
+                    $need_update_perms = true;
+                }
             }elseif(isset($columns['valueType']) && in_array($columns['valueType'],['selectbar']))
             {
                 $select_bar_button[] = $columns;
@@ -370,9 +378,19 @@ class MenuController extends CrudController
             }
 
         }
+        $pre_update = [];
         if($need_update_config)
         {
-            $this->model->where(['id'=>$item['id']])->update(['table_config'=>json_encode($config)]);
+            $pre_update['table_config'] = json_encode($config);
+            
+        }
+        if($need_update_perms)
+        {
+            $pre_update['perms'] = json_encode($perms);
+        }
+        if(!empty($pre_update))
+        {
+            $this->model->where(['id'=>$item['id']])->update($pre_update);
         }
         
         $tableColumns = $json;
