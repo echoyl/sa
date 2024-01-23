@@ -1,10 +1,11 @@
-import { ProCard, ProForm } from '@ant-design/pro-components';
+import { ProCard, ProForm, ProFormInstance } from '@ant-design/pro-components';
 import { Button, Modal, Typography } from 'antd';
 import { ButtonType } from 'antd/es/button';
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import CustomerColumnRender from '.';
 import { inArray } from '../../checkers';
 import { dependencyOn } from '../../dev/vars/dependencyOn';
+import rules from '../../dev/vars/rules';
 import { parseIcon, saFormColumnsType } from '../../helpers';
 import { GetFormFields } from '../../posts/formDom';
 interface CustomerColumnProps {
@@ -21,7 +22,7 @@ const defaultBtn = {
 
 const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   const { ok, value, relationModel, allMenus = [], modelColumns = [] } = props;
-  //console.log('relationModel', relationModel, allMenus);
+  //console.log('relationModel', relationModel, allMenus, modelColumns);
   const dependencyOnVars = dependencyOn(modelColumns);
   const fieldPorpsColumn = {
     dataIndex: 'fieldProps',
@@ -98,6 +99,20 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             msg: '依赖项配置，只控制表单项的显隐',
             formColumns: dependencyOnVars,
             saFormProps: { grid: false },
+          },
+        },
+        {
+          title: 'form校验',
+          dataIndex: 'rules',
+          valueType: 'confirmForm',
+          fieldProps: {
+            btn: {
+              title: '校验规则',
+              size: 'middle',
+            },
+            msg: 'form项的校验规则',
+            formColumns: rules,
+            saFormProps: { devEnable: false },
           },
         },
       ],
@@ -636,16 +651,23 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
       },
     ]
   >(value?.items ? value.items : []);
-  const [record, setRecord] = useState<Record<string, any>>(value?.record ? value.record : {});
+  const [record, setRecord] = useState<Record<string, any>>(
+    value?.record ? value.record : { id: 1 },
+  );
+  const formRef = useRef<ProFormInstance<any>>({} as any);
+  useEffect(() => {
+    formRef?.current?.setFieldsValue(value);
+  }, [value]);
 
   return (
     <>
-      <ProCard title="效果展示">
+      <ProCard title="效果展示,只做展示作用">
         <CustomerColumnRender items={items} record={record} />
       </ProCard>
       <ProCard title="配置">
         <ProForm
           submitter={false}
+          formRef={formRef}
           initialValues={value}
           onValuesChange={(v, allValues) => {
             //console.log(v);

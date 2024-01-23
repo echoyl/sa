@@ -124,17 +124,17 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
           ret = inArray(rvalue, cvalue.split(',')) >= 0;
         }
       }
-      if (condition_type == 'all') {
-        //全部满足
-        if (!ret) {
-          //一项不符合的话 直接返回错误
-          return false;
-        }
-      } else {
+      if (condition_type == 'one') {
         //任一满足
         if (ret) {
           //一项不符合的话 直接返回错误
           return true;
+        }
+      } else {
+        //全部满足
+        if (!ret) {
+          //一项不符合的话 直接返回错误
+          return false;
         }
       }
     }
@@ -219,7 +219,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         //console.log('cdependency', v);
       }
       //支持 dependencyOn 控制表单项的显示隐藏
-      if (v.dependencyOn && !devEnable) {
+      if (v.dependencyOn) {
         //console.log('v.dependencyOn', v.dependencyOn);
         //console.log('cdependency', v);
         //将数据设置为dependency

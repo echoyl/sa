@@ -45,8 +45,8 @@ export function useTableDesigner(props: tableDesignerInstance) {
     //重新设置列表列
     setColumns?.(getColumnsRender?.(data.columns));
     //更新schema
-    pageMenu.schema = data.schema;
-    pageMenu.data = { ...pageMenu.data, ...data.data };
+    //pageMenu.schema = data.schema;
+    //pageMenu.data = { ...pageMenu.data, ...data.data };
     setInitialState((s) => ({
       ...s,
       currentUser: data.currentUser,

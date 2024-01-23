@@ -185,7 +185,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     }
     //console.log('get,data', tabs);
     setFormColumns(getFormColumnsRender(tabs));
-  }, [detail, formColumns, tabs.length, devEnable]);
+  }, [detail, formColumns, tabs, devEnable]);
   //const formRef = useRef<ProFormInstance>();
   useEffect(() => {
     if (setting?.steps_form) {

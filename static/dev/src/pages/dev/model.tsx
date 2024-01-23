@@ -130,6 +130,8 @@ export default () => {
     { label: 'date-日期', value: 'date' },
     { label: 'text-文本', value: 'text' },
     { label: 'bigint-长整数', value: 'bigint' },
+    { label: 'longtext-长Text', value: 'longtext' },
+    
   ];
   const modelType = ['category', 'normal', 'auth'];
   const searchColumnType = ['=', 'like', 'whereBetween', 'whereIn', 'has', 'doesntHave'];

@@ -11,7 +11,7 @@ import { useModel } from '@umijs/max';
 import { Space } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import classNames from 'classnames';
-import React, { FC, useContext } from 'react';
+import React, { FC, useContext, useEffect, useState } from 'react';
 import { SaDevContext } from '..';
 import Confirm from '../../action/confirm';
 import ConfirmForm from '../../action/confirmForm';
@@ -21,6 +21,7 @@ import { DragHandler, SortableItem } from '../dnd-context/SortableItem';
 import {
   devBaseFormFormColumns,
   devBaseTableFormColumns,
+  getModelColumns,
   getModelRelations,
 } from './baseFormColumns';
 import { SchemaSettingsContext, SchemaSettingsDropdown } from './designer';
@@ -111,16 +112,28 @@ const BaseForm = (props) => {
   } = useContext(SaContext);
   const { setting } = useContext(SaDevContext);
   const { setVisible } = useContext(SchemaSettingsContext);
-  const columns =
-    type == 'table'
-      ? devBaseTableFormColumns({
-          model_id: pageMenu?.model_id,
-          dev: setting?.dev,
-        })
-      : devBaseFormFormColumns({
-          model_id: pageMenu?.model_id,
-          dev: setting?.dev,
-        });
+
+  const [value, setValue] = useState({});
+  const [columns, setColumns] = useState([]);
+  useEffect(() => {
+    setValue(getValue(uid, pageMenu, type));
+    const columns =
+      type == 'table'
+        ? devBaseTableFormColumns({
+            model_id: pageMenu?.model_id,
+            dev: setting?.dev,
+          })
+        : devBaseFormFormColumns({
+            model_id: pageMenu?.model_id,
+            dev: setting?.dev,
+          });
+
+    setColumns(columns);
+    //console.log('base value is ', value, uid);
+  }, [pageMenu]);
+  //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
+  //const value = getValue(uid, pageMenu, type);
+
   const trigger = React.cloneElement(title, {
     key: 'trigger',
     ...title.props,
@@ -129,10 +142,6 @@ const BaseForm = (props) => {
       e.stopPropagation();
     },
   });
-
-  //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
-  const value = getValue(uid, pageMenu, type);
-  //console.log('value is ', value, uid);
   return (
     <div
       onClick={(e) => {
@@ -161,11 +170,24 @@ const MoreForm = (props) => {
   } = useContext(SaContext);
   const { setVisible } = useContext(SchemaSettingsContext);
   const { setting } = useContext(SaDevContext);
-  const relations = getModelRelations(pageMenu?.model_id, setting?.dev);
+
+  const [relations, setRelations] = useState<any[]>([]);
+  const [modelColumns, setModelColumns] = useState<any[]>([]);
+  const [value, setValue] = useState({});
+  useEffect(() => {
+    setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
+    setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
+  }, []);
+
+  useEffect(() => {
+    setValue(getValue(uid, pageMenu, type));
+    //console.log('more value is ', value, uid);
+  }, [pageMenu]);
+
   const { allMenus = [] } = setting?.dev;
   //获取值
   //const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
-  const value = getValue(uid, pageMenu, type);
+
   const onChange = async (values) => {
     value.props = values;
     const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
@@ -181,13 +203,6 @@ const MoreForm = (props) => {
       e.stopPropagation();
     },
   });
-  const fieldProps = {
-    value: value?.props,
-    onChange,
-    btnText: trigger,
-    relationModel: relations,
-    allMenus,
-  };
   return (
     <div
       onKeyDown={(e) => {
@@ -197,7 +212,16 @@ const MoreForm = (props) => {
         e.stopPropagation();
       }}
     >
-      <CustomerColumnRenderDevReal fieldProps={fieldProps} />
+      <CustomerColumnRenderDevReal
+        fieldProps={{
+          value: value?.props,
+          onChange,
+          btnText: trigger,
+          relationModel: relations,
+          allMenus,
+          modelColumns,
+        }}
+      />
     </div>
   );
 };
@@ -301,7 +325,7 @@ const DevTableColumnTitle = (props) => {
   //表单的话 加一个最小宽度
   const styles = {
     form: {
-      minWidth: 150,
+      minWidth: 80,
     },
     table: {},
     toolbar: { display: 'inline-block' },

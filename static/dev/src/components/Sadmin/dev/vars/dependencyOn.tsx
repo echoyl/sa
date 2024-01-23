@@ -34,10 +34,13 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
             {
               title: '值',
               dataIndex: 'value',
+              tooltip: '值支持,拼接数据，会按inArray检测，无拼接的按 = 检测',
             },
             {
               title: '表达式',
               dataIndex: 'exp',
+              tooltip:
+                '优先级高于值的设置，示例 {{record.id == 1 && user.id == 2}} record:当前记录信息 user当前登录用户信息',
             },
           ],
         },
@@ -87,7 +90,7 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
       valueType: 'dependency',
       name: ['type'],
       columns: ({ type }) => {
-        return type == 'show' ? show : render;
+        return !type || type == 'show' ? show : render;
       },
     },
   ];

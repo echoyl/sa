@@ -36,6 +36,7 @@ const Page: React.FC = () => {
   //log('data', localtion, param, breadcrumb);
   let pathname = localtion.pathname;
   const match = pathname.match(/\/(\d+)$/);
+  //const { initialState } = useModel('@@initialState');
 
   //检测路由是否包含数字
   if (match) {
@@ -50,6 +51,7 @@ const Page: React.FC = () => {
     return <NoFoundPage />;
   }
   useEffect(() => {
+    //console.log('404 menu change', menu);
     if (menu.data?.redirect) {
       history.push(menu.data?.redirect);
     }
