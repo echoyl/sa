@@ -295,7 +295,38 @@ class FormItem
             $this->data['dependencyOn'] = $props['dependencyOn'];
         }
 
+        $this->rules();
+
         return;
+    }
+
+    /**
+     * 验证规则检测
+     *
+     * @return void
+     */
+    public function rules()
+    {
+        $props = $this->props;
+        if(!isset($props['rules']) || !isset($props['rules']['data']) || !$props['rules']['data'])
+        {
+            return;
+        }
+        if(!isset($this->data['formItemProps']))
+        {
+            $this->data['formItemProps'] = [];
+        }
+
+        if(!isset($this->data['formItemProps']['rules']))
+        {
+            $this->data['formItemProps']['rules'] = $props['rules']['data'];
+        }else
+        {
+            $this->data['formItemProps']['rules'] = array_merge($this->data['formItemProps']['rules'],$props['rules']['data']);
+        }
+
+        return;
+
     }
 
     /**

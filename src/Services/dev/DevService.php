@@ -106,6 +106,9 @@ class DevService
             case 'text':
                 $field_sql = "`{$name}`  text NULL COMMENT '{$comment}'";
             break;
+            case 'longtext':
+                $field_sql = "`{$name}`  longtext NULL COMMENT '{$comment}'";
+            break;
             case 'decimal':
                 $field_sql = "`{$name}`  decimal(10,2) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
             break;

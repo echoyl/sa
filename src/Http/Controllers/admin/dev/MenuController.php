@@ -51,7 +51,7 @@ class MenuController extends CrudController
             ['name'=>'setting','type'=>'json','default'=>''],
         ];
 
-        $this->can_be_null_columns = ['title','admin_model_id'];
+        $this->can_be_null_columns = ['title','admin_model_id','icon'];
 
         $this->with_column = ['adminModel.relations.foreignModel.menu'];
     }
@@ -962,6 +962,8 @@ class MenuController extends CrudController
 
         $base = request('base');
 
+        $form_type = request('type','base');
+
         unset($base['id']);
         if($afterUid)
         {
@@ -1015,10 +1017,13 @@ class MenuController extends CrudController
                 }elseif($count == 3)
                 {
                     $old_val = $tabs[$active[0]]['config'][$active[1]]['columns'][$active[2]];
-                    if(isset($base['props']) && isset($old_val['props']))
+                    if($form_type == 'base')
                     {
-                        //基本信息中修改了 props属性
-                        $base['props'] = array_merge($old_val['props'],$base['props']);
+                        //基础修改
+                        if(isset($old_val['props']))
+                        {
+                            $base['props'] = isset($base['props'])?array_merge($old_val['props'],$base['props']):$old_val['props'];
+                        }
                     }
                     $tabs[$active[0]]['config'][$active[1]]['columns'][$active[2]] = $base;
                 }

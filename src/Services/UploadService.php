@@ -19,7 +19,16 @@ class UploadService
 
     public function store(Request $request, $formname = 'file', $type = 0, $insert_db = false,$toSize = false)
     {
+        if(!$request->hasFile($formname))
+        {
+            return ['code' => 1, 'msg' => '无上传数据'];
+        }
         $file = $request->file($formname);
+
+        if(!$file)
+        {
+            return ['code' => 1, 'msg' => '无上传数据'];
+        }
 
         $ext = $file->extension();
 
