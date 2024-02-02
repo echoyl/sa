@@ -10,10 +10,12 @@ import {
 //import { PageContainer } from '@ant-design/pro-layout';
 import { history, useModel, useParams, useSearchParams } from '@umijs/max';
 import { App, Col, Row, Space, Tabs } from 'antd';
+import { isUndefined } from 'lodash';
 import { FC, useEffect, useRef, useState } from 'react';
 import { saConfig } from '../config';
 import { DndContext } from '../dev/dnd-context';
 import { useTableDesigner } from '../dev/table/designer';
+import { FormAddTab, TabColumnTitle } from '../dev/table/title';
 import { SaBreadcrumbRender } from '../helpers';
 
 import { beforeGet, beforePost, getFormFieldColumns, GetFormFields } from './formDom';
@@ -39,14 +41,14 @@ export const SaForm: FC<saFormProps> = (props) => {
     url = '',
     postUrl,
     formColumns,
-    categoryType = 'select',
     labels = {},
-    tabs = [
-      {
-        tab: { title: '基础信息' },
-        formColumns: props.formColumns ? props.formColumns : [],
-      },
-    ],
+    // tabs = [
+    //   {
+    //     tab: { title: '基础信息' },
+    //     formColumns: props.formColumns ? cloneDeep(props.formColumns) : [],
+    //   },
+    // ],
+    tabs,
     msgcls = ({ code }) => {
       if (!code) {
         history.back();
@@ -71,7 +73,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     grid = true,
     devEnable: pdevEnable = true,
   } = props;
-
+  //console.log('init props', formColumns, tabs);
   //const url = 'posts/posts';
   //读取后台数据
   const [detail, setDetail] = useState<{ [key: string]: any } | boolean>(
@@ -163,15 +165,13 @@ export const SaForm: FC<saFormProps> = (props) => {
     return data;
   };
   const getFormColumnsRender = (tabs) => {
-    return [...tabs].map((tab) => {
+    return tabs?.map((tab) => {
       return getFormFieldColumns({
         detail,
         labels,
         initRequest: true,
-        categoryType,
         columns: tab.formColumns,
         user: initialState?.currentUser,
-        formRef,
         devEnable,
       });
     });
@@ -183,8 +183,23 @@ export const SaForm: FC<saFormProps> = (props) => {
     if (!detail && url) {
       return;
     }
-    //console.log('get,data', tabs);
-    setFormColumns(getFormColumnsRender(tabs));
+    //tabs不能设置默认值 不然这里会一直执行
+    //console.log('form has changed here', tabs);
+
+    if (isUndefined(tabs)) {
+      const defaultTabs = formColumns
+        ? [
+            {
+              tab: { title: '基础信息' },
+              formColumns: formColumns ? formColumns : [],
+            },
+          ]
+        : [];
+      //console.log('form has changed here', defaultTabs, detail);
+      setFormColumns(getFormColumnsRender(defaultTabs));
+    } else {
+      setFormColumns(getFormColumnsRender(tabs));
+    }
   }, [detail, formColumns, tabs, devEnable]);
   //const formRef = useRef<ProFormInstance>();
   useEffect(() => {
@@ -218,6 +233,7 @@ export const SaForm: FC<saFormProps> = (props) => {
       }}
     >
       <DndContext>
+        {devEnable ? <FormAddTab /> : null}
         {setting?.steps_form ? (
           <StepsForm
             current={stepFormCurrent}
@@ -283,6 +299,7 @@ export const SaForm: FC<saFormProps> = (props) => {
           </StepsForm>
         ) : (
           <ProForm
+            key="ProForm"
             form={props.form}
             formRef={formRef}
             style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
@@ -325,15 +342,21 @@ export const SaForm: FC<saFormProps> = (props) => {
             {showTabs ? (
               <Tabs
                 style={{ width: '100%' }}
-                defaultActiveKey="0"
+                //defaultActiveKey="0"
                 // centered={true}
                 onChange={(activeKey) => {
                   onTabChange?.(activeKey);
                 }}
                 items={_formColumns.map((cl, index) => {
+                  const thistab = tabs ? tabs[index] : {};
+                  const label = tabs
+                    ? tabs[index]?.title
+                      ? tabs[index]?.title
+                      : tabs[index]?.tab?.title
+                    : '基础信息';
                   return {
-                    label: tabs[index]?.title ? tabs[index]?.title : tabs[index]?.tab?.title,
-                    key: index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
+                    label: <TabColumnTitle uid={thistab?.uid} title={label} data={thistab} />,
+                    key: thistab?.uid ? thistab?.uid : index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
                     children: <GetFormFields columns={cl} />,
                     forceRender: true,
                   };

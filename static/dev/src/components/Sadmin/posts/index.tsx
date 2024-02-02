@@ -139,24 +139,6 @@ const PostsList: React.FC<saTablePros> = (props) => {
                 setExpandedKeys(category_parent_keys);
               }
             }}
-            tableProps={
-              props.tableProps
-              // ? props.tableProps
-              // : {
-              //     tableRender: (_, dom) => (
-              //       <>
-              //         <div
-              //           style={{
-              //             height: 16,
-              //             width: '100%',
-              //             backgroundColor: 'transparent',
-              //           }}
-              //         ></div>
-              //         {dom}
-              //       </>
-              //     ),
-              //   }
-            }
           />
         </Col>
       </Row>

@@ -1,7 +1,7 @@
 import { devDefaultFields, devTabelFields } from '@/pages/dev/model';
 import { TreeNodeProps } from 'antd';
 import { saFormColumnsType, saTableColumnsType } from '../../helpers';
-const columnType = [
+export const columnType = [
   { label: '日期 - date', value: 'date' },
   { label: '日期区间 - dateRange', value: 'dateRange' },
   { label: '时间 - dateTime', value: 'dateTime' },

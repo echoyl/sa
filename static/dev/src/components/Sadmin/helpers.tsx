@@ -115,6 +115,10 @@ export declare type saValueTypeMapType<T = any, ValueType = 'text'> = ProFormCol
   | 'mdEditor'
   | 'iconSelect'
 >;
+export declare type saFormTabColumnsType = Array<{
+  title?: string;
+  formColumns?: saFormColumnsType;
+}>;
 export declare type saFormColumnsType = Array<saValueTypeMapType | saColumnsExtend | string>;
 export declare type saTableColumnsType = Array<
   ProColumns | saValueTypeMapType | saColumnsExtend | string
@@ -558,15 +562,17 @@ export const SaBreadcrumbRender = (props) => {
   const { route } = useRouteData();
   const { items: bitem } = value?.breadcrumb;
   let items = bitem ? bitem : [];
+  const bread = getBread(path);
   if (!bitem) {
     //没有的话 读取
-    const bread = getBread(path);
     if (bread?.data?.names) {
       items = bread?.data?.names;
     } else {
       //还是没有的话读取匹配的路由的name信息
       if (route.name) {
         items = [{ title: route.name }];
+      } else {
+        items = [{ title: bread?.name }];
       }
     }
   }

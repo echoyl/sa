@@ -1,6 +1,6 @@
 // @ts-ignore
 /* eslint-disable */
-import { message } from '@/components/Sadmin/message';
+import { message, notification } from '@/components/Sadmin/message';
 import { history, request as orequest } from '@umijs/max';
 import { extend } from 'umi-request';
 const codeMessage = {
@@ -32,15 +32,16 @@ function errorHandler(error) {
   if (error.response) {
     const { status, statusText } = error.response;
     const description = codeMessage[status] || statusText;
-    message?.error?.({
-      content: '服务器错误:' + description,
+    notification?.error?.({
+      message: '提示',
+      description: '服务器错误:' + description,
     });
     // 请求初始化时出错或者没有响应返回的异常
     throw error;
   } else {
     const description = error.message || error.errDesc || '系统异常';
     if (description != 'error') {
-      message?.error?.(description);
+      notification?.error?.({ description, message: '提示' });
     }
     throw error;
   }
@@ -131,31 +132,52 @@ request.interceptors.response.use(async (response, options) => {
     } else {
       //默认的操作设置
       if (code) {
-        message.error(msg);
+        notification.error({ description: msg, message: '提示' });
         options.msgcls && options.msgcls({ code, msg, data, res });
       } else {
         if (msg) {
           if (options.method == 'POST' || options.method == 'DELETE') {
+            // notification.info({
+            //   message: '提示',
+            //   description: msg,
+            //   duration: 3,
+            // });
             message.success({
               content: msg,
-              duration: 1,
-              key: 'request_message_key',
-              onClose: async () => {
-                //如果有退出命令
-                if (data?.logout) {
-                  message.loading({
-                    content: '退出登录中...',
-                    duration: 0,
-                    key: 'request_message_key',
-                  });
-                  await loginOut(() => {
-                    message.destroy('request_message_key');
-                  });
-                } else {
-                  options.msgcls && options.msgcls({ code, msg, data, res });
-                }
-              },
+              duration: 3,
             });
+            if (data?.logout) {
+              message.loading({
+                content: '退出登录中...',
+                duration: 0,
+                key: 'request_message_key',
+              });
+              await loginOut(() => {
+                message.destroy('request_message_key');
+              });
+            } else {
+              options.msgcls && options.msgcls({ code, msg, data, res });
+            }
+            // message.success({
+            //   content: msg,
+            //   duration: 1,
+            //   key: 'request_message_key',
+            //   onClose: async () => {
+            //     //如果有退出命令
+            //     if (data?.logout) {
+            //       message.loading({
+            //         content: '退出登录中...',
+            //         duration: 0,
+            //         key: 'request_message_key',
+            //       });
+            //       await loginOut(() => {
+            //         message.destroy('request_message_key');
+            //       });
+            //     } else {
+            //       options.msgcls && options.msgcls({ code, msg, data, res });
+            //     }
+            //   },
+            // });
           } else {
             options.msgcls && options.msgcls({ code, msg, data, res });
           }

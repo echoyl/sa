@@ -40,7 +40,6 @@ export const beforeGet = (data: Record<string, any>) => {};
 interface formFieldsProps {
   formColumnsIndex?: string[];
   labels?: Record<string, any>;
-  categoryType?: 'select' | 'cascader';
   detail?: Record<string, any>;
   columns?: ReactNode | ((value: any) => void);
   enums?: Record<string, any>;
@@ -81,7 +80,6 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
     enums = {},
     initRequest = false,
     user,
-    formRef,
     devEnable = true,
   } = props;
   if (!initRequest) return [];
@@ -280,6 +278,17 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
           console.log('showTime is', v);
         }
       }
+      if (v.valueType == 'dateRange' || v.valueType == 'date') {
+        if (v.fieldProps?.defaultValue) {
+          v.fieldProps.defaultValue = v.fieldProps?.defaultValue?.map((val) => {
+            if (isArr(val)) {
+              return dayjs(val[0], val[1]);
+            } else {
+              return dayjs(val);
+            }
+          });
+        }
+      }
 
       if (v.columns && Array.isArray(v.columns)) {
         v.columns = v.columns
@@ -303,7 +312,6 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
 
     return false;
   };
-
   const _columns = customerColumns
     .map((c) => parseColumns(c))
     .filter((c) => {

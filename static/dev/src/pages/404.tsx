@@ -1,3 +1,4 @@
+import SaPanel from '@/components/Sadmin/dev/panel';
 import { getBread } from '@/components/Sadmin/helpers';
 import PagePanel from '@/components/Sadmin/pagePanel';
 import PostsList from '@/components/Sadmin/posts';
@@ -122,7 +123,9 @@ const PageTypes = ({ menu, match, pathname }) => {
           />
         );
       case 'panel':
-        return <PagePanel pageMenu={menu} {...data} />;
+        return <PagePanel pageMenu={menu} {...data} path={pathname} />;
+      case 'panel2':
+        return <SaPanel pageMenu={menu} {...data} path={pathname} />;
       default:
         return null;
     }

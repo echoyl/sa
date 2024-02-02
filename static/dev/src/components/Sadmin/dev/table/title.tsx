@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { css } from '@emotion/css';
 import { useModel } from '@umijs/max';
-import { Space } from 'antd';
+import { Button, Space } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import classNames from 'classnames';
 import React, { FC, useContext, useEffect, useState } from 'react';
@@ -106,19 +106,52 @@ const getValue = (uid, pageMenu, type) => {
 };
 
 const BaseForm = (props) => {
-  const { title, uid = '', afterUid = '' } = props;
+  const { title, uid = '', ctype, data, extpost, actionType = 'edit' } = props;
   const {
     tableDesigner: { pageMenu, reflush, editUrl = '', type = 'table' },
   } = useContext(SaContext);
   const { setting } = useContext(SaDevContext);
-  const { setVisible } = useContext(SchemaSettingsContext);
+  const { setVisible } = uid ? useContext(SchemaSettingsContext) : { setVisible: undefined };
 
-  const [value, setValue] = useState({});
+  const [value, setValue] = useState(data);
   const [columns, setColumns] = useState([]);
   useEffect(() => {
-    setValue(getValue(uid, pageMenu, type));
+    //setValue(getValue(uid, pageMenu, ctype ? ctype : type));
+    //setValue(data);
+    if (actionType != 'add') {
+      if (ctype == 'tab') {
+        setValue(data);
+      } else {
+        //console.log('get value', uid, ctype, getValue(uid, pageMenu, ctype ? ctype : type));
+        setValue(getValue(uid, pageMenu, ctype ? ctype : type));
+      }
+    }
+
     const columns =
-      type == 'table'
+      ctype == 'tab'
+        ? [
+            {
+              title: 'title',
+              dataIndex: ['tab', 'title'],
+              colProps: { span: 12 },
+              formItemProps: {
+                rules: [
+                  {
+                    required: true,
+                  },
+                ],
+              },
+            },
+          ]
+        : ctype == 'formGroup'
+        ? [
+            {
+              title: 'title',
+              dataIndex: ['props', 'title'],
+              colProps: { span: 12 },
+            },
+          ]
+        : type == 'table'
         ? devBaseTableFormColumns({
             model_id: pageMenu?.model_id,
             dev: setting?.dev,
@@ -130,7 +163,7 @@ const BaseForm = (props) => {
 
     setColumns(columns);
     //console.log('base value is ', value, uid);
-  }, [pageMenu]);
+  }, [pageMenu, data]);
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
   //const value = getValue(uid, pageMenu, type);
 
@@ -138,7 +171,7 @@ const BaseForm = (props) => {
     key: 'trigger',
     ...title.props,
     onClick: async (e: any) => {
-      setVisible(false);
+      setVisible?.(false);
       e.stopPropagation();
     },
   });
@@ -153,7 +186,7 @@ const BaseForm = (props) => {
         formColumns={columns}
         value={value}
         postUrl={editUrl}
-        data={{ id: pageMenu?.id, uid, afterUid }}
+        data={{ id: pageMenu?.id, uid, ...extpost }}
         callback={({ data }) => {
           reflush(data);
         }}
@@ -191,8 +224,10 @@ const MoreForm = (props) => {
   const onChange = async (values) => {
     value.props = values;
     const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
-    //return;
+    //console.log('onchange',values,value)
+
     await edit(data);
+    return;
   };
   //console.log('value', value, uid, JSON.parse(pageMenu?.schema?.table_config));
   const trigger = React.cloneElement(title, {
@@ -209,7 +244,7 @@ const MoreForm = (props) => {
         e.stopPropagation();
       }}
       onClick={(e) => {
-        e.stopPropagation();
+        //e.stopPropagation();
       }}
     >
       <CustomerColumnRenderDevReal
@@ -226,8 +261,8 @@ const MoreForm = (props) => {
   );
 };
 
-const DeleteColumn = (props) => {
-  const { title, uid } = props;
+export const DeleteColumn = (props) => {
+  const { title, uid, extpost } = props;
   const {
     tableDesigner: { pageMenu, reflush, deleteUrl = '' },
   } = useContext(SaContext);
@@ -245,8 +280,8 @@ const DeleteColumn = (props) => {
     <Confirm
       trigger={trigger}
       url={deleteUrl}
-      data={{ base: { id: pageMenu?.id, uid } }}
-      msg="确定要删除该列吗"
+      data={{ base: { id: pageMenu?.id, uid, ...extpost } }}
+      msg="确定要删除吗"
       callback={({ data }) => {
         reflush(data);
         return true;
@@ -255,73 +290,138 @@ const DeleteColumn = (props) => {
   );
 };
 
-const DevTableColumnTitle = (props) => {
-  const { title, uid, devData } = props;
+export const DevTableColumnTitle = (props) => {
+  const { title, uid, devData, data } = props;
   //console.log('title is title', title);
   //const designable = true;
+  const { type } = devData;
+  const baseform: ItemType = {
+    label: (
+      <BaseForm
+        title={
+          <Space>
+            <EditOutlined />
+            <span>基本信息</span>
+          </Space>
+        }
+        uid={uid}
+        ctype={type}
+        data={data}
+      />
+    ),
+    key: 'base',
+  };
+  const baseAddTab: ItemType = {
+    label: (
+      <BaseForm
+        title={
+          <Space>
+            <EditOutlined />
+            <span>向后插入Tab</span>
+          </Space>
+        }
+        uid={uid}
+        ctype={type}
+        extpost={{ actionType: 'addTab' }}
+      />
+    ),
+    key: 'addtab',
+  };
+  const moreform: ItemType = {
+    label: (
+      <MoreForm
+        title={
+          <Space>
+            <SettingOutlined />
+            <span>更多设置</span>
+          </Space>
+        }
+        uid={uid}
+      />
+    ),
+    key: 'more',
+  };
+  const addCol: ItemType = {
+    label: (
+      <BaseForm
+        title={
+          <Space>
+            <InsertRowRightOutlined />
+            <span>插入列</span>
+          </Space>
+        }
+        uid={uid}
+        extpost={{ actionType: 'add' }}
+        actionType="add"
+      />
+    ),
+    key: 'addCol',
+  };
+  const addGroup: ItemType = {
+    label: (
+      <BaseForm
+        title={
+          <Space>
+            <InsertRowRightOutlined />
+            <span>插入组</span>
+          </Space>
+        }
+        uid={uid}
+        ctype="formGroup"
+        extpost={{ actionType: 'addGroup' }}
+      />
+    ),
+    key: 'addGroup',
+  };
+  const deleteitem: ItemType = {
+    label: (
+      <DeleteColumn
+        title={
+          <Space>
+            <DeleteColumnOutlined />
+            <span>删除</span>
+          </Space>
+        }
+        uid={uid}
+      />
+    ),
+    key: 'deleteitem',
+    danger: true,
+  };
 
-  const items: ItemType[] = [
-    {
-      label: (
-        <BaseForm
-          title={
-            <Space>
-              <EditOutlined />
-              <span>基本信息</span>
-            </Space>
-          }
-          uid={uid}
-        />
-      ),
-      key: 1,
-    },
-    {
-      label: (
-        <MoreForm
-          title={
-            <Space>
-              <SettingOutlined />
-              <span>更多设置</span>
-            </Space>
-          }
-          uid={uid}
-        />
-      ),
-      key: 2,
-    },
-    {
-      label: (
-        <BaseForm
-          title={
-            <Space>
-              <InsertRowRightOutlined />
-              <span>向后插入列</span>
-            </Space>
-          }
-          afterUid={uid}
-        />
-      ),
-      key: 3,
-    },
-    {
-      type: 'divider',
-    },
-    {
-      label: (
-        <DeleteColumn
-          title={
-            <Space>
-              <DeleteColumnOutlined />
-              <span>删除该列</span>
-            </Space>
-          }
-          uid={uid}
-        />
-      ),
-      key: 4,
-      danger: true,
-    },
-  ];
+  const items: ItemType[] =
+    type == 'tab'
+      ? [
+          baseform,
+          baseAddTab,
+          addGroup,
+          {
+            type: 'divider',
+          },
+
+          deleteitem,
+        ]
+      : type == 'formGroup'
+      ? [
+          baseform,
+          addCol,
+          addGroup,
+
+          {
+            type: 'divider',
+          },
+
+          deleteitem,
+        ]
+      : [
+          baseform,
+          moreform,
+          addCol,
+          {
+            type: 'divider',
+          },
+          deleteitem,
+        ];
   //表单的话 加一个最小宽度
   const styles = {
     form: {
@@ -356,6 +456,20 @@ const DevTableColumnTitle = (props) => {
   );
 };
 
+export const FormAddTab = () => {
+  return (
+    <BaseForm
+      title={
+        <Button type="dashed">
+          <span> + Tab</span>
+        </Button>
+      }
+      ctype="tab"
+      extpost={{ actionType: 'addTab' }}
+    />
+  );
+};
+
 export const TableColumnTitle: FC = (props) => {
   const { initialState } = useModel('@@initialState');
   const dev = initialState?.settings?.dev ? true : false;
@@ -367,8 +481,9 @@ export const FormColumnTitle: FC = (props) => {
 
   const title =
     props.valueType == 'group' && !props.title ? ['分组', props.uid].join(' - ') : props.title;
+  const devType = props.valueType == 'group' ? 'formGroup' : 'form';
   return dev ? (
-    <DevTableColumnTitle {...props} title={title} devData={{ type: 'form' }} />
+    <DevTableColumnTitle {...props} title={title} devData={{ type: devType }} />
   ) : (
     props.title
   );
@@ -382,4 +497,10 @@ export const ToolbarColumnTitle: FC = (props) => {
   ) : (
     <>{props.title}</>
   );
+};
+
+export const TabColumnTitle: FC = (props) => {
+  const { initialState } = useModel('@@initialState');
+  const dev = initialState?.settings?.dev ? true : false;
+  return dev ? <DevTableColumnTitle {...props} devData={{ type: 'tab' }} /> : <>{props.title}</>;
 };

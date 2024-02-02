@@ -13,7 +13,7 @@ const useDragEnd = (props?: any) => {
   const { tableDesigner } = useContext(SaContext);
   return (event: DragEndEvent) => {
     const { active, over } = event;
-    console.log('dragging', active, over, tableDesigner?.pageMenu);
+    //console.log('dragging', active, over, tableDesigner?.pageMenu);
     if (!over) {
       return;
     }
@@ -22,11 +22,22 @@ const useDragEnd = (props?: any) => {
     }
     const page_menu = tableDesigner?.pageMenu;
     if (page_menu) {
-      tableDesigner?.sort?.(
-        page_menu.id,
-        [active?.id, over?.id],
-        active.data.current?.devData.type,
-      );
+      if (active.data.current?.devData.type == 'panel') {
+        tableDesigner?.sort?.(
+          page_menu.id,
+          [
+            { uid: active?.id, devData: active.data.current?.devData },
+            { uid: over?.id, devData: over.data.current?.devData },
+          ],
+          active.data.current?.devData.type,
+        );
+      } else {
+        tableDesigner?.sort?.(
+          page_menu.id,
+          [active?.id, over?.id],
+          active.data.current?.devData.type,
+        );
+      }
     }
   };
 };

@@ -4,30 +4,38 @@ import { useModel } from '@umijs/max';
 import { Dropdown, DropdownProps } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import React, { ReactNode, createContext, useContext, useState, useTransition } from 'react';
-import message from '../../message';
 
 export type tableDesignerInstance = {
-  type?: 'table' | 'form';
+  type?: 'table' | 'form' | 'panel';
   pageMenu?: { [key: string]: any };
   sort?: (id: number, cls: any[], type: string) => void;
   sortFormColumns?: (id: number, cls: any[]) => void;
   setColumns?: any;
   getColumnsRender?: any;
+  add?: (data: { [key: string]: any }) => void;
+  addUrl?: string;
   edit?: (data: { [key: string]: any }) => void;
   editUrl?: string;
   reflush?: (data: { [key: string]: any }) => void;
   deleteUrl?: string;
   delete?: (data: { [key: string]: any }) => void;
   devEnable?: boolean; //开启的必要条件
+  sourceData?: any;
 };
 
 export function useTableDesigner(props: tableDesignerInstance) {
   const { setColumns, getColumnsRender, pageMenu = {}, type = 'table', devEnable = true } = props;
   const { setInitialState } = useModel('@@initialState');
-  const config = {
+  const config: { [key: string]: { [key: string]: string } } = {
     form: {
       deleteUrl: 'dev/menu/deleteFormColumn',
       editUrl: 'dev/menu/editFormColumn',
+      sortUrl: 'dev/menu/sortFormColumns',
+    },
+    tab: {
+      sortUrl: 'dev/menu/sortFormColumns',
+    },
+    formGroup: {
       sortUrl: 'dev/menu/sortFormColumns',
     },
     table: {
@@ -38,9 +46,17 @@ export function useTableDesigner(props: tableDesignerInstance) {
     toolbar: {
       sortUrl: 'dev/menu/sortTableColumns',
     },
+    panel: {
+      editUrl: 'dev/menu/editPanelColumn',
+      deleteUrl: 'dev/menu/deletePanelColumn',
+      sortUrl: 'dev/menu/sortPanelColumns',
+      addUrl: 'dev/menu/addPanelRow',
+    },
   };
   const editUrl = config[type].editUrl;
   const deleteUrl = config[type].deleteUrl;
+  const addUrl = config[type].addUrl;
+  //const sortUrl = config[type].sortUrl;
   const reflush = (data: any) => {
     //重新设置列表列
     setColumns?.(getColumnsRender?.(data.columns));
@@ -49,41 +65,40 @@ export function useTableDesigner(props: tableDesignerInstance) {
     //pageMenu.data = { ...pageMenu.data, ...data.data };
     setInitialState((s) => ({
       ...s,
-      currentUser: data.currentUser,
+      currentUser: { ...s.currentUser, ...data.currentUser },
     }));
+  };
+  const post = async (url, data: { [key: string]: any }) => {
+    //后台请求
+    await request.post(url, {
+      data,
+      msgcls: ({ data }) => {
+        reflush(data);
+      },
+    });
+    return;
   };
   return {
     ...props,
     editUrl,
     deleteUrl,
+    addUrl,
     reflush,
-    sort: (id: number, columns: any, type: 'table' | 'form' | 'toolbar') => {
+    sort: (id: number, columns: any, type: 'table' | 'form' | 'toolbar' | 'tab') => {
       //后台请求
       //setColumns(getColumnsRender(columns));
       const url = config[type].sortUrl;
-      request.post(url, {
-        data: { columns, id },
-        then: ({ data, code, msg }) => {
-          if (!code) {
-            data && reflush(data);
-          } else {
-            message?.error(msg);
-          }
-        },
-      });
+      post(url, { columns, id });
+      return;
     },
     edit: async (data: { [key: string]: any }) => {
       //后台请求
-      await request.post(editUrl, {
-        data,
-        then: ({ data, code, msg }) => {
-          if (!code) {
-            data && reflush(data);
-          } else {
-            message?.error(msg);
-          }
-        },
-      });
+      await post(editUrl, data);
+      return;
+    },
+    add: async (data: { [key: string]: any }) => {
+      //后台请求
+      await post(addUrl, data);
       return;
     },
   };

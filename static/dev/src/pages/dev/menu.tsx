@@ -1,8 +1,9 @@
-import { saFormColumnsType } from '@/components/Sadmin/helpers';
+import { saFormColumnsType, uid } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
 import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect.tsx';
 import { CopyOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
+import { useModel } from '@umijs/max';
 import { Space } from 'antd';
 import { useRef } from 'react';
 import MenuConfig, { MenuOther } from './menuConfig';
@@ -17,6 +18,13 @@ export const MenuFormColumn: saFormColumnsType = [
         dataIndex: 'title',
         width: 'md',
         fieldProps: { placeholder: '为空时菜单会隐藏' },
+        formItemProps: {
+          rules: [
+            {
+              required: true,
+            },
+          ],
+        },
       },
       {
         title: 'path',
@@ -39,6 +47,13 @@ export const MenuFormColumn: saFormColumnsType = [
         valueType: 'select',
         requestDataName: 'types',
         width: 'sm',
+        formItemProps: {
+          rules: [
+            {
+              required: true,
+            },
+          ],
+        },
       },
       {
         title: '新增按钮',
@@ -90,27 +105,18 @@ export const MenuFormColumn: saFormColumnsType = [
         },
         width: 'md',
       },
-      // {
-      //   title: 'model',
-      //   dataIndex: 'model',
-      //   fieldProps: { placeholder: '请输入模型名称' },
-      //   formItemProps: { tooltip: '暂时只支持posts一种模型' },
-      //   width: 'sm',
-      // },
-      // {
-      //   title: '分类选择',
-      //   dataIndex: 'category_id',
-      //   valueType: 'cascader',
-      //   request: searchCategory,
-      //   fieldProps: {
-      //     fieldNames: {
-      //       label: 'title',
-      //       value: 'id',
-      //     },
-      //     changeOnSelect: true,
-      //   },
-      //   width: 'sm',
-      // },
+      {
+        title: '上级菜单',
+        dataIndex: 'parent_id',
+        valueType: 'treeSelect',
+        requestDataName: 'menus',
+        fieldProps: {
+          treeLine: { showLeafIcon: true },
+          treeDefaultExpandAll: true,
+          allowClear: true,
+        },
+        width: 'sm',
+      },
       {
         title: '页面类型',
         dataIndex: 'page_type',
@@ -121,6 +127,7 @@ export const MenuFormColumn: saFormColumnsType = [
             { label: '分类', value: 'category' },
             { label: '表单', value: 'form' },
             { label: '面板', value: 'panel' },
+            { label: '面板2', value: 'panel2' },
           ],
         },
       },
@@ -136,9 +143,16 @@ export const MenuFormColumn: saFormColumnsType = [
           ],
         },
       },
-
-      'displayorder',
-      'state',
+      {
+        title: '启用',
+        dataIndex: 'state',
+        valueType: 'switch',
+        fieldProps: {
+          checkedChildren: '启用',
+          unCheckedChildren: '禁用',
+          defaultChecked: true,
+        },
+      },
       {
         title: '显示',
         dataIndex: 'status',
@@ -258,7 +272,6 @@ export const MenuFormColumn: saFormColumnsType = [
     fieldProps: { height: 600 },
   },
   { title: '子权限', dataIndex: 'perms', valueType: 'jsonEditor' },
-  'parent_id',
 ];
 
 export default () => {
@@ -423,6 +436,17 @@ export default () => {
     'option',
   ];
 
+  const { setInitialState } = useModel('@@initialState');
+  const reData = (ret) => {
+    const { code, data } = ret;
+    if (!code) {
+      setInitialState((s) => ({
+        ...s,
+        currentUser: { ...data.currentUser, uid: uid() },
+      }));
+    }
+    return;
+  };
   return (
     <Category
       name="菜单"
@@ -469,6 +493,8 @@ export default () => {
       tableProps={{
         scroll: { y: 600 },
       }}
+      afterFormPost={reData}
+      afterDelete={reData}
       url="dev/menu"
       grid={false}
       devEnable={false}

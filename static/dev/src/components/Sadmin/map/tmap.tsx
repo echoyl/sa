@@ -117,6 +117,9 @@ export class TmapInput extends React.Component {
             value={this.state.latlng?.lat}
             onChange={(e) => {
               const v = e.target.value;
+              if (!v) {
+                return;
+              }
               const nv = { ...this.state.latlng, lat: v };
               this.setState({ latlng: nv, okLatlng: nv });
               //this.props.onChange?.({ ...nv });
@@ -127,6 +130,9 @@ export class TmapInput extends React.Component {
             value={this.state.latlng?.lng}
             onChange={(e) => {
               const v = e.target.value;
+              if (!v) {
+                return;
+              }
               const nv = { ...this.state.latlng, lng: v };
               this.setState({ latlng: nv, okLatlng: nv });
               //this.props.onChange?.({ ...nv });

@@ -25,6 +25,7 @@ declare namespace API {
     id?: number;
     roleid?: number;
     menuData?: any;
+    uid?: string;
   };
 
   type LoginResult = {

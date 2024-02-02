@@ -103,10 +103,16 @@ const ButtonDrawer: FC<actionConfirm> = (props) => {
         maskClosable={false}
         {...drawerProps}
       >
+        <div
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
+        >
         {iopen &&
           React.Children.map(props.children, (c) => {
             return React.cloneElement(c, { setOpen, contentRender });
           })}
+        </div>
       </Drawer>
     </>
   );

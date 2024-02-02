@@ -6,16 +6,14 @@ import {
   ProProvider,
   SettingDrawer,
 } from '@ant-design/pro-components';
-import { Link, RunTimeLayoutConfig, history } from '@umijs/max';
+import { RunTimeLayoutConfig, history } from '@umijs/max';
 import { App, ConfigProvider } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { useContext } from 'react';
 import defaultSettings, { lightDefaultToken } from '../config/defaultSettings';
-import ModalJson from './components/Sadmin/action/modalJson';
-import { SaDevContext } from './components/Sadmin/dev';
+import { DevLinks, SaDevContext } from './components/Sadmin/dev';
 import { loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
-import Refresh from './components/Sadmin/refresh';
 import { getTheme } from './components/Sadmin/themSwitch';
 import request, {
   loginPath,
@@ -32,7 +30,8 @@ export async function getInitialState(): Promise<{
     baseurl?: string;
     loginTypeDefault?: string;
     loginBgImgage?: string;
-    dev?: { [key: string]: any };
+    dev?: { [key: string]: any } | boolean;
+    [key: string]: any;
   };
   currentUser?: API.CurrentUser;
   loading?: boolean;
@@ -117,53 +116,13 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
         });
       }
     },
-    layoutBgImgList: [
-      // {
-      //   src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/D2LWSqNny4sAAAAAAAAAAAAAFl94AQBr',
-      //   left: 85,
-      //   bottom: 100,
-      //   height: '303px',
-      // },
-      // {
-      //   src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/C2TWRpJpiC0AAAAAAAAAAAAAFl94AQBr',
-      //   bottom: -68,
-      //   right: -45,
-      //   height: '303px',
-      // },
-      // {
-      //   src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/F6vSTbj8KpYAAAAAAAAAAAAAFl94AQBr',
-      //   bottom: 0,
-      //   left: 0,
-      //   width: '331px',
-      // },
-    ],
-    links: initialState?.settings.dev
-      ? [
-          <Link to={'dev/menu'}>
-            <span>菜单</span>
-          </Link>,
-          <Link to={'dev/model'}>
-            <span>模型</span>
-          </Link>,
-          <Link to={'dev/setting'}>
-            <span>配置</span>
-          </Link>,
-          <Refresh />,
-          <ModalJson
-            trigger={
-              <span style={{ width: '100%', textAlign: 'left', display: 'inline-block' }}>
-                json
-              </span>
-            }
-          />,
-        ]
-      : [],
+    layoutBgImgList: [],
+    menuFooterRender: () => (initialState?.settings.dev ? <DevLinks /> : false),
     menuHeaderRender: undefined,
     menu: {
+      params: initialState?.currentUser?.uid,
       request: async (params, defaultMenuData) => {
-        const newMenu = loopMenuItem(initialState?.currentUser?.menuData);
-        localStorage.setItem('menuData', JSON.stringify(newMenu));
-        return newMenu;
+        return loopMenuItem(initialState?.currentUser?.menuData);
       },
       locale: false,
     },

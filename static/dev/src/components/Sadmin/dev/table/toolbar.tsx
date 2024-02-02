@@ -16,6 +16,7 @@ import { cloneDeep, isString } from 'lodash';
 import React, { useContext, useState } from 'react';
 import ButtonDrawer from '../../action/buttonDrawer';
 import CustomerColumnRender from '../../action/customerColumn';
+import { uid } from '../../helpers';
 import { SaForm } from '../../posts/post';
 import { SaContext } from '../../posts/table';
 import { DndContext } from '../dnd-context';
@@ -175,6 +176,58 @@ const ImportButton = ({ title = '导入', url = '', uploadProps: ups = {} }) => 
   );
 };
 
+export const ToolBarMenu = (props) => {
+  const { setInitialState } = useModel('@@initialState');
+  const { trigger, pageMenu = { id: 0 } } = props;
+  const MenuForm = (mprops) => {
+    const { contentRender, setOpen } = mprops;
+    return (
+      <SaForm
+        formColumns={MenuFormColumn}
+        url="dev/menu/show"
+        dataId={pageMenu?.id}
+        paramExtra={{ id: pageMenu?.id }}
+        postExtra={{ id: pageMenu?.id }}
+        showTabs={false}
+        grid={false}
+        devEnable={false}
+        width={1600}
+        msgcls={async ({ code, data }) => {
+          if (!code) {
+            setOpen(false);
+            const msg = await currentUser();
+            //const msg = await cuser();
+            setInitialState((s) => ({
+              ...s,
+              currentUser: { ...msg.data, uid: uid() },
+            }));
+          }
+          return;
+        }}
+        formProps={{
+          contentRender,
+          submitter: {
+            //移除默认的重置按钮，点击重置按钮后会重新请求一次request
+            render: (props, doms) => {
+              return [
+                <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
+                  关闭
+                </Button>,
+                doms[1],
+              ];
+            },
+          },
+        }}
+      />
+    );
+  };
+  return (
+    <ButtonDrawer trigger={trigger} width={1600} title="菜单配置">
+      <MenuForm />
+    </ButtonDrawer>
+  );
+};
+
 export const toolBarRender = (props) => {
   //导出按钮
   const {
@@ -226,49 +279,6 @@ export const toolBarRender = (props) => {
   const render = () => {
     const btns = [];
 
-    const MenuForm = (mprops) => {
-      const { contentRender, setOpen } = mprops;
-      return (
-        <SaForm
-          formColumns={MenuFormColumn}
-          url="dev/menu/show"
-          dataId={pageMenu?.id}
-          paramExtra={{ id: pageMenu?.id }}
-          postExtra={{ id: pageMenu?.id }}
-          showTabs={false}
-          grid={false}
-          devEnable={false}
-          width={1600}
-          msgcls={async ({ code, data }) => {
-            if (!code) {
-              setOpen(false);
-              const msg = await currentUser();
-              //const msg = await cuser();
-              setInitialState((s) => ({
-                ...s,
-                currentUser: msg.data,
-              }));
-            }
-            return;
-          }}
-          formProps={{
-            contentRender,
-            submitter: {
-              //移除默认的重置按钮，点击重置按钮后会重新请求一次request
-              render: (props, doms) => {
-                return [
-                  <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
-                    关闭
-                  </Button>,
-                  doms[1],
-                ];
-              },
-            },
-          }}
-        />
-      );
-    };
-
     _btns?.forEach((btn, index) => {
       //console.log('btn', btn);
       if (devEnable && isString(btn.title)) {
@@ -290,17 +300,15 @@ export const toolBarRender = (props) => {
       }
       if (btn.valueType == 'devsetting') {
         btns.push(
-          <ButtonDrawer
+          <ToolBarMenu
             key="devsetting"
             trigger={
               <Button type="dashed" danger>
                 {btn.title}
               </Button>
             }
-            width={1600}
-          >
-            <MenuForm />
-          </ButtonDrawer>,
+            pageMenu={pageMenu}
+          />,
         );
       }
       if (btn.valueType == 'toolbar') {

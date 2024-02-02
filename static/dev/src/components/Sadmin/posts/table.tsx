@@ -76,6 +76,7 @@ export interface saTableProps {
   pageMenu?: { [key: string]: any }; //当前菜单信息
   devEnable?: boolean; //是否开启开发模式
   setting?: { [key: string]: any }; //其它配置统一放这里
+  afterDelete?: (ret: any) => void; //删除数据后的回调
 }
 
 const components = {
@@ -131,7 +132,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
   const {
     url = '',
     level = 1,
-    tableColumns = [],
+    tableColumns,
     openType = 'page',
     labels = {},
     beforeTableGet,
@@ -156,6 +157,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
     pageMenu,
     devEnable: pdevEnable = true,
     setting = {},
+    afterDelete,
   } = props;
   //console.log('tableprops', props);
   const [tbColumns, setTbColumns] = useState([]);
@@ -182,7 +184,11 @@ const SaTable: React.FC<saTableProps> = (props) => {
   const [tableMenuId, setTableMenuId] = useState<string>(
     searchTableMenuId ? searchTableMenuId : table_menu_default,
   );
-  const _tableColumns = isFn(tableColumns) ? tableColumns([]) : [...tableColumns];
+  const _tableColumns = tableColumns
+    ? isFn(tableColumns)
+      ? tableColumns([])
+      : [...tableColumns]
+    : [];
   const enumNames = _tableColumns?.filter((v) => v.valueEnum).map((v) => v.dataIndex);
   const search_config = _tableColumns?.filter(
     (v) => isObj(v) && (isUndefined(v.search) || v.search),
@@ -196,6 +202,9 @@ const SaTable: React.FC<saTableProps> = (props) => {
   // const [enumNames, setEnumNames] = useState<any[]>([]);
   // const [search_config, setSearch_config] = useState<any[]>([]);
   const rq = async (params = {}, sort: any, filter: any) => {
+    if (!url) {
+      return [];
+    }
     for (let i in params) {
       if (typeof params[i] == 'object') {
         params[i] = JSON.stringify(params[i]);
@@ -260,6 +269,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
           data: { id },
         });
         modals.destroy();
+        afterDelete?.(ret);
         if (!ret.code) {
           actionRef.current?.reload();
           setSelectedRowKeys([]);
@@ -332,7 +342,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
       const title = Array.isArray(titleField)
         ? getFromObject(record, titleField)
         : record[titleField];
-      console.log(title);
+      //console.log(title);
       remove(record.id, '确定要删除：' + (title ? title : '该条记录吗？'));
     },
   };

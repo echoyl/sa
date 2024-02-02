@@ -85,6 +85,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
               { dataIndex: 'tooltip', title: 'tooltip' },
               { dataIndex: 'extra', title: 'extra', tooltip: '提示会追加显示到组件后面' },
             ],
+            saFormProps: { devEnable: false },
           },
         },
         {
@@ -656,7 +657,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   );
   const formRef = useRef<ProFormInstance<any>>({} as any);
   useEffect(() => {
-    formRef?.current?.setFieldsValue(value);
+    formRef?.current?.setFieldsValue?.(value);
   }, [value]);
 
   return (
@@ -668,7 +669,9 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
         <ProForm
           submitter={false}
           formRef={formRef}
-          initialValues={value}
+          request={() => {
+            return value;
+          }}
           onValuesChange={(v, allValues) => {
             //console.log(v);
             // const parseDatas: any = [];
@@ -712,16 +715,19 @@ export const CustomerColumnRenderDevReal = (props) => {
     allMenus,
     modelColumns,
   } = fieldProps;
-  const [values, setValues] = useState(value);
+  const [values, setValues] = useState();
   const [loading, setLoading] = useState(false);
   //原本项获取整行的值但是好像formlist没法获取当前行的值 只有当前字段的值
   const onOk = async () => {
-    //console.log('值变化了', values, props.onChange, 'props is', props);
+    //console.log('值变化了', values, onChange, value, 'props is', props);
     setLoading(true);
     await onChange?.(values);
     setLoading(false);
     setOpen(false);
   };
+  useEffect(() => {
+    setValues(value);
+  }, [value]);
   const btnDom =
     typeof btnText == 'string' ? (
       <Button
@@ -753,16 +759,18 @@ export const CustomerColumnRenderDevReal = (props) => {
         width={1600}
         styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
       >
-        <CustomerColumn
-          value={value}
-          relationModel={relationModel}
-          allMenus={allMenus}
-          modelColumns={modelColumns}
-          ok={(values) => {
-            //console.log(values);
-            setValues(values);
-          }}
-        />
+        {value ? (
+          <CustomerColumn
+            value={value}
+            relationModel={relationModel}
+            allMenus={allMenus}
+            modelColumns={modelColumns}
+            ok={(values) => {
+              //console.log(values);
+              setValues(values);
+            }}
+          />
+        ) : null}
       </Modal>
     </>
   );

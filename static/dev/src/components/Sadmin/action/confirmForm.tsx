@@ -2,7 +2,7 @@ import { ProFormInstance } from '@ant-design/pro-components';
 import { Button, ButtonProps } from 'antd';
 import { FC, ReactNode, useContext, useRef, useState } from 'react';
 import { history } from 'umi';
-import { getBread, saFormColumnsType, tplComplie } from '../helpers';
+import { getBread, saFormColumnsType, saFormTabColumnsType, tplComplie } from '../helpers';
 import { SaForm, saFormProps } from '../posts/post';
 import { SaContext } from '../posts/table';
 import ButtonModal from './buttonModal';
@@ -16,7 +16,7 @@ interface actionConfirm {
   data?: {};
   dataId?: number;
   formColumns?: saFormColumnsType;
-  tabs?: Array<{ title?: string; formColumns?: saFormColumnsType }>;
+  tabs?: saFormTabColumnsType;
   callback?: (value: any) => void;
   onChange?: (value: any) => void;
   value?: any;
@@ -62,7 +62,7 @@ const InnerForm = (props) => {
       pageMenu = bread;
     }
   } else {
-    tabs = [{ title: '基础信息', formColumns: [...formColumns] }];
+    tabs = utabs ? utabs : [{ title: '基础信息', formColumns: [...formColumns] }];
   }
 
   return (
@@ -81,7 +81,7 @@ const InnerForm = (props) => {
       actionRef={actionRef}
       postExtra={{ id: dataid, ...data }}
       paramExtra={{ id: dataid }}
-      showTabs={false}
+      showTabs={tabs?.length <= 1 ? false : true}
       formProps={{
         contentRender,
         initialValues: value,
@@ -128,7 +128,11 @@ const InnerForm = (props) => {
               callback?.(ret);
             } else {
               //在表单 中  就返回上一页
-              history.back();
+              setOpen(false);
+              const rcb = callback?.(ret);
+              if (!rcb) {
+                history.back();
+              }
             }
           }
         } else {
@@ -152,7 +156,8 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
     data = {},
     dataId = 0,
     callback,
-    formColumns = [],
+    formColumns,
+    tabs,
     trigger,
     width = 800,
     page,
@@ -186,6 +191,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
         url={url}
         postUrl={postUrl}
         formColumns={formColumns}
+        tabs={tabs}
         page={page}
         callback={callback}
         value={props.value}
