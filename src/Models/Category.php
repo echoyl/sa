@@ -139,7 +139,10 @@ class Category extends Base
         {
             $parent = false;
         }
+        
         $list = $this->where(['parent_id' => $cid])->where($where);
+
+
         foreach($displayorder as $dis)
         {
             $list = $list->orderBy($dis[0],$dis[1]);

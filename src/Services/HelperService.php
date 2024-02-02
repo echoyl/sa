@@ -561,6 +561,36 @@ class HelperService
         return $list;
     }
 
+    public static function getChildFromData($all_data,$parseData = false,$order_by = [],$pid = 0,$pname = 'parent_id',$max_level = 0,$level = 1)
+    {
+        $list = collect($all_data);
+        $list = $list->where($pname,$pid);
+
+        if(!empty($order_by))
+        {
+            $list = $list->sortBy($order_by);
+            // foreach($order_by as $orderby)
+            // {
+            //     $list = $list->sortBy($orderby[0],$orderby[1]);
+            // }
+        }
+        $list = $list->toArray();
+        foreach ($list as $key => $val) {
+            if($parseData)
+            {
+                $list[$key] = $parseData($val);
+            }
+            if($max_level == 0 || $max_level > $level)
+            {
+                $children = self::getChildFromData($all_data,$parseData,$order_by,$val['id'], $pname,$max_level,$level+1);
+                if (!empty($children)) {
+                    $list[$key]['children'] = $children;
+                }
+            }
+        }
+        return array_values($list);
+    }
+
     public static function arrayResetKey($arr = [],$key = 'id')
     {
         $data = [];
@@ -710,16 +740,17 @@ class HelperService
         }else
         {
             //往前
+            //将之前的数据删除
+            unset($arr[$from]);
             if($to == 0)
             {
                 //已经是第一个了
                 array_unshift($arr,$active_data);
             }else
             {
-                array_splice($arr,$to - 1,0,[$active_data]);
+                array_splice($arr,$to,0,[$active_data]);
             }
-            //将之前的数据删除
-            unset($arr[$from+1]);
+            
         }
         return array_values($arr);
     }

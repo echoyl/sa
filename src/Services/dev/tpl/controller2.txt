@@ -11,6 +11,9 @@ $customer_namespace$
 class $name$Controller extends CategoryBaseController
 {
 	public $cid = 0;
+	//customer property start
+	$customer_property$
+	//customer property end
     public function __construct()
 	{
 		$crud_config$

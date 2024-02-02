@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\Category;
+use Echoyl\Sa\Services\HelperService;
 
 class CategoryBaseController extends CrudController
 {
@@ -37,11 +38,16 @@ class CategoryBaseController extends CrudController
                 }
             }
         }
+		if(!empty($this->select_columns))
+		{
+			$this->model = $this->model->select($this->select_columns);
+		}
 
-		$data = $this->model->getChild($this->cid,[],function($val){
-			$this->parseData($val, 'decode', 'list');
-			return $val;
-		},0,1,$displayorder);
+		$data = HelperService::getChildFromData($this->model->get()->toArray(),function($item){
+            $this->parseData($item,'decode','list');
+            return $item;
+        },$displayorder);
+
 		return $this->list($data,count($data),$search);
 	}
 

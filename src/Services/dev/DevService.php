@@ -1070,7 +1070,7 @@ class DevService
     {
         $model = new Model();
         $types = $admin_type?:['system',self::appname(),''];
-        $data = $model->getChild(0,$types,function($item) use($all_selectable){
+        $data = HelperService::getChildFromData($model->whereIn('admin_type',$types)->get()->toArray(),function($item) use($all_selectable){
             
             return [
                 'id'=>$item['id'],
@@ -1079,7 +1079,7 @@ class DevService
                 'isLeaf'=>$item['type']?true:false,
                 'selectable'=>$item['type'] || $all_selectable ? true:false,
             ];
-        });
+        },[['type','asc'],['id','asc']]);
         return $data;
     }
 
@@ -1087,7 +1087,8 @@ class DevService
     {
         $model = new Menu();
         $types = $admin_type?:['system',env('APP_NAME'),''];
-        $data = $model->getChild(0,$types,function($item) use($all_selectable){
+
+        $data = HelperService::getChildFromData($model->whereIn('type',$types)->get()->toArray(),function($item) use($all_selectable){
             
             return [
                 'id'=>$item['id'],
@@ -1096,7 +1097,8 @@ class DevService
                 'isLeaf'=>true,
                 'selectable'=>true,
             ];
-        });
+        },[['displayorder','desc'],['id','asc']]);
+
         return $data;
     }
 
@@ -1104,7 +1106,7 @@ class DevService
     {
         $types = $admin_type?:['system',env('APP_NAME'),''];
         $model = (new Model())->whereIn('admin_type',$types)->where(['type'=>0]);
-        $data = HelperService::getChild($model,function($item){
+        $data = HelperService::getChildFromData($model->get()->toArray(),function($item){
             return [
                 'id'=>$item['id'],
                 'title'=>$item['title'],
@@ -1251,7 +1253,7 @@ class DevService
                                 $perms = false;
                             }
 
-                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel')
+                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel' || $menu['page_type'] == 'panel2')
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
@@ -1276,7 +1278,7 @@ class DevService
                             
                         }else
                         {
-                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel')
+                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel' || $menu['page_type'] == 'panel2')
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];

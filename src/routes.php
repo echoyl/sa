@@ -68,6 +68,11 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         //手动生成menu的配置
                         Route::post('menu/remenu', 'MenuController@remenu');
 
+                        //新增面板的编辑功能 增删改排序
+                        Route::post('menu/deletePanelColumn', 'MenuController@deletePanelColumn');
+                        Route::post('menu/editPanelColumn', 'MenuController@editPanelColumn');
+                        Route::post('menu/sortPanelColumns', 'MenuController@sortPanelColumns');
+
                         Route::resource('menu', 'MenuController');
                         Route::post('model/quickCreate', 'ModelController@quickCreate');
                         //导出导入

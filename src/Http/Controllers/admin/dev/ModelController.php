@@ -40,10 +40,11 @@ class ModelController extends CrudController
             $types = [$table_menu_id, ''];
         }
 
-        $data = $this->model->getChild($this->cid, $types, function ($item) {
+        $data = HelperService::getChildFromData($this->model->whereIn('admin_type',$types)->get()->toArray(),function ($item) {
             $this->parseData($item, 'decode', 'list');
             return $item;
-        });
+        },[['type','asc'],['id','asc']]);
+
         $search['table_menu'] = ['admin_type'=>[['value' => $ds->appname(), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
         //d($data);
         
