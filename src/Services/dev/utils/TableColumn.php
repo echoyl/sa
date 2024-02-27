@@ -55,7 +55,8 @@ class TableColumn
         }
 
         $this->key = $key;
-
+        //fixed
+        $fixed = $props['fixed']??'';
         if(in_array($key,['option','coption','created_at_s','displayorder']))
         {
             $this->data = [
@@ -63,6 +64,10 @@ class TableColumn
                 'uid'=>$uid,
                 'search'=>false
             ];
+            if($fixed)
+            {
+                $this->data['fixed'] = $fixed;
+            }
             return $this->data;
         }
 
@@ -98,6 +103,7 @@ class TableColumn
         $ellipsis = $props['ellipsis']??'';
         //copyable
         $copyable = $props['copyable']??'';
+        
         //是否设定列宽
         $width = $props['width']??'';
         //$width = $config['width']??$p_width;
@@ -213,6 +219,10 @@ class TableColumn
         if($copyable)
         {
             $d['copyable'] = true;
+        }
+        if($fixed)
+        {
+            $d['fixed'] = $fixed;
         }
 
         $this->data = $d;

@@ -50,14 +50,14 @@ class FormService extends BaseService
             if($count == 5)
             {
                 //编辑列的时候需要检测 是编辑base还是more
-                if($form_type == 'base')
-                {
-                    //基础修改
-                    if(isset($old_value['props']))
-                    {
-                        $base['props'] = isset($base['props'])?array_merge($old_value['props'],$base['props']):$old_value['props'];
-                    }
-                }
+                // if($form_type == 'base')
+                // {
+                //     //基础修改
+                //     if(isset($old_value['props']))
+                //     {
+                //         $base['props'] = isset($base['props'])?array_merge($old_value['props'],$base['props']):$old_value['props'];
+                //     }
+                // }
                 $new_set = $base;
             }else
             {

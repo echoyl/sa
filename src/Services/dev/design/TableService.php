@@ -42,7 +42,7 @@ class TableService extends BaseService
                 //基础修改
                 if(isset($old_value['props']))
                 {
-                    $base['props'] = isset($base['props'])?array_merge($old_value['props'],$base['props']):$old_value['props'];
+                    //$base['props'] = isset($base['props'])?array_merge($old_value['props'],$base['props']):$old_value['props'];
                 }
             }
 
