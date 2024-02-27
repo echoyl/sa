@@ -166,7 +166,15 @@ const CustomerColumnRender = (props) => {
       }
     } else if (item.domtype == 'tag') {
       //console.log('tag text', text, item);
-      return <ItemTags key={i} dataindex={dataindex} tags={isArr(text) ? text : [text]} />;
+      return (
+        <ItemTags
+          key={i}
+          dataindex={dataindex}
+          tags={isArr(text) ? text : [text]}
+          color={item.color}
+          bordered={item.bordered}
+        />
+      );
     } else if (item.domtype == 'table') {
       //console.log('tag text', text, item);
       if (item.fieldProps?.cal) {

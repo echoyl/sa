@@ -52,6 +52,7 @@ const InnerForm = (props) => {
   let url = ourl;
   let setting = {};
   let pageMenu = {};
+  let editable = true;
   if (page) {
     const bread = getBread(page);
     if (bread) {
@@ -60,6 +61,7 @@ const InnerForm = (props) => {
       //console.log('bread', bread);
       setting = bread?.data.setting;
       pageMenu = bread;
+      editable = bread?.data.editable ? bread?.data.editable : false;
     }
   } else {
     tabs = utabs ? utabs : [{ title: '基础信息', formColumns: [...formColumns] }];
@@ -85,22 +87,24 @@ const InnerForm = (props) => {
       formProps={{
         contentRender,
         initialValues: value,
-        submitter: {
-          searchConfig: {
-            resetText: '关闭',
-            submitText: url ? '提交' : '确定',
-          },
-          render: (props, doms) => {
-            return readonly
-              ? null
-              : [
-                  <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
-                    关闭
-                  </Button>,
-                  doms[1],
-                ];
-          },
-        },
+        submitter: editable
+          ? {
+              searchConfig: {
+                resetText: '关闭',
+                submitText: url ? '提交' : '确定',
+              },
+              render: (props, doms) => {
+                return readonly
+                  ? null
+                  : [
+                      <Button key="rest" type="default" onClick={() => setOpen?.(false)}>
+                        关闭
+                      </Button>,
+                      doms[1],
+                    ];
+              },
+            }
+          : false,
       }}
       url={url}
       postUrl={postUrl}

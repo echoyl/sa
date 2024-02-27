@@ -265,11 +265,14 @@ const Login: React.FC = () => {
         <Helmet>
           <title>登录 - {initialState?.settings?.title}</title>
         </Helmet>
-        <div className={styles.content}>
+        <div
+          className={styles.content}
+          style={containerStyle.backgroundImage ? {} : { padding: 0 }}
+        >
           <ProCard
             style={{
               //maxWidth: 440,
-              margin: '60px auto',
+              margin: '0px auto',
               padding: '20px 0',
               background: containerStyle.backgroundImage ? '#fff' : 'none',
             }}
@@ -284,9 +287,15 @@ const Login: React.FC = () => {
                 paddingInline: 0,
               }}
               formRef={formRef}
-              logo={initialState?.settings.logo}
-              title={initialState?.settings.title}
-              subTitle={initialState?.settings.subtitle}
+              logo={initialState?.settings?.logo}
+              title={initialState?.settings?.title}
+              subTitle={
+                initialState?.settings?.subtitle ? (
+                  <span
+                    dangerouslySetInnerHTML={{ __html: initialState?.settings?.subtitle }}
+                  ></span>
+                ) : null
+              }
               initialValues={{
                 autoLogin: true,
               }}

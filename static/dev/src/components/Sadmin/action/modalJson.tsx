@@ -9,10 +9,11 @@ const ModalJson: FC<{
   value?: any;
   type?: string;
   trigger?: React.ReactNode;
+  btn?: { [key: string]: any };
 }> = (props) => {
-  const { title = '点击编辑', value, type = 'json', trigger } = props;
+  const { title = '点击编辑', value, type = 'json', trigger, btn } = props;
 
-  const button = <Button>{title}</Button>;
+  const button = <Button {...btn}>{btn?.title ? btn.title : title}</Button>;
 
   return (
     <ModalForm

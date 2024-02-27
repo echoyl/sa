@@ -1,37 +1,32 @@
-import { Button, Modal, notification } from 'antd';
-import { useState } from 'react';
+import { SaForm } from '@/components/Sadmin/posts/post';
 
 export default function App() {
-  const [open, setOpen] = useState(false);
-  const [api, contextHolder] = notification.useNotification();
   return (
     <>
-      <div style={{ height: 1200, width: '100%' }}>
-        <Button
-          onClick={() => {
-            setOpen(true);
-          }}
-        >
-          modal
-        </Button>
-        <Modal
-          open={open}
-          onOk={() => {
-            api.info({
-              message: 'test',
-              description: 'test desc',
-            });
-            setOpen(false);
-          }}
-          onCancel={() => {
-            setOpen(false);
-          }}
-          afterOpenChange={(open) => {
-            setOpen(open);
-          }}
-        ></Modal>
-      </div>
-      {contextHolder}
+      <SaForm
+        tabs={[
+          {
+            title: 'test',
+            formColumns: [
+              {
+                dataIndex: 'haha',
+                title: '5555',
+                valueType: 'group',
+                name: 'hhhh',
+                columns: [{ dataIndex: 'xxx', title: 'iner' }],
+              },
+            ],
+          },
+        ]}
+        beforePost={(base) => {
+          console.log(base);
+          return false;
+        }}
+        msgcls={(data) => {
+          console.log(data);
+          return false;
+        }}
+      />
     </>
   );
 }

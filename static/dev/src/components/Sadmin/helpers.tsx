@@ -1,3 +1,4 @@
+import { BgColorsOutlined } from '@ant-design/icons';
 import {
   MenuDataItem,
   ProBreadcrumb,
@@ -9,7 +10,7 @@ import {
   getMenuData,
 } from '@ant-design/pro-components';
 import { useModel, useRouteData } from '@umijs/max';
-import { ColorPicker, Image } from 'antd';
+import { ColorPicker, Image, Input } from 'antd';
 import { get } from 'rc-util';
 import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -421,6 +422,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
             {
               label: 'Recommended',
               colors: [
+                'red',
                 '#000000',
                 '#F5222D',
                 '#FA8C16',
@@ -434,7 +436,16 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
               ],
             },
           ]}
-        />
+        >
+          <Input
+            addonBefore={<BgColorsOutlined style={{ color: value }} />}
+            value={value}
+            onChange={(e) => {
+              props.fieldProps?.onChange(e.target.value);
+              setValue(e.target.value);
+            }}
+          />
+        </ColorPicker>
       );
     },
   },

@@ -1,3 +1,4 @@
+import request from '@/services/ant-design-pro/sadmin';
 import {
   DeleteColumnOutlined,
   DragOutlined,
@@ -15,7 +16,7 @@ import React, { FC, useContext, useEffect, useState } from 'react';
 import { SaDevContext } from '..';
 import Confirm from '../../action/confirm';
 import ConfirmForm from '../../action/confirmForm';
-import { CustomerColumnRenderDevReal } from '../../action/customerColumn/dev';
+import { getCustomerColumn } from '../../action/customerColumn/dev';
 import { SaContext } from '../../posts/table';
 import { DragHandler, SortableItem } from '../dnd-context/SortableItem';
 import {
@@ -25,6 +26,7 @@ import {
   getModelRelations,
 } from './baseFormColumns';
 import { SchemaSettingsContext, SchemaSettingsDropdown } from './designer';
+import { ToolBarMenu } from './toolbar';
 export const designerCss = css`
   position: relative;
   min-width: 60px;
@@ -115,6 +117,15 @@ const BaseForm = (props) => {
 
   const [value, setValue] = useState(data);
   const [columns, setColumns] = useState([]);
+  const [columnsMore, setColumnsMore] = useState([]);
+
+  const [relations, setRelations] = useState<any[]>([]);
+  const [modelColumns, setModelColumns] = useState<any[]>([]);
+  const { allMenus = [] } = setting?.dev;
+  useEffect(() => {
+    setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
+    setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
+  }, []);
   useEffect(() => {
     //setValue(getValue(uid, pageMenu, ctype ? ctype : type));
     //setValue(data);
@@ -162,6 +173,7 @@ const BaseForm = (props) => {
           });
 
     setColumns(columns);
+    setColumnsMore(getCustomerColumn(relations, allMenus, modelColumns));
     //console.log('base value is ', value, uid);
   }, [pageMenu, data]);
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
@@ -172,7 +184,7 @@ const BaseForm = (props) => {
     ...title.props,
     onClick: async (e: any) => {
       setVisible?.(false);
-      e.stopPropagation();
+      //e.stopPropagation();
     },
   });
   return (
@@ -182,8 +194,11 @@ const BaseForm = (props) => {
       }}
     >
       <ConfirmForm
-        trigger={trigger}
-        formColumns={columns}
+        trigger={<div style={{ width: '100%' }}>{trigger}</div>}
+        tabs={[
+          { title: '基础', formColumns: columns },
+          { title: '更多', formColumns: columnsMore },
+        ]}
         value={value}
         postUrl={editUrl}
         data={{ id: pageMenu?.id, uid, ...extpost }}
@@ -191,75 +206,76 @@ const BaseForm = (props) => {
           reflush(data);
         }}
         saFormProps={{ devEnable: false }}
+        width={1000}
       />
     </div>
   );
 };
 
-const MoreForm = (props) => {
-  const { title, uid } = props;
-  const {
-    tableDesigner: { pageMenu, edit, type = 'table' },
-  } = useContext(SaContext);
-  const { setVisible } = useContext(SchemaSettingsContext);
-  const { setting } = useContext(SaDevContext);
+// const MoreForm = (props) => {
+//   const { title, uid } = props;
+//   const {
+//     tableDesigner: { pageMenu, edit, type = 'table' },
+//   } = useContext(SaContext);
+//   const { setVisible } = useContext(SchemaSettingsContext);
+//   const { setting } = useContext(SaDevContext);
 
-  const [relations, setRelations] = useState<any[]>([]);
-  const [modelColumns, setModelColumns] = useState<any[]>([]);
-  const [value, setValue] = useState({});
-  useEffect(() => {
-    setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
-    setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
-  }, []);
+//   const [relations, setRelations] = useState<any[]>([]);
+//   const [modelColumns, setModelColumns] = useState<any[]>([]);
+//   const [value, setValue] = useState({});
+//   useEffect(() => {
+//     setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
+//     setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
+//   }, []);
 
-  useEffect(() => {
-    setValue(getValue(uid, pageMenu, type));
-    //console.log('more value is ', value, uid);
-  }, [pageMenu]);
+//   useEffect(() => {
+//     setValue(getValue(uid, pageMenu, type));
+//     //console.log('more value is ', value, uid);
+//   }, [pageMenu]);
 
-  const { allMenus = [] } = setting?.dev;
-  //获取值
-  //const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
+//   const { allMenus = [] } = setting?.dev;
+//   //获取值
+//   //const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
 
-  const onChange = async (values) => {
-    value.props = values;
-    const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
-    //console.log('onchange',values,value)
+//   const onChange = async (values) => {
+//     value.props = values;
+//     const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
+//     //console.log('onchange',values,value)
 
-    await edit(data);
-    return;
-  };
-  //console.log('value', value, uid, JSON.parse(pageMenu?.schema?.table_config));
-  const trigger = React.cloneElement(title, {
-    key: 'trigger',
-    ...title.props,
-    onClick: async (e: any) => {
-      setVisible(false);
-      e.stopPropagation();
-    },
-  });
-  return (
-    <div
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        //e.stopPropagation();
-      }}
-    >
-      <CustomerColumnRenderDevReal
-        fieldProps={{
-          value: value?.props,
-          onChange,
-          btnText: trigger,
-          relationModel: relations,
-          allMenus,
-          modelColumns,
-        }}
-      />
-    </div>
-  );
-};
+//     await edit(data);
+//     return;
+//   };
+//   //console.log('value', value, uid, JSON.parse(pageMenu?.schema?.table_config));
+//   const trigger = React.cloneElement(title, {
+//     key: 'trigger',
+//     ...title.props,
+//     onClick: async (e: any) => {
+//       setVisible(false);
+//       e.stopPropagation();
+//     },
+//   });
+//   return (
+//     <div
+//       onKeyDown={(e) => {
+//         e.stopPropagation();
+//       }}
+//       onClick={(e) => {
+//         //e.stopPropagation();
+//       }}
+//     >
+//       <CustomerColumnRenderDevReal
+//         fieldProps={{
+//           value: value?.props,
+//           onChange,
+//           btnText: trigger,
+//           relationModel: relations,
+//           allMenus,
+//           modelColumns,
+//         }}
+//       />
+//     </div>
+//   );
+// };
 
 export const DeleteColumn = (props) => {
   const { title, uid, extpost } = props;
@@ -272,13 +288,11 @@ export const DeleteColumn = (props) => {
     ...title.props,
     onClick: async (e: any) => {
       setVisible(false);
-      e.preventDefault();
-      e.stopPropagation();
     },
   });
   return (
     <Confirm
-      trigger={trigger}
+      trigger={<div style={{ width: '100%' }}>{trigger}</div>}
       url={deleteUrl}
       data={{ base: { id: pageMenu?.id, uid, ...extpost } }}
       msg="确定要删除吗"
@@ -287,6 +301,26 @@ export const DeleteColumn = (props) => {
         return true;
       }}
     />
+  );
+};
+export const AddEmptyGroup = (props) => {
+  const { title, uid, extpost } = props;
+  const {
+    tableDesigner: { pageMenu, reflush, editUrl = '' },
+  } = useContext(SaContext);
+  const { setVisible } = useContext(SchemaSettingsContext);
+
+  const add = async () => {
+    const { data } = await request.post(editUrl, {
+      data: { base: { id: pageMenu?.id, uid, ...extpost } },
+    });
+    reflush(data);
+  };
+
+  return (
+    <div style={{ width: '100%' }} onClick={add}>
+      {title}
+    </div>
   );
 };
 
@@ -301,7 +335,7 @@ export const DevTableColumnTitle = (props) => {
         title={
           <Space>
             <EditOutlined />
-            <span>基本信息</span>
+            <span>设置</span>
           </Space>
         }
         uid={uid}
@@ -327,20 +361,20 @@ export const DevTableColumnTitle = (props) => {
     ),
     key: 'addtab',
   };
-  const moreform: ItemType = {
-    label: (
-      <MoreForm
-        title={
-          <Space>
-            <SettingOutlined />
-            <span>更多设置</span>
-          </Space>
-        }
-        uid={uid}
-      />
-    ),
-    key: 'more',
-  };
+  // const moreform: ItemType = {
+  //   label: (
+  //     <MoreForm
+  //       title={
+  //         <Space>
+  //           <SettingOutlined />
+  //           <span>更多设置</span>
+  //         </Space>
+  //       }
+  //       uid={uid}
+  //     />
+  //   ),
+  //   key: 'more',
+  // };
   const addCol: ItemType = {
     label: (
       <BaseForm
@@ -372,6 +406,21 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'addGroup',
+  };
+  const addEmptyGroup: ItemType = {
+    label: (
+      <AddEmptyGroup
+        title={
+          <Space>
+            <InsertRowRightOutlined />
+            <span>快速插入组</span>
+          </Space>
+        }
+        uid={uid}
+        extpost={{ actionType: 'addGroup' }}
+      />
+    ),
+    key: 'addEmptyGroup',
   };
   const deleteitem: ItemType = {
     label: (
@@ -406,7 +455,7 @@ export const DevTableColumnTitle = (props) => {
           baseform,
           addCol,
           addGroup,
-
+          addEmptyGroup,
           {
             type: 'divider',
           },
@@ -415,7 +464,7 @@ export const DevTableColumnTitle = (props) => {
         ]
       : [
           baseform,
-          moreform,
+          //moreform,
           addCol,
           {
             type: 'divider',
@@ -456,17 +505,29 @@ export const DevTableColumnTitle = (props) => {
   );
 };
 
-export const FormAddTab = () => {
+export const FormAddTab = (props) => {
+  const { pageMenu } = props;
   return (
-    <BaseForm
-      title={
-        <Button type="dashed">
-          <span> + Tab</span>
-        </Button>
-      }
-      ctype="tab"
-      extpost={{ actionType: 'addTab' }}
-    />
+    <Space>
+      <BaseForm
+        title={
+          <Button type="dashed">
+            <span> + Tab</span>
+          </Button>
+        }
+        ctype="tab"
+        extpost={{ actionType: 'addTab' }}
+      />
+      <ToolBarMenu
+        key="devsetting"
+        trigger={
+          <Button type="dashed" danger>
+            <SettingOutlined />
+          </Button>
+        }
+        pageMenu={pageMenu}
+      />
+    </Space>
   );
 };
 

@@ -27,6 +27,7 @@ const formMoreType = [
   { label: '属性配置 - jsonForm', value: 'jsonForm' },
   { label: '多行编辑 - formList', value: 'formList' },
   { label: 'select', value: 'select' },
+  { label: '异步下拉选择器 - debounceSelect', value: 'debounceSelect' },
   { label: 'json编辑器 - jsonEditor', value: 'jsonEditor' },
   { label: 'jsonCode', value: 'jsonCode' },
   { label: '头像显示 - avatar', value: 'avatar' },
@@ -350,27 +351,28 @@ export const devBaseFormFormColumns = (props: devTabelFieldsProps) => {
           valueType: 'select',
           fieldProps: {
             options: formMoreType,
+            showSearch: true,
             placeholder: '请选择表单额外类型',
           },
         },
       ],
     },
-    {
-      valueType: 'group',
-      columns: [
-        {
-          title: '自定义title',
-          dataIndex: ['props', 'title'],
-          colProps: { span: 12 },
-        },
-        {
-          title: '自定义字段',
-          tooltip: '如果选择器中无想要的字段名称，可定义填写，多层级使用.拼接',
-          dataIndex: ['props', 'dataIndex'],
-          colProps: { span: 12 },
-        },
-      ],
-    },
+    // {
+    //   valueType: 'group',
+    //   columns: [
+    //     {
+    //       title: '自定义title',
+    //       dataIndex: ['props', 'title'],
+    //       colProps: { span: 12 },
+    //     },
+    //     {
+    //       title: '自定义字段',
+    //       tooltip: '如果选择器中无想要的字段名称，可定义填写，多层级使用.拼接',
+    //       dataIndex: ['props', 'dataIndex'],
+    //       colProps: { span: 12 },
+    //     },
+    //   ],
+    // },
     {
       valueType: 'group',
       columns: [
@@ -573,26 +575,27 @@ export const devBaseTableFormColumns = (props: devTabelFieldsProps): saFormColum
           title: '字段类型',
           fieldProps: {
             options: columnType,
+            showSearch: true,
             placeholder: '请选择表字段类型',
           },
         },
       ],
     },
-    {
-      valueType: 'group',
-      columns: [
-        {
-          dataIndex: ['props', 'title'],
-          title: '自定义表头',
-          colProps: { span: 12 },
-        },
-        {
-          dataIndex: ['props', 'width'],
-          title: '自定义列宽',
-          colProps: { span: 12 },
-        },
-      ],
-    },
+    // {
+    //   valueType: 'group',
+    //   columns: [
+    //     {
+    //       dataIndex: ['props', 'title'],
+    //       title: '自定义表头',
+    //       colProps: { span: 12 },
+    //     },
+    //     {
+    //       dataIndex: ['props', 'width'],
+    //       title: '自定义列宽',
+    //       colProps: { span: 12 },
+    //     },
+    //   ],
+    // },
     {
       valueType: 'group',
       columns: [

@@ -556,6 +556,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
             ...setting?.pagination,
           }}
           {...tableProps}
+          {...setting?.table}
           rowKey="id"
         />
         <TableForm

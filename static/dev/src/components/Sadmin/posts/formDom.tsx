@@ -49,27 +49,12 @@ interface formFieldsProps {
   devEnable?: boolean;
 }
 
-export const GetFormFields: React.FC<{ columns: ProFormColumnsType[] | saFormColumnsType }> = ({
-  columns,
-}) => {
+export const GetFormFields: React.FC<{
+  columns: ProFormColumnsType[] | saFormColumnsType;
+  grid?: boolean;
+}> = ({ columns, grid }) => {
   //console.log('GetFormFields', columns);
-  return (
-    <BetaSchemaForm
-      layoutType="Embed"
-      // rowProps={{
-      //   gutter: [10, 10],
-      // }}
-      // colProps={{
-      //   span: 12,
-      // }}
-      // grid={true}
-      // name="hahaha"
-      // onFinish={async (values) => {
-      //   console.log(values);
-      // }}
-      columns={columns}
-    />
-  );
+  return <BetaSchemaForm layoutType="Embed" grid={false} columns={columns} />;
 };
 
 export const getFormFieldColumns = (props: formFieldsProps) => {
@@ -200,7 +185,7 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
       }
 
       //将name设置到属性当中 因为 valueTypeMap 中会丢失name 先在这里添加修改下
-      v.fieldProps = { ...v.fieldProps, dataindex: v.dataIndex };
+      v.fieldProps = { ...v.fieldProps, dataindex: v.dataIndex, olddataindex: v.dataIndex };
       if (v.valueType == 'modalSelect' && !v.fieldProps.name) {
         //将name设置到属性当中 因为 valueTypeMap 中会丢失name 先在这里添加修改下
         v.fieldProps = { ...v.fieldProps, name: v.dataIndex };

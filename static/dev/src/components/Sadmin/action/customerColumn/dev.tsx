@@ -1,13 +1,12 @@
 import { ProCard, ProForm, ProFormInstance } from '@ant-design/pro-components';
 import { Button, Modal, Typography } from 'antd';
-import { ButtonType } from 'antd/es/button';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import CustomerColumnRender from '.';
 import { inArray } from '../../checkers';
 import { dependencyOn } from '../../dev/vars/dependencyOn';
 import rules from '../../dev/vars/rules';
+import tagConfig from '../../dev/vars/tag';
 import { parseIcon, saFormColumnsType } from '../../helpers';
-import { GetFormFields } from '../../posts/formDom';
+import { GetFormFields, getFormFieldColumns } from '../../posts/formDom';
 interface CustomerColumnProps {
   ok?: (value: any) => void;
   value?: any;
@@ -20,9 +19,7 @@ const defaultBtn = {
   //type: 'default',
 };
 
-const CustomerColumn: FC<CustomerColumnProps> = (props) => {
-  const { ok, value, relationModel, allMenus = [], modelColumns = [] } = props;
-  //console.log('relationModel', relationModel, allMenus, modelColumns);
+export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumns = []) => {
   const dependencyOnVars = dependencyOn(modelColumns);
   const fieldPorpsColumn = {
     dataIndex: 'fieldProps',
@@ -32,7 +29,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
       width: 1200,
       btn: {
         title: 'fieldProps',
-        size: 'middle',
+        size: 'small',
       },
       formColumns: [
         {
@@ -55,25 +52,38 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
       columns: [
         {
           title: '表头title',
-          dataIndex: 'title',
+          dataIndex: ['props', 'title'],
+          colProps: {
+            span: 12,
+          },
+        },
+        {
+          title: '列宽',
+          dataIndex: ['props', 'width'],
+          colProps: {
+            span: 12,
+          },
         },
         {
           title: '字段名称',
           tooltip: '如果选择器中无想要的字段名称，请填写在这里',
-          dataIndex: 'dataIndex',
+          dataIndex: ['props', 'dataIndex'],
+          colProps: {
+            span: 12,
+          },
         },
-        {
-          title: '列宽',
-          dataIndex: 'width',
-        },
+
         {
           title: '栅格',
-          dataIndex: 'span',
+          dataIndex: ['props', 'span'],
           tooltip: '分为24格，不设置自动 = 24 / 列数',
+          colProps: {
+            span: 12,
+          },
         },
         {
           title: '提示语',
-          dataIndex: 'tip',
+          dataIndex: ['props', 'tip'],
           valueType: 'confirmForm',
           fieldProps: {
             btn: {
@@ -87,24 +97,14 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             ],
             saFormProps: { devEnable: false },
           },
-        },
-        {
-          title: 'dependencyOn',
-          dataIndex: 'dependencyOn',
-          valueType: 'confirmForm',
-          fieldProps: {
-            btn: {
-              title: 'dependencyOn',
-              size: 'middle',
-            },
-            msg: '依赖项配置，只控制表单项的显隐',
-            formColumns: dependencyOnVars,
-            saFormProps: { grid: false },
+          colProps: {
+            span: 5,
           },
         },
+
         {
           title: 'form校验',
-          dataIndex: 'rules',
+          dataIndex: ['props', 'rules'],
           valueType: 'confirmForm',
           fieldProps: {
             btn: {
@@ -115,34 +115,64 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             formColumns: rules,
             saFormProps: { devEnable: false },
           },
+          colProps: {
+            span: 5,
+          },
+        },
+        {
+          title: 'fieldProps',
+          valueType: 'modalJson',
+          dataIndex: ['props', 'fieldProps'],
+          colProps: {
+            span: 5,
+          },
+        },
+        {
+          title: 'dependencyOn',
+          dataIndex: ['props', 'dependencyOn'],
+          valueType: 'confirmForm',
+          fieldProps: {
+            btn: {
+              title: 'dependencyOn',
+              size: 'middle',
+            },
+            msg: '依赖项配置，只控制表单项的显隐',
+            formColumns: dependencyOnVars,
+            saFormProps: { grid: false },
+          },
+          colProps: {
+            span: 9,
+          },
         },
       ],
     },
     {
       valueType: 'group',
       columns: [
-        {
-          title: '模拟数据',
-          valueType: 'modalJson',
-          dataIndex: 'record',
-        },
-        {
-          title: 'fieldProps',
-          valueType: 'modalJson',
-          dataIndex: 'fieldProps',
-        },
+        // {
+        //   title: '模拟数据',
+        //   valueType: 'modalJson',
+        //   dataIndex: 'record',
+        // },
+
         {
           title: 'formItemProps',
           valueType: 'modalJson',
-          dataIndex: 'formItemProps',
+          dataIndex: ['props', 'formItemProps'],
+          colProps: {
+            span: 5,
+          },
         },
         {
           title: '整体配置',
           valueType: 'modalJson',
-          dataIndex: 'outside',
+          dataIndex: ['props', 'outside'],
+          colProps: {
+            span: 5,
+          },
         },
         {
-          dataIndex: 'if',
+          dataIndex: ['props', 'if'],
           title: '显示条件',
           valueType: 'modalJson',
           tooltip:
@@ -151,19 +181,12 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             title: '编辑条件',
             type: 'textarea',
           },
+          colProps: {
+            span: 5,
+          },
         },
         {
-          title: '可复制',
-          valueType: 'switch',
-          dataIndex: 'copyable',
-        },
-        {
-          title: 'ellipsis',
-          valueType: 'switch',
-          dataIndex: 'ellipsis',
-        },
-        {
-          dataIndex: 'dom_direction',
+          dataIndex: ['props', 'dom_direction'],
           title: 'dom排列方式',
           valueType: 'radioButton',
           fieldProps: {
@@ -176,18 +199,54 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
               { label: 'Dropdown', value: 'dropdown' },
             ],
           },
+          colProps: {
+            span: 9,
+          },
+        },
+        {
+          title: '可复制',
+          valueType: 'switch',
+          dataIndex: ['props', 'copyable'],
+          colProps: {
+            span: 5,
+          },
+        },
+        {
+          title: 'ellipsis',
+          valueType: 'switch',
+          dataIndex: ['props', 'ellipsis'],
+          colProps: {
+            span: 10,
+          },
+        },
+        {
+          dataIndex: ['props', 'fixed'],
+          title: 'fixed',
+          valueType: 'radioButton',
+          fieldProps: {
+            buttonStyle: 'solid',
+            defaultValue: 'none',
+            options: [
+              { label: 'none', value: 'none' },
+              { label: 'left', value: 'left' },
+              { label: 'right', value: 'right' },
+            ],
+          },
+          colProps: {
+            span: 9,
+          },
         },
       ],
     },
     {
-      dataIndex: 'items',
+      dataIndex: ['props', 'items'],
+      //dataIndex: 'items',
       title: 'DOM列',
       valueType: 'saFormList',
       fieldProps: {
         //creatorRecord: { ...defaultBtn },
         showtype: 'table',
       },
-
       columns: [
         {
           valueType: 'group',
@@ -207,6 +266,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                   { label: 'tag', value: 'tag' },
                   { label: 'table', value: 'table' },
                 ],
+                size: 'small',
               },
             },
 
@@ -223,12 +283,16 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                       valueType: 'modalJson',
                       fieldProps: {
                         title: '设置',
+                        size: 'small',
                       },
                     },
                   ];
                 }
                 if (domtype == 'table') {
                   return [fieldPorpsColumn];
+                }
+                if (domtype == 'tag') {
+                  return tagConfig;
                 }
                 if (domtype == 'button' || domtype == 'text' || domtype == 'qrcode') {
                   const domExtColumns = [];
@@ -244,6 +308,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                           { label: 'Q', value: 'Q' },
                           { label: 'H', value: 'H' },
                         ],
+                        size: 'small',
                       },
                     });
                   }
@@ -313,6 +378,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                           fieldProps: {
                             title: '编辑条件',
                             type: 'textarea',
+                            btn: { size: 'small' },
                           },
                         },
                         {
@@ -322,7 +388,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                           fieldProps: {
                             btn: {
                               title: '编辑DOM',
-                              size: 'middle',
+                              size: 'small',
                             },
                             formColumns: domFormColumns,
                             saFormProps: { grid: false, devEnable: false },
@@ -373,6 +439,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                               { label: '编辑', value: 'edit' },
                               { label: '删除', value: 'delete' },
                             ],
+                            size: 'small',
                           },
                         },
                         fieldPorpsColumn,
@@ -392,7 +459,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                                   width: 1200,
                                   btn: {
                                     title: 'modal配置',
-                                    size: 'middle',
+                                    size: 'small',
                                   },
                                   formColumns: [
                                     {
@@ -422,7 +489,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                                   width: 1200,
                                   btn: {
                                     title: 'modal配置',
-                                    size: 'middle',
+                                    size: 'small',
                                   },
                                   formColumns: [
                                     {
@@ -446,7 +513,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                                   width: 1200,
                                   btn: {
                                     title: 'modal配置',
-                                    size: 'middle',
+                                    size: 'small',
                                   },
                                   formColumns: [
                                     {
@@ -504,7 +571,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                                 fieldProps: {
                                   btn: {
                                     title: 'request配置',
-                                    size: 'middle',
+                                    size: 'small',
                                   },
                                   formColumns: [
                                     {
@@ -549,7 +616,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
                                 fieldProps: {
                                   btn: {
                                     title: 'popover配置',
-                                    size: 'middle',
+                                    size: 'small',
                                   },
                                   formColumns: [
                                     {
@@ -635,42 +702,62 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
       ],
     },
   ];
+  return columns;
+};
+
+const CustomerColumn: FC<CustomerColumnProps> = (props) => {
+  const { ok, value, relationModel, allMenus = [], modelColumns = [] } = props;
+  //console.log('relationModel', relationModel, allMenus, modelColumns);
+
   interface saRequestData {
     url?: string;
     data?: object;
   }
-  const [items, setItems] = useState<
-    [
-      {
-        text?: string;
-        type?: ButtonType;
-        danger?: boolean;
-        domtype?: string;
-        action?: string;
-        formColumns?: [];
-        request?: saRequestData;
-      },
-    ]
-  >(value?.items ? value.items : []);
-  const [record, setRecord] = useState<Record<string, any>>(
-    value?.record ? value.record : { id: 1 },
-  );
+  // const [items, setItems] = useState<
+  //   [
+  //     {
+  //       text?: string;
+  //       type?: ButtonType;
+  //       danger?: boolean;
+  //       domtype?: string;
+  //       action?: string;
+  //       formColumns?: [];
+  //       request?: saRequestData;
+  //     },
+  //   ]
+  // >(value?.items ? value.items : []);
+  // const [record, setRecord] = useState<Record<string, any>>(
+  //   value?.record ? value.record : { id: 1 },
+  // );
+  const [columns, setColumns] = useState([]);
+  useEffect(() => {
+    const cols = getCustomerColumn(relationModel, allMenus, modelColumns);
+
+    setColumns(
+      getFormFieldColumns({
+        initRequest: true,
+        columns: cols,
+        devEnable: false,
+      }),
+    );
+  }, []);
   const formRef = useRef<ProFormInstance<any>>({} as any);
   useEffect(() => {
-    formRef?.current?.setFieldsValue?.(value);
+    console.log('value is ', value, { props: value });
+    formRef?.current?.setFieldsValue?.({ props: value });
   }, [value]);
 
   return (
     <>
-      <ProCard title="效果展示,只做展示作用">
+      {/* <ProCard title="效果展示,只做展示作用">
         <CustomerColumnRender items={items} record={record} />
-      </ProCard>
+      </ProCard> */}
       <ProCard title="配置">
         <ProForm
           submitter={false}
           formRef={formRef}
           request={() => {
-            return value;
+            return { props: value };
           }}
           onValuesChange={(v, allValues) => {
             //console.log(v);
@@ -688,13 +775,13 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
             //     parseDatas.push({ ...item, ...parseValues });
             //   }
             // });
-            if (v.items) {
-              setItems([...allValues.items]);
-            }
-            if (v.record) {
-              setRecord(allValues.record);
-            }
-            ok && ok(allValues);
+            // if (v.items) {
+            //   setItems([...allValues.items]);
+            // }
+            // if (v.record) {
+            //   setRecord(allValues.record);
+            // }
+            ok && ok(allValues?.props);
           }}
         >
           <GetFormFields columns={columns} />

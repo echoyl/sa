@@ -89,7 +89,7 @@ const DragableUploadListItem = ({
   //const errorNode = <Tooltip title="Upload Error">{originNode.props.children}</Tooltip>;
   return (
     <div
-      className={`ant-pro-form-list-item ant-pro-form-list-item-default ${hashId}`}
+      className={`ant-pro-form-list-item ant-pro-form-list-item-default ant-pro-form-list-item-${showtype} ${hashId} `}
       style={{ display: 'flex', alignItems: 'flex-end' }}
     >
       {showtype == 'card' ? (
@@ -143,12 +143,13 @@ const SaOptions: React.FC<SaOptionsProps> = (props) => {
     actionRef.current?.add({ id: uid() }, addIndex);
   }, []);
   //const name = props.id.replace('basic_', '');
-
+  //console.log('name is', name);
   return (
     <ProFormList
       key={id}
       actionRef={actionRef}
       name={name}
+      rowProps={{ gutter: 0 }}
       //name={name}
       //alwaysShowItemLabel={false}
       //initialValue={[...props.value]}
@@ -174,7 +175,7 @@ const SaOptions: React.FC<SaOptionsProps> = (props) => {
     >
       {() => {
         //console.log(f, index, action);
-        return <GetFormFields columns={[{ valueType: 'group', columns: columns }]} />;
+        return <GetFormFields grid={false} columns={[{ valueType: 'group', columns: columns }]} />;
         // return (
         //   <BetaSchemaForm
         //     layoutType="Embed"

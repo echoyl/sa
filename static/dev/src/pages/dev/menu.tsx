@@ -179,6 +179,26 @@ export const MenuFormColumn: saFormColumnsType = [
           formColumns: [
             {
               valueType: 'group',
+              title: '表格设置',
+              columns: [
+                {
+                  dataIndex: ['table', 'scroll', 'y'],
+                  title: '滚动高度',
+                  valueType: 'digit',
+                  width: '100%',
+                  colProps: { span: 12 },
+                },
+                {
+                  dataIndex: ['table', 'scroll', 'x'],
+                  title: '滚动宽度',
+                  valueType: 'digit',
+                  width: '100%',
+                  colProps: { span: 12 },
+                },
+              ],
+            },
+            {
+              valueType: 'group',
               title: '分页设置',
               columns: [
                 {
@@ -217,6 +237,21 @@ export const MenuFormColumn: saFormColumnsType = [
                   dataIndex: 'steps_form',
                   title: '分步表单',
                   valueType: 'switch',
+                  colProps: { span: 12 },
+                },
+                {
+                  dataIndex: ['form', 'variant'],
+                  title: 'variant',
+                  valueType: 'radioButton',
+                  fieldProps: {
+                    buttonStyle: 'solid',
+                    defaultValue: 'filled',
+                    options: [
+                      { label: 'outlined', value: 'outlined' },
+                      { label: 'borderless', value: 'borderless' },
+                      { label: 'filled', value: 'filled' },
+                    ],
+                  },
                   colProps: { span: 12 },
                 },
               ],

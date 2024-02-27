@@ -233,7 +233,7 @@ export const SaForm: FC<saFormProps> = (props) => {
       }}
     >
       <DndContext>
-        {devEnable ? <FormAddTab /> : null}
+        {devEnable ? <FormAddTab pageMenu={pageMenu} /> : null}
         {setting?.steps_form ? (
           <StepsForm
             current={stepFormCurrent}
@@ -302,6 +302,7 @@ export const SaForm: FC<saFormProps> = (props) => {
             key="ProForm"
             form={props.form}
             formRef={formRef}
+            variant="filled"
             style={pageType == 'page' ? { margin: 'auto', maxWidth: width } : {}}
             //style={pageType == 'page' ? { maxWidth: 688 } : {}}
             //layout="vertical"
@@ -338,6 +339,7 @@ export const SaForm: FC<saFormProps> = (props) => {
               required: '此项为必填项',
             }}
             {...props.formProps}
+            {...setting?.form}
           >
             {showTabs ? (
               <Tabs
@@ -355,7 +357,11 @@ export const SaForm: FC<saFormProps> = (props) => {
                       : tabs[index]?.tab?.title
                     : '基础信息';
                   return {
-                    label: <TabColumnTitle uid={thistab?.uid} title={label} data={thistab} />,
+                    label: devEnable ? (
+                      <TabColumnTitle uid={thistab?.uid} title={label} data={thistab} />
+                    ) : (
+                      label
+                    ),
                     key: thistab?.uid ? thistab?.uid : index + '', //key为字符串 如果是数字造成tab过多后点击切换失败的bug
                     children: <GetFormFields columns={cl} />,
                     forceRender: true,

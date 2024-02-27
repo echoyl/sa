@@ -223,7 +223,12 @@ export const getTableColumns = (props) => {
     const df = v.valueType ? defaulColumnsRender(v.valueType) : false;
     if (df) {
       df.uid = v.uid;
+      const fixed = v.fixed;
       v = cloneDeep(df);
+      //设置fixed
+      if (fixed) {
+        v.fixed = fixed;
+      }
     }
 
     //加入if条件控制
