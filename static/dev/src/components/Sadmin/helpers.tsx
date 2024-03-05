@@ -373,14 +373,19 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
     render: (text, props) => {
       //console.log('customerColumn', text, props);
       const { fieldProps } = props;
-      const { items } = fieldProps;
+      //const { items } = fieldProps;
       return (
-        <CustomerColumnRender {...fieldProps} type="table" record={props.record} text={text} />
+        <CustomerColumnRender
+          {...fieldProps}
+          type={props.record ? 'table' : 'form'}
+          record={props.record ? props.record : {}}
+          text={text}
+        />
       );
     },
     renderFormItem: (text, props) => {
       const { fieldProps } = props;
-      const { items } = fieldProps;
+      //const { items } = fieldProps;
       //console.log('renderFormItem here');
       return <CustomerColumnRender {...fieldProps} type="form" record={{}} text={text} />;
     },
@@ -616,6 +621,28 @@ export const getBread = (path: string) => {
   }
   return null;
 };
+const findChild = (data, id) => {
+  let r;
+  for (const v of data) {
+    if (v.id == id) {
+      r = v;
+    } else {
+      if (v.routes?.length > 0) {
+        r = findChild(v.routes, id);
+      }
+    }
+    if (r) {
+      break;
+    }
+  }
+  return r;
+};
+export const getMenuDataById = (data, id) => {
+  //const { initialState } = useModel('@@initialState');
+  const menu = findChild(data, id);
+  return menu;
+};
+
 export const parseIcon = (icon) => {
   if (icon) {
     if (isStr(icon)) {

@@ -173,7 +173,7 @@ export const SchemaSettingsDropdown: React.FC<SchemaSettingsProps> = (props) => 
         <span
           onClick={(e) => {
             e.preventDefault();
-            //e.stopPropagation();
+            e.stopPropagation();
           }}
         >
           {typeof title === 'string' ? <span>{title}</span> : title}

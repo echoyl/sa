@@ -14,7 +14,7 @@ import {
 } from 'antd';
 import React, { useContext, useEffect, useState } from 'react';
 import { inArray, isArr } from '../../checkers';
-import { parseIcon, tplComplie } from '../../helpers';
+import { getMenuDataById, parseIcon, tplComplie } from '../../helpers';
 import { SaContext } from '../../posts/table';
 import TableFromBread from '../../tableFromBread';
 import ButtonDrawer from '../buttonDrawer';
@@ -176,16 +176,30 @@ const CustomerColumnRender = (props) => {
         />
       );
     } else if (item.domtype == 'table') {
-      //console.log('tag text', text, item);
-      if (item.fieldProps?.cal) {
-        const cal_data = tplComplie(item.fieldProps.cal, {
-          record,
-          user: initialState?.currentUser,
-        });
-        return <Table key={'table_' + i} dataSource={cal_data} {...item.fieldProps?.value} />;
+      //读取是否关联了菜单，关联菜单后直接读取该菜单的table列设置
+      let tableColumns;
+      if (item.page) {
+        const menudata = getMenuDataById(initialState?.currentUser?.menuData, item.page);
+        //console.log('menudata', menudata);
+        tableColumns = menudata ? menudata.data?.tableColumns : [];
       } else {
-        return <Table key={'table_' + i} dataSource={text} {...item.fieldProps?.value} />;
+        tableColumns = item.fieldProps?.value?.columns ? item.fieldProps?.value?.columns : [];
       }
+      //console.log('tag text', text, item, initialState?.currentUser?.menuData, tableColumns);
+      const dataSource = item.fieldProps?.cal
+        ? tplComplie(item.fieldProps.cal, {
+            record,
+            user: initialState?.currentUser,
+          })
+        : text;
+      return (
+        <Table
+          key={'table_' + i}
+          dataSource={dataSource}
+          {...item.fieldProps?.value}
+          columns={tableColumns}
+        />
+      );
     }
     return '';
   };
@@ -459,6 +473,8 @@ const CustomerColumnRender = (props) => {
         <a onClick={(e) => e.preventDefault()}>{dropdown.text ? dropdown.text : '···'}</a>
       </Dropdown>
     ) : null
+  ) : direction == 'none' ? (
+    itemsDom
   ) : (
     <Space direction={direction}>{itemsDom}</Space>
   );

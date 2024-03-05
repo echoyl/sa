@@ -341,7 +341,7 @@ export const SaForm: FC<saFormProps> = (props) => {
             {...props.formProps}
             {...setting?.form}
           >
-            {showTabs ? (
+            {showTabs || devEnable ? (
               <Tabs
                 style={{ width: '100%' }}
                 //defaultActiveKey="0"

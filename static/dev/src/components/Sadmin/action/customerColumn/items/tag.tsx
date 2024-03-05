@@ -5,13 +5,13 @@ import { Tag, Typography } from 'antd';
 import { FC, useContext } from 'react';
 const ItemTag: FC<{ color?: string; title?: string; bordered?: boolean }> = (props) => {
   const { color, title, bordered = true } = props;
-  return (
+  return title ? (
     <Tag color={color} bordered={bordered}>
       <Typography.Text style={{ maxWidth: 80, color: 'inherit' }} ellipsis={{ tooltip: title }}>
         {title}
       </Typography.Text>
     </Tag>
-  );
+  ) : null;
 };
 
 const ItemTags: FC<{
@@ -32,17 +32,12 @@ const ItemTags: FC<{
   return (
     <>
       {tags.map((tag, i) => {
+        let xtag = tag;
         if (!isObj(tag)) {
           const opt = options?.find((v) => v.id == tag);
-          return opt ? (
-            <ItemTag key={i} color={opt.color} title={opt.title} bordered={bordered} />
-          ) : (
-            <ItemTag key={i} color={color} title={tag} bordered={bordered} />
-          );
-        } else {
-          //console.log('one tag', dataindex, searchData, tag);
-          return <ItemTag key={i} color={tag.color} title={tag.title} bordered={bordered} />;
+          xtag = opt ? opt : { color, title: tag };
         }
+        return xtag.title ? <ItemTag key={i} {...xtag} bordered={bordered} /> : '-';
       })}
     </>
   );

@@ -19,13 +19,37 @@ class TableService extends BaseService
     {
         $config = $this->config;
         $name = $this->name;
-
-        
+        $columns = $config?$config:[];
         $uid = Arr::get($base,'uid');
 
-        $columns = $config?$config:[];
+        if($action_type == 'setColumns')
+        {
+            //table 快速设置列字段展示
+            $checked = $base['checked'];
+            $key = $base['key'];
+            unset($base['checked']);
+            if($checked)
+            {
+                //勾选 新增
+                $action_type = 'add';
+            }else
+            {
+                //取消勾选 删除
+                $action_type = 'delete';
+            }
+            [$active,$old_value] = $this->getColumnIndex($columns,$key,'key');
+        }else
+        {
+            [$active,$old_value] = $this->getColumnIndex($columns,$uid);
+        }
 
-        [$active,$old_value] = $this->getColumnIndex($columns,$uid);
+        //d($active,$old_value,$action_type);
+        
+        
+
+        
+
+        
 
         $new_uid = HelperService::uuid();
 
@@ -109,12 +133,12 @@ class TableService extends BaseService
      * @param [type] $uid
      * @return void
      */
-    public function getColumnIndex($columns,$uid)
+    public function getColumnIndex($columns,$uid,$key_name = 'uid')
     {
         $index = $index_data = false;
         foreach($columns as $key=>$val)
         {
-            if($uid == $val['uid'])
+            if($uid == $val[$key_name])
             {
                 $index = $key;
                 $index_data = $val;

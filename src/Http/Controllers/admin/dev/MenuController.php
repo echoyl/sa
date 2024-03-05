@@ -501,10 +501,11 @@ class MenuController extends CrudController
                     }
                 }
                 $config[$kv]['columns'] = $keys;
-                if($item['admin_model'])
-                {
-                    $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
-                }
+                // if($item['admin_model'])
+                // {
+                    
+                // }
+                $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
                 
                 // if(empty($columns))
                 // {
@@ -518,6 +519,7 @@ class MenuController extends CrudController
                 {
                     $json_item['title'] = $group_title;
                 }
+                
                 $json[] = $json_item;
             }
             
@@ -669,12 +671,19 @@ class MenuController extends CrudController
     {
         $ds = new DevService;
         //所请求使用菜单的path路径
-        $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
-        $desc['url'] = implode('/',$path);
-        if($item['page_type'] == 'form')
+        //如果没有选择模型清除链接
+        if($item['admin_model_id'])
         {
-            //如果指定form页面额外设置 postUrl参数
-            $desc['postUrl'] = $desc['url'];
+            $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
+            $desc['url'] = implode('/',$path);
+            if($item['page_type'] == 'form')
+            {
+                //如果指定form页面额外设置 postUrl参数
+                $desc['postUrl'] = $desc['url'];
+            }
+        }else
+        {
+            $desc['url']  = $desc['postUrl'] = '';
         }
         $data['desc'] = json_encode($desc);
         $this->model->where(['id'=>$item['id']])->update($data);

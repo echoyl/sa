@@ -1,12 +1,13 @@
 import { saTableColumnsType } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
+import request from '@/services/ant-design-pro/sadmin';
 import { CopyOutlined, FileOutlined, FolderOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { ActionType, ProFormInstance } from '@ant-design/pro-components';
+import { useModel } from '@umijs/max';
 import { Button, Space } from 'antd';
 import { useRef, useState } from 'react';
 import ModelRelation from './modelRelation';
 import QuickCreate from './quickCreate';
-
 /**
  * 默认数据库有的字段
  */
@@ -131,7 +132,6 @@ export default () => {
     { label: 'text-文本', value: 'text' },
     { label: 'bigint-长整数', value: 'bigint' },
     { label: 'longtext-长Text', value: 'longtext' },
-    
   ];
   const modelType = ['category', 'normal', 'auth'];
   const searchColumnType = ['=', 'like', 'whereBetween', 'whereIn', 'has', 'doesntHave'];
@@ -166,6 +166,8 @@ export default () => {
     const cateColumns = [
       { title: 'id', name: 'id', type: 'int' },
       { title: '名称', name: 'title', type: 'vachar' },
+      { title: '描述', name: 'desc', type: 'vachar' },
+      { title: '颜色', name: 'color', type: 'vachar' },
       { title: '父级Id', name: 'parent_id', type: 'int', desc: '' },
       {
         title: '图片',
@@ -220,7 +222,14 @@ export default () => {
       type == 'category' ? [...cateColumns] : [...normalColumns],
     );
   };
+  const { initialState, setInitialState } = useModel('@@initialState');
 
+  const reData = () => {
+    request.get('setting').then(({ data }) => {
+      initialState.settings.dev.allModels = data.dev?.allModels;
+      setInitialState((s) => initialState);
+    });
+  };
   return (
     <>
       <Category
@@ -234,6 +243,8 @@ export default () => {
           //console.log('beforeTableGet', data);
           setAllData(data);
         }}
+        afterFormPost={reData}
+        afterDelete={reData}
         openWidth={1500}
         grid={false}
         devEnable={false}
@@ -429,29 +440,33 @@ export default () => {
                         {
                           valueType: 'group',
                           columns: [
-                            { title: '图片或视频数量限制', dataIndex: 'image_count',colProps:{span:8} },
-                            { title: '省市区层级', dataIndex: 'pca_level',colProps:{span:8} },
+                            {
+                              title: '图片或视频数量限制',
+                              dataIndex: 'image_count',
+                              colProps: { span: 8 },
+                            },
+                            { title: '省市区层级', dataIndex: 'pca_level', colProps: { span: 8 } },
                             {
                               title: '省市区前缀',
                               dataIndex: 'pca_topCode',
                               tooltip: '限定上级省市显示，逗号分割',
-                              colProps:{span:8}
+                              colProps: { span: 8 },
                             },
                           ],
                         },
                         {
                           valueType: 'group',
                           columns: [
-                            { title: 'label', dataIndex: 'label',colProps:{span:8} },
-                            { title: 'value', dataIndex: 'value',colProps:{span:8} },
-                            { title: 'children', dataIndex: 'children',colProps:{span:8} },
+                            { title: 'label', dataIndex: 'label', colProps: { span: 8 } },
+                            { title: 'value', dataIndex: 'value', colProps: { span: 8 } },
+                            { title: 'children', dataIndex: 'children', colProps: { span: 8 } },
                           ],
                         },
                         {
                           valueType: 'group',
                           columns: [
-                            { title: 'swtich开启', dataIndex: 'open',colProps:{span:8} },
-                            { title: 'swtich关闭', dataIndex: 'close',colProps:{span:8} },
+                            { title: 'swtich开启', dataIndex: 'open', colProps: { span: 8 } },
+                            { title: 'swtich关闭', dataIndex: 'close', colProps: { span: 8 } },
                           ],
                         },
                         { title: 'json可选数据', dataIndex: 'json', valueType: 'jsonEditor' },

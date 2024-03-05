@@ -19,7 +19,7 @@ const defaultBtn = {
   //type: 'default',
 };
 
-export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumns = []) => {
+export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumns: any[]) => {
   const dependencyOnVars = dependencyOn(modelColumns);
   const fieldPorpsColumn = {
     dataIndex: 'fieldProps',
@@ -98,7 +98,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
             saFormProps: { devEnable: false },
           },
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
 
@@ -116,7 +116,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
             saFormProps: { devEnable: false },
           },
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
@@ -124,24 +124,21 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
           valueType: 'modalJson',
           dataIndex: ['props', 'fieldProps'],
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
-          title: 'dependencyOn',
-          dataIndex: ['props', 'dependencyOn'],
-          valueType: 'confirmForm',
+          dataIndex: ['props', 'page'],
+          title: '关联页面',
+          tooltip: '如果类型为formlist等，选择后自动读取所选菜单的columns配置',
+          valueType: 'treeSelect',
           fieldProps: {
-            btn: {
-              title: 'dependencyOn',
-              size: 'middle',
-            },
-            msg: '依赖项配置，只控制表单项的显隐',
-            formColumns: dependencyOnVars,
-            saFormProps: { grid: false },
+            options: allMenus,
+            treeLine: { showLeafIcon: true },
+            treeDefaultExpandAll: true,
           },
           colProps: {
-            span: 9,
+            span: 12,
           },
         },
       ],
@@ -160,7 +157,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
           valueType: 'modalJson',
           dataIndex: ['props', 'formItemProps'],
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
@@ -168,7 +165,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
           valueType: 'modalJson',
           dataIndex: ['props', 'outside'],
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
@@ -182,25 +179,25 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
             type: 'textarea',
           },
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
           dataIndex: ['props', 'dom_direction'],
           title: 'dom排列方式',
-          valueType: 'radioButton',
+          valueType: 'select',
           fieldProps: {
-            buttonStyle: 'solid',
-            placeholder: '请选择用工类别',
+            //buttonStyle: 'solid',
             defaultValue: 'horizontal',
             options: [
               { label: '水平', value: 'horizontal' },
               { label: '垂直', value: 'vertical' },
               { label: 'Dropdown', value: 'dropdown' },
+              { label: 'none', value: 'none' },
             ],
           },
           colProps: {
-            span: 9,
+            span: 12,
           },
         },
         {
@@ -208,7 +205,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
           valueType: 'switch',
           dataIndex: ['props', 'copyable'],
           colProps: {
-            span: 5,
+            span: 4,
           },
         },
         {
@@ -216,15 +213,32 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
           valueType: 'switch',
           dataIndex: ['props', 'ellipsis'],
           colProps: {
-            span: 10,
+            span: 4,
+          },
+        },
+        {
+          title: 'dependencyOn',
+          dataIndex: ['props', 'dependencyOn'],
+          valueType: 'confirmForm',
+          fieldProps: {
+            btn: {
+              title: 'dependencyOn',
+              size: 'middle',
+            },
+            msg: '依赖项配置，只控制表单项的显隐',
+            formColumns: dependencyOnVars,
+            saFormProps: { grid: false, devEnable: false },
+          },
+          colProps: {
+            span: 4,
           },
         },
         {
           dataIndex: ['props', 'fixed'],
           title: 'fixed',
-          valueType: 'radioButton',
+          valueType: 'select',
           fieldProps: {
-            buttonStyle: 'solid',
+            //buttonStyle: 'solid',
             defaultValue: 'none',
             options: [
               { label: 'none', value: 'none' },
@@ -233,7 +247,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
             ],
           },
           colProps: {
-            span: 9,
+            span: 12,
           },
         },
       ],
@@ -289,7 +303,20 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
                   ];
                 }
                 if (domtype == 'table') {
-                  return [fieldPorpsColumn];
+                  return [
+                    fieldPorpsColumn,
+                    {
+                      dataIndex: 'page',
+                      title: '关联菜单',
+                      valueType: 'treeSelect',
+                      width: 200,
+                      fieldProps: {
+                        options: allMenus,
+                        treeLine: { showLeafIcon: true },
+                        treeDefaultExpandAll: true,
+                      },
+                    },
+                  ];
                 }
                 if (domtype == 'tag') {
                   return tagConfig;
@@ -743,7 +770,7 @@ const CustomerColumn: FC<CustomerColumnProps> = (props) => {
   }, []);
   const formRef = useRef<ProFormInstance<any>>({} as any);
   useEffect(() => {
-    console.log('value is ', value, { props: value });
+    //console.log('value is ', value, { props: value });
     formRef?.current?.setFieldsValue?.({ props: value });
   }, [value]);
 
@@ -846,18 +873,19 @@ export const CustomerColumnRenderDevReal = (props) => {
         width={1600}
         styles={{ body: { maxHeight: 650, overflowY: 'auto' } }}
       >
-        {value ? (
-          <CustomerColumn
-            value={value}
-            relationModel={relationModel}
-            allMenus={allMenus}
-            modelColumns={modelColumns}
-            ok={(values) => {
-              //console.log(values);
-              setValues(values);
-            }}
-          />
-        ) : null}
+        {/* {value ? (
+          
+        ) : null} */}
+        <CustomerColumn
+          value={value}
+          relationModel={relationModel}
+          allMenus={allMenus}
+          modelColumns={modelColumns}
+          ok={(values) => {
+            //console.log(values);
+            setValues(values);
+          }}
+        />
       </Modal>
     </>
   );

@@ -23,6 +23,7 @@ class FormItem
         $this->config = $config;
         $this->menus = $menus;
         $this->models = $models;
+        $model = $model?:['columns'=>'[]','relations'=>[]];
         $this->model = $model;
 
         $key = $dataIndex = $config['key']??'';
@@ -48,7 +49,7 @@ class FormItem
             }
             $key = $key[0];
         }
-        if($key == 'customer_field')
+        if(in_array($key,['customer_field']) || !$key)
         {
             $has_customer_dataindex = true;
             $unset_dataindex = true;
@@ -234,7 +235,7 @@ class FormItem
         if($placeholder || $tip_placeholder)
         {
             $this->data['fieldProps']['placeholder'] = $placeholder?:$tip_placeholder;
-        }else
+        }elseif(isset($d['title']))
         {
             //默认给每个表单设置 placeholder
             if(in_array($form_type,['select','cascader','tmapInput','switch']))
@@ -275,6 +276,10 @@ class FormItem
         if(isset($props['outside']))
         {
             $this->data = array_merge($this->data,$props['outside']);
+        }
+        if(isset($props['page']))
+        {
+            $this->data['page'] = $props['page'];
         }
 
         //栅格数
@@ -340,6 +345,7 @@ class FormItem
         $props = $this->props;
         if(!$props || !isset($props['items']) || !$props['items'])return;
         $items = $props['items'];
+        $direction = $props['dom_direction']??'horizontal';//默认元素都是水平排列
 
         //检测是否有modalTable 有的话通过关联数据设置属性值
         foreach($items as $key=>$item)
@@ -386,7 +392,7 @@ class FormItem
             //20231030 如果使用了form的record 那么不能使用readonly 不然会组件不能读取record的值
             //unset($this->data['readonly']);
         }
-        $this->data['fieldProps'] = ['items'=>$items];
+        $this->data['fieldProps'] = ['items'=>$items,'direction'=>$direction];
         return;
     }
 

@@ -4,7 +4,7 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
   const show: saFormColumnsType = [
     {
       dataIndex: 'condition_type',
-      valueType: 'radioButton',
+      valueType: 'select',
       fieldProps: {
         defaultValue: 'all',
         options: [
@@ -76,7 +76,7 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
     {
       title: '类型',
       dataIndex: 'type',
-      valueType: 'radioButton',
+      valueType: 'select',
       tooltip: '控制切换是否显示，或依赖项显示可以添加计算等',
       fieldProps: {
         defaultValue: 'show',

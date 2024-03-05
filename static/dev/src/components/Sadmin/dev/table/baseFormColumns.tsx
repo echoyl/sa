@@ -19,6 +19,7 @@ export const columnType = [
   { label: '用户权限 - userPerm', value: 'userPerm' },
   { label: 'html', value: 'html' },
   { label: 'select', value: 'select' },
+  { label: '拾色器 - colorPicker', value: 'colorPicker' },
 ];
 
 const formMoreType = [
@@ -46,6 +47,8 @@ const formMoreType = [
   { label: '文本域 - textarea', value: 'textarea' },
   { label: '上传 - uploader', value: 'uploader' },
   { label: 'markdown编辑器 - mdEditor', value: 'mdEditor' },
+  { label: '分割线 - divider', value: 'divider' },
+  { label: '数字 - digit', value: 'digit' },
 ];
 
 export const getModelColumnsSelect = (id: number, allModels, level = 1) => {

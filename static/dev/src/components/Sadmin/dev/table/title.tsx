@@ -12,7 +12,7 @@ import { useModel } from '@umijs/max';
 import { Button, Space } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import classNames from 'classnames';
-import React, { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useEffect, useState } from 'react';
 import { SaDevContext } from '..';
 import Confirm from '../../action/confirm';
 import ConfirmForm from '../../action/confirmForm';
@@ -83,8 +83,11 @@ const getValue = (uid, pageMenu, type) => {
   if (!uid) {
     return {};
   }
-  const config = type == 'table' ? pageMenu?.schema?.table_config : pageMenu?.schema?.form_config;
-  if (type == 'table') {
+  const config =
+    type == 'table' || type == 'toolbar'
+      ? pageMenu?.schema?.table_config
+      : pageMenu?.schema?.form_config;
+  if (type == 'table' || type == 'toolbar') {
     return JSON.parse(config)?.find((v) => v.uid == uid);
   } else {
     //form获取组或列信息
@@ -133,7 +136,13 @@ const BaseForm = (props) => {
       if (ctype == 'tab') {
         setValue(data);
       } else {
-        //console.log('get value', uid, ctype, getValue(uid, pageMenu, ctype ? ctype : type));
+        // console.log(
+        //   'get value',
+        //   uid,
+        //   ctype,
+        //   pageMenu,
+        //   getValue(uid, pageMenu, ctype ? ctype : type),
+        // );
         setValue(getValue(uid, pageMenu, ctype ? ctype : type));
       }
     }
@@ -175,26 +184,38 @@ const BaseForm = (props) => {
     setColumns(columns);
     setColumnsMore(getCustomerColumn(relations, allMenus, modelColumns));
     //console.log('base value is ', value, uid);
-  }, [pageMenu, data]);
+  }, [pageMenu, data, modelColumns]);
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
   //const value = getValue(uid, pageMenu, type);
 
-  const trigger = React.cloneElement(title, {
-    key: 'trigger',
-    ...title.props,
-    onClick: async (e: any) => {
-      setVisible?.(false);
-      //e.stopPropagation();
-    },
-  });
+  // const trigger = React.cloneElement(title, {
+  //   key: 'trigger',
+  //   ...title.props,
+  //   onClick: async (e: any) => {
+  //     setVisible?.(false);
+  //     //e.preventDefault();
+  //     console.log('clicked');
+  //     e.stopPropagation();
+  //   },
+  // });
   return (
     <div
       onClick={(e) => {
-        e.stopPropagation();
+        //e.preventDefault();
+        e.preventDefault();
       }}
     >
       <ConfirmForm
-        trigger={<div style={{ width: '100%' }}>{trigger}</div>}
+        trigger={
+          <div
+            style={{ width: '100%' }}
+            onClick={(e) => {
+              setVisible?.(false);
+            }}
+          >
+            {title}
+          </div>
+        }
         tabs={[
           { title: '基础', formColumns: columns },
           { title: '更多', formColumns: columnsMore },
@@ -212,87 +233,35 @@ const BaseForm = (props) => {
   );
 };
 
-// const MoreForm = (props) => {
-//   const { title, uid } = props;
-//   const {
-//     tableDesigner: { pageMenu, edit, type = 'table' },
-//   } = useContext(SaContext);
-//   const { setVisible } = useContext(SchemaSettingsContext);
-//   const { setting } = useContext(SaDevContext);
-
-//   const [relations, setRelations] = useState<any[]>([]);
-//   const [modelColumns, setModelColumns] = useState<any[]>([]);
-//   const [value, setValue] = useState({});
-//   useEffect(() => {
-//     setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
-//     setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
-//   }, []);
-
-//   useEffect(() => {
-//     setValue(getValue(uid, pageMenu, type));
-//     //console.log('more value is ', value, uid);
-//   }, [pageMenu]);
-
-//   const { allMenus = [] } = setting?.dev;
-//   //获取值
-//   //const value = JSON.parse(pageMenu?.schema?.table_config)?.find?.((v) => v.uid == uid);
-
-//   const onChange = async (values) => {
-//     value.props = values;
-//     const data = { base: { ...value, id: pageMenu?.id, uid, props: values }, type: 'more' };
-//     //console.log('onchange',values,value)
-
-//     await edit(data);
-//     return;
-//   };
-//   //console.log('value', value, uid, JSON.parse(pageMenu?.schema?.table_config));
-//   const trigger = React.cloneElement(title, {
-//     key: 'trigger',
-//     ...title.props,
-//     onClick: async (e: any) => {
-//       setVisible(false);
-//       e.stopPropagation();
-//     },
-//   });
-//   return (
-//     <div
-//       onKeyDown={(e) => {
-//         e.stopPropagation();
-//       }}
-//       onClick={(e) => {
-//         //e.stopPropagation();
-//       }}
-//     >
-//       <CustomerColumnRenderDevReal
-//         fieldProps={{
-//           value: value?.props,
-//           onChange,
-//           btnText: trigger,
-//           relationModel: relations,
-//           allMenus,
-//           modelColumns,
-//         }}
-//       />
-//     </div>
-//   );
-// };
-
 export const DeleteColumn = (props) => {
   const { title, uid, extpost } = props;
   const {
     tableDesigner: { pageMenu, reflush, deleteUrl = '' },
   } = useContext(SaContext);
   const { setVisible } = useContext(SchemaSettingsContext);
-  const trigger = React.cloneElement(title, {
-    key: 'trigger',
-    ...title.props,
-    onClick: async (e: any) => {
-      setVisible(false);
-    },
-  });
+  // const trigger = React.cloneElement(title, {
+  //   key: 'trigger',
+  //   ...title.props,
+  //   onClick: async (e: any) => {
+  //     setVisible(false);
+  //     e.preventDefault();
+  //     //e.stopPropagation();
+  //   },
+  // });
   return (
     <Confirm
-      trigger={<div style={{ width: '100%' }}>{trigger}</div>}
+      trigger={
+        <div
+          style={{ width: '100%' }}
+          onClick={(e) => {
+            setVisible(false);
+            //e.stopPropagation();
+            //e.preventDefault();
+          }}
+        >
+          {title}
+        </div>
+      }
       url={deleteUrl}
       data={{ base: { id: pageMenu?.id, uid, ...extpost } }}
       msg="确定要删除吗"
@@ -344,6 +313,9 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'base',
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
   const baseAddTab: ItemType = {
     label: (
@@ -360,21 +332,11 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'addtab',
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
-  // const moreform: ItemType = {
-  //   label: (
-  //     <MoreForm
-  //       title={
-  //         <Space>
-  //           <SettingOutlined />
-  //           <span>更多设置</span>
-  //         </Space>
-  //       }
-  //       uid={uid}
-  //     />
-  //   ),
-  //   key: 'more',
-  // };
+
   const addCol: ItemType = {
     label: (
       <BaseForm
@@ -390,6 +352,9 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'addCol',
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
   const addGroup: ItemType = {
     label: (
@@ -406,6 +371,9 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'addGroup',
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
   const addEmptyGroup: ItemType = {
     label: (
@@ -421,6 +389,9 @@ export const DevTableColumnTitle = (props) => {
       />
     ),
     key: 'addEmptyGroup',
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
   const deleteitem: ItemType = {
     label: (
@@ -436,6 +407,9 @@ export const DevTableColumnTitle = (props) => {
     ),
     key: 'deleteitem',
     danger: true,
+    onClick: ({ domEvent }) => {
+      domEvent.stopPropagation();
+    },
   };
 
   const items: ItemType[] =
@@ -462,9 +436,17 @@ export const DevTableColumnTitle = (props) => {
 
           deleteitem,
         ]
+      : type == 'toolbar'
+      ? [
+          uid ? baseform : null,
+          addCol,
+          {
+            type: 'divider',
+          },
+          deleteitem,
+        ]
       : [
           baseform,
-          //moreform,
           addCol,
           {
             type: 'divider',
@@ -500,7 +482,7 @@ export const DevTableColumnTitle = (props) => {
           </Space>
         </div>
       </div>
-      <div role="button">{title}</div>
+      <div role="button">{title ? title : 'dev'}</div>
     </SortableItem>
   );
 };

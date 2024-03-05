@@ -240,6 +240,21 @@ export const MenuFormColumn: saFormColumnsType = [
                   colProps: { span: 12 },
                 },
                 {
+                  dataIndex: ['form', 'layout'],
+                  title: '标签布局',
+                  valueType: 'radioButton',
+                  fieldProps: {
+                    buttonStyle: 'solid',
+                    defaultValue: 'vertical',
+                    options: [
+                      { label: 'horizontal', value: 'horizontal' },
+                      { label: 'vertical', value: 'vertical' },
+                      { label: 'inline', value: 'inline' },
+                    ],
+                  },
+                  colProps: { span: 12 },
+                },
+                {
                   dataIndex: ['form', 'variant'],
                   title: 'variant',
                   valueType: 'radioButton',

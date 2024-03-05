@@ -9,17 +9,19 @@ import {
   LoadingOutlined,
   PlusOutlined,
   SettingOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { FormattedMessage, Link, useModel } from '@umijs/max';
-import { App, Button, Space, Upload } from 'antd';
+import { App, Button, Popover, Space, Tree, Upload } from 'antd';
 import { cloneDeep, isString } from 'lodash';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import ButtonDrawer from '../../action/buttonDrawer';
 import CustomerColumnRender from '../../action/customerColumn';
 import { uid } from '../../helpers';
 import { SaForm } from '../../posts/post';
 import { SaContext } from '../../posts/table';
 import { DndContext } from '../dnd-context';
+import { getModelColumns } from './baseFormColumns';
 import { ToolbarColumnTitle } from './title';
 
 export const ToolBarDom = (props) => {
@@ -85,7 +87,7 @@ export const ToolBarDom = (props) => {
           <Space key="selectbar" key={'customer_' + ci}>
             {devEnable && (
               <Button size="small" key={cbtn.uid + '_dev'} type="dashed">
-                <ToolbarColumnTitle {...cbtn} />
+                <ToolbarColumnTitle {...cbtn} title={cbtn.title ? cbtn.title : '配置'} />
               </Button>
             )}
             <CustomerColumnRender
@@ -176,6 +178,11 @@ const ImportButton = ({ title = '导入', url = '', uploadProps: ups = {} }) => 
   );
 };
 
+/**
+ * 打开后显示当前菜单的form表单
+ * @param props
+ * @returns
+ */
 export const ToolBarMenu = (props) => {
   const { setInitialState } = useModel('@@initialState');
   const { trigger, pageMenu = { id: 0 } } = props;
@@ -228,6 +235,65 @@ export const ToolBarMenu = (props) => {
   );
 };
 
+const ColumnsSelector = (props) => {
+  const { trigger, dev } = props;
+  const [treeData, setTreeData] = useState<any[]>();
+  const [treeChecked, setTreeChecked] = useState<any[]>();
+  const {
+    tableDesigner: { pageMenu, reflush, editUrl = '', type = 'table' },
+  } = useContext(SaContext);
+  useEffect(() => {
+    const _treeData = getModelColumns(pageMenu?.model_id, dev);
+
+    setTreeData(
+      _treeData.map((v) => {
+        return { label: v.label, value: v.value };
+      }),
+    );
+    //初始化已有的列
+    const defaultChecked = pageMenu?.data?.tableColumns
+      ?.map((v) => v.dataIndex)
+      .filter((v) => isString(v));
+    setTreeChecked(defaultChecked);
+  }, []);
+  const post = async (e) => {
+    const { data } = await request.post(editUrl, {
+      data: {
+        base: { id: pageMenu?.id, checked: e.checked, key: e.node.key, actionType: 'setColumns' },
+      },
+      then: () => {
+        return;
+      },
+    });
+    reflush(data);
+  };
+  const onCheck = async (keys, e) => {
+    //将数据提交到后台
+    setTreeChecked(keys);
+    await post(e);
+  };
+  const content = (
+    <Tree
+      treeData={treeData}
+      checkedKeys={treeChecked}
+      onCheck={onCheck}
+      fieldNames={{ title: 'label', key: 'value' }}
+      checkable
+      height={300}
+    />
+  );
+  return (
+    <Popover
+      content={<div style={{ width: 250 }}>{content}</div>}
+      title="快速选择需要展示的列"
+      trigger={'click'}
+      placement="bottomRight"
+    >
+      {trigger}
+    </Popover>
+  );
+};
+
 export const toolBarRender = (props) => {
   //导出按钮
   const {
@@ -261,8 +327,14 @@ export const toolBarRender = (props) => {
   if (table_menu_key) {
     values[table_menu_key] = tableMenuId;
   }
+
   const _btns = cloneDeep(toolBarButton);
   if (devEnable) {
+    _btns.push({
+      valueType: 'devcolumns',
+      title: <UnorderedListOutlined />,
+      key: 'devcolumns',
+    });
     _btns.push({
       valueType: 'devsetting',
       title: <SettingOutlined />,
@@ -278,11 +350,16 @@ export const toolBarRender = (props) => {
   }
   const render = () => {
     const btns = [];
-
+    const defaultTitle = { export: '导出', import: '导入', toolbar: '配置' };
     _btns?.forEach((btn, index) => {
       //console.log('btn', btn);
       if (devEnable && isString(btn.title)) {
-        btn.title = <ToolbarColumnTitle {...btn} />;
+        btn.title = (
+          <ToolbarColumnTitle
+            {...btn}
+            title={btn.title ? btn.title : defaultTitle[btn.valueType]}
+          />
+        );
       }
 
       if (btn.valueType == 'export') {
@@ -311,9 +388,19 @@ export const toolBarRender = (props) => {
           />,
         );
       }
+      if (btn.valueType == 'devcolumns') {
+        btns.push(
+          <ColumnsSelector
+            key="devcolumns"
+            trigger={<Button type="dashed">{btn.title}</Button>}
+            dev={initialState?.settings?.dev}
+          />,
+        );
+      }
       if (btn.valueType == 'toolbar') {
         //console.log('toolbar btn', btn);
         if (devEnable) {
+          //console.log('toolbar btn', btn);
           btns.push(
             <Button key={btn.uid + '_dev'} type="dashed">
               <ToolbarColumnTitle {...btn} />
@@ -331,7 +418,8 @@ export const toolBarRender = (props) => {
       }
     });
 
-    typeof props.toolBar == 'function' && btns.push(props.toolBar({ enums }));
+    typeof props.toolBar == 'function' &&
+      btns.push(React.cloneElement(props.toolBar({ enums }), { key: 'ctoolbar' }));
     if (addable) {
       if (openType == 'drawer' || openType == 'modal') {
         btns.push(

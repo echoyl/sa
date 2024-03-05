@@ -910,7 +910,7 @@ class DevService
                     }
 
                 }
-                if($form_type == 'search_select')
+                if($form_type == 'search_select' && isset($all_relations[$column['name']]))
                 {
                     $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]['name']);
                     $label = $setting['label']??'';

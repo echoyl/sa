@@ -1,11 +1,11 @@
 import request from '@/services/ant-design-pro/sadmin';
 import { BetaSchemaForm, ProFormColumnsType, ProFormInstance } from '@ant-design/pro-components';
 import dayjs from 'dayjs';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isString } from 'lodash';
 import React, { ReactNode } from 'react';
 import { inArray, isArr, isStr } from '../checkers';
 import { FormColumnTitle } from '../dev/table/title';
-import { getFromObject, saFormColumnsType, tplComplie } from '../helpers';
+import { getFromObject, getMenuDataById, saFormColumnsType, tplComplie } from '../helpers';
 export const defaultColumnsLabel = {
   id: '序号',
   category_id: '分类选择',
@@ -196,10 +196,14 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         //dependency不需要 title 和 dataindex
         delete v.title;
         delete v.dataIndex;
-        v.columns = ((body) => {
-          return new Function(`return ${body}`)();
-        })(v.columns);
+
         //console.log('cdependency', v);
+      }
+      if (isString(v.columns)) {
+        // v.columns = ((body) => {
+        //   return new Function(`return ${body}`)();
+        // })(v.columns);
+        //console.log('columns is now', v.columns);
       }
       //支持 dependencyOn 控制表单项的显示隐藏
       if (v.dependencyOn) {
@@ -210,10 +214,38 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         const names = dependencyOn?.condition?.map((cv) => {
           return cv.name;
         });
+
         //delete v.dependencyOn;
         //克隆变量
+
         if (dependencyOn.type == 'render') {
-          v.dependencies = names;
+          if (v.valueType == 'dependency' || !v.valueType) {
+            v.name = names;
+            v.valueType = 'dependency';
+
+            const new_column = JSON.parse(JSON.stringify(v));
+            const cf = ((body) => {
+              return new Function(`return ${body}`)();
+            })(new_column.columns);
+
+            if (devEnable) {
+              v = {
+                valueType: 'dependency',
+                name: names,
+                columns: (d) => {
+                  const relcol = cf?.(d);
+                  return relcol?.map((nv) => {
+                    nv.title = <FormColumnTitle title={nv.title} uid={v.uid} />;
+                    return nv;
+                  });
+                },
+              };
+            }
+          } else {
+            v.dependencies = names;
+          }
+
+          //v.valueType = 'dependency';
         } else {
           const new_column = JSON.parse(JSON.stringify(v));
           v = {
@@ -272,6 +304,16 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
               return dayjs(val);
             }
           });
+        }
+      }
+
+      //关联page检测
+      if (v.page) {
+        const relateMenu = getMenuDataById(user?.menuData, v.page);
+        if (relateMenu) {
+          v.columns = relateMenu.data.formColumns
+            ? relateMenu.data.formColumns
+            : relateMenu.data.tabs[0]?.formColumns;
         }
       }
 

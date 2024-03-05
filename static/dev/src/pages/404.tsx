@@ -76,7 +76,9 @@ const PageTypes = ({ menu, match, pathname }) => {
     //post 页面
     //console.log('post page param is', data, page_type);
     const url =
-      (data.postUrl ? data.postUrl : data.url + '/show') + (match ? '?id=' + match?.[1] : '');
+      data.postUrl || data.url
+        ? (data.postUrl ? data.postUrl : data.url + '/show') + (match ? '?id=' + match?.[1] : '')
+        : '';
     return (
       <PostsForm
         key={pathname}

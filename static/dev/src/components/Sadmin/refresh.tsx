@@ -1,4 +1,4 @@
-import { currentUser } from '@/services/ant-design-pro/sadmin';
+import request, { currentUser } from '@/services/ant-design-pro/sadmin';
 import { SyncOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { message, Space } from 'antd';
