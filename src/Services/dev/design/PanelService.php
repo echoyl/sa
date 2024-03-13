@@ -33,7 +33,25 @@ class PanelService extends BaseService
         return $config;
     }
 
-    public function colData($base)
+    public function tabData($config)
+    {
+        $cpage = Arr::get($config,'cpage',10);
+        $pagination = Arr::get($config,'pagination',[]);
+        
+        if(!$cpage)
+        {
+            $pagination = false;
+        }else
+        {
+            $pagination['pageSize'] = $cpage;
+        }
+
+        $config['pagination'] = $pagination;
+
+        return $config;
+    }
+
+    public function colData($base,$active_data = [])
     {
         $type = Arr::get($base,'type');
         $config = Arr::get($base,'config',[]);
@@ -42,6 +60,16 @@ class PanelService extends BaseService
         if($type == 'table')
         {
             $defaultConfig = $this->tableData($defaultConfig);
+        }elseif($type == 'StatisticCard')
+        {
+            //配置chart
+            $chart = Arr::get($config,'chart',[]);
+            $new_chart = Arr::get($defaultConfig,'chart',[]);
+            $chart = array_merge($chart,$new_chart);
+            Arr::set($defaultConfig,'chart',$chart);
+        }elseif($type == 'tab')
+        {
+            $base['rows'] = $active_data['rows']??[];
         }
 
         $config = array_merge($config,$defaultConfig);
@@ -61,11 +89,12 @@ class PanelService extends BaseService
         $total = 24;
         $spaned = 0;
         $un_len = 0;
-        foreach($cols as $col)
+        foreach($cols as $key=>$col)
         {
             if(isset($col['customer_span']) && $col['customer_span'])
             {
                 $spaned += $col['customer_span'];
+                $cols[$key]['span'] = $col['customer_span'];
             }else
             {
                 $un_len++;
@@ -282,7 +311,7 @@ class PanelService extends BaseService
             break;
             case 'editCol':
                 //编辑列
-                $update = $this->colData($base);
+                $update = $this->colData($base,$active_data);
                 //d($update);
                 Arr::set($rows,implode('.',$active),$update);
                 $rows = $this->setColSpan($active,$rows);
