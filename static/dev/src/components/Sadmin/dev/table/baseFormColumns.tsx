@@ -49,6 +49,8 @@ const formMoreType = [
   { label: 'markdown编辑器 - mdEditor', value: 'mdEditor' },
   { label: '分割线 - divider', value: 'divider' },
   { label: '数字 - digit', value: 'digit' },
+  { label: 'icon选择器 - iconSelect', value: 'iconSelect' },
+  
 ];
 
 export const getModelColumnsSelect = (id: number, allModels, level = 1) => {

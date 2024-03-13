@@ -39,6 +39,7 @@ const TableFromBread: FC<{
       ...readonlyProps,
       //paramExtra: { [fieldProps.foreign_key]: post_key },
       postExtra: { [fieldProps.foreign_key]: post_key },
+      pageMenu: bread,
     };
     //log('saformtabolex', v);
   }

@@ -1,13 +1,13 @@
 import { saFormColumnsType } from '@/components/Sadmin/helpers';
 import { columnType } from '../../table/baseFormColumns';
 
-const formColumns = (data): saFormColumnsType => [
+const formColumns = (data, dataIndex = ['defaultConfig', 'columns']): saFormColumnsType => [
   {
     valueType: 'group',
     columns: [
       {
         title: '列表字段',
-        dataIndex: ['defaultConfig', 'columns'],
+        dataIndex,
         colProps: { span: 24 },
         rowProps: { gutter: 0 },
         valueType: 'formList',

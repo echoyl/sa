@@ -129,6 +129,7 @@ const BaseForm = (props) => {
     setRelations(getModelRelations(pageMenu?.model_id, setting?.dev));
     setModelColumns(getModelColumns(pageMenu?.model_id, setting?.dev));
   }, []);
+  //console.log('title pageMenu is', pageMenu);
   useEffect(() => {
     //setValue(getValue(uid, pageMenu, ctype ? ctype : type));
     //setValue(data);

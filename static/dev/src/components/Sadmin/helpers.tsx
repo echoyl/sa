@@ -172,6 +172,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       return <>-</>; //列表默认不显示
     },
     renderFormItem: (text, props) => {
+      return null;
       return <AliyunVideo {...props.fieldProps} />;
     },
   },

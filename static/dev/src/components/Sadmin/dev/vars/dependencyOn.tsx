@@ -32,12 +32,20 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
               },
             },
             {
+              title: '自定义字段',
+              dataIndex: 'cname',
+              width: 120,
+              tooltip: '无字段选择是可手动填入此项 . 分割为数组形式',
+            },
+            {
               title: '值',
               dataIndex: 'value',
+              width: 100,
               tooltip: '值支持,拼接数据，会按inArray检测，无拼接的按 = 检测',
             },
             {
               title: '表达式',
+              width: 120,
               dataIndex: 'exp',
               tooltip:
                 '优先级高于值的设置，示例 {{record.id == 1 && user.id == 2}} record:当前记录信息 user当前登录用户信息',

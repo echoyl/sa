@@ -173,6 +173,8 @@ const CustomerColumnRender = (props) => {
           tags={isArr(text) ? text : [text]}
           color={item.color}
           bordered={item.bordered}
+          icon={item.icon}
+          ellipsis={item.ellipsis}
         />
       );
     } else if (item.domtype == 'table') {

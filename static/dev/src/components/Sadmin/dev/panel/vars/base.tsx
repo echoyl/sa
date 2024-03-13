@@ -3,15 +3,9 @@ import {
   saFormTabColumnsType,
   saValueTypeMapType,
 } from '@/components/Sadmin/helpers';
-import { CreditCardOutlined } from '@ant-design/icons';
-import { Space } from 'antd';
-import areaMapColumns from './areaMap';
-import barColumns from './bar';
 import cardColumns from './card';
-import columnColumns from './column';
+import chartColumns from './chart';
 import formColumns from './form';
-import lineColumns from './line';
-import pieColumns from './pie';
 import tableColumns from './table';
 
 const configColumn: saValueTypeMapType = {
@@ -20,42 +14,36 @@ const configColumn: saValueTypeMapType = {
   dataIndex: 'config',
 };
 
-const chartColumns = (data): saFormColumnsType => [
+export const layoutType = (dataIndex): saFormColumnsType => [
   {
-    title: '图表类型',
-    dataIndex: ['chart', 'type'],
+    title: '排列方式',
+    dataIndex,
     valueType: 'select',
     fieldProps: {
       options: [
-        { label: '饼图', value: 'pie' },
-        { label: '折线图', value: 'line' },
-        { label: '柱形图', value: 'column' },
-        { label: '条形图', value: 'bar' },
-        { label: '区域地图', value: 'areaMap' },
+        { label: '横向', value: 'horizontal' },
+        { label: '纵向', value: 'vertical' },
       ],
+      defaultValue: 'horizontal',
     },
-  },
-  {
-    name: ['chart', 'type'],
-    valueType: 'dependency',
-    columns: (datas) => {
-      //   const type = { chart };
-      //console.log('data', data);
-      if (datas?.chart?.type == 'pie') {
-        return pieColumns(data);
-      } else if (datas?.chart?.type == 'line') {
-        return lineColumns(data);
-      } else if (datas?.chart?.type == 'column') {
-        return columnColumns(data);
-      } else if (datas?.chart?.type == 'bar') {
-        return barColumns(data);
-      } else if (datas?.chart?.type == 'areaMap') {
-        return areaMapColumns(data);
-      }
-      return [];
-    },
+    colProps: { span: 12 },
   },
 ];
+
+export const chartShapeField = (span: number): saValueTypeMapType => {
+  return {
+    title: '形状',
+    dataIndex: ['defaultConfig', 'chart', 'shapeField'],
+    valueType: 'select',
+    fieldProps: {
+      options: [
+        { label: 'smooth - 平滑', value: 'smooth' },
+        { label: 'trail - 变粗', value: 'trail' },
+      ],
+    },
+    colProps: { span },
+  };
+};
 
 export const baseRowColumns = (data: any[]): saFormTabColumnsType => {
   return [
@@ -94,16 +82,10 @@ const baseFormColumns = (data: any[]): saFormTabColumnsType => {
               fieldProps: {
                 options: [
                   {
-                    label: (
-                      <Space>
-                        <CreditCardOutlined />
-                        Card
-                      </Space>
-                    ),
-                    value: 'card',
+                    label: 'StatisticCard - 指标卡',
+                    value: 'StatisticCard',
                   },
                   { label: 'tab', value: 'tab' },
-                  { label: '图表', value: 'chart' },
                   { label: '表格', value: 'table' },
                   { label: '容器', value: 'rows' },
                   { label: '查询表单', value: 'form' },
@@ -138,10 +120,15 @@ const baseFormColumns = (data: any[]): saFormTabColumnsType => {
               return chartColumns(data?.find((v) => v.value == sourceDataName));
             } else if (type == 'table') {
               return tableColumns(data?.find((v) => v.value == sourceDataName));
-            } else if (type == 'card') {
+            } else if (type == 'StatisticCard') {
               return cardColumns(data?.find((v) => v.value == sourceDataName));
             } else if (type == 'form') {
               return formColumns(data?.find((v) => v.value == sourceDataName));
+            } else if (type == 'tab') {
+              return formColumns(
+                data?.find((v) => v.value == sourceDataName),
+                ['defaultConfig', 'form', 'columns'],
+              );
             }
             return [];
           },

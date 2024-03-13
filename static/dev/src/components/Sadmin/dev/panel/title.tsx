@@ -10,7 +10,7 @@ import { css } from '@emotion/css';
 import { Space } from 'antd';
 import { ItemType } from 'antd/es/menu/hooks/useItems';
 import classNames from 'classnames';
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { SaDevContext } from '..';
 import ConfirmForm from '../../action/confirmForm';
 import { SaContext } from '../../posts/table';
@@ -45,22 +45,24 @@ const BaseForm = (props) => {
   //console.log('tableDesigner?.pageMenu', setTbColumns, getTableColumnsRender);
   //const value = getValue(uid, pageMenu, type);
   //console.log('sourceData', sourceData);
-  const trigger = React.cloneElement(title, {
-    key: 'trigger',
-    ...title.props,
-    onClick: async (e: any) => {
-      setVisible(false);
-      e.stopPropagation();
-    },
-  });
+
   return (
     <div
       onClick={(e) => {
-        e.stopPropagation();
+        e.preventDefault();
       }}
     >
       <ConfirmForm
-        trigger={trigger}
+        trigger={
+          <div
+            style={{ width: '100%' }}
+            onClick={(e) => {
+              setVisible?.(false);
+            }}
+          >
+            {title}
+          </div>
+        }
         tabs={type == 'col' ? baseFormColumns(sourceData) : baseRowColumns(sourceData)}
         value={value}
         postUrl={editUrl}

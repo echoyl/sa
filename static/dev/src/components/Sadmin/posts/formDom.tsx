@@ -91,17 +91,18 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
     const { condition = [], condition_type = 'all' } = dependency;
     for (var i in condition) {
       let cd = condition[i];
-      let cname = cd.name;
+      let cname = cd.cname ? cd.cname.split('.') : cd.name;
       let cvalue = cd.value;
-      let rvalue = getFromObject(vals, cname);
+
       if (cd.exp) {
         //有表达式优先检测表达式
         ret = tplComplie(cd.exp, {
-          record: detail,
+          record: vals,
           user,
         });
       } else {
-        if (cvalue?.indexOf(',') < 0) {
+        let rvalue = getFromObject(vals, cname);
+        if (!isStr(cvalue) || cvalue?.indexOf(',') < 0) {
           ret = rvalue == cvalue;
         } else {
           ret = inArray(rvalue, cvalue.split(',')) >= 0;
@@ -199,10 +200,11 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
 
         //console.log('cdependency', v);
       }
+      let columnsFun;
       if (isString(v.columns)) {
-        // v.columns = ((body) => {
-        //   return new Function(`return ${body}`)();
-        // })(v.columns);
+        columnsFun = ((body) => {
+          return new Function(`return ${body}`)();
+        })(v.columns);
         //console.log('columns is now', v.columns);
       }
       //支持 dependencyOn 控制表单项的显示隐藏
@@ -212,9 +214,8 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         //将数据设置为dependency
         const dependencyOn = v.dependencyOn;
         const names = dependencyOn?.condition?.map((cv) => {
-          return cv.name;
+          return cv.cname ? cv.cname.split('.') : cv.name;
         });
-
         //delete v.dependencyOn;
         //克隆变量
 
@@ -222,24 +223,26 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
           if (v.valueType == 'dependency' || !v.valueType) {
             v.name = names;
             v.valueType = 'dependency';
-
-            const new_column = JSON.parse(JSON.stringify(v));
-            const cf = ((body) => {
-              return new Function(`return ${body}`)();
-            })(new_column.columns);
+            // ((body) => {
+            //   return new Function(`return ${body}`)();
+            // })(new_column.columns);
 
             if (devEnable) {
               v = {
                 valueType: 'dependency',
                 name: names,
                 columns: (d) => {
-                  const relcol = cf?.(d);
+                  const relcol = columnsFun?.(d);
                   return relcol?.map((nv) => {
                     nv.title = <FormColumnTitle title={nv.title} uid={v.uid} />;
                     return nv;
                   });
                 },
               };
+            } else {
+              if (columnsFun) {
+                v.columns = columnsFun;
+              }
             }
           } else {
             v.dependencies = names;

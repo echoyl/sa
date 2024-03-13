@@ -1,6 +1,6 @@
 import request from '@/services/ant-design-pro/sadmin';
-import { BetaSchemaForm, PageContainer, ProCard, StatisticCard } from '@ant-design/pro-components';
-import { Link, useModel } from '@umijs/max';
+import { BetaSchemaForm, PageContainer, ProCard } from '@ant-design/pro-components';
+import { useModel } from '@umijs/max';
 import { Button, Col, Flex, Row, Skeleton, Table, Tabs } from 'antd';
 import { useContext, useEffect, useState } from 'react';
 import { saConfig } from '../../config';
@@ -12,7 +12,7 @@ import { SaContext } from '../../posts/table';
 import { getTableColumns } from '../../posts/tableColumns';
 import { DndContext } from '../dnd-context';
 import { useTableDesigner } from '../table/designer';
-import ChartItem from './item';
+import PanelItemCard from './items/card';
 import { DevPanelColumnTitle } from './title';
 
 const ItemCol = (props) => {
@@ -48,7 +48,7 @@ const ItemCol = (props) => {
     );
   };
   //console.log('cititle', ctitle);
-
+  const itemTitle = devEnable ? ctitle(title) : title ? title : false;
   return (
     <Col span={span}>
       {type == 'tab' ? (
@@ -60,29 +60,6 @@ const ItemCol = (props) => {
           {ctitle()}
           <Panel rows={rows} data={data} />
         </>
-      ) : type == 'card' ? (
-        <StatisticCard
-          style={{ height: '100%' }}
-          statistic={{
-            title: devEnable
-              ? ctitle(idata?.label)
-              : title
-              ? title
-              : idata?.label
-              ? idata?.label
-              : false,
-            value: idata?.data,
-            prefix: config?.prefix,
-            suffix: config?.suffix,
-            description: config?.href ? (
-              <Link to={config?.href} style={{ fontSize: 12 }}>
-                查看更多
-              </Link>
-            ) : (
-              ''
-            ),
-          }}
-        />
       ) : type == 'form' ? (
         <ItemForm {...props} idata={idata?.data} />
       ) : type == 'user' ? (
@@ -92,21 +69,15 @@ const ItemCol = (props) => {
         >
           <PagePanelHeader flash={getData} />
         </ProCard>
-      ) : (
-        <ProCard
-          headStyle={devEnable ? { width: '100%', display: 'block' } : {}}
-          title={devEnable ? ctitle() : title ? title : false}
-          style={{ height: height ? height : 300 }}
-        >
-          <ChartItem data={idata?.data} config={config} type={chart?.type} />
-        </ProCard>
-      )}
+      ) : type == 'StatisticCard' ? (
+        <PanelItemCard title={itemTitle} data={idata?.data} config={config} />
+      ) : null}
     </Col>
   );
 };
 
 const ItemForm = (props) => {
-  const { config, idata, title, uid, getData } = props;
+  const { config, idata, title, uid, getData, simple } = props;
   const {
     tableDesigner: { devEnable },
   } = useContext(SaContext);
@@ -130,8 +101,31 @@ const ItemForm = (props) => {
     }
     return v;
   });
-
-  return (
+  const _columnsx = getFormFieldColumns({
+    initRequest: true,
+    columns: _columns,
+    devEnable: false,
+  });
+  const form = (
+    <BetaSchemaForm
+      layoutType={simple ? 'LightFilter' : 'QueryFilter'}
+      columns={_columnsx}
+      rowProps={{
+        gutter: [16, 16],
+      }}
+      colProps={{
+        span: 12,
+      }}
+      grid={false}
+      onFinish={(data: { [key: string]: any }) => {
+        //setFormData(data);
+        getData?.(data);
+      }}
+    />
+  );
+  return simple ? (
+    form
+  ) : (
     <ProCard
       //style={{ padding: 0 }}
       bodyStyle={{ padding: 0 }}
@@ -143,18 +137,7 @@ const ItemForm = (props) => {
       // }}
       // bodyStyle={{ paddingBottom: 0 }}
     >
-      <BetaSchemaForm
-        layoutType="QueryFilter"
-        columns={getFormFieldColumns({
-          initRequest: true,
-          columns: _columns,
-          devEnable: false,
-        })}
-        onFinish={(data: { [key: string]: any }) => {
-          //setFormData(data);
-          getData?.(data);
-        }}
-      />
+      {form}
     </ProCard>
   );
 };
@@ -194,10 +177,13 @@ const ItemTable = (props) => {
 };
 
 const ItemTab = (props) => {
-  const { uid, rows, data } = props;
+  const { uid, rows, data, getData, config } = props;
   const {
     tableDesigner: { devEnable },
   } = useContext(SaContext);
+  const rightForm = config.form ? (
+    <ItemForm simple={true} config={config.form} getData={getData} />
+  ) : null;
   return (
     <ProCard
       style={{
@@ -220,6 +206,13 @@ const ItemTab = (props) => {
     >
       <Tabs
         style={{ background: 'none' }}
+        tabBarExtraContent={
+          rightForm
+            ? {
+                right: rightForm,
+              }
+            : null
+        }
         items={rows?.map((row, i) => {
           return {
             key: i,

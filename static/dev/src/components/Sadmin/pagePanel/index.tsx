@@ -4,8 +4,8 @@ import { Link, useModel } from '@umijs/max';
 //import { PageContainer } from '@ant-design/pro-layout';
 import { saConfig } from '@/components/Sadmin/config';
 import { SaBreadcrumbRender } from '@/components/Sadmin/helpers';
-import { AreaMap, Bar, Column, Line, Pie } from '@ant-design/charts';
 import { SyncOutlined } from '@ant-design/icons';
+import { Bar, Column, Line, Pie } from '@ant-design/plots';
 import { App, Avatar, Button, Col, Flex, Row, Skeleton, Table, Tabs } from 'antd';
 import dayjs from 'dayjs';
 import React, { FC, useEffect, useState } from 'react';
@@ -13,7 +13,9 @@ import { TampShow } from '../map/tmap';
 import { getFormFieldColumns } from '../posts/formDom';
 import { getTableColumns } from '../posts/tableColumns';
 import styles from './style.less';
-
+import AreaMap from '../dev/panel/items/areaMap';
+import { sum } from 'lodash';
+import numeral from 'numeral';
 export const PagePanelHeader: FC = (props) => {
   const { initialState } = useModel('@@initialState');
   const { currentUser } = initialState;
@@ -33,24 +35,30 @@ export const PagePanelHeader: FC = (props) => {
         <div className={styles.contentTitle}>
           <Row>
             <Col span={12}>
-              你好，
-              {currentUser.realname ? currentUser.realname : currentUser.name}
+              <Row>
+                <Col>
+                  你好，
+                  {currentUser.realname ? currentUser.realname : currentUser.name}
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  {currentUser.rolename}{' '}
+                  <Button
+                    shape="circle"
+                    type="text"
+                    onClick={() => {
+                      props.flash?.();
+                    }}
+                    icon={<SyncOutlined />}
+                  />
+                </Col>
+              </Row>
             </Col>
             <Col span={12} style={{ textAlign: 'right' }}>
               <ClockPanel />
             </Col>
           </Row>
-        </div>
-        <div>
-          {currentUser.rolename}{' '}
-          <Button
-            shape="circle"
-            type="text"
-            onClick={() => {
-              props.flash?.();
-            }}
-            icon={<SyncOutlined />}
-          />
         </div>
       </div>
     </div>
@@ -93,33 +101,73 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
   const getChart = (chart) => {
     const { type } = chart;
     if (type == 'pie') {
+      const x = chart.config.colorField;
+      const y = chart.config.angleField;
+      const sum_val = sum(chart.data.map((v) => v[y]));
+
       return (
         <Pie
           height={280}
           appendPadding={10}
           data={chart.data}
           radius={0.9}
+          // label={{
+          //   type: 'inner',
+          //   offset: '-30%',
+          //   content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
+          //   style: {
+          //     fontSize: 14,
+          //     textAlign: 'center',
+          //   },
+          // }}
           label={{
-            type: 'inner',
-            offset: '-30%',
-            content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
-            style: {
-              fontSize: 14,
-              textAlign: 'center',
+            position: 'spider',
+            text: (item: any) => {
+              return `${item[x]}: ${numeral(item[y]).format('0,0')}`;
             },
           }}
+          annotations={[
+            {
+              type: 'text',
+              style: {
+                text: `总计\n${sum_val}`,
+                x: '50%',
+                y: '50%',
+                textAlign: 'center',
+                fontSize: 18,
+                //fontStyle: 'bold',
+              },
+            },
+          ]}
           interactions={[
             {
               type: 'element-active',
             },
           ]}
+          legend={false}
           {...chart.config}
         />
       );
     } else if (type == 'bar') {
-      return <Bar xField="x" yField="y" data={chart.data} {...chart.config} />;
+      return (
+        <Bar
+          xField="x"
+          yField="y"
+          scale={{ x: { paddingInner: 0.4 } }}
+          data={chart.data}
+          {...chart.config}
+        />
+      );
     } else if (type == 'column') {
-      return <Column xField="x" yField="y" data={chart.data} {...chart.config} />;
+      return (
+        <Column
+          xField="x"
+          yField="y"
+          scale={{ x: { paddingInner: 0.4 } }}
+          data={chart.data}
+          {...chart.config}
+        />
+      );
     } else if (type == 'areaMap') {
       const config = {
         map: {
@@ -191,13 +239,14 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
       };
       return (
         <div style={{ width: '100%', height: 500 }}>
-          <AreaMap {...config} />
+          <AreaMap data={chart.data} config={chart} />
         </div>
       );
     } else {
       return (
         <Line
           smooth={true}
+          shapeField="smooth"
           height={280}
           data={chart.data}
           xField="x"
@@ -363,7 +412,7 @@ const PagePanel: React.FC<{ url?: string }> = (props) => {
                     initRequest: true,
                     columns: chart.columns,
                     initialState,
-                    devEnable:false
+                    devEnable: false,
                   })}
                   dataSource={chart.data}
                   title={() => chart.title}

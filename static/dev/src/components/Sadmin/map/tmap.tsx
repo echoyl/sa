@@ -215,7 +215,7 @@ export const TampShow: FC<{
             position: center,
           });
         }
-        dots.map((dot, i) => {
+        dots?.map((dot, i) => {
           // const markerLayer = new window.TMap.MultiMarker({
           //   id: 'marker-layer' + i,
           //   map: map,
