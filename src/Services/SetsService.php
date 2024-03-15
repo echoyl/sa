@@ -56,8 +56,7 @@ class SetsService
     public function post($key)
     {
         $app_name = $this->appName();
-        $item = $this->model->where(['key'=>$key,'app_name'=>$app_name])->first();
-
+        $item = $this->getData($key);
         //新增自动检测字段是否是图片 及 配置 类型
 
 
@@ -151,7 +150,12 @@ class SetsService
         {
             return $data[$key];
         }
-        $data[$key] = $this->model->where(['key'=>$key,'app_name'=>$this->appName()])->first();
+        $item = $this->model->where(['key'=>$key,'app_name'=>$this->appName()])->first();
+        if(!$item && $key == 'setting')
+        {
+            $item = $this->model->where(['key'=>$key,'app_name'=>'deadmin'])->first();
+        }
+        $data[$key] = $item;
         return $data[$key];
     }
 

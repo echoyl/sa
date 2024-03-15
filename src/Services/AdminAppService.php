@@ -160,7 +160,7 @@ class AdminAppService implements SaAdminAppServiceInterface
         $file = storage_path('app/public/map/'.$type.'.json');
         if(!file_exists($file))
         {
-            return false;
+            return [];
         }
 
         $map_data = file_get_contents($file);
@@ -207,5 +207,229 @@ class AdminAppService implements SaAdminAppServiceInterface
                 ]
             ]
         ];
+    }
+    public function panel2()
+    {
+        $carr = function ($length) {
+            $r = [];
+            for ($i = 0; $i < $length; $i++) {
+                $r[] = 1;
+            }
+            return $r;
+        };
+        $names = ['家用电器','食用酒水','个护健康','服饰箱包','母婴产品','其他'];
+        $source = [
+            'label' => '示例数据',
+            'value' => 'source1',
+            'fields' => ['type', 'value'],
+            'data' => [
+                'chart' => [
+                    'fields' => ['type', 'value'],
+                    'data' => collect($carr(6))->map(function ($v, $k) use($names) {
+                        return ['type' => $names[$k], 'value' => rand(10, 100)];
+                    })
+                ]
+            ]
+
+        ];
+        $source2 = [
+            'label' => '示例数据2',
+            'value' => 'source2',
+            'fields' => ['typex', 'valuex'],
+            'data' => [
+                'chart' => [
+                    'fields' => ['typex', 'valuex'],
+                    'data' => collect($carr(6))->map(function ($v, $k) use($names) {
+                        return ['typex' => $names[$k], 'valuex' => rand(10, 100)];
+                    })
+                ]
+            ]
+        ];
+        $source3 = [
+            'label' => '示例数据3',
+            'value' => 'source3',
+            'fields' => ['gdp', 'year', 'name'],
+            'data' => [
+                'chart' => [
+                    'fields' => ['gdp', 'year', 'name'],
+                    'data' => collect($carr(24))->map(function ($v, $k) {
+                        return [
+                            'year' => 2010 + $k % 12, 
+                            'gdp' => rand(10, 100), 
+                            'name' => $k > 11 ? 'china' : 'us'
+                        ];
+                    })
+                ]
+            ]
+        ];
+
+        $pca = (new Pca())->where(['pcode' => 0])->get()->toArray();
+        $mapdatas = collect($pca)->map(function ($q) {
+            return [
+                'code' => $q['code'], 'la' => rand(0, 100), 'li' => rand(0, 100), 'name' => $q['name'], 'id' => $q['code']
+            ];
+        })->toArray();
+        $mapdata = [];
+        foreach ($mapdatas as $val) {
+            $mapdata[$val['code']] = $val;
+        }
+        // $mapdata[710000] = [
+        //     'code' => 710000, 'la' => rand(0, 100), 'li' => rand(0, 100), 'name' => '台湾', 'id' => 710000
+        // ];
+        $as = new AdminAppService;
+
+        $sourcemap = [
+            'label' => '地图数据-map',
+            'value' => 'sourcemap',
+            'fields' => ['name', 'la', 'li'],
+            'data' => [
+                'chart' => [
+                    'fields' => ['name', 'la', 'li'],
+                    'data' => $as->areaMap($mapdata)
+                ]
+            ]
+        ];
+
+        $source4 = [
+            'label' => '当月数据-table',
+            'value' => 'source4',
+            'fields' => ['name', 'la', 'li'],
+            'data' => $mapdatas
+        ];
+
+        $source5 = [
+            'label' => '地图数据5',
+            'value' => 'source5',
+            'fields' => ['name', 'la', 'li'],
+            'data' => array_values($mapdata)
+        ];
+        $sourceMonth = [
+            'label' => '当月数据',
+            'value' => 'sourcemonth',
+            'data' => [
+                'chart' => [
+                    'fields' => ['x', 'y'],
+                    'data' => collect($carr(30))->map(function ($v, $k) {
+                        $day = 30 - $k;
+                        return ['x' => date("m-d", strtotime("-{$day} days")), 'y' => rand(10, 200)];
+                    })
+                ]
+            ]
+        ];
+        $sourceYear = [
+            'label' => '全年数据',
+            'value' => 'sourceyear',
+            'data' => [
+                'chart' => [
+                    'fields' => ['x', 'y'],
+                    'data' => collect($carr(12))->map(function ($v, $k) {
+                        $day = 12 - $k;
+                        return ['x' => date("Ym", strtotime("-{$day} months")), 'y' => rand(10, 200)];
+                    })
+                ]
+            ]
+
+        ];
+
+        $source6 = [
+            'label' => '总销售额',
+            'value' => 'source6',
+            'fields' => [],
+            'data' => [
+                'value' => rand(10000, 90000),
+                // 'chart'=>[
+                //     'fields'=>['type','value'],
+                //     'data'=>collect($carr(17))->map(function($v,$k){
+                //         return ['type'=>'type'.$k,'value'=>rand(10,100)];
+                //     })
+                // ],
+                'trend' => [
+                    ['title' => '日环比', 'value' => $this->random_float(50, 100) . '%', 'trend' => 'up'],
+                    ['title' => '月环比', 'value' => $this->random_float(1, 50) . '%', 'trend' => 'down']
+                ],
+                'footer' => '日销售额 ￥' . rand(100000, 999999)
+            ],
+        ];
+        $source7 = [
+            'label' => '访问量',
+            'value' => 'source7',
+            'fields' => [],
+            'data' => [
+                'value' => rand(10000, 90000),
+                'chart' => [
+                    'fields' => ['type', 'value'],
+                    'data' => collect($carr(17))->map(function ($v, $k) {
+                        return ['type' => 'type' . $k, 'value' => rand(100, 400)];
+                    })
+                ],
+                'trend' => [
+                    ['title' => '日访问量', 'value' => rand(50, 500) . '人', 'trend' => 'down'],
+                ]
+            ],
+        ];
+        $source8 = [
+            'label' => '支付比数',
+            'value' => 'source8',
+            'fields' => [],
+            'data' => [
+                'value' => rand(10000, 90000),
+                'chart' => [
+                    'fields' => ['type', 'value'],
+                    'data' => collect($carr(17))->map(function ($v, $k) {
+                        return ['type' => 'type' . $k, 'value' => rand(10, 100)];
+                    })
+                ],
+                'trend' => [
+                    ['title' => '转化率', 'value' => $this->random_float(1, 50) . '%', 'trend' => 'up']
+                ]
+            ],
+        ];
+        $source9 = [
+            'label' => '营销活动效果',
+            'value' => 'source9',
+            'fields' => [],
+            'data' => [
+                'value' => rand(10, 99),
+                'progress' => [
+                    ['percent' => rand(10, 99), 'status' => 'active', "strokeColor" => ["from" => '#108ee9', "to" => '#87d068']]
+                ]
+            ]
+        ];
+        $source10 = [
+            'label' => '表单字段',
+            'value' => 'source10',
+            'fields' => ['date[]'],
+            'data' => [
+                ['name' => 'date[]', 'props' => [
+                    'fieldProps' => [
+                        'defaultValue' => [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")],
+                        'presets' => [
+                            ['label' => '近7日', 'value' => [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")]],
+                            ['label' => '近30日', 'value' => [date("Y-m-d", strtotime("-30 days")), date("Y-m-d")]],
+                            ['label' => '近1年', 'value' => [date("Y-m-d", strtotime("-1 year")), date("Y-m-d")]]
+                        ]
+                    ]
+                ]]
+            ]
+        ];
+        $dots = [
+            ['title'=>'门店1号','lat'=>'31.231024533405503','lng'=>'121.46091217796811'],
+            ['title'=>'门店2号','lat'=>'31.2303340000322','lng'=>'121.45518260832819']
+            
+        ];
+        $sourcemapdots = [
+            'label' => '标点地图',
+            'value' => 'sourcemapdots',
+            'data'=>[
+                'chart'=>[
+                    'data'=>$dots
+                ]
+            ]
+        ];
+        $data = [$source, $source2, $source3, $source4, $source5, $sourceMonth, $sourceYear, $source6, $source7, $source8, $source9, $source10,$sourcemap,$sourcemapdots];
+        return $data;
+    }
+    public function random_float($min, $max) {
+        return number_format($min + mt_rand() / mt_getrandmax() * ($max - $min),2,'.');
     }
 }

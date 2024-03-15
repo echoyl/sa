@@ -45,7 +45,7 @@ class ServiceProvider extends LaravelServiceProvider
             //build的文件
             $this->publishes([__DIR__ . '/../static/dist' => public_path('antadmin')], 'antadmin');
             //前端开发文件
-            $this->publishes([__DIR__ . '/../static/dev' => public_path('antadmindev')], 'antadmindev');
+            //$this->publishes([__DIR__ . '/../static/dev' => public_path('antadmindev')], 'antadmindev');
             //配置文件
             $this->publishes([
                 __DIR__.'/../config/sa.php' => config_path('sa.php'),

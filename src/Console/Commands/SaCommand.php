@@ -41,7 +41,7 @@ class SaCommand extends VendorPublishCommand
             //$this->input->setOption('force',true);
             //将旧文件移除
 
-            $this->tags = ['antadmin','antadmindev'];
+            $this->tags = ['antadmin'];
 
             foreach($this->tags as $tag)
             {
@@ -53,7 +53,7 @@ class SaCommand extends VendorPublishCommand
         }else
         {
             //初始化发布 静态文件及配置，数据库文件
-            $this->tags = ['antadmin','antadmindev','deadmin'];
+            $this->tags = ['antadmin','deadmin'];
         }
 
         foreach ($this->tags ?: [null] as $tag) {

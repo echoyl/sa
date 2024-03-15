@@ -118,7 +118,7 @@ class IndexController extends ApiBaseController
 
     public function workplace()
     {
-        return $this->success($this->service->panel());
+        return $this->success($this->service->panel2());
     }
 
 }

@@ -137,7 +137,7 @@ class Creator
         $schema = '[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"varchar"},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"父级Id","name":"parent_id","type":"int"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"状态","name":"state","type":"int","form_type":"switch","default":"1","setting":{"open":"启用","close":"禁用"},"table_menu":true}]';
         
         $confJson = [
-            'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"id":"5502ynqp7rs","columns":[{"key":["id"],"readonly":true}]},{"id":"notvg3ox047","columns":[{"key":["title"],"required":true},{"key":["displayorder"]}]},{"id":"s6hsnxta2yc","columns":[{"key":["desc"]}]},{"id":"ovjiqj6t6oh","columns":[{"key":["state"]}]}]}]}',
+            'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"id":"notvg3ox047","columns":[{"key":["title"],"required":true},{"key":["displayorder"]}]},{"id":"s6hsnxta2yc","columns":[{"key":["desc"]}]},{"id":"ovjiqj6t6oh","columns":[{"key":["state"]}]}]}]}',
             'table_config'=>'[{"key":"id"},{"key":"title"},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":["option"]}]',
             'other_config'=>'{"level"::level}'
         ];
