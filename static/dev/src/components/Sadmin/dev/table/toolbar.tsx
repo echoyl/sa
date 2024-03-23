@@ -340,7 +340,7 @@ export const toolBarRender = (props) => {
       title: <SettingOutlined />,
       key: 'devsetting',
     });
-    if (_btns.length <= 1) {
+    if (_btns.length <= 2) {
       _btns.push({
         valueType: 'devadd',
         title: '+',

@@ -433,7 +433,6 @@ export default () => {
                     fieldProps: {
                       btn: { title: '配置' },
                       saFormProps: {
-                        grid: false,
                         devEnable: false,
                       },
                       formColumns: [

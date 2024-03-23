@@ -40,6 +40,7 @@ import AliyunVideo from './uploader/video';
 import IconSelect, { iconToElement } from './valueTypeMap/iconSelect.tsx';
 import MDEditor from './valueTypeMap/mdEditor';
 import { wxMenuRender } from './wxMenu';
+import { isString } from 'lodash';
 
 export function findParents(array, id, fieldNames = { id: 'id', children: 'child' }) {
   let parentArray = [];
@@ -172,7 +173,7 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       return <>-</>; //列表默认不显示
     },
     renderFormItem: (text, props) => {
-      return null;
+      //return null;
       return <AliyunVideo {...props.fieldProps} />;
     },
   },
@@ -269,11 +270,11 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
   },
   debounceSelect: {
     renderFormItem: (text, props) => {
-      //console.log(props.fieldProps);
+      //console.log('debounceSelect', props, 'text');
       return <DebounceSelect {...props.fieldProps} />;
     },
     render: (text) => {
-      console.log(text);
+      //console.log(text);
       return <span>{text?.label}</span>;
     },
   },
@@ -472,6 +473,9 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
 export const tplComplie = (exp: string | undefined, props: any) => {
   if (!exp) {
     return false;
+  }
+  if (!isString(exp)) {
+    return exp;
   }
   const ExpRE = /^\s*\{\{([\s\S]*)\}\}\s*$/;
   const matched = exp.match(ExpRE);

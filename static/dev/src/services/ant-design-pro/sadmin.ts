@@ -223,8 +223,14 @@ export async function currentUser(options?: { [key: string]: any }) {
 export async function loginOut(cb?: Function) {
   return request.get('index/logout', {
     msgcls: () => {
-      //删除数据
+      //删除数据 token
       localStorage.setItem(adminTokenName, '');
+      //清除pca数据
+      for (var i in localStorage) {
+        if (i.indexOf('pca') >= 0) {
+          localStorage.setItem(i, '');
+        }
+      }
       if (cb) {
         cb();
       }

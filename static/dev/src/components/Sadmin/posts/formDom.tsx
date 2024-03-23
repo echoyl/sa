@@ -153,8 +153,8 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
       const requestName = v.requestDataName
         ? v.requestDataName
         : v.fieldProps?.requestDataName
-        ? v.fieldProps.requestDataName
-        : false;
+          ? v.fieldProps.requestDataName
+          : false;
       if (requestName) {
         // v.request = async () => {
         //   return enums[v.requestDataName] ? enums[v.requestDataName] : detail[v.requestDataName];
@@ -192,20 +192,23 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
         v.fieldProps = { ...v.fieldProps, name: v.dataIndex };
       }
 
-      if (v.valueType == 'cdependency') {
-        v.valueType = 'dependency';
-        //dependency不需要 title 和 dataindex
-        delete v.title;
-        delete v.dataIndex;
-
-        //console.log('cdependency', v);
-      }
       let columnsFun;
       if (isString(v.columns)) {
         columnsFun = ((body) => {
           return new Function(`return ${body}`)();
         })(v.columns);
         //console.log('columns is now', v.columns);
+      }
+      if (v.valueType == 'cdependency') {
+        v.valueType = 'dependency';
+        if (columnsFun) {
+          v.columns = columnsFun;
+        }
+        //dependency不需要 title 和 dataindex
+        delete v.title;
+        delete v.dataIndex;
+
+        //console.log('cdependency', v);
       }
       //支持 dependencyOn 控制表单项的显示隐藏
       if (v.dependencyOn) {
@@ -256,12 +259,13 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
             name: names,
             columns: (dependencyOnName: string[]) => {
               //检测条件是否符合 condition 全部符合才返回数据
-              if (checkCondition(dependencyOnName, dependencyOn)) {
+              if (checkCondition(dependencyOnName, dependencyOn) || devEnable) {
                 return [new_column].map((nv) => {
                   if (devEnable && deep <= 1) {
                     if (!React.isValidElement(nv.title)) {
                       nv.title = <FormColumnTitle {...nv} />;
                     }
+                    nv.dependencies = names;
                   }
                   return nv;
                 });

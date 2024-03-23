@@ -418,7 +418,7 @@ export const DevTableColumnTitle = (props) => {
       ? [
           baseform,
           baseAddTab,
-          addGroup,
+          addEmptyGroup,
           {
             type: 'divider',
           },

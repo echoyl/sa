@@ -1071,13 +1071,20 @@ class CrudController extends ApiBaseController
                     }
                     break;
                 case 'search_select':
-                    //表单类型为 搜索select时
+                    //表单类型为 搜索select时 
+                    //20240323 前端组件改成了select labelinvalue设置后已不会再将整个数据放入到value中 所以这里要再检测下value字段
                     $id_name = $col['value']??'id';
                     if($encode)
                     {
-                        if($isset && $val && isset($val[$id_name]))
+                        if($isset && $val)
                         {
-                            $val = $val[$id_name];
+                            if(isset($val[$id_name]))
+                            {
+                                $val = $val[$id_name];
+                            }elseif(isset($val['value']))
+                            {
+                                $val = $val['value'];
+                            }
                         }
                     }else
                     {

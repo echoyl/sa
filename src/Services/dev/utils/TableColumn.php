@@ -356,6 +356,7 @@ class TableColumn
     public function customerColumn()
     {
         $props = $this->props;
+        
         if(!$props || !isset($props['items']) || !$props['items'])return;
         $items = $props['items'];
         $direction = $props['dom_direction']??'horizontal';//默认元素都是水平排列

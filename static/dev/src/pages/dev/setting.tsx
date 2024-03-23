@@ -25,7 +25,6 @@ export default () => {
     <PostsForm
       url="dev/setting"
       formTitle={false}
-      grid={false}
       devEnable={false}
       tabs={[
         {
@@ -36,8 +35,8 @@ export default () => {
             {
               valueType: 'group',
               columns: [
-                { title: '子标题', dataIndex: 'subtitle', width: 'md' },
-                { title: '后台前缀', dataIndex: 'baseurl', width: 'md' },
+                { title: '子标题', dataIndex: 'subtitle', colProps: { span: 12 } },
+                { title: '后台前缀', dataIndex: 'baseurl', colProps: { span: 12 } },
               ],
             },
             {
@@ -47,9 +46,22 @@ export default () => {
                   title: '水印设置',
                   dataIndex: 'watermark',
                   tooltip: '1.username表示后台用户名',
-                  width: 'md',
+                  colProps: { span: 12 },
                 },
-                { title: '腾讯地图key', dataIndex: 'tmap_key', width: 'md' },
+                { title: '腾讯地图key', dataIndex: 'tmap_key', colProps: { span: 12 } },
+              ],
+            },
+            {
+              valueType: 'group',
+              columns: [
+                { title: 'logo', valueType: 'uploader', dataIndex: 'logo', colProps: { span: 12 } },
+                {
+                  title: 'favicons',
+                  tooltip: '自行覆盖目录下的favicon.ico 文件',
+                  readonly: true,
+                  dataIndex: 'favicons',
+                  colProps: { span: 12 },
+                },
               ],
             },
             {
@@ -62,6 +74,7 @@ export default () => {
                   fieldProps: {
                     defaultChecked: true,
                   },
+                  colProps: { span: 8 },
                 },
                 {
                   title: '多语言',
@@ -70,23 +83,13 @@ export default () => {
                   fieldProps: {
                     defaultChecked: true,
                   },
+                  colProps: { span: 8 },
                 },
                 {
                   title: '分割菜单 - 顶部显示大菜单',
                   valueType: 'switch',
                   dataIndex: 'splitMenus',
-                },
-              ],
-            },
-            {
-              valueType: 'group',
-              columns: [
-                { title: 'logo', valueType: 'uploader', dataIndex: 'logo' },
-                {
-                  title: 'favicons',
-                  tooltip: '自行覆盖目录下的favicon.ico 文件',
-                  readonly: true,
-                  dataIndex: 'favicons',
+                  colProps: { span: 8 },
                 },
               ],
             },
@@ -102,14 +105,17 @@ export default () => {
                   fieldProps: {
                     options: [{ label: '阿里云', value: 'aliyun' }],
                   },
+                  colProps: { span: 8 },
                 },
                 {
                   title: '验证码模板id',
                   dataIndex: 'sms_code_id',
+                  colProps: { span: 8 },
                 },
                 {
                   title: '模板名称',
                   dataIndex: 'sms_name',
+                  colProps: { span: 8 },
                 },
               ],
             },
@@ -128,6 +134,7 @@ export default () => {
                   fieldProps: {
                     defaultChecked: false,
                   },
+                  colProps: { span: 12 },
                 },
                 {
                   valueType: 'dependency',
@@ -143,6 +150,7 @@ export default () => {
                               minuteStep: 15,
                               secondStep: 10,
                             },
+                            colProps: { span: 12 },
                           },
                         ]
                       : [];
@@ -160,35 +168,49 @@ export default () => {
             {
               valueType: 'group',
               columns: [
-                { title: '登录页背景图', valueType: 'uploader', dataIndex: 'loginBgImgage' },
+                {
+                  title: '显示验证码登录错误次数',
+                  dataIndex: 'login_error_times',
+                  tooltip: '登录失败该次数后展示图形验证码输入框，默认数字为3次',
+                  colProps: { span: 12 },
+                },
+                {
+                  title: '登录页背景图',
+                  valueType: 'uploader',
+                  dataIndex: 'loginBgImgage',
+                  colProps: { span: 12 },
+                },
               ],
             },
+
             {
-              title: '显示验证码登录错误次数',
-              dataIndex: 'login_error_times',
-              tooltip: '登录失败该次数后展示图形验证码输入框，默认数字为3次',
-            },
-            {
-              title: '登录方式',
-              valueType: 'checkbox',
-              dataIndex: 'loginType',
-              fieldProps: {
-                options: [
-                  { label: '账号密码', value: 'password' },
-                  { label: '手机号登录', value: 'phone' },
-                ],
-              },
-            },
-            {
-              title: '默认登录方式',
-              valueType: 'radio',
-              dataIndex: 'loginTypeDefault',
-              fieldProps: {
-                options: [
-                  { label: '账号密码', value: 'password' },
-                  { label: '手机号登录', value: 'phone' },
-                ],
-              },
+              valueType: 'group',
+              columns: [
+                {
+                  title: '登录方式',
+                  valueType: 'checkbox',
+                  dataIndex: 'loginType',
+                  fieldProps: {
+                    options: [
+                      { label: '账号密码', value: 'password' },
+                      { label: '手机号登录', value: 'phone' },
+                    ],
+                  },
+                  colProps: { span: 12 },
+                },
+                {
+                  title: '默认登录方式',
+                  valueType: 'radio',
+                  dataIndex: 'loginTypeDefault',
+                  fieldProps: {
+                    options: [
+                      { label: '账号密码', value: 'password' },
+                      { label: '手机号登录', value: 'phone' },
+                    ],
+                  },
+                  colProps: { span: 12 },
+                },
+              ],
             },
           ],
         },

@@ -7,7 +7,7 @@ import {
   SettingDrawer,
 } from '@ant-design/pro-components';
 import { RunTimeLayoutConfig, history } from '@umijs/max';
-import { App, ConfigProvider } from 'antd';
+import { App, ConfigProvider, Divider, Select } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import { useContext } from 'react';

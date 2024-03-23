@@ -380,7 +380,7 @@ export const SaForm: FC<saFormProps> = (props) => {
   );
 };
 
-const PostsForm: FC<saFormPros & { match?: boolean }> = (props) => {
+const PostsForm: FC<saFormProps & { match?: boolean }> = (props) => {
   //console.log('post pros',props);
   const { formTitle = '详情', match = false, path } = props;
   //console.log(value?.breadcrumb);

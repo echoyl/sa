@@ -152,7 +152,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
     selectRowBtns = [],
     formRef = useRef<ProFormInstance>(),
     tableProps = {
-      size: 'large',
+      size: 'middle',
     },
     pageMenu,
     devEnable: pdevEnable = true,

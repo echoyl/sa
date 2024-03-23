@@ -8,17 +8,6 @@ export default [
     component: './login',
   },
   {
-    path: '/web',
-    name: '菜单导航',
-    icon: 'bars',
-    routes: [
-      {
-        path: 'menu/:id',
-        component: './menu/menu/post',
-      },
-    ],
-  },
-  {
     path: 'dev',
     name: '开发管理',
     routes: [
@@ -39,7 +28,7 @@ export default [
       },
       {
         path: 'test',
-        name: '测试专用',
+        name: 'for Test',
         component: 'dev/test',
       },
     ],

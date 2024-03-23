@@ -50,8 +50,8 @@ const AreaMap = (props: any) => {
       zIndex: 2,
     })
       .source(data)
-      .color('#fff')
-      .size(0.5)
+      .color('#eee')
+      .size(0.8)
       .active(true)
       .style({
         lineType: 'solid',
@@ -68,7 +68,9 @@ const AreaMap = (props: any) => {
     chinaPolygonLayer.on('mousemove', (e) => {
       popup
         .setLnglat(e.lngLat)
-        .setHTML(`<span>${e.feature.properties.name}:${e.feature.properties.la}</span>`);
+        .setHTML(
+          `<span>${e.feature.properties.name}:${e && e.feature.properties[field] ? e.feature.properties[field] : '-'}</span>`,
+        );
       scene.addPopup(popup);
     });
     chinaPolygonLayer.on('mouseout', (e) => {

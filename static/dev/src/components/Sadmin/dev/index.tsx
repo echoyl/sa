@@ -1,5 +1,6 @@
 import {
   DatabaseOutlined,
+  FileMarkdownOutlined,
   MenuOutlined,
   MoreOutlined,
   PlusSquareOutlined,
@@ -84,6 +85,22 @@ export const DevLinks = () => {
             </div>
           }
         />
+      ),
+    },
+    {
+      key: 'docs',
+      label: (
+        <a
+          href={'https://echoyl.com'}
+          style={{ display: 'inline-block', width: '100%', textAlign: 'center' }}
+          key="setting"
+          target={'_blank'}
+        >
+          <Space>
+            <FileMarkdownOutlined />
+            文档
+          </Space>
+        </a>
       ),
     },
   ];

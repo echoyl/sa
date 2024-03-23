@@ -92,13 +92,15 @@ class MenuController extends CrudController
     {
         $ws = new WebsiteService;
         $data['spec_arr'] = $ws->spec_arr;
-        $data['modules'] = $ws->modules;
+        $data['modules'] = collect($ws->modules)->map(function($v){
+            return ['value'=>$v['id'],'label'=>$v['title']];
+        });
         $ds = new DevService;
-        $data['admin_model_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
+        $data['admin_model_ids'] = $ds->getModelsTreeData([env('APP_NAME')]);
         //$data['admin_model_folder_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
         if ($data['id']) {
 
-            $data['content_id'] = $ws->menuContent($data);
+            //$data['content_id'] = $ws->menuContent($data);
         }
         // if(isset($data['specs']))
         // {
@@ -150,6 +152,7 @@ class MenuController extends CrudController
     public function category()
     {
         $admin_model_id = request('admin_model_id');
+        $pagetype = request('pagetype','list');//页面类型 list || detail
         //找到改模型文件夹下面的category 模型
         //$namespace = 'App\Models\jianfuguanjia\anli';
 
@@ -159,7 +162,7 @@ class MenuController extends CrudController
 
         if(!$model_data)
         {
-            return $this->fail([1,'信息错误，请先选择关联模型']);
+            return $this->success([]);
         }
 
         $ds = new DevService;
@@ -168,17 +171,36 @@ class MenuController extends CrudController
 
         array_unshift($namespace,$prefix);
 
-        $namespace[] = 'Category';
+        //$namespace[] = 'Category';
         $category_class = implode('\\',$namespace);
         if(!class_exists($category_class))
         {
             return $this->success([]);
-            return $this->fail([1,'请先创建 '.$model_data['title'].' 下方的Category模型']);
         }
 
         $model = new $category_class;
+        $data = [];
+        if($pagetype == 'detail')
+        {
+            //获取单个内容信息
+            $page = 1;
+            $psize = request('pageSize',10);
 
-        $data = $model->getChild();
+            $keyword = request('keyword');
+            $data = $model->select(['id','title']);
+            if($keyword)
+            {
+                $data = $data->where([['title','like','%'.$keyword.'%']]);
+            }
+            $data = $data->offset(($page - 1) * $psize)->limit($psize)->get()->toArray();
+        }else
+        {
+            if(method_exists($model,'getChild'))
+            {
+                $data = $model->getChild();
+            }
+        }
+
         return $this->success($data);
     }
 }

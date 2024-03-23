@@ -11,7 +11,7 @@ class Menu extends Category
      *
      * @var string
      */
-    protected $table = 'menu';
+    protected $table = 'web_menu';
 
     // public function category()
     // {

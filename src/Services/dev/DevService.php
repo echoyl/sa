@@ -1331,7 +1331,7 @@ class DevService
         $model = new Model();
         $data = [];
         $list = $model->where(['type'=>1])->with(['relations'=>function($query){
-            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
+            $query->select(['id','title','model_id','name','foreign_model_id','type'])->whereIn('type',['one','many']);
         }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
         foreach($list as $val)
         {

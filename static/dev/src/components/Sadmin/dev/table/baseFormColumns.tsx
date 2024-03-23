@@ -50,10 +50,12 @@ const formMoreType = [
   { label: '分割线 - divider', value: 'divider' },
   { label: '数字 - digit', value: 'digit' },
   { label: 'icon选择器 - iconSelect', value: 'iconSelect' },
-  
+  { label: 'treeSelect', value: 'treeSelect' },
+  { label: 'cascader', value: 'cascader' },
+  { label: 'radio', value: 'radio' },
 ];
 
-export const getModelColumnsSelect = (id: number, allModels, level = 1) => {
+export const getModelColumnsSelect = (id: number, allModels: any[], level = 1) => {
   const select_data = allModels?.find((v) => v.id == id);
   //console.log(foreign_model_id, allModels, select_data);
   const fields: Array<TreeNodeProps> = select_data?.columns?.map((v) => ({
@@ -97,7 +99,7 @@ export const getModelById = (model_id: number, models: any[]) => {
 };
 
 export const getModelRelations = (model_id: number, dev: { [key: string]: any }): any[] => {
-  //console.log('model_id', model_id);
+  //console.log('model_id', model_id, dev);
   const { allModels } = dev;
   const model = getModelById(model_id, allModels);
   const manyRelation: any[] = [];

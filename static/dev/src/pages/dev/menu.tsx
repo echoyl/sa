@@ -195,6 +195,21 @@ export const MenuFormColumn: saFormColumnsType = [
                   width: '100%',
                   colProps: { span: 12 },
                 },
+                {
+                  dataIndex: ['table', 'size'],
+                  title: '尺寸',
+                  valueType: 'radioButton',
+                  fieldProps: {
+                    buttonStyle: 'solid',
+                    defaultValue: 'middle',
+                    options: [
+                      { label: 'large', value: 'large' },
+                      { label: 'middle', value: 'middle' },
+                      { label: 'small', value: 'small' },
+                    ],
+                  },
+                  colProps: { span: 12 },
+                },
               ],
             },
             {
