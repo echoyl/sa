@@ -227,7 +227,7 @@ export default () => {
                           valueType: 'dependency',
                           name: [['socket', 'ping']],
                           columns: ({ socket }) => {
-                            if (socket.ping) {
+                            if (socket?.ping) {
                               return [
                                 {
                                   title: '时间间隔',

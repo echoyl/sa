@@ -43,6 +43,9 @@ const useWebSocket = () => {
     return;
   };
   useEffect(() => {
+    if (!setting.socket?.open) {
+      return () => {};
+    }
     const url = setting.socket?.url;
     const ws = new WebSocket(url);
     setSocket(ws);
