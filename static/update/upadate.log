@@ -31,3 +31,15 @@ MODIFY COLUMN `select_columns` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb
 ALTER TABLE `la_wechat_offiaccount_account`
  ADD COLUMN `subscribe_reply`  varchar(255) NOT NULL DEFAULT '' COMMENT '关注时回复',
  ADD COLUMN `auto_reply`  varchar(255) NOT NULL DEFAULT '' COMMENT '自动回复';
+
+2024-03-27
+CREATE TABLE `la_socket_log` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL DEFAULT '0',
+  `client_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  `state` int DEFAULT '0',
+  `token_id` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
