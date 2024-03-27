@@ -22,6 +22,7 @@ import ButtonModal from '../buttonModal';
 import Confirm, { ConfirmTriggerClick } from '../confirm';
 import ConfirmForm from '../confirmForm';
 import Print from '../print';
+import RequestComponent from '../request';
 import ItemTags from './items/tag';
 
 const CustomerColumnRender = (props) => {
@@ -271,6 +272,8 @@ const CustomerColumnRender = (props) => {
               }}
             />
           );
+        } else if (item.action == 'request') {
+          return <RequestComponent key={key} trigger={dom} requestParam={{ ...item.request }} />;
         } else if (item.action == 'print') {
           return (
             <Print

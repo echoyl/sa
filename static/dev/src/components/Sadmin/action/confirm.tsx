@@ -53,7 +53,14 @@ export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = und
           if (actionRef?.current) {
             actionRef.current?.reload();
           } else {
-            history.back();
+            if(ret.data.reload)
+            {
+
+            }else
+            {
+              history.back();
+            }
+            
           }
         }
       }

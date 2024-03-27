@@ -3,23 +3,6 @@ import request from '@/services/ant-design-pro/sadmin';
 import { App, Button } from 'antd';
 import { useState } from 'react';
 
-const ClearDevCache = () => {
-  const [loading, setLoading] = useState(false);
-  const { message } = App.useApp();
-  const clear = async () => {
-    setLoading(true);
-    const { code, msg } = await request.get('dev/menu/clearCache');
-    message.info(msg);
-    setLoading(false);
-  };
-
-  return (
-    <Button onClick={clear} loading={loading}>
-      清除缓存
-    </Button>
-  );
-};
-
 export default () => {
   return (
     <PostsForm
@@ -215,12 +198,76 @@ export default () => {
           ],
         },
         {
-          title: '缓存设置',
+          title: 'Socket配置',
           formColumns: [
             {
-              title: '清除缓存',
-              renderFormItem: (props) => {
-                return <ClearDevCache />;
+              title: '是否开启',
+              dataIndex: ['socket', 'open'],
+              valueType: 'switch',
+            },
+            {
+              valueType: 'dependency',
+              name: [['socket', 'open']],
+              columns: ({ socket }) => {
+                if (socket?.open) {
+                  return [
+                    {
+                      title: '连接地址',
+                      dataIndex: ['socket', 'url'],
+                    },
+                    {
+                      valueType: 'group',
+                      columns: [
+                        {
+                          title: '开启ping',
+                          dataIndex: ['socket', 'ping'],
+                          valueType: 'switch',
+                        },
+                        {
+                          valueType: 'dependency',
+                          name: [['socket', 'ping']],
+                          columns: ({ socket }) => {
+                            if (socket.ping) {
+                              return [
+                                {
+                                  title: '时间间隔',
+                                  dataIndex: ['socket', 'pingInterval'],
+                                  valueType: 'digit',
+                                  colProps: { span: 12 },
+                                  fieldProps: {
+                                    addonAfter: '秒',
+                                  },
+                                  formItemProps: {
+                                    rules: [
+                                      {
+                                        required: true,
+                                      },
+                                    ],
+                                  },
+                                  width: '100%',
+                                },
+                                {
+                                  title: 'ping信息',
+                                  dataIndex: ['socket', 'pingData'],
+                                  colProps: { span: 12 },
+                                  formItemProps: {
+                                    rules: [
+                                      {
+                                        required: true,
+                                      },
+                                    ],
+                                  },
+                                },
+                              ];
+                            }
+                            return [];
+                          },
+                        },
+                      ],
+                    },
+                  ];
+                }
+                return [];
               },
             },
           ],

@@ -1,6 +1,6 @@
 import { ProFormInstance } from '@ant-design/pro-components';
 import { Button, ButtonProps } from 'antd';
-import { FC, ReactNode, useContext, useRef, useState } from 'react';
+import { FC, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import { getBread, saFormColumnsType, saFormTabColumnsType, tplComplie } from '../helpers';
 import { SaForm, saFormProps } from '../posts/post';
@@ -26,6 +26,8 @@ interface actionConfirm {
   readonly?: boolean;
   xkey?: string;
   saFormProps?: saFormProps;
+  open?: boolean;
+  onOpen?: (open: boolean) => void;
 }
 
 const InnerForm = (props) => {
@@ -169,17 +171,22 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
     readonly = false,
     xkey,
     saFormProps = {},
+    open: oopen = false,
+    onOpen,
   } = props;
   //console.log('ConfirmForm props ', props);
   const defaultButton = { title: '操作', type: 'primary', danger: false, size: 'small' };
   const _btn = { ...defaultButton, ...btn };
 
   //const [form] = Form.useForm<{ desc: string }>();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(oopen);
 
   // useEffect(() => {
   //   console.log('confirm modal open state is ', open, page, xkey);
   // }, [open]);
+  useEffect(() => {
+    setOpen(oopen);
+  }, [oopen]);
 
   return (
     <ButtonModal
@@ -189,6 +196,7 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
       title={msg}
       afterOpenChange={(open) => {
         setOpen(open);
+        onOpen?.(open);
       }}
     >
       <InnerForm

@@ -462,6 +462,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
                               { label: 'dropdown', value: 'dropdown' },
                               { label: 'Popover气泡卡片', value: 'popover' },
                               { label: '打印功能', value: 'print' },
+                              { label: '请求', value: 'request' },
                               { label: '查看', value: 'view' },
                               { label: '编辑', value: 'edit' },
                               { label: '删除', value: 'delete' },
@@ -588,7 +589,13 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
                           columns: ({ action }: any) => {
                             const action_ret: saFormColumnsType = [];
                             if (
-                              inArray(action, ['confirm', 'confirmForm', 'dropdown', 'print']) >= 0
+                              inArray(action, [
+                                'confirm',
+                                'confirmForm',
+                                'dropdown',
+                                'print',
+                                'request',
+                              ]) >= 0
                             ) {
                               action_ret.push({
                                 dataIndex: 'request',

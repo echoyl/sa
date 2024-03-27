@@ -7,14 +7,17 @@ export default () => {
   const { setInitialState } = useModel('@@initialState');
   const [messageApi, contextHolder] = message.useMessage();
   const reload = async () => {
+    const mkey = 'refresh_key';
+    messageApi.loading({ key: mkey, content: 'loading...' });
     const msg = await currentUser();
     //const msg = await cuser();
+    await request.get('dev/menu/clearCache');
 
     setInitialState((s) => ({
       ...s,
       currentUser: { ...msg.data, uid: uid() },
     })).then(() => {
-      messageApi.success('刷新菜单成功');
+      messageApi.success({ key: mkey, content: '刷新成功' });
     });
 
     return msg.data;

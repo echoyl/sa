@@ -7,6 +7,7 @@ interface actionConfirm {
   open?: boolean;
   onOk?: () => boolean | void;
   width?: number;
+  height?: number; //modal的最大高度
   modalProps?: ModalProps;
   children?: ReactNode;
   confirmLoading?: boolean;
@@ -22,6 +23,7 @@ const ButtonModal: FC<actionConfirm> = (props) => {
     open = false,
     onOk,
     width = 1200,
+    height = 650,
     modalProps,
     afterOpenChange,
     confirmLoading = false,
@@ -121,7 +123,7 @@ const ButtonModal: FC<actionConfirm> = (props) => {
           }
         }}
         maskClosable={false}
-        styles={{ body: { maxHeight: 650, overflowY: 'auto', overflowX: 'hidden' } }}
+        styles={{ body: { maxHeight: height, overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <div
           onKeyDown={(e) => {

@@ -30,7 +30,7 @@ const TableFromBread: FC<{
   const post_key = record?.[fieldProps.local_key] ? record?.[fieldProps.local_key] : 0;
 
   const bread = getBread(fieldProps.path);
-  //console.log('fieldProps.props is', JSON.stringify(fieldProps.props));
+  console.log('fieldProps.props is', JSON.stringify(fieldProps.props), bread);
   if (bread) {
     const { data: v_data } = bread;
     fieldProps.props = {

@@ -60,6 +60,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     showTabs = true,
     align = 'center',
     editable = true, //是否可编辑 用于判断编辑状态下是否可以出现提交按钮
+    addable = true, //是否可以新增
     readonly = false, //是否可新增 用户 添加状态下是否出现提交按钮
     dataId = 0, //用户判断是编辑还是新增，通过网络请求有一定的延迟 还是通过参数判断
     actionRef,
@@ -73,7 +74,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     grid = true,
     devEnable: pdevEnable = true,
   } = props;
-  //console.log('init props', formColumns, tabs);
+  //console.log('init props', props);
   //const url = 'posts/posts';
   //读取后台数据
   const [detail, setDetail] = useState<{ [key: string]: any } | boolean>(
@@ -317,7 +318,10 @@ export const SaForm: FC<saFormProps> = (props) => {
             onFinish={post}
             request={get}
             submitter={
-              (!editable && dataId != 0) || (dataId == 0 && readonly) || params.readonly == 1
+              (!editable && dataId != 0) ||
+              (dataId == 0 && !addable) ||
+              (dataId == 0 && readonly) ||
+              params.readonly == 1
                 ? false
                 : {
                     render: (props, dom) => {

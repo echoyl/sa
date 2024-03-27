@@ -14,7 +14,7 @@ import {
 } from '@ant-design/pro-components';
 import { Helmet, history, useModel, useSearchParams } from '@umijs/max';
 import { Alert, App, Tabs, message } from 'antd';
-import React, { CSSProperties, useRef, useState } from 'react';
+import React, { CSSProperties, useContext, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import styles from './index.less';
 const LoginMessage: React.FC<{
@@ -47,7 +47,6 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const [messageApi, contextHolder] = message.useMessage();
-
   //console.log('redirect', searchParams.get('redirect'));
 
   const handleSubmit = async (values: API.LoginParams) => {

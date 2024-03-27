@@ -53,7 +53,7 @@ export async function saRequest(url: string, method = 'GET', options?: { [key: s
     method: method,
     headers: {
       'Content-Type': 'application/json',
-      authorization: `Bearer ${localStorage.getItem('token')}`,
+      authorization: `Bearer ${localStorage.getItem(adminTokenName)}`,
     },
     ...(options || {}),
   });

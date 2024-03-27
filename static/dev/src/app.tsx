@@ -13,7 +13,8 @@ import 'dayjs/locale/zh-cn';
 import { useContext } from 'react';
 import defaultSettings, { lightDefaultToken } from '../config/defaultSettings';
 import { DevLinks, SaDevContext } from './components/Sadmin/dev';
-import { loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
+import { isJsonString, loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
+import WebSocketProvider, { WebSocketStateProvider } from './components/Sadmin/hooks/websocket';
 import { getTheme } from './components/Sadmin/themSwitch';
 import request, {
   loginPath,
@@ -144,20 +145,22 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
                   setting: initialState?.settings,
                 }}
               >
-                {children}
-                {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
-                  <SettingDrawer
-                    disableUrlParams
-                    enableDarkTheme
-                    settings={initialState?.settings}
-                    onSettingChange={(settings) => {
-                      setInitialState((preInitialState) => ({
-                        ...preInitialState,
-                        settings: { ...preInitialState.settings, ...settings },
-                      }));
-                    }}
-                  />
-                )}
+                <WebSocketProvider>
+                  {children}
+                  {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
+                    <SettingDrawer
+                      disableUrlParams
+                      enableDarkTheme
+                      settings={initialState?.settings}
+                      onSettingChange={(settings) => {
+                        setInitialState((preInitialState) => ({
+                          ...preInitialState,
+                          settings: { ...preInitialState.settings, ...settings },
+                        }));
+                      }}
+                    />
+                  )}
+                </WebSocketProvider>
               </SaDevContext.Provider>
             </ProConfigProvider>
           </ConfigProvider>
