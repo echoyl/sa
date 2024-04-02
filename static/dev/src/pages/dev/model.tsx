@@ -547,14 +547,25 @@ export default () => {
                   valueType: 'formList',
                   columns: [
                     {
-                      title: '字段',
-                      dataIndex: 'columns',
-                      valueType: 'select',
-                      width: 300,
-                      fieldProps: {
-                        options: [...foreignOptions, ...devDefaultFields],
-                        mode: 'multiple',
-                      },
+                      valueType: 'group',
+                      columns: [
+                        {
+                          title: '字段',
+                          dataIndex: 'columns',
+                          valueType: 'select',
+                          //width: 300,
+                          fieldProps: {
+                            options: [...foreignOptions, ...devDefaultFields],
+                            mode: 'multiple',
+                          },
+                          colProps: { span: 12 },
+                        },
+                        {
+                          title: '提示语',
+                          dataIndex: 'message',
+                          colProps: { span: 12 },
+                        },
+                      ],
                     },
                   ],
                 },

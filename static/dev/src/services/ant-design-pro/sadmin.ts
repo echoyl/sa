@@ -230,6 +230,9 @@ export async function loginOut(cb?: Function) {
         if (i.indexOf('pca') >= 0) {
           localStorage.setItem(i, '');
         }
+        if (i.indexOf('adminSetting') >= 0) {
+          localStorage.setItem(i, '');
+        }
       }
       if (cb) {
         cb();

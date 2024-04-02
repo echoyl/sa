@@ -24,7 +24,8 @@ const GlobalHeaderRight: React.FC = () => {
 
   return (
     <Space className={className}>
-      <NoticeIconView />
+      <DevSwitch />
+
       <Avatar menu={true} />
       {lang && (
         <UmiSelectLang
@@ -34,7 +35,7 @@ const GlobalHeaderRight: React.FC = () => {
         />
       )}
       <ThemeSwitch />
-      <DevSwitch />
+      <NoticeIconView />
       <span> </span>
     </Space>
   );

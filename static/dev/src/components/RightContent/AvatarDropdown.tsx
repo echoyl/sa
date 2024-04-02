@@ -30,7 +30,11 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
         });
         await loginOut(() => {
           setInitialState((s) => ({ ...s, currentUser: undefined }));
-          message.info('退出成功');
+          message.info({
+            key: 'request_message_key',
+            content: '退出成功',
+            duration: 1,
+          });
         });
         return;
       } else {

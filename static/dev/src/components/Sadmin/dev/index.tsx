@@ -18,6 +18,8 @@ import { ToolBarMenu } from './table/toolbar';
 
 export const SaDevContext = createContext<{
   setting?: any;
+  admin?: any;
+  setAdmin?: (admin: any) => void;
 }>({});
 
 export const DevLinks = () => {

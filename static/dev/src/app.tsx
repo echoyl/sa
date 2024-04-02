@@ -1,5 +1,4 @@
 import { Footer, RightContent } from '@/components';
-
 import {
   Settings as LayoutSettings,
   ProConfigProvider,
@@ -7,19 +6,16 @@ import {
   SettingDrawer,
 } from '@ant-design/pro-components';
 import { RunTimeLayoutConfig, history } from '@umijs/max';
-import { App, ConfigProvider, Divider, Select } from 'antd';
+import { App, ConfigProvider } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
-import { useContext } from 'react';
-import defaultSettings, { lightDefaultToken } from '../config/defaultSettings';
+import React, { useContext, useEffect, useState } from 'react';
 import { DevLinks, SaDevContext } from './components/Sadmin/dev';
-import { isJsonString, loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
-import WebSocketProvider, { WebSocketStateProvider } from './components/Sadmin/hooks/websocket';
-import { getTheme } from './components/Sadmin/themSwitch';
-import request, {
-  loginPath,
-  currentUser as queryCurrentUser,
-} from './services/ant-design-pro/sadmin';
+import { loopMenuItem, saValueTypeMap } from './components/Sadmin/helpers';
+import WebSocketProvider, { WebSocketListen } from './components/Sadmin/hooks/websocket';
+import Message from './components/Sadmin/message';
+import { saGetSetting } from './components/Sadmin/refresh';
+import { loginPath, currentUser as queryCurrentUser } from './services/ant-design-pro/sadmin';
 dayjs.locale('zh-cn');
 //const isDev = process.env.NODE_ENV === 'development';
 
@@ -51,7 +47,9 @@ export async function getInitialState(): Promise<{
     return undefined;
   };
   //获取后台基础配置信息
-  const { data: adminSetting } = await request.get('setting');
+  const settings = await saGetSetting();
+  //const { data: adminSetting } = await request.get('setting');
+
   // 如果是登录页面，不执行
   //const location = useLocation();
   // console.log(
@@ -59,24 +57,74 @@ export async function getInitialState(): Promise<{
   //   loginPath,
   //   history.location.pathname.replace(adminSetting.baseurl, '/'),
   // );
-  //check theme cache
-  const theme = getTheme(adminSetting);
-  const navTheme =
-    theme == 'light'
-      ? { navTheme: theme, token: { ...lightDefaultToken } }
-      : { navTheme: theme, token: { sider: {}, header: {} } };
-  if (history.location.pathname.replace(adminSetting.baseurl, '/') !== loginPath) {
+  if (history.location.pathname.replace(settings.baseurl, '/') !== loginPath) {
     const currentUser = await fetchUserInfo();
     return {
       fetchUserInfo,
       currentUser,
-      settings: { ...defaultSettings, ...adminSetting, ...navTheme },
+      settings,
     };
   }
   return {
     fetchUserInfo,
-    settings: { ...defaultSettings, ...adminSetting, ...navTheme },
+    settings,
   };
+}
+
+/**
+ * 最外层的context
+ * @param container
+ * @returns
+ */
+export function rootContainer(container: JSX.Element, args) {
+  // console.log('args', args);
+  // args.plugin.hooks.getInitialState[0]().then((v) => {
+  //   console.log('v', v);
+  // });
+
+  const Provider = (props) => {
+    //const { initialState } = useModel('@@initialState');
+    const [setting, setSetting] = useState<any>();
+    //const [admin, setAdmin] = useState<any>();
+    useEffect(() => {
+      //console.log('root get');
+      saGetSetting().then((v) => {
+        setSetting(v);
+        // if (history.location.pathname.replace(v.baseurl, '/') !== loginPath) {
+        //   queryCurrentUser().then(({ code, data }) => {
+        //     if (!code) {
+        //       setAdmin(data);
+        //     }
+        //   });
+        // }
+      });
+    }, []);
+
+    return (
+      <ConfigProvider
+        theme={
+          setting?.navTheme == 'light'
+            ? {
+                ...setting?.antdtheme,
+              }
+            : {}
+        }
+      >
+        <App>
+          <SaDevContext.Provider
+            value={{
+              //setting: initialState?.settings,
+              setting,
+            }}
+          >
+            <WebSocketProvider>{props.children}</WebSocketProvider>
+            <Message />
+          </SaDevContext.Provider>
+        </App>
+      </ConfigProvider>
+    );
+  };
+  return React.createElement(Provider, null, container);
 }
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
@@ -92,20 +140,12 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     }
   };
   return {
-    rightContentRender: () => (
-      <App>
-        <RightContent />
-      </App>
-    ),
+    rightContentRender: () => <RightContent />,
     //disableContentMargin: false,
     waterMarkProps: {
       content: checkWaterMark(),
     },
-    footerRender: () => (
-      <App>
-        <Footer />
-      </App>
-    ),
+    footerRender: () => <Footer />,
     onPageChange: () => {
       // 如果没有登录，重定向到 login
       const pathname = history.location.pathname.replace(initialState?.settings?.baseurl, '/');
@@ -129,42 +169,23 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     },
     childrenRender: (children, props) => {
       return (
-        <App>
-          <ConfigProvider
-            theme={
-              initialState?.settings?.navTheme == 'light'
-                ? {
-                    ...initialState?.settings.antdtheme,
-                  }
-                : {}
-            }
-          >
-            <ProConfigProvider {...values} valueTypeMap={{ ...saValueTypeMap }}>
-              <SaDevContext.Provider
-                value={{
-                  setting: initialState?.settings,
-                }}
-              >
-                <WebSocketProvider>
-                  {children}
-                  {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
-                    <SettingDrawer
-                      disableUrlParams
-                      enableDarkTheme
-                      settings={initialState?.settings}
-                      onSettingChange={(settings) => {
-                        setInitialState((preInitialState) => ({
-                          ...preInitialState,
-                          settings: { ...preInitialState.settings, ...settings },
-                        }));
-                      }}
-                    />
-                  )}
-                </WebSocketProvider>
-              </SaDevContext.Provider>
-            </ProConfigProvider>
-          </ConfigProvider>
-        </App>
+        <ProConfigProvider {...values} valueTypeMap={{ ...saValueTypeMap }}>
+          <WebSocketListen />
+          {children}
+          {initialState?.settings.dev && !props.location?.pathname?.includes('/login') && (
+            <SettingDrawer
+              disableUrlParams
+              enableDarkTheme
+              settings={initialState?.settings}
+              onSettingChange={(settings) => {
+                setInitialState((preInitialState) => ({
+                  ...preInitialState,
+                  settings: { ...preInitialState.settings, ...settings },
+                }));
+              }}
+            />
+          )}
+        </ProConfigProvider>
       );
     },
     siderWidth: 208,

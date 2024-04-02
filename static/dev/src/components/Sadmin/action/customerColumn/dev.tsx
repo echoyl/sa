@@ -609,9 +609,29 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
                                   },
                                   formColumns: [
                                     {
-                                      dataIndex: 'url',
-                                      title: 'URL地址',
+                                      valueType: 'group',
+                                      columns: [
+                                        {
+                                          dataIndex: 'url',
+                                          title: 'URL地址',
+                                          colProps: { span: 12 },
+                                        },
+                                        {
+                                          dataIndex: 'method',
+                                          valueType: 'select',
+                                          title: '请求方式',
+                                          fieldProps: {
+                                            options: [
+                                              { label: 'GET', value: 'get' },
+                                              { label: 'POST', value: 'post' },
+                                            ],
+                                            defaultValue: 'post',
+                                          },
+                                          colProps: { span: 12 },
+                                        },
+                                      ],
                                     },
+
                                     {
                                       dataIndex: 'model',
                                       title: '数据源',

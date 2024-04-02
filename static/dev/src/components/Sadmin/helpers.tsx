@@ -41,6 +41,8 @@ import IconSelect, { iconToElement } from './valueTypeMap/iconSelect.tsx';
 import MDEditor from './valueTypeMap/mdEditor';
 import { wxMenuRender } from './wxMenu';
 import { isString } from 'lodash';
+import { SaContext } from './posts/table';
+import { SaDevContext } from './dev';
 
 export function findParents(array, id, fieldNames = { id: 'id', children: 'child' }) {
   let parentArray = [];
@@ -612,6 +614,7 @@ export const getBread = (path: string) => {
     return null;
   }
   const { initialState } = useModel('@@initialState');
+  //const { admin } = useContext(SaDevContext);
   const { breadcrumb } = getMenuData(initialState?.currentUser?.menuData);
   if (path == '/') {
     //首页默认跳转第一个菜单

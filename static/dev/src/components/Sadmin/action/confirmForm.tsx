@@ -143,7 +143,7 @@ const InnerForm = (props) => {
           }
         } else {
           //无 绑定onchange事件
-          console.log('close it', data);
+          //console.log('close it', data);
           setOpen(false);
           onChange?.(data);
         }

@@ -1,3 +1,4 @@
+import { inArray } from '@/components/Sadmin/checkers';
 import PostsForm from '@/components/Sadmin/posts/post';
 import request from '@/services/ant-design-pro/sadmin';
 import { App, Button } from 'antd';
@@ -152,16 +153,10 @@ export default () => {
               valueType: 'group',
               columns: [
                 {
-                  title: '显示验证码登录错误次数',
-                  dataIndex: 'login_error_times',
-                  tooltip: '登录失败该次数后展示图形验证码输入框，默认数字为3次',
-                  colProps: { span: 12 },
-                },
-                {
                   title: '登录页背景图',
                   valueType: 'uploader',
                   dataIndex: 'loginBgImgage',
-                  colProps: { span: 12 },
+                  colProps: { span: 24 },
                 },
               ],
             },
@@ -194,6 +189,53 @@ export default () => {
                   colProps: { span: 12 },
                 },
               ],
+            },
+            {
+              valueType: 'group',
+              columns: [
+                {
+                  title: '其它登录方式',
+                  valueType: 'checkbox',
+                  dataIndex: 'loginActions',
+                  fieldProps: {
+                    options: [{ label: '微信公众号', value: 'wechat' }],
+                  },
+                  colProps: { span: 12 },
+                },
+                {
+                  title: '显示验证码登录错误次数',
+                  dataIndex: 'login_error_times',
+                  tooltip: '登录失败该次数后展示图形验证码输入框，默认数字为3次',
+                  colProps: { span: 12 },
+                },
+              ],
+            },
+            {
+              valueType: 'dependency',
+              name: ['loginActions'],
+              columns: ({ loginActions }) => {
+                //console.log('loginActions', loginActions);
+                if (loginActions && inArray('wechat', loginActions) > -1) {
+                  return [
+                    {
+                      valueType: 'group',
+                      columns: [
+                        {
+                          title: '二维码地址',
+                          dataIndex: ['loginWechat', 'url'],
+                          colProps: { span: 12 },
+                        },
+                        {
+                          title: '描述文字',
+                          dataIndex: ['loginWechat', 'desc'],
+                          colProps: { span: 12 },
+                        },
+                      ],
+                    },
+                  ];
+                }
+                return [];
+              },
             },
           ],
         },

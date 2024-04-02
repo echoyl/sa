@@ -5,6 +5,7 @@ import {
   Button,
   Divider,
   Dropdown,
+  Modal,
   Popover,
   QRCode,
   Space,
@@ -24,7 +25,6 @@ import ConfirmForm from '../confirmForm';
 import Print from '../print';
 import RequestComponent from '../request';
 import ItemTags from './items/tag';
-
 const CustomerColumnRender = (props) => {
   const {
     items = [],
@@ -39,9 +39,9 @@ const CustomerColumnRender = (props) => {
   const { initialState } = useModel('@@initialState');
   //console.log('props ', props);
   const { actionRef, formRef, columnData, url, saTableContext } = useContext(SaContext);
-  const { modal: appModal } = App.useApp();
   //const formValue = formRef?.current?.getFieldsValue?.(true);
   const [record, setRecord] = useState(orecord);
+  const [modalApi, modalHolder] = Modal.useModal();
   //console.log('CustomerColumnRender record is  ', orecord, !formRef.current);
   //console.log('formRef', formRef);
   //console.log('dependencies', dependencies);
@@ -253,11 +253,12 @@ const CustomerColumnRender = (props) => {
               trigger={dom}
               url={item.request?.url}
               data={{ ...paramExtra, ...item.request?.data }}
+              method={item.request?.method ? item.request?.method : 'post'}
               msg={item.modal?.msg}
               title={item.modal?.title}
               callback={(ret) => {
                 if (!ret.code && ret.data?.ifram_url) {
-                  appModal.info({
+                  modalApi.info({
                     title: ret.data?.ifram_title ? ret.data?.ifram_title : '详情',
                     width: 1000, //两边padding48px
                     content: (
@@ -363,21 +364,22 @@ const CustomerColumnRender = (props) => {
                 onClick: (event) => {
                   //console.log(event.item);
                   const clickItem = dropdown_items.find((v) => v.key == event.key);
-                  ConfirmTriggerClick(
-                    {
-                      data: { [post_key_name]: event.key, ...item.request?.data },
-                      url: requestUrl,
-                      dataId: record.id,
-                      msg: (
-                        <Space>
-                          确定要执行
-                          <span style={{ color: 'red' }}>{clickItem?.label}</span>
-                          操作吗？
-                        </Space>
-                      ),
-                    },
-                    appModal,
-                    actionRef,
+                  modalApi.confirm(
+                    ConfirmTriggerClick(
+                      {
+                        data: { [post_key_name]: event.key, ...item.request?.data },
+                        url: requestUrl,
+                        dataId: record.id,
+                        msg: (
+                          <Space>
+                            确定要执行
+                            <span style={{ color: 'red' }}>{clickItem?.label}</span>
+                            操作吗？
+                          </Space>
+                        ),
+                      },
+                      actionRef,
+                    ),
                   );
                 },
               }}
@@ -441,47 +443,55 @@ const CustomerColumnRender = (props) => {
     items,
     direction == 'dropdown' ? (dropdown.num ? dropdown.num : 0) : -1,
   );
-  return direction == 'dropdown' ? (
-    dropdown.num ? (
-      <Space>
-        {itemsDom.filter((v, i) => i < dropdown.num)}
-        {itemsDom.length > dropdown.num ? (
-          <Dropdown
-            key="action_dropdown"
-            trigger="click"
-            menu={{
-              items: itemsDom
-                .filter((v, i) => i >= dropdown.num)
-                .map((v, i) => {
-                  //console.log(label);
-                  return {
-                    label: v,
-                    key: i,
-                  };
+  return (
+    <>
+      {modalHolder}
+      {direction == 'dropdown' ? (
+        dropdown.num ? (
+          <Space>
+            {itemsDom.filter((v, i) => i < dropdown.num)}
+            {itemsDom.length > dropdown.num ? (
+              <Dropdown
+                key="action_dropdown"
+                trigger="click"
+                menu={{
+                  items: itemsDom
+                    .filter((v, i) => i >= dropdown.num)
+                    .map((v, i) => {
+                      //console.log(label);
+                      return {
+                        label: v,
+                        key: i,
+                      };
+                    }),
+                }}
+              >
+                <a onClick={(e) => e.preventDefault()}>{dropdown.text ? dropdown.text : '···'}</a>
+              </Dropdown>
+            ) : null}
+          </Space>
+        ) : itemsDom.legnth ? (
+          <>
+            {contextHolder}
+            <Dropdown
+              key="action_dropdown"
+              trigger="click"
+              menu={{
+                items: itemsDom.map((v, i) => {
+                  return { label: v, key: i };
                 }),
-            }}
-          >
-            <a onClick={(e) => e.preventDefault()}>{dropdown.text ? dropdown.text : '···'}</a>
-          </Dropdown>
-        ) : null}
-      </Space>
-    ) : itemsDom.legnth ? (
-      <Dropdown
-        key="action_dropdown"
-        trigger="click"
-        menu={{
-          items: itemsDom.map((v, i) => {
-            return { label: v, key: i };
-          }),
-        }}
-      >
-        <a onClick={(e) => e.preventDefault()}>{dropdown.text ? dropdown.text : '···'}</a>
-      </Dropdown>
-    ) : null
-  ) : direction == 'none' ? (
-    itemsDom
-  ) : (
-    <Space direction={direction}>{itemsDom}</Space>
+              }}
+            >
+              <a onClick={(e) => e.preventDefault()}>{dropdown.text ? dropdown.text : '···'}</a>
+            </Dropdown>
+          </>
+        ) : null
+      ) : direction == 'none' ? (
+        itemsDom
+      ) : (
+        <Space direction={direction}>{itemsDom}</Space>
+      )}
+    </>
   );
 };
 export const CustomerColumnRenderTable = (text, props) => {

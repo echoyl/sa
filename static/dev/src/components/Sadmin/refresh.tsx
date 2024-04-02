@@ -1,23 +1,49 @@
 import request, { currentUser } from '@/services/ant-design-pro/sadmin';
 import { SyncOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { message, Space } from 'antd';
-import { uid } from './helpers';
+import { Space } from 'antd';
+import defaultSettings, { lightDefaultToken } from '../../../config/defaultSettings';
+import { isJsonString, uid } from './helpers';
+import { message } from './message';
+import { getTheme } from './themSwitch';
+export const saGetSetting = async (force: boolean = false): Promise<{ [key: string]: any }> => {
+  const cacheKey = 'adminSetting';
+  let localsetting = localStorage.getItem(cacheKey);
+  if (force || !localsetting) {
+    const { data } = await request.get('setting');
+    localsetting = data;
+
+    localStorage.setItem(cacheKey, JSON.stringify(localsetting));
+  } else {
+    localsetting = isJsonString(localsetting) ? JSON.parse(localsetting) : {};
+  }
+  if (!localsetting) {
+    return {};
+  }
+
+  const theme = getTheme(localsetting);
+  const navTheme =
+    theme == 'light'
+      ? { navTheme: theme, token: { ...lightDefaultToken } }
+      : { navTheme: theme, token: { sider: {}, header: {} } };
+
+  return { ...defaultSettings, ...localsetting, ...navTheme };
+};
 export default () => {
   const { setInitialState } = useModel('@@initialState');
-  const [messageApi, contextHolder] = message.useMessage();
   const reload = async () => {
     const mkey = 'refresh_key';
-    messageApi.loading({ key: mkey, content: 'loading...' });
+    message.loading({ key: mkey, content: 'loading...' });
     const msg = await currentUser();
     //const msg = await cuser();
+    await saGetSetting(true);
     await request.get('dev/menu/clearCache');
 
     setInitialState((s) => ({
       ...s,
       currentUser: { ...msg.data, uid: uid() },
     })).then(() => {
-      messageApi.success({ key: mkey, content: '刷新成功' });
+      message.success({ key: mkey, content: '刷新成功' });
     });
 
     return msg.data;
@@ -25,7 +51,6 @@ export default () => {
 
   return (
     <span onClick={reload} style={{ width: '100%', textAlign: 'center', display: 'inline-block' }}>
-      {contextHolder}
       <Space>
         <SyncOutlined />
         刷新

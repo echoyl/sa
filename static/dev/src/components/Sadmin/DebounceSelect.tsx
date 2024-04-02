@@ -113,18 +113,22 @@ export default function DebounceSelect<
   // props.fieldProps = { ...fieldProps, ...props.fieldProps };
 
   return type == 'select' ? (
-    <Select
+    <ProFormSelect
       {...props}
-      value={thisValue}
-      onChange={(v) => {
-        console.log('change v', v);
-        setIsInit(false);
-        setThisValue(v);
-        props?.onChange?.(v);
-      }}
-      labelInValue={true}
-      filterOption={false}
-      {...fieldProps}
+      // value={thisValue}
+      // onChange={(v) => {
+      //   console.log('change v', v);
+      //   // if (v.value) {
+      //   //   v.id = v.value;
+      //   // }
+      //   setIsInit(false);
+      //   setThisValue(v);
+      //   props?.onChange?.(v);
+      // }}
+      //labelInValue
+      fieldProps={{ ...fieldProps, labelInValue: true, filterOption: false }}
+      // filterOption={false}
+      // {...fieldProps}
       options={options}
     />
   ) : (

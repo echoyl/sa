@@ -1,7 +1,11 @@
 import CaptchaInput from '@/components/CaptchInput';
 import Footer from '@/components/Footer';
+import ButtonModal from '@/components/Sadmin/action/buttonModal';
+import { WebSocketContext } from '@/components/Sadmin/hooks/websocket';
+import { message, notification } from '@/components/Sadmin/message';
+import { saGetSetting } from '@/components/Sadmin/refresh';
 import request, { adminTokenName } from '@/services/ant-design-pro/sadmin';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { LockOutlined, UserOutlined, WechatOutlined } from '@ant-design/icons';
 import ProCard from '@ant-design/pro-card';
 import {
   LoginForm,
@@ -11,42 +15,85 @@ import {
   ProFormDependency,
   ProFormInstance,
   ProFormText,
+  setAlpha,
 } from '@ant-design/pro-components';
 import { Helmet, history, useModel, useSearchParams } from '@umijs/max';
-import { Alert, App, Tabs, message } from 'antd';
-import React, { CSSProperties, useContext, useRef, useState } from 'react';
+import { Tabs, QRCode, Space, theme } from 'antd';
+import React, { CSSProperties, useContext, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import styles from './index.less';
-const LoginMessage: React.FC<{
-  content: string;
-}> = ({ content }) => (
-  <Alert
-    style={{
-      marginBottom: 24,
-    }}
-    message={content}
-    type="error"
-    showIcon
-  />
-);
+
+const LoginComponent: React.FC = () => {
+  return <Login />;
+};
 
 const Login: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
   const [captchaReload, setCaptchaReload] = useState(0);
   const [captchaPhoneReload, setCaptchaPhoneReload] = useState(0);
   const [showCaptcha, setShowCaptcha] = useState(false);
-  // const fetchUserInfo = async () => {
-  //   //const userInfo = await initialState?.fetchUserInfo?.();
-  //   const userInfo = await currentUser();
-  //   if (userInfo.data) {
-  //     await setInitialState((s) => ({ ...s, currentUser: userInfo.data }));
-  //   }
-  //   return;
-  // };
+
+  const [isQrcode, setIsQrcode] = useState(false);
 
   const [searchParams] = useSearchParams();
 
-  const [messageApi, contextHolder] = message.useMessage();
+  const { clientId, messageData, bind } = useContext(WebSocketContext);
+  const [setting, setSetting] = useState<any>();
+  const [loginType, setLoginType] = useState();
+  useEffect(() => {
+    saGetSetting().then((v) => {
+      //console.log('setSetting', v);
+      setSetting(v);
+      setLoginType(v?.loginTypeDefault);
+    });
+  }, []);
+
+  const doLogin = (data) => {
+    localStorage.setItem(adminTokenName, data.access_token);
+    //await fetchUserInfo();
+    bind?.();
+    setInitialState((s) => ({
+      ...s,
+      currentUser: data.userinfo,
+      settings: { ...s?.settings, ...data.setting },
+    })).then(() => {
+      //const redirect = searchParams.get('redirect') || '/';
+      const redirect = '/';
+      let goUrl = '/';
+      if (data.userinfo.redirect) {
+        //后台登录后指定跳转页面
+        goUrl = data.userinfo.redirect;
+      } else if (initialState?.settings?.baseurl) {
+        goUrl = redirect.replace(initialState?.settings?.baseurl, '/');
+      }
+      //console.log('goUrl is ', goUrl);
+      history.push(goUrl);
+    });
+  };
+
+  useEffect(() => {
+    //console.log('messageData', messageData);
+    if (!messageData) {
+      return;
+    }
+    const { data } = messageData;
+    if (data?.action == 'login') {
+      //如果是登录的话 跳转登录
+      localStorage.setItem('Sa-Remember', '1');
+      message.success({
+        content: data.msg,
+        duration: 1,
+        onClose: () => {
+          flushSync(() => {
+            doLogin(data);
+          });
+        },
+      });
+    }
+  }, [messageData]);
+
+  //console.log('clientId', clientId, initialState?.settings);
+
   //console.log('redirect', searchParams.get('redirect'));
 
   const handleSubmit = async (values: API.LoginParams) => {
@@ -54,8 +101,10 @@ const Login: React.FC = () => {
     await request.post('login', {
       data: { ...values, loginType },
       duration: 1,
-      msgcls: async (res) => {
+      then: (res) => {
+        const { code, msg, data } = res;
         if (res.code) {
+          notification.error({ description: msg, message: '提示' });
           if (loginType == 'phone' && res.code == 3) {
             setCaptchaPhoneReload(captchaReload + 1);
           }
@@ -67,33 +116,20 @@ const Login: React.FC = () => {
             setShowCaptcha(true);
           }
         } else {
-          if (!res.code) {
-            if (values.autoLogin) {
-              localStorage.setItem('Sa-Remember', '1');
-            } else {
-              localStorage.setItem('Sa-Remember', '0');
-            }
-            localStorage.setItem(adminTokenName, res.data.access_token);
-            //await fetchUserInfo();
-            flushSync(() => {
-              setInitialState((s) => ({
-                ...s,
-                currentUser: res.data.userinfo,
-                settings: { ...s?.settings, ...res.data.setting },
-              })).then(() => {
-                //const redirect = searchParams.get('redirect') || '/';
-                const redirect = '/';
-                if (res.data.userinfo.redirect) {
-                  //后台登录后指定跳转页面
-                  history.push(res.data.userinfo.redirect);
-                } else if (initialState?.settings?.baseurl) {
-                  history.push(redirect.replace(initialState?.settings?.baseurl, '/'));
-                } else {
-                  history.push(redirect);
-                }
-              });
-            });
+          if (values.autoLogin) {
+            localStorage.setItem('Sa-Remember', '1');
+          } else {
+            localStorage.setItem('Sa-Remember', '0');
           }
+          message.success({
+            content: msg,
+            duration: 1,
+            onClose: () => {
+              flushSync(() => {
+                doLogin(res.data);
+              });
+            },
+          });
         }
       },
     });
@@ -101,9 +137,9 @@ const Login: React.FC = () => {
   };
 
   const containerStyle: CSSProperties = {};
-  const [loginType, setLoginType] = useState(initialState?.settings?.loginTypeDefault);
-  if (initialState?.settings?.loginBgImgage) {
-    containerStyle.backgroundImage = 'url("' + initialState?.settings.loginBgImgage + '")';
+
+  if (setting?.loginBgImgage) {
+    containerStyle.backgroundImage = 'url("' + setting.loginBgImgage + '")';
   }
   const formRef = useRef<ProFormInstance>();
 
@@ -258,58 +294,93 @@ const Login: React.FC = () => {
         ),
     },
   ];
-  return (
-    <App>
-      <div className={styles.container} style={{ ...containerStyle }}>
-        <Helmet>
-          <title>登录 - {initialState?.settings?.title}</title>
-        </Helmet>
-        <div
-          className={styles.content}
-          style={containerStyle.backgroundImage ? {} : { padding: 0 }}
+  const { token } = theme.useToken();
+  const iconStyles: CSSProperties = {
+    marginInlineStart: '16px',
+    color: setAlpha(token.colorTextBase, 0.2),
+    fontSize: '24px',
+    verticalAlign: 'middle',
+    cursor: 'pointer',
+  };
+  const ActionLogin = (props) => {
+    const { type } = props;
+    if (type == 'wechat') {
+      const { url, desc } = setting?.loginWechat;
+      return (
+        <div style={{ textAlign: 'center' }}>
+          <QRCode style={{ margin: '0 auto' }} value={url + '?client_id=' + clientId} />
+          <div style={{ marginTop: 20 }}>{desc}</div>
+        </div>
+      );
+    }
+    return null;
+  };
+  return setting ? (
+    <div className={styles.container} style={{ ...containerStyle }}>
+      <Helmet>
+        <title>登录 - {setting?.title}</title>
+      </Helmet>
+      <div className={styles.content} style={containerStyle.backgroundImage ? {} : { padding: 0 }}>
+        <ProCard
+          style={{
+            //maxWidth: 440,
+            margin: '0px auto',
+            padding: '20px 0',
+            background: containerStyle.backgroundImage ? '#fff' : 'none',
+          }}
         >
-          <ProCard
-            style={{
-              //maxWidth: 440,
-              margin: '0px auto',
-              padding: '20px 0',
-              background: containerStyle.backgroundImage ? '#fff' : 'none',
+          <LoginForm
+            contentStyle={{
+              minWidth: 280,
+              maxWidth: '75vw',
             }}
+            containerStyle={{
+              paddingInline: 0,
+            }}
+            formRef={formRef}
+            logo={setting?.logo}
+            title={setting?.title}
+            subTitle={
+              setting?.subtitle ? (
+                <span dangerouslySetInnerHTML={{ __html: setting?.subtitle }}></span>
+              ) : null
+            }
+            initialValues={{
+              autoLogin: true,
+            }}
+            onFinish={async (values) => {
+              await handleSubmit(values as API.LoginParams);
+            }}
+            //submitter={isQrcode ? false : undefined}
+            actions={
+              setting?.loginActions ? (
+                <Space>
+                  其他登录方式
+                  <ButtonModal
+                    trigger={<WechatOutlined style={iconStyles} />}
+                    width={350}
+                    title="扫码登录"
+                  >
+                    {setting?.loginActions?.map((ac, index) => {
+                      return <ActionLogin key={index} type={ac} />;
+                    })}
+                  </ButtonModal>
+                </Space>
+              ) : null
+            }
           >
-            {contextHolder}
-            <LoginForm
-              contentStyle={{
-                minWidth: 280,
-                maxWidth: '75vw',
+            <Tabs
+              centered
+              activeKey={loginType}
+              onChange={(activeKey) => {
+                setLoginType(activeKey);
+                setIsQrcode(activeKey == 'phone');
               }}
-              containerStyle={{
-                paddingInline: 0,
-              }}
-              formRef={formRef}
-              logo={initialState?.settings?.logo}
-              title={initialState?.settings?.title}
-              subTitle={
-                initialState?.settings?.subtitle ? (
-                  <span
-                    dangerouslySetInnerHTML={{ __html: initialState?.settings?.subtitle }}
-                  ></span>
-                ) : null
-              }
-              initialValues={{
-                autoLogin: true,
-              }}
-              onFinish={async (values) => {
-                await handleSubmit(values as API.LoginParams);
-              }}
-            >
-              <Tabs
-                centered
-                activeKey={loginType}
-                onChange={(activeKey) => setLoginType(activeKey)}
-                items={initialState?.settings.loginType?.map((v) => {
-                  return loginTypeItems.find((item) => item.key == v);
-                })}
-              />
+              items={setting.loginType?.map((v) => {
+                return loginTypeItems.find((item) => item.key == v);
+              })}
+            />
+            {isQrcode ? null : (
               <div
                 style={{
                   marginBottom: 24,
@@ -323,20 +394,20 @@ const Login: React.FC = () => {
                     float: 'right',
                   }}
                   onClick={() => {
-                    messageApi.info('请使用手机号登录后修改,或联系后台管理员修改账号密码！');
+                    message.info('请使用手机号登录后修改,或联系后台管理员修改账号密码！');
                   }}
                 >
                   忘记密码
                 </a>
               </div>
-            </LoginForm>
-          </ProCard>
-        </div>
-
-        <Footer />
+            )}
+          </LoginForm>
+        </ProCard>
       </div>
-    </App>
-  );
+
+      <Footer />
+    </div>
+  ) : null;
 };
 
-export default Login;
+export default LoginComponent;

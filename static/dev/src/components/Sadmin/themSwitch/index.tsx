@@ -51,13 +51,14 @@ const ThemeSwitch = () => {
   const theme = getTheme(initialState?.settings);
   const [checked, setChecked] = useState(theme != 'light' ? true : false);
   return (
-    <Switch
-      checkedChildren={<MoonIcon />}
-      unCheckedChildren={<SunIcon />}
-      onChange={(checked) => {
-        setChecked(checked);
-        const theme = !checked ? 'light' : 'realDark';
-        const token = !checked ? { ...lightDefaultToken } : { sider: {}, header: {} };
+    <div
+      style={{ padding: 4, fontSize: 16, cursor: 'pointer', lineHeight: '48px' }}
+      title={checked ? '切换至日间模式' : '切换至夜晚模式'}
+      onClick={() => {
+        const _checked = !checked;
+        setChecked(_checked);
+        const theme = checked ? 'light' : 'realDark';
+        const token = checked ? { ...lightDefaultToken } : { sider: {}, header: {} };
 
         setInitialState((s) => ({
           ...s,
@@ -71,8 +72,9 @@ const ThemeSwitch = () => {
           localStorage.setItem('navTheme', theme);
         });
       }}
-      checked={checked}
-    />
+    >
+      {checked ? <MoonIcon /> : <SunIcon />}
+    </div>
   );
 };
 export default ThemeSwitch;

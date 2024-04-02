@@ -17,14 +17,13 @@ const RequestComponent: React.FC<RequestComponentProps> = (props) => {
 
   const [loading, setLoading] = useState(false);
 
-  const { method = 'post', url = '', data } = requestParam;
+  const { method = 'get', url = '', data } = requestParam;
 
   const doRequest = async () => {
     setLoading(true);
-    const ret = await request[method]?.(url, {
-      data: { ...data },
-      then: () => {},
-    });
+    const requestProps =
+      method == 'post' ? { data: { ...data }, then: () => {} } : { params: { ...data } };
+    const ret = await request[method]?.(url, requestProps);
     callback?.(ret);
     setLoading(false);
   };

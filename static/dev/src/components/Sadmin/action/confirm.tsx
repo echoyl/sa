@@ -1,12 +1,12 @@
 import request from '@/services/ant-design-pro/sadmin';
-import { App, Button, ButtonProps } from 'antd';
+import { Button, ButtonProps, Modal } from 'antd';
 import React, { FC, useContext, useMemo } from 'react';
 import { SaContext } from '../posts/table';
 
 interface actionConfirm {
   msg?: string;
   btn?: ButtonProps;
-  method?: 'post' | 'delete';
+  method?: 'post' | 'delete' | 'get';
   url?: string;
   data?: {};
   dataId?: number;
@@ -16,18 +16,21 @@ interface actionConfirm {
   title?: string;
 }
 
-export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = undefined) => {
+export const ConfirmTriggerClick = (props: actionConfirm, actionRef, searchFormRef = undefined) => {
   const { msg, method = 'post', url = '', data = {}, dataId = 0, callback, title } = props;
   const values = searchFormRef?.current?.getFieldsFormatValue();
-  const m = modal.confirm({
+
+  return {
     title: title ? title : '温馨提示！',
     content: msg,
     onOk: async () => {
-      const ret = await request[method](url, {
-        data: { ...data, id: dataId, ...values },
-      });
-      m.destroy();
-
+      const requestProps =
+        method == 'get'
+          ? { params: { ...data, id: dataId, ...values } }
+          : {
+              data: { ...data, id: dataId, ...values },
+            };
+      const ret = await request[method](url, requestProps);
       if (callback) {
         const cbret = callback(ret);
         if (cbret) {
@@ -53,14 +56,10 @@ export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = und
           if (actionRef?.current) {
             actionRef.current?.reload();
           } else {
-            if(ret.data.reload)
-            {
-
-            }else
-            {
+            if (ret.data.reload) {
+            } else {
               history.back();
             }
-            
           }
         }
       }
@@ -70,16 +69,16 @@ export const ConfirmTriggerClick = (props, modal, actionRef, searchFormRef = und
       //   setSelectedRowKeys([]);
       // }
     },
-  });
+  };
 };
 
 const Confirm: FC<actionConfirm> = (props) => {
   const { btn = { title: '操作', type: 'primary', danger: false }, trigger } = props;
-  const { modal } = App.useApp();
+  const [modalApi, modalHolder] = Modal.useModal();
   const { actionRef, searchFormRef } = useContext(SaContext);
-  const click = () => {
-    ConfirmTriggerClick(props, modal, actionRef, searchFormRef);
-  };
+  // const click = () => {
+  //   ConfirmTriggerClick(props, modal, actionRef, searchFormRef);
+  // };
 
   const triggerDom = useMemo(() => {
     if (!trigger) {
@@ -90,18 +89,23 @@ const Confirm: FC<actionConfirm> = (props) => {
       key: 'trigger',
       ...trigger.props,
       onClick: async (e: any) => {
-        click();
+        modalApi.confirm(ConfirmTriggerClick(props, actionRef, searchFormRef));
         trigger.props?.onClick?.(e);
       },
     });
   }, [trigger]);
 
-  return trigger ? (
-    <>{triggerDom}</>
-  ) : (
-    <Button size="small" onClick={click} type={btn.type} danger={btn.danger}>
-      {btn.title}
-    </Button>
+  return (
+    <>
+      {modalHolder}
+      {trigger ? (
+        <>{triggerDom}</>
+      ) : (
+        <Button size="small" onClick={click} type={btn.type} danger={btn.danger}>
+          {btn.title}
+        </Button>
+      )}
+    </>
   );
 };
 // export const ConfirmConfig:FC = (props) => {

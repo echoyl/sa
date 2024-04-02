@@ -1,6 +1,5 @@
 import { DefaultFooter } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import Message from '../Sadmin/message';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -36,7 +35,6 @@ const Footer: React.FC = () => {
         //   },
         // ]}
       />
-      <Message />
     </>
   );
 };
