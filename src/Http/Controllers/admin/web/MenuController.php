@@ -171,6 +171,13 @@ class MenuController extends CrudController
 
         array_unshift($namespace,$prefix);
 
+        if($pagetype == 'list')
+        {
+            //换取分类
+            array_pop($namespace);
+            $namespace[] = 'Category';
+        }
+
         //$namespace[] = 'Category';
         $category_class = implode('\\',$namespace);
         if(!class_exists($category_class))

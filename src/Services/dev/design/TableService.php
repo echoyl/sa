@@ -136,6 +136,7 @@ class TableService extends BaseService
     public function getColumnIndex($columns,$uid,$key_name = 'uid')
     {
         $index = $index_data = false;
+        //d($columns);
         foreach($columns as $key=>$val)
         {
             if($uid == $val[$key_name])

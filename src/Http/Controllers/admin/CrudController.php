@@ -465,6 +465,7 @@ class CrudController extends ApiBaseController
             return;
         }
         $key = '';
+        //$message = '';
         $is_has = false;
         foreach($this->uniqueFields as $field)
         {
@@ -472,8 +473,27 @@ class CrudController extends ApiBaseController
             $where = [];
             if(is_array($field))
             {
-                $key = implode('-',$field);
-                foreach($field as $f)
+                //增加了提示语 检测格式 如果有 columns和message
+                $keys = [];
+                foreach($field as $k=>$v)
+                {
+                    if(is_numeric($k))
+                    {
+                        $keys[] = $v;
+                    }else
+                    {
+                        if($k == 'columns')
+                        {
+                            $keys = $v;
+                        }
+                        if($k == 'message')
+                        {
+                            $key = $v;
+                        }
+                    }
+                }
+                $key = $key?$key:implode('-',$keys).'数据已存在';
+                foreach($keys as $f)
                 {
                     if(!isset($data[$f]))
                     {
@@ -645,7 +665,7 @@ class CrudController extends ApiBaseController
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
                 {
-                    return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
+                    return $this->fail([1,$check_uniue_result]);
                 }
                 $this->model->where(['id' => $id])->update($data);
             } else {
@@ -654,7 +674,7 @@ class CrudController extends ApiBaseController
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
                 {
-                    return $this->fail([1,$check_uniue_result.' 数据已存在,请重新输入']);
+                    return $this->fail([1,$check_uniue_result]);
                 }
                 $id = $this->model->insertGetId($data);
             }

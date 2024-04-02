@@ -269,4 +269,13 @@ class AppApiService implements SaServiceInterface
         // return true;
     }
 
+    public function postListWhere($m, $menu)
+    {
+        return $m;
+    }
+
+    public function postParse($val, $menu)
+    {
+        return $val;
+    }
 }

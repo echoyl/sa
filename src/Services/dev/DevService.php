@@ -780,12 +780,13 @@ class DevService
         if($model['unique_fields'])
         {
             $_unique_fields = json_decode($model['unique_fields'],true);
-            $unique_fields = [];
-            foreach($_unique_fields as $uf)
-            {
-                $unique_fields[] = $uf['columns'];
-            }
-            $crud_config[] = '$this->uniqueFields = '.(json_encode($unique_fields)).';';
+            // $unique_fields = [];
+            // foreach($_unique_fields as $uf)
+            // {
+            //     $unique_fields[] = $uf['columns'];
+            // }
+            // $crud_config[] = '$this->uniqueFields = '.(json_encode($unique_fields)).';';
+            $crud_config[] = '$this->uniqueFields = '.(Dev::export($_unique_fields,2)).';';
         }
 
 

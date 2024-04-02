@@ -754,4 +754,9 @@ class HelperService
         }
         return array_values($arr);
     }
+
+    public static function isDev()
+    {
+        return env('APP_ENV') == 'local';
+    }
 }

@@ -458,7 +458,7 @@ class WebMenuService
     {
 
         static $all = [];
-        if (empty($all) && Schema::hasTable('menu')) {
+        if (empty($all) && Schema::hasTable('web_menu')) {
             $all = Menu::where(['state' => '1','type'=>env('APP_NAME')])->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
         }
         return $all;
@@ -532,18 +532,18 @@ class WebMenuService
         $namespace = $ds->getNamespace($admin_model);//这个是选中的模型
         
         //后台更新关联模型方法直接指向模型 不再选择文件夹
-        // if($type == 'category')
-        // {
-        //     $namespaces = explode("\\",$namespace[2]);
-        //     array_pop($namespaces);
-        //     $namespaces[] = $admin_model['name'];
-        //     $namespaces[] = 'Category';
-        //     $classname = implode("\\",$namespaces);
-        // }else
-        // {
-        //     $classname = $namespace[2];
-        // }
-        $classname = $namespace[2];
+        if($type == 'category')
+        {
+            $namespaces = explode("\\",$namespace[2]);
+            array_pop($namespaces);
+            //$namespaces[] = $admin_model['name'];
+            $namespaces[] = 'Category';
+            $classname = implode("\\",$namespaces);
+        }else
+        {
+            $classname = $namespace[2];
+        }
+        //$classname = $namespace[2];
         if(class_exists($classname))
         {
             return new $classname;

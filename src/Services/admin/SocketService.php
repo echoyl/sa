@@ -63,7 +63,17 @@ class SocketService
         return true;
     }
 
-    public static function logout($client_id)
+    public static function logoutByToken($token_id)
+    {
+        return self::logout($token_id,'token');
+    }
+
+    public static function logoutByClient($client_id)
+    {
+        return self::logout($client_id);
+    }
+
+    public static function logout($id,$type = 'client')
     {
         $model = self::getModel();
 
@@ -72,7 +82,15 @@ class SocketService
             return;
         }
 
-        $model->where(['client_id'=>$client_id])->delete();
+        if($type == 'token')
+        {
+            $where = ['token_id'=>$id];
+        }else
+        {
+            $where = ['client_id'=>$id];
+        }
+
+        $model->where($where)->delete();
         return;
     }
 
@@ -84,6 +102,15 @@ class SocketService
     public static function sendToUser($user_id,$message)
     {
         return self::send($user_id,$message);
+    }
+
+    public static function sendToClient($client_id,$message)
+    {
+        if(Gateway::isOnline($client_id))
+        {
+            Gateway::sendToClient($client_id, json_encode($message));
+        }
+        return;
     }
 
     /**
@@ -122,14 +149,8 @@ class SocketService
 
         foreach($logs as $log)
         {
-            $client_id = $log['client_id'];
-            if(Gateway::isOnline($client_id))
-            {
-                Gateway::sendToClient($client_id, json_encode($message));
-            }
+            self::sendToClient($log['client_id'],$message);
         }
         return;
     }
-
-    
 }

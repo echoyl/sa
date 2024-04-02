@@ -58,7 +58,6 @@ class LoginController extends ApiBaseController
             $info = AdminService::doLoginByUsername($username,$pwd);
         }
 
-        
 
         if($info)
         {

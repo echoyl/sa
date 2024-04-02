@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\perm\Log;
 use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Services\admin\SocketService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\dev\utils\Utils;
@@ -218,6 +219,7 @@ class AdminService
 
     public static function logout()
     {
+        SocketService::logoutByToken(request()->user()->currentAccessToken()->id);
         request()->user()->currentAccessToken()->delete();
         return;
     }

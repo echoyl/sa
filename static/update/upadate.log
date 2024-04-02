@@ -43,3 +43,15 @@ CREATE TABLE `la_socket_log` (
   `token_id` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+2024-04-02
+CREATE TABLE `la_wechat_offiaccount_admin` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `state` int NOT NULL DEFAULT '1' COMMENT '状态',
+  `user_id` int NOT NULL DEFAULT '0' COMMENT '后台用户id',
+  `updated_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `displayorder` int NOT NULL DEFAULT '0' COMMENT '排序权重',
+  `openid` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'openid',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
