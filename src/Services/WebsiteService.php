@@ -202,7 +202,7 @@ class WebsiteService
         //d($menu);
         $list = [];
 
-        if ($menu['pagetype'] == 'list' && $menu['admin_model']) {
+        if ($menu && $menu['pagetype'] == 'list' && $menu['admin_model']) {
             $category_model = WebMenuService::getModel($menu['admin_model'],'category');
             if($category_model)
             {

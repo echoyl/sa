@@ -105,6 +105,10 @@ class MenuController extends CrudController
         {
             $this->tableConfig($id);
             $this->formConfig($id);
+        }else
+        {
+            $desc = $data['desc']?json_decode($data['desc'],true):[];
+            $this->updateDesc($desc,$data);
         }
         $this->clearCache();
         return;
@@ -669,6 +673,21 @@ class MenuController extends CrudController
 
     protected function updateDesc($desc,$item,$data = [])
     {
+        $desc = $this->getDescUrl($item,$desc);
+
+        $data['desc'] = json_encode($desc);
+        $this->model->where(['id'=>$item['id']])->update($data);
+        return $this->success('操作成功');
+    }
+    /**
+     * 根据menu记录获取desc字段中的url 和 postUrl
+     *
+     * @param [type] $item
+     * @param array $desc
+     * @return void
+     */
+    public function getDescUrl($item,$desc = [])
+    {
         $ds = new DevService;
         //所请求使用菜单的path路径
         //如果没有选择模型清除链接
@@ -685,9 +704,7 @@ class MenuController extends CrudController
         {
             $desc['url']  = $desc['postUrl'] = '';
         }
-        $data['desc'] = json_encode($desc);
-        $this->model->where(['id'=>$item['id']])->update($data);
-        return $this->success('操作成功');
+        return $desc;
     }
 
     /**

@@ -1200,6 +1200,7 @@ class DevService
         $self = new self();
         if(!$menus)return;
         $app_name = self::appname();
+        $only_action_types = ['form','panel','panel2','justTable'];
         //d($menus);
         foreach($menus as $menu)
         {
@@ -1249,12 +1250,18 @@ class DevService
                             if($menu['perms'])
                             {
                                 $perms = json_decode($menu['perms'],true);
-                            }else
-                            {
-                                $perms = false;
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms,$controller_prefix){
+                                    if($perms)
+                                    {
+                                        foreach($perms as $key=>$title)
+                                        {
+                                            Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
+                                        }
+                                    }
+                                });
                             }
 
-                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel' || $menu['page_type'] == 'panel2')
+                            if(in_array($menu['page_type'],$only_action_types))
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
@@ -1264,22 +1271,16 @@ class DevService
                             }else
                             {
                                 //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms,$controller_prefix){
-                                    if($perms)
-                                    {
-                                        foreach($perms as $key=>$title)
-                                        {
-                                            Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
-                                        }
-                                    }
+                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$controller_prefix){
+
                                     Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
                                 });
                             }
-
+                            
                             
                         }else
                         {
-                            if($menu['page_type'] == 'form' || $menu['page_type'] == 'panel' || $menu['page_type'] == 'panel2')
+                            if(in_array($menu['page_type'],$only_action_types))
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];

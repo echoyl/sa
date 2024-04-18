@@ -360,7 +360,7 @@ class MenuService
         }
 
         //先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
-        $m = (new Menu())->where(['path'=>$name,'state'=>1])->whereIn('page_type',['form','panel','panel2'])->whereIn('type',[env('APP_NAME'),'system']);
+        $m = (new Menu())->where(['path'=>$name,'state'=>1])->whereIn('page_type',['form','panel','panel2','justTable'])->whereIn('type',[env('APP_NAME'),'system']);
         if(!empty($r))
         {
             $m = $this->searchParent($m,$r);
@@ -373,6 +373,12 @@ class MenuService
             {
                 $name = request()->isMethod('POST')?'submit':'show';
             }
+            //如果只是justTable的话
+            if($form_menu['page_type'] == 'justTable')
+            {
+                $name = 'index';
+            }
+            //d($name);
             return [$name,$form_menu];
         }
         
