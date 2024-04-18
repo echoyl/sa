@@ -168,7 +168,7 @@ class PanelService extends BaseService
         [$over] = $this->getColumnIndex($rows,$over_item['uid']);
 
 
-        $active_count = count($active);
+        //$active_count = count($active);
         $over_count = count($over);
        
         if($active_item['devData']['itemType'] == 'col')
@@ -181,14 +181,14 @@ class PanelService extends BaseService
                     //same group
                     [$keys,$last_key,$top_data] = $this->getTopData($active,$rows);
                     $top_data = HelperService::arrayMove($top_data,$last_key,$over[$over_count - 1]);
-                    Arr::set($rows,$keys,$top_data);
+                    $rows = $this->setData($rows,$keys,$top_data);
                 }else
                 {
                     //different group
                     [$over_keys,$over_last_key,$over_top_data] = $this->getTopData($over,$rows);
                     //$over_top_data[] = $active_data;
                     array_splice($over_top_data,$over_last_key + 1,0,[$active_data]);
-                    Arr::set($rows,$over_keys, array_values($over_top_data));
+                    $rows = $this->setData($rows,$over_keys,$over_top_data);
                     $rows = $this->setColSpan($over,$rows);
                     //remove the active data
                     $rows = $this->removeActive($active,$rows);
@@ -210,27 +210,21 @@ class PanelService extends BaseService
                 $rows = $this->differentSortp($active,$over,$rows,'rows');
             }elseif($over_item['devData']['itemType'] == 'row')
             {
+                //d($this->isSameRow($active,$over),$active,$over);
                 //行到行后面
                 if($this->isSameRow($active,$over))
                 {
                     //same col
                     [$keys,$last_key,$top_data] = $this->getTopData($active,$rows);
                     $top_data = HelperService::arrayMove($top_data,$last_key,$over[$over_count - 1]);
-                    Arr::set($rows,$keys,$top_data);
+                    $rows = $this->setData($rows,$keys,$top_data);
                 }else
                 {
                     //different col
                     [$over_keys,$over_last_key,$over_top_data] = $this->getTopData($over,$rows);
                     //$over_top_data[] = $active_data;
                     array_splice($over_top_data,$over_last_key + 1,0,[$active_data]);
-                    if($over_keys !== '')
-                    {
-                        Arr::set($rows,$over_keys, array_values($over_top_data));
-                    }else
-                    {
-                        $rows = array_values($over_top_data);
-                    }
-                    
+                    $rows = $this->setData($rows,$over_keys,$over_top_data);
                     //remove the active data
                     $rows = $this->removeActive($active,$rows);
                 }
@@ -341,7 +335,14 @@ class PanelService extends BaseService
                 //行后插入行
                 [$keys,$last_key,$top_data] = $this->getTopData($active,$rows);
                 array_splice($top_data,$last_key + 1,0,[$base]);
-                Arr::set($rows,$keys,array_values($top_data));
+                if(!$keys)
+                {
+                    //如果是最外层直接设置
+                    $rows = array_values($top_data);
+                }else
+                {
+                    Arr::set($rows,$keys,array_values($top_data));
+                }
             break;
 
             case 'addCol':
@@ -349,6 +350,7 @@ class PanelService extends BaseService
                 [$keys,$last_key,$top_data] = $this->getTopData($active,$rows);
                 array_splice($top_data,$last_key + 1,0,[$this->colData($base)]);
                 $top_data = $this->calSpan(array_values($top_data));
+                
                 Arr::set($rows,$keys,$top_data);
             break;
             case 'deleteRow':

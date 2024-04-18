@@ -53,6 +53,26 @@ class BaseService
         return [$keys,$last_key,$top_data];
     }
 
+    /**
+     * 设置数据
+     *
+     * @param [type] $data 原始数据
+     * @param [type] $keys 需要设置的key值如果是空的话直接返回设置的值
+     * @param [type] $set_data 设置的值
+     * @return void
+     */
+    public function setData($data,$keys,$set_data)
+    {
+        if($keys !== '')
+        {
+            Arr::set($data,$keys, array_values($set_data));
+            return $data;
+        }else
+        {
+            return array_values($set_data);
+        }
+    }
+
     public function formatTopData($active,$datas)
     {
         array_pop($active);
