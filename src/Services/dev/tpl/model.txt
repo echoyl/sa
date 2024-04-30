@@ -17,6 +17,13 @@ class $name$ extends Base
      */
     protected $table = '$table_name$';
 
+    /**
+     * 在模型表中的id
+     *
+     * @var int
+     */
+    public $model_id = $model_id$;
+
     $parse_columns$
 
     //relationship start

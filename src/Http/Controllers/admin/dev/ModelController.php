@@ -15,6 +15,7 @@ class ModelController extends CrudController
     public $model;
     public $cid = 0;
     var $can_be_null_columns = ['search_columns'];
+    var $with_column = ['relations.foreignModel'];
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -119,6 +120,8 @@ class ModelController extends CrudController
         $ds->createControllerFile($data);
 
         $ds->createModelFile($data);
+
+        $ds->modelColumn2Export($data);
 
         $this->clearCache();
 

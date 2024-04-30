@@ -48,17 +48,23 @@ class GoodsService
             {
                 $_its[] = [
                     'id'=>$it['id'],
-                    'name'=>$it['name']
+                    'name'=>$it['name'],
+                    'displayorder'=>$it['displayorder']??0
                 ];
                 $items_id_map[$it['id']] = $it['name'];
             }
+            $_its = collect($_its)->sortBy('displayorder')->map(function($v){
+                return ['id'=>$v['id'],'name'=>$v['name']];
+            })->toArray();
+            //d($_its);
             $items[] = [
                 'id'=>$item['id'],
                 'name'=>$item['name'],
-                'items'=>$_its
+                'items'=>array_values($_its),
+                
             ];
         }
-        //d($items_id_map);
+        //d($items);
 
         $guiges = [];
         foreach($goods['guiges'] as $guige)
@@ -90,7 +96,11 @@ class GoodsService
             $ids = explode(':',$guige['ids']);
             foreach($ids as $id)
             {
-                $_guige[$id] = $items_id_map[$id];
+                if(isset($items_id_map[$id]))
+                {
+                    $_guige[$id] = $items_id_map[$id];
+                }
+                
             }
             $guiges[] = $_guige;
         }
@@ -149,17 +159,17 @@ class GoodsService
             $items_id_map[$item['id']] = ['id'=>$item_id,'name'=>$item['name']];
             $has_item_ids[] = $item_id;
 
-            foreach($item['items'] as $it)
+            foreach($item['items'] as $k=>$it)
             {
                 if(is_numeric($it['id']))
                 {
                     //如果是数字id表示已经插入数据库中
                     $item_2_id = $it['id'];
-                    $itemModel->where(['id'=>$it['id']])->update(['name'=>$it['name']]);
+                    $itemModel->where(['id'=>$it['id']])->update(['name'=>$it['name'],'displayorder'=>$k]);
                 }else
                 {
                     //新增数据
-                    $item_2_id = $itemModel->insertGetId(['name'=>$it['name'],'goods_id'=>$goods_id,'parent_id'=>$item_id]);
+                    $item_2_id = $itemModel->insertGetId(['name'=>$it['name'],'goods_id'=>$goods_id,'parent_id'=>$item_id,'displayorder'=>$k]);
                 }
                 $has_item_ids[] = $item_2_id;
                 $items_id_map[$it['id']] = ['id'=>$item_2_id,'name'=>$it['name']];

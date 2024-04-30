@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Dev;
+use Echoyl\Sa\Services\dev\utils\ExportColumn;
 use Echoyl\Sa\Services\dev\utils\FormItem;
 use Echoyl\Sa\Services\dev\utils\SchemaDiff;
 use Echoyl\Sa\Services\dev\utils\TableColumn;
@@ -432,8 +433,6 @@ class DevService
         [$use_namespace2,$tpl,$use] = $this->createModelRelation($data,$useModelArr);
         
         $use_namespace = array_unique(array_merge($use_namespace,$use_namespace2));
-
-        
     
         //d($use_namespace,$tpl);
 
@@ -465,6 +464,7 @@ class DevService
             '/\$namespace\$/'=>$namespace,
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
+            '/\$model_id\$/'=>$data['id'],
             '/\$relationship\$/'=>implode("\r",$tpl),
             '/\$parse_columns\$/'=>$parse_columns,
             '/\$customer_code\$/'=>$customer_code,
@@ -1178,6 +1178,44 @@ class DevService
         $models = $this->allModel();
         $tableColumn = new TableColumn($col,$model,$menus,$models);
         return $tableColumn->data;
+    }
+
+    public function modelColumn2Export($model)
+    {
+        $setting = $model['setting'];
+        if(!$setting)return;
+
+        $setting = json_decode($model['setting'],true);
+        $exports = Arr::get($setting,'export');
+        if(!$exports)return;
+
+        $menus = $this->allMenu();
+        $models = $this->allModel();
+        foreach($exports as $key=>$export)
+        {
+            //多模板需要执行
+            $columns = HelperService::getFromObject($export,['config','head','columns']);
+            if(!$columns)
+            {
+                continue;
+            }
+            foreach($columns as $k=>$col)
+            {
+                $exportColumn = new ExportColumn($col,$model,$menus,$models);
+                $col['title'] = $exportColumn->data['title'];
+                $columns[$k] = $col;
+            }
+            //d($columns);
+            Arr::set($export,'config.head.columns', array_values($columns));
+            $exports[$key] = $export;
+        }
+        
+        $setting['export'] = $exports;
+        $_model = new Model();
+        $_model->where(['id'=>$model['id']])->update(['setting'=>json_encode($setting)]);
+
+        return;
+        
     }
 
     public static function aliasRoute()

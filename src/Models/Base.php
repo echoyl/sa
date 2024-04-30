@@ -21,5 +21,5 @@ class Base extends Model
     {
         return [];
     }
-    
+
 }

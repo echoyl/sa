@@ -14,10 +14,26 @@ class CategoryBaseController extends CrudController
 	{
 		$this->model = $model;
 		$post_parent_id = request('parent_id',0);
+		$cid = request('cid',0);
+		$this->cid = $cid;
 		$this->default_post = [
 			'parent_id'=>$post_parent_id?:$this->cid
 		];
 
+	}
+
+	public function beforePost(&$data, $id = 0, $item)
+	{
+		$cid = request('cid',0);
+		if(!isset($data['parent_id']) || !$data['parent_id'])
+		{
+			//未设置或者无父级id
+			if($cid)
+			{
+				//菜单设置了父级id 使用菜单的父级id
+				$data['parent_id'] = $cid;
+			}
+		}
 	}
 
     public function index()
@@ -27,6 +43,9 @@ class CategoryBaseController extends CrudController
 		//return ['code'=>0,'msg'=>'','data'=>$this->model->getChild($this->cid)];	
 		$search = [];
         $this->parseWiths($search);
+		//由于先执行构造函数再执行中间件检测权限导致 无法在构造函数中获取中间件中设置的参数信息，导致这里要手动设置
+		$cid = request('cid',0);
+		$this->cid = $cid;
 		$displayorder = [];
 		$sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
         if (request('sort')) {
@@ -46,7 +65,7 @@ class CategoryBaseController extends CrudController
 		$data = HelperService::getChildFromData($this->model->get()->toArray(),function($item){
             $this->parseData($item,'decode','list');
             return $item;
-        },$displayorder);
+        },$displayorder,$this->cid);
 
 		return $this->list($data,count($data),$search);
 	}

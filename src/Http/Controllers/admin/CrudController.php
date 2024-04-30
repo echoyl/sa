@@ -43,6 +43,12 @@ class CrudController extends ApiBaseController
     var $page_size = 10;
     var $withTrashed = false;
     var $group_by = '';
+    var $category_fields = [//分类字段检测，如果某个菜单有预设cid
+        [
+            'request_name'=>'cid',//请求参数名 可以是数组
+            'field_name'=>'category_id',//数据库字段名 
+        ]
+    ];
 
     /**
      * 搜索项配置
@@ -51,6 +57,44 @@ class CrudController extends ApiBaseController
 
     public $parse_columns = [];
     public $withs = [];
+
+    public function checkCategoryField($name,$default = '')
+    {
+        $field = collect($this->category_fields)->first(function($q) use($name){
+            return $q['field_name'] == $name;
+        });
+        $orval = request($name);//原始请求值
+        $rval = $lval = $array_val = $default;
+
+        if($field)
+        {
+            $rval = request($field['request_name']);//预设请求值
+            if($rval)
+            {
+                if(is_array($rval))
+                {
+                    $len = count($rval);
+                    $lval = $rval[$len - 1];
+                }else
+                {
+                    $lval = $rval;
+                }
+                if(!$orval)
+                {
+                    //未传数据 自动读取映射字段
+                    $array_val = is_numeric($rval)?[$rval]:(is_array($rval)?$rval:json_decode($rval,true));
+                }
+            }
+            
+        }
+        
+        
+        return [
+            'search_val'=>$orval?:$rval,//处理过后搜索值
+            'last_val'=>$lval,//分类的id值 数字类型
+            'array_val'=>$array_val
+        ];
+    }
 
     public function defaultSearch($m)
     {
@@ -77,6 +121,10 @@ class CrudController extends ApiBaseController
             $name = $col['name'];
             $type = $col['type'];
             $search_val = request($name, '');
+
+            $check_search_val = $this->checkCategoryField($name);
+            $search_val = $check_search_val['search_val'];
+
             if (empty($search_val) && $search_val !== 0) {
                 //无查询值情况的默认查询
                 switch ($type) {
@@ -112,6 +160,7 @@ class CrudController extends ApiBaseController
                 continue;
             }
 
+
             switch ($type) {
                 case 'state':
                     $m = $m->where($name, $search_val);
@@ -120,7 +169,7 @@ class CrudController extends ApiBaseController
                     if (is_numeric($search_val)) {
                         $category_id = [$search_val];
                     } else {
-                        $category_id = json_decode($search_val, true);
+                        $category_id = is_array($search_val)?$search_val:json_decode($search_val, true);
                     }
 
                     if (isset($col['class'])) {
@@ -765,7 +814,8 @@ class CrudController extends ApiBaseController
             $name = $with['name'] . 's';
             if(isset($with['class']))
             {
-                $data[$name] = (new $with['class'])->format($with['cid']??0);
+                $check_category_field = $this->checkCategoryField($with['name'],$with['cid']??0);
+                $data[$name] = (new $with['class'])->formatHasTop($check_category_field['last_val']);
             }elseif(isset($with['data']))
             {
                 $data[$name] = $with['data'];
@@ -826,14 +876,20 @@ class CrudController extends ApiBaseController
                             if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
                             {
                                 //设置post_all 时 不再读取cid筛选数据
-                                $with['cid'] = 0;
-                            }
-                            if(isset($with['fields']))
-                            {
-                                $data[$name] = $_m->format($with['cid']??0,$with['fields']);
+                                $cid = 0;
                             }else
                             {
-                                $data[$name] = $_m->format($with['cid']??0);
+                                //检测是否有cid字段的参数传入
+                                $check_category_field = $this->checkCategoryField($with['name'],$with['cid']??0);
+                                $cid = $check_category_field['last_val'];
+                            }
+                            
+                            if(isset($with['fields']))
+                            {
+                                $data[$name] = $_m->formatHasTop($cid,$with['fields']);
+                            }else
+                            {
+                                $data[$name] = $_m->formatHasTop($cid);
                             }
                         }
                         
@@ -900,7 +956,15 @@ class CrudController extends ApiBaseController
             }
             $col['default'] = $col['default']??"";
 
+            
+
             $val = $isset ? $data[$name] : $col['default'];
+            if(!$isset)
+            {
+                $check_category_field = $this->checkCategoryField($name,$col['default']);
+                $val = $check_category_field['array_val'];
+            }
+
             $config = [
                 'data'=>$data,'col'=>$col,
             ];

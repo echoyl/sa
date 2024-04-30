@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services;
 
+use Echoyl\Sa\Models\dev\Model;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
@@ -758,5 +759,16 @@ class HelperService
     public static function isDev()
     {
         return env('APP_ENV') == 'local';
+    }
+
+    public static function getDevModel($model_id)
+    {
+        $model = new Model();
+        $data = $model->where(['id'=>$model_id])->first();
+        if($data)
+        {
+            $data = $data->toArray();
+        }
+        return $data;
     }
 }

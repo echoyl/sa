@@ -223,7 +223,7 @@ class MenuController extends CrudController
         }
         if($to)
         {
-            $parent_id = $to['parent_id'];
+            $parent_id = $to['id'];
             $type = $to['type'];
         }else
         {

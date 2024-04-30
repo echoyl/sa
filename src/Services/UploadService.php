@@ -84,8 +84,7 @@ class UploadService
             }else
             {
                 //没有size 那么默认图片最大为1200
-                
-                $max_size = 1000;
+                $max_size = config('sa.admin_upload_max_wh',1000);
                 if($height > $max_size || $width > $max_size)
                 {
                     Image::make($new_path)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
@@ -188,18 +187,33 @@ class UploadService
             $newPath = $public_path . '/' . $filename;
         }
         //生成缩略图
+        $thumb_url = $path;
         if ($isImage && $thumb) {
-            $path_parts = pathinfo($newPath);
-            $thumbnail_file_path = storage_path('app/public/user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']));
-            Image::make($newPath)->resize(800, 800, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
-            $thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
+            $max_size = config('sa.user_upload_max_wh',800);//读取压缩图片配置信息
+            $height = Image::make($newPath)->getHeight();
+            $width = Image::make($newPath)->getWidth();
+            //d($width,$height,$max_size,$newPath);
+            //$path_parts = pathinfo($newPath);
+            //$thumbnail_file_path = storage_path('app/public/user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']));
+            if($height > $max_size || $width > $max_size)
+            {
+                Image::make($newPath)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($newPath);
+                //$thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
+                //d($newPath);
+            }else
+            {
+                //$thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . $path_parts['basename'];
+            }
+            
+            // Image::make($newPath)->resize(800, 800, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
+            // $thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
             $height = Image::make($newPath)->getHeight();
             $width = Image::make($newPath)->getWidth();
             //检测图片如果大小还大于500kb 再次压缩图片至 600*600
 
             if ($rewrite) {
                 //删除原始图片
-                @unlink($newPath);
+                //@unlink($newPath);
             }
 
         } else {

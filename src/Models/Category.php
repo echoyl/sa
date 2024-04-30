@@ -40,6 +40,56 @@ class Category extends Base
         }
         return $ret;
     }
+    public function getItem($parseData,$val,$fields)
+    {
+        if($parseData)
+        {
+            $item = $parseData($val);
+        }else
+        {
+            $item = [
+                $fields['id'] => $val['id'],
+                $fields['title'] => $val['title'],
+                'parent_id' => $val['parent_id'],
+                //$fields['children'] => $this->format($val['id'], $fields),
+            ];
+        }
+        return $item;
+    }
+    public function formatHasTop($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'],$parseData = false,$level = 1)
+    {
+        $data = self::allData($this->table)->filter(function ($item) use ($id) {
+            return $item->parent_id === $id;
+        })->sortByDesc('displayorder');
+        
+        $ret = [];
+
+        foreach ($data as $val) {
+            $children = $this->formatHasTop($val['id'], $fields,$parseData,$level + 1);
+            
+            $item = $this->getItem($parseData,$val,$fields);
+            
+            if(!empty($children))
+            {
+                $item[$fields['children']] = $children;
+            }
+            $ret[] = $item;
+        }
+        if($level == 1 && $id)
+        {
+            //第一级且有父级id是插入数据
+            $top_one = self::allData($this->table)->first(function($item) use ($id) {
+                return $item->id == $id;
+            });
+            if($top_one)
+            {
+                $top_one = $this->getItem($parseData,$top_one->toArray(),$fields);
+                $top_one[$fields['children']] = $ret;
+                return [$top_one];
+            }
+        }
+        return $ret;
+    }
     public static function allData($table)
     {
         static $all = [];
