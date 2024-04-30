@@ -3,8 +3,8 @@
 namespace Echoyl\Sa\Services\admin;
 
 use Echoyl\Sa\Models\socket\Log;
-use Echoyl\Sa\Services\AdminService;
 use GatewayWorker\Lib\Gateway;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -24,12 +24,29 @@ class SocketService
      * @param [type] $client_id
      * @return void
      */
-    public static function bind($client_id,$token)
+    public static function bind($client_id,$token,$remember = 1)
     {
         $accessToken = PersonalAccessToken::findToken($token);
+        //FacadesLog::channel('daily')->info('findToken',['token'=>$accessToken]);
         //这里先不检测token是否过期
-        if(!$accessToken || $accessToken['name'] != 'admin')
+        if(!$accessToken)
         {
+            return;
+        }
+        
+        $accessToken = $accessToken->toArray();
+        if($accessToken['name'] != 'admin')
+        {
+            return;
+        }
+
+        //是否过期,由于前端只要有token都会bind一次，所以这里需要检测一下是否过期的token
+        //默认记住登录有效期为3天 否则为1天
+        $expiration = $remember?config('sanctum.expiration_remember',60*12*6):config('sanctum.expiration',24 * 60);
+        //FacadesLog::channel('daily')->info('expiration',['token'=>$accessToken,'exp'=>$expiration * 60,'time'=>time(),'exptime'=>strtotime($accessToken['created_at']) + $expiration * 60]);
+        if(strtotime($accessToken['created_at']) + $expiration * 60 < time())
+        {
+            //过期了
             return;
         }
 

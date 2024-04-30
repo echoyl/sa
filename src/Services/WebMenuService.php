@@ -75,6 +75,10 @@ class WebMenuService
      */
     public static function getParentAlias($val, $menus)
     {
+        if(!$val)
+        {
+            return [];
+        }
         $alias = [$val['alias']];
         //d($parent);
         if ($val['parent_id']) {

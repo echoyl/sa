@@ -1223,22 +1223,35 @@ class DevService
                         $controller_prefix = '';
                         //检测如果菜单是项目菜单 指向的是系统模型需要添加控制器文件绝对路径前缀
                         //20230825 - 先检测一遍项目下是否有该控制器 没有的话再指向system下的控制器
-                        if($menu['type'] == $app_name && $model['admin_type'] == 'system')
-                        {
+                        // if($menu['type'] == $app_name && $model['admin_type'] == 'system')
+                        // {
                             
-                            $_model_path = $model_path;
-                            $name = array_pop($_model_path);
-                            $c = !empty($_model_path)?implode("\\",$_model_path).'\\':'';
-                            if(class_exists('App\Http\Controllers\admin\\'.$c.ucfirst($name).'Controller'))
-                            {
-                                //这样设置的话 系统路由中存在项目路由
-                                $controller_prefix = '\App\Http\Controllers\admin\\'.$c;
-                            }else
-                            {
-                                //项目路由中存在指向系统控制器的路由
-                                $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.$c;
-                            }
-                            //Log::channel('daily')->info('createRoute form:',['controller_prefix'=>$controller_prefix]);
+                        //     $_model_path = $model_path;
+                        //     $name = array_pop($_model_path);
+                        //     $c = !empty($_model_path)?implode("\\",$_model_path).'\\':'';
+                        //     if(class_exists('App\Http\Controllers\admin\\'.$c.ucfirst($name).'Controller'))
+                        //     {
+                        //         //这样设置的话 系统路由中存在项目路由
+                        //         $controller_prefix = '\App\Http\Controllers\admin\\'.$c;
+                        //     }else
+                        //     {
+                        //         //项目路由中存在指向系统控制器的路由
+                        //         $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.$c;
+                        //     }
+                        //     //Log::channel('daily')->info('createRoute form:',['controller_prefix'=>$controller_prefix]);
+                        // }
+                        //20240419这里只检测指向模型属于系统还是项目，不再设置namespace
+                        $_model_path = $model_path;
+                        $name = array_pop($_model_path);
+                        $c = !empty($_model_path)?implode("\\",$_model_path).'\\':'';
+                        if(class_exists('App\Http\Controllers\admin\\'.$c.ucfirst($name).'Controller'))
+                        {
+                            //这样设置的话 系统路由中存在项目路由
+                            $controller_prefix = '\App\Http\Controllers\admin\\'.$c;
+                        }else
+                        {
+                            //项目路由中存在指向系统控制器的路由
+                            $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.$c;
                         }
 
                         if(count($model_path) > 1)
@@ -1250,31 +1263,25 @@ class DevService
                             if($menu['perms'])
                             {
                                 $perms = json_decode($menu['perms'],true);
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$perms,$controller_prefix){
-                                    if($perms)
+                                $perms = HelperService::json_validate($menu['perms']);
+                                if($perms && is_array($perms))
+                                {
+                                    foreach($perms as $key=>$title)
                                     {
-                                        foreach($perms as $key=>$title)
-                                        {
-                                            Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
-                                        }
+                                        Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
                                     }
-                                });
+                                }
                             }
 
                             if(in_array($menu['page_type'],$only_action_types))
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$key,$controller_prefix){
-                                    Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
-                                });
+                                Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
                             }else
                             {
+                                Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
                                 //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
-                                Route::group(['namespace' => implode("\\",$model_path)], function () use($name,$_prefix,$controller_prefix){
-
-                                    Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
-                                });
                             }
                             
                             

@@ -20,4 +20,6 @@ return [
     'userModel'=>User::class,//后台用户使用数据模型
     'frontUserModel'=>ModelsUser::class,
     'adminAppService'=>AdminAppService::class,//后台通用service
+    'admin_upload_max_wh'=>1000,//后台上传图片最大的宽高，超过该值后会压缩至该宽高
+    'user_upload_max_wh'=>1200,//前台上传图片最大的宽高，超过该值后会压缩至该宽高
 ];
