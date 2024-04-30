@@ -2,7 +2,9 @@ import request, { currentUser } from '@/services/ant-design-pro/sadmin';
 import { SyncOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Space } from 'antd';
+import { useContext } from 'react';
 import defaultSettings, { lightDefaultToken } from '../../../config/defaultSettings';
+import { SaDevContext } from './dev';
 import { isJsonString, uid } from './helpers';
 import { message } from './message';
 import { getTheme } from './themSwitch';
@@ -30,19 +32,25 @@ export const saGetSetting = async (force: boolean = false): Promise<{ [key: stri
   return { ...defaultSettings, ...localsetting, ...navTheme };
 };
 export default () => {
-  const { setInitialState } = useModel('@@initialState');
+  const { initialState, setInitialState } = useModel('@@initialState');
+  const { setSetting } = useContext(SaDevContext);
   const reload = async () => {
     const mkey = 'refresh_key';
     message.loading({ key: mkey, content: 'loading...' });
     const msg = await currentUser();
     //const msg = await cuser();
-    await saGetSetting(true);
+    const setting = await saGetSetting(true);
     await request.get('dev/menu/clearCache');
-
+    const uidx = uid();
     setInitialState((s) => ({
       ...s,
-      currentUser: { ...msg.data, uid: uid() },
+      currentUser: { ...msg.data, uidx },
+      settings: setting,
     })).then(() => {
+      setSetting?.({
+        ...initialState?.settings,
+        ...setting,
+      });
       message.success({ key: mkey, content: '刷新成功' });
     });
 

@@ -393,6 +393,7 @@ export const getCustomerColumn = (relationModel = [], allMenus = [], modelColumn
                     },
 
                     { dataIndex: 'danger', title: '危险按钮', valueType: 'switch' },
+                    { dataIndex: 'copyable', title: '文字可复制', valueType: 'switch' },
                   ];
                   return [
                     {

@@ -7,8 +7,8 @@ import type {
 } from '@ant-design/pro-components';
 import { FooterToolbar, ProTable } from '@ant-design/pro-components';
 import { history, useModel, useSearchParams } from '@umijs/max';
-import { App } from 'antd';
-import React, { createContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Modal } from 'antd';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { inArray, isArr, isFn, isObj, isStr, isUndefined } from '../checkers';
 import { TableForm } from '../dev/table/form';
 import TableIndex from '../dev/table/tableIndex';
@@ -22,12 +22,14 @@ import {
   getFromObject,
   isJsonString,
   saFormColumnsType,
+  saFormTabColumnsType,
   saTableColumnsType,
   search2Obj,
 } from '../helpers';
 import { EditableCell, EditableRow } from './editable';
 import './style.less';
 import { getTableColumns } from './tableColumns';
+import { SaDevContext } from '../dev';
 export interface saTableProps {
   url?: string;
   name?: string;
@@ -44,7 +46,7 @@ export interface saTableProps {
   beforeGet?: (value: any) => void;
   beforeTableGet?: (value: any) => void;
   tableProps?: ProTableProps;
-  tabs?: Array<{ title?: string; formColumns?: saFormColumnsType }>;
+  tabs?: saFormTabColumnsType;
   /**
    * 删除操作时 弹出提示数据所展示的字段
    */
@@ -198,7 +200,6 @@ const SaTable: React.FC<saTableProps> = (props) => {
   const [devEnable, setDevEnable] = useState(
     pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev,
   );
-  const { message } = App.useApp();
   // const [enumNames, setEnumNames] = useState<any[]>([]);
   // const [search_config, setSearch_config] = useState<any[]>([]);
   const rq = async (params = {}, sort: any, filter: any) => {
@@ -253,15 +254,18 @@ const SaTable: React.FC<saTableProps> = (props) => {
     setData([...ret.data]);
     return Promise.resolve({ data: ret.data, success: ret.success, total: ret.total });
   };
-
-  const post = async (base: any, extra: any) => {
+  const [modalApi, modalHolder] = Modal.useModal();
+  const { messageApi } = useContext(SaDevContext);
+  const post = async (base: any, extra: any, requestRes: any) => {
     return await request.post(url, {
       data: { base: { ...base }, ...extra },
+      messageApi,
+      ...requestRes,
     });
   };
-  const { modal } = App.useApp();
+
   const remove = (id, msg: string) => {
-    const modals = modal.confirm({
+    const modals = modalApi.confirm({
       title: '温馨提示！',
       content: msg,
       onOk: async () => {
@@ -279,7 +283,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
   };
 
   const switchState = (id, msg: string, val: string) => {
-    const modals = modal.confirm({
+    const modals = modalApi.confirm({
       title: '温馨提示！',
       content: msg,
       onOk: async () => {
@@ -363,7 +367,6 @@ const SaTable: React.FC<saTableProps> = (props) => {
       columns,
       actionRef,
       initialState,
-      message,
       devEnable,
       ...props,
     });
@@ -397,6 +400,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
       }}
     >
       <>
+        {modalHolder}
         <ProTable
           components={components}
           className="sa-pro-table"
@@ -429,6 +433,7 @@ const SaTable: React.FC<saTableProps> = (props) => {
             pageType != 'page'
               ? false
               : {
+                  variant: 'filled',
                   ignoreRules: false,
                   syncToInitialValues: false,
                   syncToUrl: (values, type) => {

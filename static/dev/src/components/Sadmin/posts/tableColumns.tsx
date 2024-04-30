@@ -1,4 +1,4 @@
-import request from '@/services/ant-design-pro/sadmin';
+import request, { messageLoadingKey } from '@/services/ant-design-pro/sadmin';
 import { TableDropdown } from '@ant-design/pro-components';
 import { history, Link, useModel } from '@umijs/max';
 import { Button, Space } from 'antd';
@@ -152,7 +152,6 @@ export const getTableColumns = (props) => {
     editable = true,
     deleteable = true,
     initialState,
-    message,
     devEnable = true,
   } = props;
 
@@ -178,19 +177,18 @@ export const getTableColumns = (props) => {
           const oldV = record.displayorder;
           record.displayorder = row.displayorder;
           setData([...data]);
-          message?.loading({ content: '提交中...', duration: 0, key: 'request_message_key' });
           const ret = await post(
             { id: row.id },
             { actype: 'displayorder', displayorder: row.displayorder },
           );
-          message?.destroy('request_message_key');
+
           //const success = true;
           if (ret.code) {
             //失败后将数据设置回去
             record.displayorder = oldV;
             setData([...data]);
           } else {
-            actionRef?.current?.reload();
+            //actionRef?.current?.reload();
           }
         },
       }),

@@ -10,16 +10,19 @@ import {
 import { ProConfigProvider, ProProvider } from '@ant-design/pro-components';
 import { Link } from '@umijs/max';
 import { Button, Dropdown, Space } from 'antd';
+import { MessageInstance } from 'antd/es/message/interface';
 import { createContext, useContext } from 'react';
 import ModalJson from '../action/modalJson';
 import { saValueTypeMap } from '../helpers';
 import Refresh from '../refresh';
-import { ToolBarMenu } from './table/toolbar';
+import { ToolBarMenu, ToolMenuForm } from './table/toolbar';
 
 export const SaDevContext = createContext<{
   setting?: any;
+  setSetting?: (setting: any) => void;
   admin?: any;
   setAdmin?: (admin: any) => void;
+  messageApi?: MessageInstance;
 }>({});
 
 export const DevLinks = () => {
@@ -115,7 +118,7 @@ export const DevLinks = () => {
       </Dropdown>
 
       <ProConfigProvider {...values} valueTypeMap={{ ...saValueTypeMap }}>
-        <ToolBarMenu
+        <ToolMenuForm
           key="devsetting"
           trigger={
             <Button type="text" style={{ width: '100%' }} icon={<PlusSquareOutlined />}>

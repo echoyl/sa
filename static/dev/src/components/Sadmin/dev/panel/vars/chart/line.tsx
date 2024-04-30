@@ -26,7 +26,7 @@ const lineColumns = (data): saFormColumnsType => [
       {
         title: '分组字段',
         tooltip: '多条线可使用该参数',
-        dataIndex: ['defaultConfig', 'chart', 'seriesField'],
+        dataIndex: ['defaultConfig', 'chart', 'colorField'],
         colProps: { span: 6 },
         valueType: 'select',
         fieldProps: {

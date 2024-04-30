@@ -6,13 +6,14 @@ import {
   CloudDownloadOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
+  EditOutlined,
   LoadingOutlined,
   PlusOutlined,
   SettingOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
 import { FormattedMessage, Link, useModel } from '@umijs/max';
-import { App, Button, Popover, Space, Tree, Upload } from 'antd';
+import { App, Button, Dropdown, Modal, Popover, Space, Tree, Upload } from 'antd';
 import { cloneDeep, isString } from 'lodash';
 import React, { useContext, useEffect, useState } from 'react';
 import ButtonDrawer from '../../action/buttonDrawer';
@@ -109,27 +110,36 @@ export const ToolBarDom = (props) => {
   );
 };
 
-const ExportButton = ({ title = '导出', fieldProps = { post: {} }, values = {}, url = '' }) => {
-  const { modal } = App.useApp();
+const ExportButton = ({
+  title = '导出',
+  fieldProps = { post: {}, button: {} },
+  values = {},
+  url = '',
+}) => {
   const { searchFormRef } = useContext(SaContext);
+  const [modalApi, modalHolder] = Modal.useModal();
+  const { post = {}, button = {} } = fieldProps;
   return (
-    <Button
-      key="exportButton"
-      icon={<CloudDownloadOutlined />}
-      onClick={async () => {
-        modal.confirm({
-          title: '温馨提示！',
-          content: '确定要导出吗？',
-          onOk: async () => {
-            const { post = {} } = fieldProps;
-            const search = searchFormRef?.current?.getFieldsFormatValue();
-            await request.post(url + '/export', { data: { ...values, ...post, ...search } });
-          },
-        });
-      }}
-    >
-      {title}
-    </Button>
+    <>
+      <Button
+        key="exportButton"
+        icon={<CloudDownloadOutlined />}
+        onClick={async () => {
+          modalApi.confirm({
+            title: '温馨提示！',
+            content: '确定要导出吗？',
+            onOk: async () => {
+              const search = searchFormRef?.current?.getFieldsFormatValue();
+              await request.post(url + '/export', { data: { ...values, ...post, ...search } });
+            },
+          });
+        }}
+        {...button}
+      >
+        {title}
+      </Button>
+      {modalHolder}
+    </>
   );
 };
 
@@ -178,14 +188,9 @@ const ImportButton = ({ title = '导入', url = '', uploadProps: ups = {} }) => 
   );
 };
 
-/**
- * 打开后显示当前菜单的form表单
- * @param props
- * @returns
- */
-export const ToolBarMenu = (props) => {
+export const ToolMenuForm = (props) => {
   const { setInitialState } = useModel('@@initialState');
-  const { trigger, pageMenu = { id: 0 } } = props;
+  const { pageMenu = { id: 0 }, trigger } = props;
   const MenuForm = (mprops) => {
     const { contentRender, setOpen } = mprops;
     return (
@@ -232,6 +237,56 @@ export const ToolBarMenu = (props) => {
     <ButtonDrawer trigger={trigger} width={1600} title="菜单配置">
       <MenuForm />
     </ButtonDrawer>
+  );
+};
+
+/**
+ * 打开后显示当前菜单的form表单
+ * @param props
+ * @returns
+ */
+export const ToolBarMenu = (props) => {
+  const { trigger, pageMenu = { id: 0 } } = props;
+
+  return (
+    <Dropdown
+      trigger={['click']}
+      menu={{
+        items: [
+          {
+            key: 'edit',
+            label: (
+              <ToolMenuForm
+                pageMenu={pageMenu}
+                trigger={
+                  <Button icon={<EditOutlined />} type="link">
+                    编辑
+                  </Button>
+                }
+              />
+            ),
+          },
+          {
+            key: 'export',
+            label: (
+              <ExportButton
+                url="dev/menu"
+                fieldProps={{ post: { ids: [pageMenu?.id] }, button: { type: 'link' } }}
+              />
+            ),
+          },
+        ],
+      }}
+    >
+      <span
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        {trigger}
+      </span>
+    </Dropdown>
   );
 };
 
@@ -353,7 +408,7 @@ export const toolBarRender = (props) => {
     const defaultTitle = { export: '导出', import: '导入', toolbar: '配置' };
     _btns?.forEach((btn, index) => {
       //console.log('btn', btn);
-      if (devEnable && isString(btn.title)) {
+      if (devEnable && (isString(btn.title) || !btn.title)) {
         btn.title = (
           <ToolbarColumnTitle
             {...btn}

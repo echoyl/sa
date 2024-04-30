@@ -37,12 +37,13 @@ import TinyEditor from './tinyEditor';
 import { SaTransferRender } from './transfer';
 import Uploader from './uploader';
 import AliyunVideo from './uploader/video';
-import IconSelect, { iconToElement } from './valueTypeMap/iconSelect.tsx';
+import IconSelect, { iconToElement } from './valueTypeMap/iconSelect';
 import MDEditor from './valueTypeMap/mdEditor';
 import { wxMenuRender } from './wxMenu';
 import { isString } from 'lodash';
 import { SaContext } from './posts/table';
 import { SaDevContext } from './dev';
+import SaAutoCompleteMap from './valueTypeMap/autoComplete';
 
 export function findParents(array, id, fieldNames = { id: 'id', children: 'child' }) {
   let parentArray = [];
@@ -119,9 +120,10 @@ export declare type saValueTypeMapType<T = any, ValueType = 'text'> = ProFormCol
   | 'mdEditor'
   | 'iconSelect'
 >;
+type saFormColumnsTypeFn<T> = (d: T) => saFormColumnsType;
 export declare type saFormTabColumnsType = Array<{
   title?: string;
-  formColumns?: saFormColumnsType;
+  formColumns?: saFormColumnsType | saFormColumnsTypeFn<any>;
 }>;
 export declare type saFormColumnsType = Array<saValueTypeMapType | saColumnsExtend | string>;
 export declare type saTableColumnsType = Array<
@@ -353,7 +355,6 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       return <ConfirmFormRender record={props.record} {...props.fieldProps} />;
     },
     renderFormItem: (_, props) => {
-      //console.log('confirmForm render', _, props);
       return <ConfirmFormRender {...props.fieldProps} />;
     },
   },
@@ -469,6 +470,12 @@ export const saValueTypeMap: Record<string, ProRenderFieldPropsType> = {
       return _;
     },
     renderFormItem: IconSelect,
+  },
+  saAutoComplete: {
+    render: (_) => {
+      return _;
+    },
+    renderFormItem: SaAutoCompleteMap,
   },
 };
 

@@ -53,6 +53,7 @@ const formMoreType = [
   { label: 'treeSelect', value: 'treeSelect' },
   { label: 'cascader', value: 'cascader' },
   { label: 'radio', value: 'radio' },
+  { label: 'AutoComplete', value: 'saAutoComplete' },
 ];
 
 export const getModelColumnsSelect = (id: number, allModels: any[], level = 1) => {
@@ -139,7 +140,10 @@ export const getModelRelations = (model_id: number, dev: { [key: string]: any })
   return [...manyRelation, ...oneRelation];
 };
 
-export const getModelColumns = (model_id: number, dev: { [key: string]: any }) => {
+export const getModelColumns = (
+  model_id: number,
+  dev: { [key: string]: any } = { allModels: [] },
+) => {
   const { allModels = [] } = dev;
   //console.log('model_id', model_id, allModels);
   const model = getModelById(model_id, allModels);

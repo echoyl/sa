@@ -11,7 +11,7 @@ const TableFromBread: FC<{
   readonly?: string | boolean; //支持条件判断
   alwaysenable?: boolean; //是否一直可用 默认false 当是表单是 如果无主数据表格不会展示，true 都会展示
 }> = (props) => {
-  const { fieldProps, readonly, record: orecord, alwaysenable = false } = props;
+  const { fieldProps = { props: {} }, readonly, record: orecord, alwaysenable = false } = props;
   //console.log('fieldProps', fieldProps);
   const { formRef } = useContext(SaContext);
   //在form中渲染 必须是readonly 所以用formRef 获取当前表单的所有值

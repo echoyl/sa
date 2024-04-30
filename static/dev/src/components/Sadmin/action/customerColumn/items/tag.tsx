@@ -1,7 +1,7 @@
 import { isObj } from '@/components/Sadmin/checkers';
 import { getFromObject } from '@/components/Sadmin/helpers';
 import { SaContext } from '@/components/Sadmin/posts/table';
-import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect.tsx';
+import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect';
 import { Tag, Typography } from 'antd';
 import { FC, useContext } from 'react';
 const ItemTag: FC<{

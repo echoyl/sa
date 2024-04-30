@@ -1,12 +1,14 @@
 import { HighlightOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Switch } from 'antd';
+import useToken from 'antd/es/theme/useToken';
 import { useState } from 'react';
 
 const DevSwitch = () => {
   const [checked, setChecked] = useState(true);
   const { initialState, setInitialState } = useModel('@@initialState');
-  const checkedStyle = { backgroundColor: '#1890ff', color: '#fff' };
+  const [theme, token] = useToken();
+  const checkedStyle = { backgroundColor: token.colorPrimary, color: '#fff' };
   const defaultStyle = {
     padding: '4px 20px',
     fontSize: 16,

@@ -25,17 +25,16 @@ const GlobalHeaderRight: React.FC = () => {
   return (
     <Space className={className}>
       <DevSwitch />
-
-      <Avatar menu={true} />
-      {lang && (
-        <UmiSelectLang
-          style={{
-            padding: 4,
-          }}
-        />
-      )}
       <ThemeSwitch />
+
+      {lang && (
+        <div style={{ padding: '0 4px', height: 48, lineHeight: '46px' }}>
+          <UmiSelectLang style={{ padding: 0, fontSize: 16 }} />
+        </div>
+      )}
+
       <NoticeIconView />
+      <Avatar menu={true} />
       <span> </span>
     </Space>
   );

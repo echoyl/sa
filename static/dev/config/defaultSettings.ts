@@ -3,24 +3,7 @@ import { ProLayoutProps } from '@ant-design/pro-components';
 /**
  * 默认的亮色主题暂时的配置
  */
-export const lightDefaultToken = {
-  sider: {
-    colorBgMenuItemSelected: '#e6f4ff',
-    colorMenuBackground: '#ffffff',
-    colorTextMenuSelected: '#1890ff',
-    colorBgMenuItemHover: 'rgba(90, 75, 75, 0.03)',
-    colorTextMenu: 'rgba(0, 0, 0, 0.88)',
-    colorTextMenuActive: '#1890ff',
-    colorBgMenuItemCollapsedElevated: '#ffffff',
-  },
-  header: {
-    colorTextMenuActive: '#1890ff',
-    colorTextMenu: 'rgba(0, 0, 0, 0.88)',
-    colorBgMenuItemSelected: '#e6f4ff',
-    colorTextMenuSelected: '#1890ff',
-    colorBgMenuItemHover: 'rgba(90, 75, 75, 0.03)',
-  },
-};
+export const lightDefaultToken = {};
 
 const Settings: ProLayoutProps & {
   pwa?: boolean;

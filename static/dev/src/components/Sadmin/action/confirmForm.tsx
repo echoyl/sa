@@ -140,6 +140,8 @@ const InnerForm = (props) => {
                 history.back();
               }
             }
+          } else {
+            return;
           }
         } else {
           //无 绑定onchange事件
@@ -180,7 +182,6 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
 
   //const [form] = Form.useForm<{ desc: string }>();
   const [open, setOpen] = useState(oopen);
-
   // useEffect(() => {
   //   console.log('confirm modal open state is ', open, page, xkey);
   // }, [open]);
@@ -218,7 +219,6 @@ const ConfirmForm: FC<actionConfirm> = (props) => {
 };
 
 export const ConfirmFormRender = (props) => {
-  //console.log('confirm props', props);
   let show = true;
   if (props.if) {
     show = tplComplie(props.if, props);

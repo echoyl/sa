@@ -52,9 +52,9 @@ interface formFieldsProps {
 export const GetFormFields: React.FC<{
   columns: ProFormColumnsType[] | saFormColumnsType;
   grid?: boolean;
-}> = ({ columns, grid }) => {
+}> = ({ columns, grid = false }) => {
   //console.log('GetFormFields', columns);
-  return <BetaSchemaForm layoutType="Embed" grid={false} columns={columns} />;
+  return <BetaSchemaForm layoutType="Embed" grid={grid} columns={columns} />;
 };
 
 export const getFormFieldColumns = (props: formFieldsProps) => {
@@ -265,8 +265,8 @@ export const getFormFieldColumns = (props: formFieldsProps) => {
                     if (!React.isValidElement(nv.title)) {
                       nv.title = <FormColumnTitle {...nv} />;
                     }
-                    nv.dependencies = names;
                   }
+                  nv.dependencies = names;
                   return nv;
                 });
               } else {

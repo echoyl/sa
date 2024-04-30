@@ -18,7 +18,7 @@ import {
   setAlpha,
 } from '@ant-design/pro-components';
 import { Helmet, history, useModel, useSearchParams } from '@umijs/max';
-import { Tabs, QRCode, Space, theme } from 'antd';
+import { Tabs, QRCode, Space, theme, GetProp } from 'antd';
 import React, { CSSProperties, useContext, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import styles from './index.less';
@@ -304,11 +304,49 @@ const Login: React.FC = () => {
   };
   const ActionLogin = (props) => {
     const { type } = props;
+    const [timestamp, setTimestamp] = useState<number>(Date.now());
+    const [status, setStatus] = useState<GetProp<typeof QRCode, 'status'>>('active');
+    const expiredTimes = 3 * 60; //3分钟后过期
+    let tout: string | number | undefined | NodeJS.Timeout;
+    const clock = (timestamp: number) => {
+      const now = Date.now();
+      // console.log(
+      //   'timeis now',
+      //   now,
+      //   timestamp + expiredTimes * 1000,
+      //   now > timestamp + expiredTimes * 1000,
+      // );
+      if (now > timestamp + expiredTimes * 1000) {
+        //过期了
+        //setTimestamp(now);
+        setStatus('expired');
+        //tout = setTimeout(() => clock(now), 1000);
+      } else {
+        tout = setTimeout(() => clock(timestamp), 1000);
+      }
+    };
+    const refresh = () => {
+      const now = Date.now();
+      setTimestamp(now);
+      setStatus('active');
+      tout = setTimeout(() => clock(now), 1000);
+    };
+    useEffect(() => {
+      tout = setTimeout(() => clock(timestamp), 1000);
+      return () => clearTimeout(tout);
+    }, []);
+
     if (type == 'wechat') {
       const { url, desc } = setting?.loginWechat;
+      const qrcodeUrl = url + '?client_id=' + clientId + '&timestamp=' + timestamp;
       return (
         <div style={{ textAlign: 'center' }}>
-          <QRCode style={{ margin: '0 auto' }} value={url + '?client_id=' + clientId} />
+          <QRCode
+            style={{ margin: '0 auto' }}
+            value={qrcodeUrl}
+            status={status}
+            onRefresh={refresh}
+          />
           <div style={{ marginTop: 20 }}>{desc}</div>
         </div>
       );

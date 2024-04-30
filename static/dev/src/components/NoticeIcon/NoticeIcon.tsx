@@ -117,9 +117,10 @@ const NoticeIcon: React.FC<NoticeIconProps> & {
   );
 };
 
-NoticeIcon.defaultProps = {
-  emptyImage: 'https://gw.alipayobjects.com/zos/rmsportal/wAhyIChODzsoKIOBHcBk.svg',
-};
+// NoticeIcon.defaultProps = {
+//   emptyImage: 'https://gw.alipayobjects.com/zos/rmsportal/wAhyIChODzsoKIOBHcBk.svg',
+// };
+NoticeIcon.emptyImage = 'https://gw.alipayobjects.com/zos/rmsportal/wAhyIChODzsoKIOBHcBk.svg';
 
 NoticeIcon.Tab = NoticeList;
 

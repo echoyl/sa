@@ -12,6 +12,7 @@ import {
   Table,
   Timeline,
   Tooltip,
+  Typography,
 } from 'antd';
 import React, { useContext, useEffect, useState } from 'react';
 import { inArray, isArr } from '../../checkers';
@@ -138,15 +139,27 @@ const CustomerColumnRender = (props) => {
             );
           }
         } else {
+          //文字展示
+          //是否支持复制
+          if (!tpl) {
+            return null;
+          }
+          const textCopyable = item?.btn?.copyable ? (
+            <Typography.Paragraph key="text_copyable" copyable>
+              {tpl}
+            </Typography.Paragraph>
+          ) : (
+            tpl
+          );
           if (tooltip) {
             return (
               <Tooltip key={i} title={tooltip}>
-                {tpl}
+                {textCopyable}
               </Tooltip>
             );
           } else {
             //console.log('i am text ', tpl, item, record);
-            return <span key={i}>{tpl}</span>;
+            return <span key={i}>{textCopyable}</span>;
           }
         }
       } else {

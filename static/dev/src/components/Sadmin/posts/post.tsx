@@ -9,10 +9,11 @@ import {
 } from '@ant-design/pro-components';
 //import { PageContainer } from '@ant-design/pro-layout';
 import { history, useModel, useParams, useSearchParams } from '@umijs/max';
-import { App, Col, Row, Space, Tabs } from 'antd';
+import { App, Col, GetProps, message, Row, Space, Tabs } from 'antd';
 import { isUndefined } from 'lodash';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useContext, useEffect, useRef, useState } from 'react';
 import { saConfig } from '../config';
+import { SaDevContext } from '../dev';
 import { DndContext } from '../dev/dnd-context';
 import { useTableDesigner } from '../dev/table/designer';
 import { FormAddTab, TabColumnTitle } from '../dev/table/title';
@@ -34,6 +35,7 @@ export interface saFormProps extends saTableProps {
   onTabChange?: (index: string) => void; //tab切换后的回调
   resetForm?: boolean; //提交数据后 是否重置表单
   grid?: boolean; //form是否开启grid布局
+  tabsProps?: GetProps<typeof Tabs>;
 }
 
 export const SaForm: FC<saFormProps> = (props) => {
@@ -85,6 +87,7 @@ export const SaForm: FC<saFormProps> = (props) => {
   const [devEnable, setDevEnable] = useState(
     pdevEnable && !initialState?.settings?.devDisable && initialState?.settings?.dev,
   );
+  const { messageApi } = useContext(SaDevContext);
   //提交数据
   const post = async (base: any, callback?: (value: any) => void, then?: any) => {
     //log('post data is ', base);
@@ -111,6 +114,7 @@ export const SaForm: FC<saFormProps> = (props) => {
       data: { base: { ...postExtra, ...postBase } },
       msgcls: callback ? callback : msgcls,
       then,
+      messageApi,
     });
 
     props.afterPost?.(ret);
@@ -140,7 +144,7 @@ export const SaForm: FC<saFormProps> = (props) => {
     });
   }
   params['*'] && delete params['*'];
-  const { message } = App.useApp();
+
   //获取数据
   //console.log('post params', params, url);
   const get = async () => {
@@ -150,13 +154,12 @@ export const SaForm: FC<saFormProps> = (props) => {
     // }
     if (props.formProps?.initialValues || !url) {
       //有初始化值 则不请求后台数据
-      return {};
+      const ndetail = props.formProps?.initialValues ? props.formProps?.initialValues : {};
+      //console.log('ndetail', ndetail);
+      setDetail({ ...ndetail });
+      return { ...ndetail };
     }
-    if (!url) {
-      message.error('请求链接错误');
-      return {};
-    }
-    const { data, search } = await request.get(url, { params, drawer: pageType == 'drawer' });
+    const { data } = await request.get(url, { params, drawer: pageType == 'drawer' });
     beforeGet(data);
     if (props.beforeGet) {
       props.beforeGet(data);
@@ -231,6 +234,7 @@ export const SaForm: FC<saFormProps> = (props) => {
         formRef: setting?.steps_form ? formMapRef?.current[0] : formRef,
         actionRef,
         tableDesigner,
+        detail,
       }}
     >
       <DndContext>
@@ -274,7 +278,7 @@ export const SaForm: FC<saFormProps> = (props) => {
                     ).then(({ code, data, msg }) => {
                       //将传回的数据又重新赋值一遍
                       if (code) {
-                        message.error(msg);
+                        messageApi.error(msg);
                         return false;
                       }
                       if (index + 1 == tabs.length) {
@@ -371,6 +375,7 @@ export const SaForm: FC<saFormProps> = (props) => {
                     forceRender: true,
                   };
                 })}
+                {...props.tabsProps}
               />
             ) : (
               _formColumns.map((cl, index) => {

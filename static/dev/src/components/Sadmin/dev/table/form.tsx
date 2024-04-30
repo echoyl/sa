@@ -26,7 +26,7 @@ const InnerForm = (props) => {
       msgcls={(ret) => {
         const { code } = ret;
         if (!code) {
-          actionRef.current?.reload();
+          //actionRef.current?.reload();
           afterFormPost?.(ret);
           //设置弹出层关闭，本来会触发table重新加载数据后会关闭弹层，但是如果数据重载过慢的话，这个会感觉很卡所以在这里直接设置弹层关闭
           setOpen(false);

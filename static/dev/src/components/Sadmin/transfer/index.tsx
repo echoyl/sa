@@ -113,7 +113,7 @@ const SaTransferMiddle = (props) => {
       setDataSource(d);
     }
   }, [formRef?.current]);
-  return dataSource.length > 0 ? <SaTransfer {...props} dataSource={dataSource} /> : null;
+  return dataSource?.length > 0 ? <SaTransfer {...props} dataSource={dataSource} /> : null;
 };
 
 export const SaTransferRender = (text, props) => {

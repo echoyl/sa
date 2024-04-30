@@ -1,3 +1,4 @@
+import { isObj } from '@/components/Sadmin/checkers';
 import { Statistic, StatisticCard } from '@ant-design/pro-components';
 import { Link } from '@umijs/max';
 import { Divider, Progress, Space } from 'antd';
@@ -56,7 +57,7 @@ const PanelItemCard = (props) => {
   const statistic = open?.statistic
     ? {
         ...config?.statistic,
-        value: data?.value,
+        value: isObj(data) ? data?.value : data,
         description: getDescription(config),
       }
     : false;
@@ -78,7 +79,7 @@ const PanelItemCard = (props) => {
     } else if (type == 'progress') {
       return <div style={style}>{data.progress?.map((v, i) => <Progress key={i} {...v} />)}</div>;
     } else {
-      return <PanelItemChart data={data?.chart?.data} config={chart} type={type} />;
+      return <PanelItemChart {...data?.chart} config={chart} type={type} />;
     }
     return null;
   };

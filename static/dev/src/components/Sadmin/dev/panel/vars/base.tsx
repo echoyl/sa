@@ -1,3 +1,4 @@
+import { isArr } from '@/components/Sadmin/checkers';
 import {
   saFormColumnsType,
   saFormTabColumnsType,
@@ -105,7 +106,8 @@ const baseFormColumns = (data: any[]): saFormTabColumnsType => {
               dataIndex: 'sourceDataName',
               valueType: 'select',
               fieldProps: {
-                options: data,
+                options: isArr(data) ? data : [],
+                showSearch: true,
               },
               colProps: { span: 12 },
             },
@@ -154,6 +156,19 @@ const baseFormColumns = (data: any[]): saFormTabColumnsType => {
               valueType: 'digit',
               width: '100%',
               colProps: { span: 12 },
+            },
+          ],
+        },
+        {
+          valueType: 'group',
+          columns: [
+            {
+              title: '显示条件',
+              dataIndex: 'show_condition',
+              tooltip:
+                '可根据当前用户编写是否显示该组件,例如 {{ user.id == 1?true:false }} user为当前登录用户信息',
+              valueType: 'textarea',
+              colProps: { span: 24 },
             },
           ],
         },

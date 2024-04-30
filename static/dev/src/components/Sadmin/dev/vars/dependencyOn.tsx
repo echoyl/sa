@@ -5,6 +5,7 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
     {
       dataIndex: 'condition_type',
       valueType: 'select',
+      title: '满足条件',
       fieldProps: {
         defaultValue: 'all',
         options: [
@@ -73,6 +74,12 @@ export const dependencyOn = (columns: any[]): saFormColumnsType => {
                 changeOnSelect: true,
               },
               width: 'md',
+            },
+            {
+              title: '自定义字段',
+              dataIndex: 'cname',
+              width: 120,
+              tooltip: '无字段选择是可手动填入此项 . 分割为数组形式',
             },
           ],
         },

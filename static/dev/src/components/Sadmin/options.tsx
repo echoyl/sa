@@ -16,6 +16,7 @@ interface SaOptionsProps {
   showtype?: 'card' | 'table';
   name: string;
   id: string;
+  grid?: boolean;
 }
 
 const type = 'saFormListDrag';
@@ -63,7 +64,7 @@ const DragableUploadListItem = ({
     lineHeight: 32,
   };
   if (showtype == 'table') {
-    style0.marginBlockStart = 6;
+    style0.marginBlockStart = 4;
     stylex.marginBlockEnd = 24;
   }
   const moreIcons = (
@@ -127,7 +128,7 @@ const DragableUploadListItem = ({
 };
 
 const SaOptions: React.FC<SaOptionsProps> = (props) => {
-  const { columns = [], showtype = 'card', name, id } = props;
+  const { columns = [], showtype = 'card', name, id, grid = false } = props;
   //console.log('inner', props);
   const actionRef = useRef<
     FormListActionType<{
@@ -175,7 +176,7 @@ const SaOptions: React.FC<SaOptionsProps> = (props) => {
     >
       {() => {
         //console.log(f, index, action);
-        return <GetFormFields grid={false} columns={[{ valueType: 'group', columns: columns }]} />;
+        return <GetFormFields grid={grid} columns={[{ valueType: 'group', columns: columns }]} />;
         // return (
         //   <BetaSchemaForm
         //     layoutType="Embed"

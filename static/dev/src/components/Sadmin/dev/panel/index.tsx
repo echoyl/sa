@@ -1,18 +1,20 @@
-import request from '@/services/ant-design-pro/sadmin';
+import request, { messageLoadingKey } from '@/services/ant-design-pro/sadmin';
+import { SettingOutlined } from '@ant-design/icons';
 import { BetaSchemaForm, PageContainer, ProCard } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { Button, Col, Flex, Row, Skeleton, Table, Tabs } from 'antd';
+import { Button, Col, Flex, Row, Skeleton, Space, Tabs } from 'antd';
 import { useContext, useEffect, useState } from 'react';
 import { saConfig } from '../../config';
-import { SaBreadcrumbRender } from '../../helpers';
+import { SaBreadcrumbRender, tplComplie } from '../../helpers';
 import { message } from '../../message';
 import { PagePanelHeader } from '../../pagePanel';
 import { getFormFieldColumns } from '../../posts/formDom';
 import { SaContext } from '../../posts/table';
-import { getTableColumns } from '../../posts/tableColumns';
 import { DndContext } from '../dnd-context';
 import { useTableDesigner } from '../table/designer';
+import { ToolBarMenu } from '../table/toolbar';
 import PanelItemCard from './items/card';
+import PanelItemTable from './items/table';
 import { DevPanelColumnTitle } from './title';
 
 const ItemCol = (props) => {
@@ -29,18 +31,24 @@ const ItemCol = (props) => {
     height,
     type,
     getData,
+    show_condition: showCondition,
   } = props;
 
   const idata = data?.find((v) => v.value == sourceDataName);
   const {
     tableDesigner: { devEnable },
   } = useContext(SaContext);
+  const { initialState } = useModel('@@initialState');
+  const show =
+    showCondition && !devEnable
+      ? tplComplie(showCondition, { user: initialState?.currentUser })
+      : true;
   //console.log('ItemCol', props, data);
   const ctitle = (_title = '') => {
     return noTitle ? null : (
       <DevPanelColumnTitle
         otitle={_title ? _title : title}
-        title={_title ? _title : title ? title : '元素 - ' + uid}
+        title={(_title ? _title : title ? title : '元素') + ' - ' + uid}
         uid={uid}
         col={props}
         devData={{ itemType: 'col' }}
@@ -49,19 +57,19 @@ const ItemCol = (props) => {
   };
   //console.log('cititle', ctitle);
   const itemTitle = devEnable ? ctitle(title) : title ? title : false;
-  return (
+  return show ? (
     <Col span={span}>
       {type == 'tab' ? (
         <ItemTab {...props} />
       ) : type == 'table' ? (
-        <ItemTable {...props} data={idata} />
+        <PanelItemTable {...props} data={idata} />
       ) : rows || type == 'rows' ? (
         <>
           {ctitle()}
           <Panel rows={rows} data={data} />
         </>
       ) : type == 'form' ? (
-        <ItemForm {...props} idata={idata?.data} />
+        <ItemForm {...props} idata={idata} />
       ) : type == 'user' ? (
         <ProCard
           headStyle={devEnable ? { width: '100%', display: 'block' } : {}}
@@ -73,11 +81,12 @@ const ItemCol = (props) => {
         <PanelItemCard title={itemTitle} data={idata?.data} config={config} />
       ) : null}
     </Col>
-  );
+  ) : null;
 };
 
 const ItemForm = (props) => {
   const { config, idata, title, uid, getData, simple } = props;
+  //console.log('idata is ', idata);
   const {
     tableDesigner: { devEnable },
   } = useContext(SaContext);
@@ -95,7 +104,7 @@ const ItemForm = (props) => {
   //处理一遍后端的动态参数，如果有前端设置动态参数的话 需要一个编译js的函数 类似 tplComplie
   const _columns = config?.columns?.map((v) => {
     //获取是否有设置
-    const ps = idata?.find((ida) => ida.name == v.dataIndex);
+    const ps = idata?.data?.find((ida) => ida.name == v.dataIndex);
     if (ps) {
       v = { ...v, ...ps.props };
     }
@@ -117,6 +126,7 @@ const ItemForm = (props) => {
         span: 12,
       }}
       grid={false}
+      initialValues={idata?.initialValues}
       onFinish={(data: { [key: string]: any }) => {
         //setFormData(data);
         getData?.(data);
@@ -142,47 +152,14 @@ const ItemForm = (props) => {
   );
 };
 
-const ItemTable = (props) => {
-  const { config, data, title, uid } = props;
-  //console.log('table props', props);
-  const { columns, ...retConfig } = config;
-  const { initialState } = useModel('@@initialState');
-  return (
-    <ProCard
-      style={{ height: '100%' }}
-      title={
-        <DevPanelColumnTitle
-          otitle={null}
-          uid={uid}
-          col={props}
-          devData={{ itemType: 'col' }}
-          title={'Table - ' + uid}
-        />
-      }
-    >
-      <Table
-        columns={getTableColumns({
-          initRequest: true,
-          columns: columns,
-          initialState,
-          devEnable: false,
-        })}
-        dataSource={data?.data}
-        title={() => title}
-        rowKey="id"
-        {...retConfig}
-      />
-    </ProCard>
-  );
-};
-
 const ItemTab = (props) => {
-  const { uid, rows, data, getData, config } = props;
+  const { uid, rows, data, getData, config, sourceDataName, height } = props;
   const {
     tableDesigner: { devEnable },
   } = useContext(SaContext);
+  const idata = data?.find((v) => v.value == sourceDataName);
   const rightForm = config.form ? (
-    <ItemForm simple={true} config={config.form} getData={getData} />
+    <ItemForm simple={true} idata={idata} config={config.form} getData={getData} />
   ) : null;
   return (
     <ProCard
@@ -213,12 +190,13 @@ const ItemTab = (props) => {
               }
             : null
         }
+        destroyInactiveTabPane={true}
         items={rows?.map((row, i) => {
           return {
             key: i,
             label: (
               <DevPanelColumnTitle
-                title={row?.title}
+                title={row?.title ? row?.title : 'tabItem'}
                 otitle={row?.title}
                 uid={row?.uid}
                 row={row}
@@ -265,7 +243,7 @@ const SaPanel = (props) => {
   const getData = async (params = {}) => {
     //setLoading(true);
     //message.loading('加载中...');
-    message.loading('加载中...');
+    message.loading({ content: '加载中...', key: messageLoadingKey, duration: 0 });
     const { data: rdata } = await request.get(url, {
       params: { ...formData, ...params },
     });
@@ -321,16 +299,26 @@ const SaPanel = (props) => {
         </DndContext>
         {!data && <Skeleton paragraph={{ rows: 10 }} active />}
         {devEnable ? (
-          <Button
-            type="dashed"
-            key="addrow"
-            onClick={() => {
-              tableDesigner.edit({ base: { id: pageMenu?.id, actionType: 'insertRow' } });
-            }}
-            style={{ marginTop: 10 }}
-          >
-            + Row
-          </Button>
+          <Space style={{ marginTop: 10 }}>
+            <Button
+              type="dashed"
+              key="addrow"
+              onClick={() => {
+                tableDesigner.edit({ base: { id: pageMenu?.id, actionType: 'insertRow' } });
+              }}
+            >
+              + Row
+            </Button>
+            <ToolBarMenu
+              key="devsetting"
+              trigger={
+                <Button type="dashed" danger>
+                  <SettingOutlined />
+                </Button>
+              }
+              pageMenu={pageMenu}
+            />
+          </Space>
         ) : null}
       </SaContext.Provider>
     </PageContainer>

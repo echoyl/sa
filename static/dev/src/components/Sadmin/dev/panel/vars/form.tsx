@@ -16,12 +16,7 @@ const formColumns = (data, dataIndex = ['defaultConfig', 'columns']): saFormColu
             valueType: 'group',
             columns: [
               {
-                title: 'Label',
-                dataIndex: 'title',
-                colProps: { span: 6 },
-              },
-              {
-                title: 'dataIndex',
+                title: '表单项',
                 dataIndex: 'dataIndex',
                 colProps: { span: 6 },
                 valueType: 'select',
@@ -29,6 +24,15 @@ const formColumns = (data, dataIndex = ['defaultConfig', 'columns']): saFormColu
                   options: data?.fields,
                 },
               },
+              {
+                title: 'Label',
+                dataIndex: 'title',
+                colProps: { span: 6 },
+                fieldProps:{
+                  placeholder:'不输入的话使用后台数据'
+                }
+              },
+              
               {
                 title: '组件类型',
                 dataIndex: 'valueType',

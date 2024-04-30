@@ -5,9 +5,11 @@ import { CopyOutlined, FileOutlined, FolderOutlined, PlusCircleOutlined } from '
 import { ActionType, ProFormInstance } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
 import { Button, Space } from 'antd';
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import ModelRelation from './modelRelation';
 import QuickCreate from './quickCreate';
+import modelSettingColumns from '@/components/Sadmin/dev/vars/modelSettingColumns';
+import { SaDevContext } from '@/components/Sadmin/dev';
 /**
  * 默认数据库有的字段
  */
@@ -230,6 +232,7 @@ export default () => {
       setInitialState((s) => initialState);
     });
   };
+  const { setting } = useContext(SaDevContext);
   return (
     <>
       <Category
@@ -276,7 +279,7 @@ export default () => {
         expandAll={false}
         level={4}
         url="dev/model"
-        formColumns={[
+        formColumns={(detail) => [
           {
             valueType: 'group',
             columns: [
@@ -333,13 +336,8 @@ export default () => {
                     title: '设置',
                     size: 'middle',
                   },
-                  formColumns: [
-                    {
-                      dataIndex: 'soft_delete',
-                      title: '软删除',
-                      valueType: 'switch',
-                    },
-                  ],
+                  tabs: modelSettingColumns(detail.id, setting?.dev),
+                  saFormProps: { devEnable: false, grid: false },
                 },
               },
             ],

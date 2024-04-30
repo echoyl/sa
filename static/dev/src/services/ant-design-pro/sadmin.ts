@@ -1,6 +1,6 @@
 // @ts-ignore
 /* eslint-disable */
-import { message, notification } from '@/components/Sadmin/message';
+import { message as gmessage, notification } from '@/components/Sadmin/message';
 import { history, request as orequest } from '@umijs/max';
 import { extend } from 'umi-request';
 const codeMessage = {
@@ -26,6 +26,8 @@ export const request_prefix = '/sadmin/';
 export const loginPath = '/login';
 
 export const adminTokenName = 'sadmin-token';
+
+export const messageLoadingKey = 'message_loading_key';
 
 function errorHandler(error) {
   // 请求已发送但服务端返回状态码非 2xx 的响应
@@ -113,12 +115,18 @@ export const responseCodeAction = (code: number, method: string, drawer: boolean
   }
   return false;
 };
-
+request.interceptors.request.use(async (response, options) => {
+  const { method, messageApi } = options;
+  if (method == 'post' && messageApi) {
+    messageApi.loading({ content: '提交中...', duration: 0, key: messageLoadingKey });
+  }
+});
 request.interceptors.response.use(async (response, options) => {
   if (response.status == 200) {
     const res = await response.clone().json();
     const { code, msg, data } = res;
-
+    const { messageApi } = options;
+    const message = messageApi ? messageApi : gmessage;
     if (code) {
       //message.error(msg);
       if (responseCodeAction(code, options.method, options.drawer)) {
@@ -143,17 +151,18 @@ request.interceptors.response.use(async (response, options) => {
             //   duration: 3,
             // });
             message.success({
+              key: messageLoadingKey,
               content: msg,
-              duration: 3,
+              duration: 2,
             });
             if (data?.logout) {
               message.loading({
                 content: '退出登录中...',
                 duration: 0,
-                key: 'request_message_key',
+                key: messageLoadingKey,
               });
               await loginOut(() => {
-                message.destroy('request_message_key');
+                message.destroy(messageLoadingKey);
               });
             } else {
               options.msgcls && options.msgcls({ code, msg, data, res });

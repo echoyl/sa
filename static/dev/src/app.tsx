@@ -6,7 +6,7 @@ import {
   SettingDrawer,
 } from '@ant-design/pro-components';
 import { RunTimeLayoutConfig, history } from '@umijs/max';
-import { App, ConfigProvider } from 'antd';
+import { App, ConfigProvider, message } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import React, { useContext, useEffect, useState } from 'react';
@@ -86,6 +86,7 @@ export function rootContainer(container: JSX.Element, args) {
     //const { initialState } = useModel('@@initialState');
     const [setting, setSetting] = useState<any>();
     //const [admin, setAdmin] = useState<any>();
+    const [messageApi, messageHolder] = message.useMessage();
     useEffect(() => {
       //console.log('root get');
       saGetSetting().then((v) => {
@@ -99,13 +100,19 @@ export function rootContainer(container: JSX.Element, args) {
         // }
       });
     }, []);
-
+    const components = {
+      Menu: {
+        subMenuItemBg: 'rgb(0,0,0,0)',
+      },
+      ...setting?.antdtheme?.components,
+    };
     return (
       <ConfigProvider
         theme={
           setting?.navTheme == 'light'
             ? {
                 ...setting?.antdtheme,
+                components,
               }
             : {}
         }
@@ -115,10 +122,13 @@ export function rootContainer(container: JSX.Element, args) {
             value={{
               //setting: initialState?.settings,
               setting,
+              setSetting,
+              messageApi,
             }}
           >
             <WebSocketProvider>{props.children}</WebSocketProvider>
             <Message />
+            {messageHolder}
           </SaDevContext.Provider>
         </App>
       </ConfigProvider>
@@ -158,6 +168,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       }
     },
     layoutBgImgList: [],
+
     menuFooterRender: () => (initialState?.settings.dev ? <DevLinks /> : false),
     menuHeaderRender: undefined,
     menu: {
@@ -189,6 +200,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       );
     },
     siderWidth: 208,
+    className: initialState?.settings?.navTheme == 'light' ? 'deadminLight' : 'deadminDark',
     ...initialState?.settings,
   };
 };

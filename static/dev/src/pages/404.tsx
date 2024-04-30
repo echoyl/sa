@@ -114,6 +114,7 @@ const PageTypes = ({ menu, match, pathname }) => {
           />
         );
       case 'table':
+      case 'justTable':
         return (
           <PostsList
             key={pathname}

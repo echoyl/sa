@@ -1,6 +1,6 @@
 import { saFormColumnsType, uid } from '@/components/Sadmin/helpers';
 import Category from '@/components/Sadmin/posts/category';
-import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect.tsx';
+import { iconToElement } from '@/components/Sadmin/valueTypeMap/iconSelect';
 import { CopyOutlined, RollbackOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
@@ -120,16 +120,18 @@ export const MenuFormColumn: saFormColumnsType = [
       {
         title: '页面类型',
         dataIndex: 'page_type',
-        valueType: 'radioButton',
+        valueType: 'select',
         fieldProps: {
           options: [
-            { label: '列表', value: 'table' },
+            { label: '列表 - 整个resource', value: 'table' },
             { label: '分类', value: 'category' },
             { label: '表单', value: 'form' },
-            { label: '面板', value: 'panel' },
+            { label: '面板 - 将移除', value: 'panel' },
             { label: '面板2', value: 'panel2' },
+            { label: '仅列表 - 指向控制器方法', value: 'justTable' },
           ],
         },
+        width: 'sm',
       },
       {
         title: 'form打开方式',

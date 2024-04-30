@@ -1,15 +1,47 @@
 import { inArray } from '@/components/Sadmin/checkers';
+import { SaDevContext } from '@/components/Sadmin/dev';
+import { message } from '@/components/Sadmin/message';
 import PostsForm from '@/components/Sadmin/posts/post';
-import request from '@/services/ant-design-pro/sadmin';
-import { App, Button } from 'antd';
-import { useState } from 'react';
+import Refresh, { saGetSetting } from '@/components/Sadmin/refresh';
+import request, { currentUser, messageLoadingKey } from '@/services/ant-design-pro/sadmin';
+import { useModel } from '@umijs/max';
+import { Button } from 'antd';
+import { useContext } from 'react';
 
 export default () => {
+  const { initialState, setInitialState } = useModel('@@initialState');
+  const { setSetting } = useContext(SaDevContext);
+  const reload = async () => {
+    message.loading({ key: messageLoadingKey, content: 'loading...' });
+    const msg = await currentUser();
+    //const msg = await cuser();
+    const setting = await saGetSetting(true);
+    await request.get('dev/menu/clearCache');
+    setInitialState((s) => ({
+      ...s,
+      settings: setting,
+    })).then(() => {
+      setSetting?.({
+        ...initialState?.settings,
+        ...setting,
+      });
+      message.success({ key: messageLoadingKey, content: '刷新成功' });
+    });
+
+    return msg.data;
+  };
   return (
     <PostsForm
       url="dev/setting"
       formTitle={false}
       devEnable={false}
+      tabsProps={{
+        tabBarExtraContent: (
+          <Button type="text">
+            <Refresh key="refresh" />
+          </Button>
+        ),
+      }}
       tabs={[
         {
           title: '基础配置',
@@ -315,7 +347,8 @@ export default () => {
           ],
         },
       ]}
-      msgcls={() => {
+      msgcls={async () => {
+        await reload();
         return;
       }}
     />

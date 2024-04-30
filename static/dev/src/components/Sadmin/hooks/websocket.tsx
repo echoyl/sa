@@ -21,6 +21,21 @@ export const WebSocketContext = React.createContext<{
 //   const ws = useWebSocket();
 //   return <Comp {...props} webSocket={ws} />;
 // };
+const bind = (ws?: WebSocket) => {
+  const token = localStorage.getItem(adminTokenName);
+  const remember = localStorage.getItem('Sa-Remember');
+  //console.log('send bind', token);
+  if (!token) {
+    //未登录不用绑定
+    //console.log('no token');
+    return;
+  }
+  if (ws) {
+    ws.send(JSON.stringify({ type: 'bind', data: { token, remember } }));
+  }
+
+  return;
+};
 
 // 自定义钩子，用于管理WebSocket连接
 const useWebSocket = () => {
@@ -29,22 +44,7 @@ const useWebSocket = () => {
   const { setting } = useContext(SaDevContext);
   let timeinterval: any = null;
   let reconnectInterval: any = null;
-  const bind = (ws?: WebSocket) => {
-    const token = localStorage.getItem(adminTokenName);
-    //console.log('send bind', token);
-    if (!token) {
-      //未登录不用绑定
-      //console.log('no token');
-      return;
-    }
-    if (ws) {
-      ws.send(JSON.stringify({ type: 'bind', data: { token } }));
-    } else {
-      socket?.send(JSON.stringify({ type: 'bind', data: { token } }));
-    }
 
-    return;
-  };
   const connect = (): WebSocket => {
     const url = setting.socket?.url;
     //console.log('connect url is ', url);
@@ -74,7 +74,7 @@ const useWebSocket = () => {
         clearInterval(timeinterval);
       }
       //重新连接 每10秒 重连一次
-      console.log('on close', e);
+      //console.log('on close', e);
       reconnectInterval = setInterval(() => {
         console.log('reconnect now');
         connect();
@@ -94,16 +94,16 @@ const useWebSocket = () => {
 
     return () => ws.close(); // 组件卸载时关闭连接
   }, [setting]);
-
-  return { socket, bind };
+  return { socket };
 };
 
 // 使用WebSocketContext提供WebSocket实例
 const WebSocketProvider = (props) => {
-  const { socket, bind } = useWebSocket();
   const [clientId, setClientId] = useState();
   const [messageData, setMessageData] = useState<{ [key: string]: any }>({});
 
+  const { socket } = useWebSocket();
+  const [bindfn, setBindfn] = useState<any>();
   useEffect(() => {
     if (socket) {
       socket.onmessage = (e) => {
@@ -117,10 +117,13 @@ const WebSocketProvider = (props) => {
           }
         }
       };
+      setBindfn(() => {
+        bind(socket);
+      });
     }
   }, [socket]);
   return (
-    <WebSocketContext.Provider value={{ socket, bind, clientId, messageData }}>
+    <WebSocketContext.Provider value={{ socket, bind: bindfn, clientId, messageData }}>
       {props.children}
     </WebSocketContext.Provider>
   );

@@ -6,9 +6,14 @@ import { cloneDeep, sum } from 'lodash';
 import numeral from 'numeral';
 import AreaMap from './areaMap';
 const PanelItemChart = (props: any) => {
-  const { type, data, config: oconfig } = props;
+  const { type, data, config: oconfig, ...retProps } = props;
   //const { type } = chart;
   const config = cloneDeep(oconfig);
+  const getField = (name: string) => {
+    return retProps?.fields?.find((v: any) => {
+      return v?.value == name;
+    });
+  };
   delete config.type;
   if (type == 'pie') {
     const x = config.colorField;
@@ -28,16 +33,20 @@ const PanelItemChart = (props: any) => {
         //   },
         // }}
         label={{
-          position: 'spider',
+          position: 'outside',
           text: (item: any) => {
             return `${item[x]}: ${numeral(item[y]).format('0,0')}`;
           },
+          transform: [{ type: 'overlapDodgeY' }],
+        }}
+        tooltip={(item: any, index, data, column) => {
+          return { value: `${item[x]}: ${numeral(item[y]).format('0,0')}` };
         }}
         annotations={[
           {
             type: 'text',
             style: {
-              text: `总计\n${sum_val}`,
+              text: `总计\n${numeral(sum_val).format('0,0')}`,
               x: '50%',
               y: '50%',
               textAlign: 'center',
@@ -53,13 +62,36 @@ const PanelItemChart = (props: any) => {
         ]}
         radius={0.9}
         innerRadius={0.6}
+        legend={{
+          color: {
+            maxCols: 1,
+            maxRows: 1,
+            position: 'top',
+          },
+        }}
         {...config}
       />
     );
   } else if (type == 'bar') {
     return <Bar data={data} scale={{ x: { paddingInner: 0.4 } }} {...config} />;
   } else if (type == 'column') {
-    return <Column data={data} scale={{ x: { paddingInner: 0.4 } }} {...config} />;
+    const x = config.xField;
+    const y = config.yField;
+    const field = getField(y);
+    return (
+      <Column
+        data={data}
+        scale={{ x: { paddingInner: 0.4 } }}
+        label={{ text: (d: any) => d?.[y], textBaseline: 'bottom' }}
+        style={{
+          // 圆角样式
+          radiusTopLeft: 10,
+          radiusTopRight: 10,
+        }}
+        tooltip={{ name: field?.label, field: y }}
+        {...config}
+      />
+    );
   } else if (type == 'area') {
     return <Area data={data} {...config} />;
   } else if (type == 'mapDots') {

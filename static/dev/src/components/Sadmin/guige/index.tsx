@@ -1,5 +1,6 @@
 import {
   DoubleRightOutlined,
+  HolderOutlined,
   PlusCircleOutlined,
   SettingOutlined,
   SyncOutlined,
@@ -13,11 +14,16 @@ import {
   ProFormList,
   ProFormText,
 } from '@ant-design/pro-components';
-import { App, Button, InputNumber, Space, Switch, Tooltip } from 'antd';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import { App, Button, ConfigProvider, Flex, InputNumber, Space, Switch, Tooltip } from 'antd';
+import React, { FC, useContext, useEffect, useRef, useState } from 'react';
 import ButtonDrawer from '../action/buttonDrawer';
 import { isStr } from '../checkers';
 import { saFormColumnsType, uid } from '../helpers';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
+import { SortableContext, arrayMove, useSortable } from '@dnd-kit/sortable';
+import { css } from '@emotion/css';
+import { FormListOperation } from 'antd/lib/form';
 const getData = (attributes: any[], values: any) => {
   const tableRows: any[] = [];
   const editableKeys: React.Key[] = [];
@@ -250,6 +256,136 @@ const GuigeTable: FC<{
   );
 };
 
+const DraggableItem = (props) => {
+  const { item } = props;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item?.id,
+  });
+  const commonStyle = {
+    transition: 'unset', // Prevent element from shaking after drag
+    height: '100%',
+    width: '100%',
+  };
+  // const style: React.CSSProperties = {
+  //   transform: CSS.Transform.toString(transform),
+  //   transition,
+  // };
+  const style = transform
+    ? {
+        ...commonStyle,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transition: isDragging ? 'unset' : transition, // Improve performance/visual effect when dragging
+        ...(isDragging ? { zIndex: 9999 } : {}),
+      }
+    : commonStyle;
+
+  // prevent preview event when drag end
+  const className = isDragging
+    ? css`
+        a {
+          pointer-events: none;
+        }
+      `
+    : css`
+        .guigehandle:hover {
+          color: rgba(42, 46, 54, 0.88);
+          background-color: #d3e7ff;
+        }
+      `;
+  const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
+
+  return (
+    <Flex ref={setNodeRef} style={style} className={className} {...attributes} gap="small">
+      <ProFormText allowClear={false} width="xs" rules={[{ required: true }]} name={['name']} />
+      <div style={{ height: 32, marginBlockEnd: '24px', lineHeight: '36px' }}>
+        <div
+          style={{
+            cursor: 'grab',
+            padding: 4,
+            borderRadius: 6,
+            fontSize: 14,
+            display: 'inline-flex',
+          }}
+          className="guigehandle"
+          {...listeners}
+          title="拖拽移动后排序"
+        >
+          <HolderOutlined />
+        </div>
+      </div>
+    </Flex>
+  );
+};
+
+const GuigeItems = ({ action, item }: { item: { [key: string]: any }; action: any }) => {
+  //const { item,action } = props;
+  const sensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 10 },
+  });
+  const [items, setItems] = useState(item.items);
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    //console.log('onDragEnd', active, over);
+    if (active.id !== over?.id) {
+      const nitem = action.getCurrentRowData();
+      const { items = [] } = nitem;
+      const activeIndex = items.findIndex((i) => i.id === active.id);
+      const overIndex = items.findIndex((i) => i.id === over?.id);
+      const new_sort_data = arrayMove(items, activeIndex, overIndex);
+      setItems([...new_sort_data]);
+      item.items = new_sort_data;
+      // setFileList([...new_sort_data]);
+      // props.onChange?.([...new_sort_data]);
+      action.setCurrentRowData?.(item);
+    }
+  };
+  return (
+    <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
+      <SortableContext
+        items={items?.map((i) => i.id)}
+        //strategy={horizontalListSortingStrategy}
+      >
+        <ProFormList
+          label="规格值"
+          name="items"
+          creatorRecord={() => ({ name: '', id: uid() })}
+          creatorButtonProps={{
+            creatorButtonText: '新建',
+            icon: <PlusCircleOutlined />,
+            type: 'link',
+            style: { width: 'unset' },
+          }}
+          min={1}
+          copyIconProps={false}
+          deleteIconProps={{ tooltipText: '删除' }}
+          itemRender={({ listDom, action }) => (
+            <div
+              style={{
+                display: 'inline-flex',
+                marginInlineEnd: 25,
+              }}
+            >
+              {listDom}
+              {action}
+            </div>
+          )}
+          onAfterAdd={() => {
+            const newitem = action.getCurrentRowData();
+            setItems(newitem.items);
+          }}
+          onAfterRemove={() => {
+            const newitem = action.getCurrentRowData();
+            setItems(newitem.items);
+          }}
+        >
+          {(f, index, inneraction) => {
+            return <DraggableItem item={inneraction.getCurrentRowData()} />;
+          }}
+        </ProFormList>
+      </SortableContext>
+    </DndContext>
+  );
+};
+
 const GuigePanel: FC<{
   value?: any;
   contentRender?: any;
@@ -359,33 +495,9 @@ const GuigePanel: FC<{
         creatorRecord={() => ({ name: '', items: [{ name: '', id: uid() }], id: uid() })}
         //initialValue={[{ name: '', items: [{ name: '', id: uid() }], id: uid() }]}
       >
-        <ProFormList
-          label="规格值"
-          name="items"
-          creatorRecord={() => ({ name: '', id: uid() })}
-          creatorButtonProps={{
-            creatorButtonText: '新建',
-            icon: <PlusCircleOutlined />,
-            type: 'link',
-            style: { width: 'unset' },
-          }}
-          min={1}
-          copyIconProps={false}
-          deleteIconProps={{ tooltipText: '删除' }}
-          itemRender={({ listDom, action }) => (
-            <div
-              style={{
-                display: 'inline-flex',
-                marginInlineEnd: 25,
-              }}
-            >
-              {listDom}
-              {action}
-            </div>
-          )}
-        >
-          <ProFormText allowClear={false} width="xs" rules={[{ required: true }]} name={['name']} />
-        </ProFormList>
+        {(topf, topindex, topaction) => {
+          return <GuigeItems item={topaction.getCurrentRowData()} action={topaction} />;
+        }}
       </ProFormList>
       <ProFormText name="attrs" hidden />
       <ProForm.Item

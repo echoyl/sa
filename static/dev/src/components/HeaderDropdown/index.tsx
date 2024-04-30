@@ -11,6 +11,7 @@ const HeaderDropdown: React.FC<HeaderDropdownProps> = ({ overlayClassName: cls, 
   return (
     <Dropdown
       //overlayClassName={classNames(className, cls)}
+      overlayClassName={cls}
       overlayStyle={{
         background: '#fff',
         borderRadius: 4,
