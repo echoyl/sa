@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\dev\crud\CrudService;
+use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\WebMenuService;
 use Illuminate\Support\Arr;
@@ -398,6 +399,50 @@ class CrudController extends ApiBaseController
         return $m;
     }
 
+    public function handleSearch($search = [])
+    {
+        $m = $this->model;
+        //系统渲染search数据后 还可以自定义handleSearch 修改注入信息
+        return [$m,$search];
+    }
+
+    /**
+     * 处理排序 如果请求有sort参数根据该参数排序，否则按照displayorder排序，默认按id倒叙
+     *
+     * @param \Illuminate\Database\Eloquent\Model $m
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function handleSort($m)
+    {
+        $has_id = false;
+        $sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
+        $sort = request('sort');
+        if ($sort) {
+            //添加排序检测
+            $sort = is_string($sort)?json_decode(request('sort'), true):$sort;
+            if (!empty($sort)) {
+                foreach ($sort as $skey => $sval) {
+                    $m = $m->orderBy($skey, $sort_type[$sval] ?? 'desc');
+                }
+
+                $has_id = true;
+            }
+        }
+
+        if (!empty($this->displayorder)) {
+            foreach ($this->displayorder as $val) {
+                $m = $m->orderBy($val[0], $val[1]);
+            }
+        } else {
+            //默认按照id排序
+            if (!$has_id) {
+                $m = $m->orderBy('id', 'desc');
+            }
+
+        }
+        return $m;
+    }
+
     public function index()
     {
         $psize = request('pageSize', $this->page_size);
@@ -407,15 +452,9 @@ class CrudController extends ApiBaseController
 
         $this->parseWiths($search);
 
-        if (method_exists($this, 'handleSearch')) {
-            [$m, $csearch] = $this->handleSearch($search);
-            $search = array_merge($search,$csearch);
-            //系统渲染search数据后 还可以自定义handleSearch 修改注入信息
-        } else {
-            $m = $this->model;
-        }
+        [$m, $csearch] = $this->handleSearch($search);
 
-        
+        $search = array_merge($search,$csearch);
 
         $m = $this->defaultSearch($m);
 
@@ -445,31 +484,9 @@ class CrudController extends ApiBaseController
             
         }
 
-        $has_id = false;
-        $sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
-        if (request('sort')) {
-            //添加排序检测
-            $sort = json_decode(request('sort'), true);
-            if (!empty($sort)) {
-                foreach ($sort as $skey => $sval) {
-                    $m = $m->orderBy($skey, $sort_type[$sval] ?? 'desc');
-                }
-
-                $has_id = true;
-            }
-        }
-
-        if (!empty($this->displayorder)) {
-            foreach ($this->displayorder as $val) {
-                $m = $m->orderBy($val[0], $val[1]);
-            }
-        } else {
-            //默认按照id排序
-            if (!$has_id) {
-                $m = $m->orderBy('id', 'desc');
-            }
-
-        }
+        //处理排序
+        $m = $this->handleSort($m);
+        
         if(!empty($this->select_columns))
         {
             $m = $m->select($this->select_columns);
@@ -1014,6 +1031,11 @@ class CrudController extends ApiBaseController
                     $_name = '_' . $name;
                     if ($encode) {
                         if (!empty($val)) {
+                            if(is_numeric($val))
+                            {
+                                //检测数据类型
+                                $val = [$val];
+                            }
                             $data[$_name] = json_encode($val);
                             $__val = [];
                             $val_len = count($val);
@@ -1402,5 +1424,60 @@ class CrudController extends ApiBaseController
     public function setThis()
     {
         return [];
+    }
+
+    public function export()
+    {
+        $model = HelperService::getDevModel($this->model->model_id);
+        if(!$model)
+        {
+            return $this->fail([1,'model error']);
+        }
+
+        [$m,] = $this->handleSearch();
+
+		$ids = request('ids');
+		if($ids)
+		{
+			$m = $m->whereIn('id',$ids);
+		}
+
+		$m = $this->defaultSearch($m);
+
+        $index = request('export_index',0);
+
+        if(!$model['setting'])
+        {
+            return $this->fail([1,'setting error']);
+        }
+
+        $setting = json_decode($model['setting'],true);
+
+        $export_config = Arr::get($setting,'export');
+
+        if(!$export_config)
+        {
+            return $this->fail([1,'export setting error']);
+        }
+
+        if($index)
+        {
+            $config = collect($export_config)->first(function($item) use($index){
+                return $item['value'] == $index;
+            });
+        }else
+        {
+            $config = $export_config[0];
+        }
+        //$ds->modelColumn2Export($model);
+        //d(1);
+        
+		$es = new ExcelService($config['config']);
+
+        $m = $this->handleSort($m);
+
+        $data = $m->with($this->with_column)->get()->toArray();
+		$ret = $es->export($data);
+		return $this->success($ret);
     }
 }

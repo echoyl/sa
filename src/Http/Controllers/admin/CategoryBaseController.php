@@ -15,7 +15,7 @@ class CategoryBaseController extends CrudController
 		$this->model = $model;
 		$post_parent_id = request('parent_id',0);
 		$cid = request('cid',0);
-		$this->cid = $cid;
+		$this->cid = $cid?:$this->cid;
 		$this->default_post = [
 			'parent_id'=>$post_parent_id?:$this->cid
 		];
@@ -24,7 +24,8 @@ class CategoryBaseController extends CrudController
 
 	public function beforePost(&$data, $id = 0, $item)
 	{
-		$cid = request('cid',0);
+		$cid = request('cid',$this->cid);
+
 		if(!isset($data['parent_id']) || !$data['parent_id'])
 		{
 			//未设置或者无父级id
@@ -45,7 +46,7 @@ class CategoryBaseController extends CrudController
         $this->parseWiths($search);
 		//由于先执行构造函数再执行中间件检测权限导致 无法在构造函数中获取中间件中设置的参数信息，导致这里要手动设置
 		$cid = request('cid',0);
-		$this->cid = $cid;
+		$this->cid = $cid?:$this->cid;
 		$displayorder = [];
 		$sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
         if (request('sort')) {
