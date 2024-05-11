@@ -65,11 +65,9 @@ class PostsController extends CrudController
 		}
 	}
 
-	public function handleSearch()
+	public function handleSearch($search = [])
 	{
 		$m = $this->model;
-
-		$search = [];
 
 		$keyword = request('keyword','');
 		if($keyword)

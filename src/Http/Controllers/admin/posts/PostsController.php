@@ -51,11 +51,9 @@ class PostsController extends CrudController
         ];
     }
 
-    public function handleSearch()
+    public function handleSearch($search = [])
     {
         $m = $this->model;
-
-        $search = [];
 
         $cids = (new Category)->childrenIds($this->cid);
         $cids = array_unique($cids);

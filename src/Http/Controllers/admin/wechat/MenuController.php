@@ -136,11 +136,9 @@ class MenuController extends CrudController
 		return ['code'=>0,'msg'=>'拉取成功'];
 	}
 
-	public function handleSearch()
+	public function handleSearch($search = [])
 	{
 		$m = $this->model;
-
-		$search = [];
 
 		$keyword = request('keyword','');
 		if($keyword)

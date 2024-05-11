@@ -38,16 +38,16 @@ class RelationController extends CrudController
 
     }
 
-    public function handleSearch()
+    public function handleSearch($search = [])
     {
         $m = $this->model;
         $m = $m->where(['model_id'=>$this->model_id]);
         $ds = new DevService;
-        $search = [
+        $search = array_merge([
             'columns'=>$this->getModelColumns($this->model_id),
             'models'=>$ds->getModelsTree(),
             'allModels'=>$this->allModels(),
-        ];
+        ],$search);
         return [$m,$search];
 
     }

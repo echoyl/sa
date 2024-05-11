@@ -29,11 +29,11 @@ class LogController extends CrudController
 	}
 
 
-	public function handleSearch()
+	public function handleSearch($search = [])
 	{
 		$m = $this->model;
 
-		$search = [];
+		
 		
 		$startTime = request('startTime','');
 		$endTime = request('endTime','');
