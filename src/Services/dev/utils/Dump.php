@@ -200,14 +200,28 @@ class Dump
         return [0, '操作成功，模型:' . $model_count . ' 菜单:' . $menu_count . ' 关系:' . $relation_count];
     }
 
-    public function exportModel($model)
+    public function exportModel($model_id)
     {
+        //新增递归将所有上级数据也都导出（当导出一个新模型的时候如果有上级的话程序就炸了）暂时不去重了
+        $model = Model::where(['id'=>$model_id])->with(['relations'])->first();
+        $datas = [];
+        if(!$model)
+        {
+            return $datas;
+        }
+        $model = $model->toArray();
+        if($model['parent_id'])
+        {
+            //存在上级 导出上级数据
+            $datas = array_merge($datas,$this->exportModel($model['parent_id']));
+        }
         $relations = $model['relations'];
         unset($model['relations']);
-        return [
+        $datas[] = [
             'model' => $model,
             'relations' => $relations
         ];
+        return $datas;
     }
 
     public function export($ids = [], $type = 'model')
@@ -222,23 +236,21 @@ class Dump
         $json = [];
         if($type == 'model')
         {
-            $models = Model::whereIn('id', $ids)->with(['relations'])->get()->toArray();
-            foreach ($models as $model) {
-                $json[] = $this->exportModel($model);
+            foreach ($ids as $model_id) 
+            {
+                $json = array_merge($json,$this->exportModel($model_id));
             }
         }else
         {
             //导出菜单
-            $menus = Menu::whereIn('id', $ids)->with(['adminModel.relations'])->get()->toArray();
-            foreach ($menus as $menu) {
-                $item = [];
-                $model = $menu['admin_model'];
-                if($model)
+            $menus = Menu::whereIn('id', $ids)->get()->toArray();
+            foreach ($menus as $menu) 
+            {
+                $json[] = ['menu'=>$menu];
+                if($menu['admin_model_id'])
                 {
-                    $item = $this->exportModel($model);
+                    $json = array_merge($json,$this->exportModel($menu['admin_model_id']));
                 }
-                unset($menu['admin_model']);
-                $json[] = array_merge(['menu'=>$menu],$item);
             }
         }
 

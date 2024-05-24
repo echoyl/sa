@@ -10,7 +10,7 @@ class FormService extends BaseService
     
     /**
      * 所有编辑操作
-     *
+     * 除了增加组的操作外其它操作都要检测是否有空组，空组的话自动删除
      * @param [type] $base
      * @param ['edit','add','addTab','addGroup','delete'] $action_type
      * @param ['base','more'] $form_type
@@ -19,19 +19,50 @@ class FormService extends BaseService
     public function edit($base,$action_type = 'edit',$form_type = 'base')
     {
         $config = $this->config;
-        $name = $this->name;
-
         
         $uid = Arr::get($base,'uid');
 
         if(!isset($config['tabs']))
         {
-            $config['tabs'] = [];
+            //未设置默认设置一个初始化tab
+            $config['tabs'] = [
+                [
+                    'tab'=>['title'=>'基础信息'],
+                    'config'=>[],
+                    'uid'=>HelperService::uuid()
+                ]
+            ];
         }
 
         $tabs = $config['tabs'];
 
-        [$active,$old_value] = $this->getColumnIndex($tabs,$uid);
+        if($action_type == 'setColumns')
+        {
+            //form 快速设置列字段展示
+            //勾选后未增加操作 会增加一个组加当前字段的列。
+            $checked = $base['checked'];
+            $key = $base['key'];
+            unset($base['checked']);
+            if($checked)
+            {
+                //勾选 新增
+                //增加一个group 
+                $action_type = 'quickAdd';
+                $active = [0];
+                $old_value = $tabs[0];
+            }else
+            {
+                //取消勾选 删除
+                $action_type = 'delete';
+                [$active,$old_value] = $this->getColumnIndex($tabs,$key,'key');
+            }
+            //d($active,$old_value);
+        }else
+        {
+            [$active,$old_value] = $this->getColumnIndex($tabs,$uid);
+        }
+
+        //d('test');
 
         $new_uid = HelperService::uuid();
 
@@ -122,6 +153,22 @@ class FormService extends BaseService
                 // 和 panel 不一样，span计算这里不做判断
             }
             $tabs = $this->formatTopData($active,$tabs);
+        }elseif($action_type == 'quickAdd')
+        {
+            //快速新增列
+            $keys = implode('.',$active);
+            $base['uid'] = $new_uid;
+            $group = [
+                'columns'=>[
+                    $base
+                ],
+                'uid'=>HelperService::uuid()
+            ];
+
+            $active = [0,'conifg',count($tabs[0]['config']) - 1];
+            //在组中插入列
+            $old_value['config'][] = $group;
+            Arr::set($tabs,$keys,$old_value);
         }else
         {
             //添加列
@@ -149,10 +196,37 @@ class FormService extends BaseService
             }
             
         }
+        if($action_type != 'addGroup')
+        {
+            //处理添加分组外其他操作都要删除掉空的分组
+            $tabs = $this->clearEmptyGroup($tabs);
+        }
         $config['tabs'] = $tabs;
-
-        $this->model->where(['id'=>$this->id])->update([$name=>json_encode($config)]);
+        $this->updateConfig($config);
         return;
+    }
+
+    /**
+     * 清除空组
+     *
+     * @param [type] $tabs
+     * @return void
+     */
+    public function clearEmptyGroup($tabs)
+    {
+        foreach($tabs as $tab_key=>$tab)
+        {
+            foreach($tab['config'] as $config_key=>$config)
+            {
+                if(empty($config['columns']))
+                {
+                    unset($tab['config'][$config_key]);
+                }
+            }
+            $tabs[$tab_key] = $tab;
+        }
+
+        return $tabs;
     }
 
     public function sort($columns)
@@ -239,6 +313,7 @@ class FormService extends BaseService
             return false;
         }
 
+        $tabs = $this->clearEmptyGroup($tabs);
 
         $config['tabs'] = $tabs;
 
@@ -254,7 +329,7 @@ class FormService extends BaseService
      * @param [type] $uid
      * @return void
      */
-    public function getColumnIndex($tabs,$uid)
+    public function getColumnIndex($tabs,$uid,$key_name = 'uid')
     {
         $index = $index_data = false;
         foreach($tabs as $tk => $tab)
@@ -276,7 +351,7 @@ class FormService extends BaseService
                     {
                         foreach($group['columns'] as $ck => $column)
                         {
-                            if($column['uid'] == $uid)
+                            if($column[$key_name] == $uid)
                             {
                                 $index = [$tk,'config',$gk,'columns',$ck];
                                 $index_data = $column;

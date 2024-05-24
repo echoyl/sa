@@ -120,4 +120,17 @@ class BaseService
         
         return $tabs;
     }
+
+    /**
+     * 更新当前类型的字段信息
+     *
+     * @param [type] $config
+     * @return void
+     */
+    public function updateConfig($config)
+    {
+        $name = $this->name;
+        $this->model->where(['id'=>$this->id])->update([$name=>json_encode($config)]);
+        return;
+    }
 }

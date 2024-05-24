@@ -107,7 +107,16 @@ class SocketService
             $where = ['client_id'=>$id];
         }
 
-        $model->where($where)->delete();
+        $client_data = $model->where($where)->first();
+
+        if(!$client_data)
+        {
+            return;
+        }
+
+        $model->where(['id'=>$client_data->id])->delete();
+        //发送ws消息推送
+        Gateway::sendToClient($client_data->client_id, json_encode(['type' => 'info', 'data' => ['message'=>'logout']]));
         return;
     }
 
