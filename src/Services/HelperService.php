@@ -3,7 +3,7 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\dev\Model;
 use Exception;
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -365,25 +365,19 @@ class HelperService
 
     public static function asynUrl($url,$data = [],$method = 'GET')
     {
-        $client = new Client();
-
-		$options = [
-			'headers' => [
-				'Authorization' => request()->header('Authorization'),
-				'Sa-Remember' => request()->header('Sa-Remember'),
-			],
-			'timeout'=>1
-		];
-        if($method == 'GET')
-        {
-            $options['query'] = $data;
-        }else
-        {
-            $options['form_params'] = $data;
-        }
+        $res = Http::withHeaders([
+            'Authorization' => request()->header('Authorization'),
+            'Sa-Remember' => request()->header('Sa-Remember'),
+        ])->timeout(1);
 
 		try{
-			$client->request($method, $url, $options);
+            if($method == 'GET')
+            {
+                $res->get($url,$data);
+            }else
+            {
+                $res->post($url,$data);
+            }
 		}catch(Exception $e)
 		{
 			//异步执行url 无返回
@@ -648,50 +642,33 @@ class HelperService
         return preg_match("/^1\d{10}$/",$mobile);
     }
 
-    public static function get($url,$query)
+    public static function get($url,$query = [])
     {
-        $client = new Client();
         //Log::channel('daily')->info('request query:',['query'=>$query,'url'=>$url]);
 
         try{
-            $res = $client->request('GET',$url,[
-                'query'=>$query,
-                'timeout'=>10,
-            ]);
+            $res = Http::timeout(10)->get($url,$query);
         }catch(Exception $e)
         {
             return [1,$e->getMessage()];
         }
 
-        
-        $content = $res->getBody()->getContents();
-
-        //Log::channel('daily')->info('request get result:',['content'=>$content,'url'=>$url]);
-
-        $data = json_decode($content,true);
+        $data = $res->json();
+    
         return [0,$data];
     }
 
     public static function post($url,$post)
     {
         //Log::channel('daily')->info('post start:',['params'=>$post]);
-
-        $client = new Client();
-        //Log::channel('daily')->info('try post start:',['params'=>$post]);
         try{
-            $res = $client->request('POST',$url,[
-                'form_params'=>$post,
-                'timeout'=>10,
-            ]);
+            $res = Http::timeout(10)->post($url,$post);
         }catch(Exception $e)
         {
             return [1,$e->getMessage()];
         }
-        
-        $content = $res->getBody()->getContents();
 
-        //Log::channel('daily')->info('request post result:',['content'=>$content,'url'=>$url]);
-        $data = json_decode($content,true);
+        $data = $res->json();
         
         return [0,$data];
     }
