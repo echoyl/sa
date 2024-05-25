@@ -13,7 +13,7 @@ use Illuminate\Support\Arr;
 /**
  * 后台crud基础类 都走这个
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
- * @method mixed beforePost(&$data,$id = 0,$item)  提交数据前的检测数据
+ * @method mixed beforePost(&$data,$id = 0,$item = [])  提交数据前的检测数据
  * @method mixed beforeMultiplePost(&$data,$id = []) 批量操作前检测
  * @method mixed handleSearch($search = []) 数据列表中额外的搜索调价等
  * @method mixed postData(&$item) 获取数据时格式化数据
