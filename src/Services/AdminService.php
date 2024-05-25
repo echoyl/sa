@@ -157,7 +157,7 @@ class AdminService
         //新增 体验权限也能看到 开发菜单
         $setting['dev'] = $dev && ($is_super || $is_dev);
         $setting['lang'] = Arr::get($setting,'lang',true);
-        $setting['splitMenus'] = Arr::get($setting,'splitMenus',false);
+        $setting['splitMenus'] = Arr::get($setting,'splitMenus',true);
 
         //加入开发环境时 全局数据
         if($dev)
