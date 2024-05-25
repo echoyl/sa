@@ -22,7 +22,7 @@ class CategoryBaseController extends CrudController
 
 	}
 
-	public function beforePost(&$data, $id = 0, $item)
+	public function beforePost(&$data, $id = 0, $item = [])
 	{
 		$cid = request('cid',$this->cid);
 
