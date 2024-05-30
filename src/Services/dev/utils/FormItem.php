@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
+use Echoyl\Sa\Services\admin\LocaleService;
 use Illuminate\Support\Arr;
 
 class FormItem
@@ -238,12 +239,13 @@ class FormItem
         }elseif(isset($d['title']))
         {
             //默认给每个表单设置 placeholder
+
             if(in_array($form_type,['select','cascader','tmapInput','switch']))
             {
-                $this->data['fieldProps']['placeholder'] = '请选择'.$d['title'];
+                $this->data['fieldProps']['placeholder'] = $this->placeholder().$d['title'];
             }else
             {
-                $this->data['fieldProps']['placeholder'] = '请输入'.$d['title'];
+                $this->data['fieldProps']['placeholder'] = $this->placeholder('input').$d['title'];
             }
         }
 
@@ -667,12 +669,38 @@ class FormItem
         return;
     }
 
+    /**
+     * 国际化 placeholder
+     *
+     * @param 'select' | 'input' $type
+     * @return void
+     */
+    private function placeholder($type = 'select')
+    {
+        
+        
+        if(LocaleService::enable())
+        {
+            $arr = [
+                'select'=>"{{t('form.pleaseselect')}}",
+                'input'=>"{{t('form.pleasetypein')}}",
+            ];
+        }else
+        {
+            $arr = [
+                'select'=>'请选择',
+                'input'=>'请输入',
+            ];
+        }
+        return $arr[$type]??'';
+    }
+
     public function cascader()
     {
         //多选分类
         $this->data['requestDataName'] = $this->schema['name'].'s';
         $this->data['fieldProps'] = [
-            'placeholder'=>'请选择'.$this->schema['title'],
+            'placeholder'=>$this->placeholder().$this->schema['title'],
             'showCheckedStrategy'=>'SHOW_CHILD'
         ];
         if($this->schema['form_type'] == 'cascaders')

@@ -216,13 +216,16 @@ class FormService extends BaseService
     {
         foreach($tabs as $tab_key=>$tab)
         {
-            foreach($tab['config'] as $config_key=>$config)
+            $configs = $tab['config'];
+
+            foreach($configs as $config_key=>$config)
             {
                 if(empty($config['columns']))
                 {
-                    unset($tab['config'][$config_key]);
+                    unset($configs[$config_key]);
                 }
             }
+            $tab['config'] = array_values($configs);
             $tabs[$tab_key] = $tab;
         }
 
@@ -284,6 +287,7 @@ class FormService extends BaseService
                 [$keys,$last_key,$top_data] = $this->getTopData($active,$tabs);
                 $top_data = HelperService::arrayMove($top_data,$active[4],$over[4]);
                 Arr::set($tabs,$keys,$top_data);
+                //$tabs = $this->formatTopData($active,$tabs);
             }else
             {
                 //different group

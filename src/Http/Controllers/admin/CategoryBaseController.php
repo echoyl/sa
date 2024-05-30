@@ -63,7 +63,9 @@ class CategoryBaseController extends CrudController
 			$this->model = $this->model->select($this->select_columns);
 		}
 
-		$data = HelperService::getChildFromData($this->model->get()->toArray(),function($item){
+		$m = $this->defaultSearch($this->model);
+
+		$data = HelperService::getChildFromData($m->get()->toArray(),function($item){
             $this->parseData($item,'decode','list');
             return $item;
         },$displayorder,$this->cid);

@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\perm\Log;
 use Echoyl\Sa\Models\perm\User;
+use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\admin\SocketService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\MenuService;
@@ -116,6 +117,9 @@ class AdminService
 
     public static function setting($user = false)
     {
+        $ds = new DevService;
+        $ds->allMenu(true);
+        $ds->allModel(true);
         $ss = new SetsService();
         $setting = $ss->getSet('setting');
 
@@ -133,7 +137,9 @@ class AdminService
         $setting['baseurl'] = Arr::get($setting,'baseurl','/antadmin/');
         $setting['logo'] = $setting['logo']['url']?:false;
         $setting['loginBgImgage'] = $setting['loginBgImgage']['url']?:false;
+        $setting['loginBgCardColor'] = Arr::get($setting,'loginBgCardColor','none');
         $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
+        $setting['colorPrimary'] = Arr::get($setting,'colorPrimary','#006eff');
         $login_type = Arr::get($setting,'loginType',[]);
 
         if(in_array($setting['loginTypeDefault'],$login_type))
@@ -158,7 +164,7 @@ class AdminService
         $setting['dev'] = $dev && ($is_super || $is_dev);
         $setting['lang'] = Arr::get($setting,'lang',true);
         $setting['splitMenus'] = Arr::get($setting,'splitMenus',true);
-
+        $setting['locales'] = LocaleService::getSetting();
         //加入开发环境时 全局数据
         if($dev)
         {
