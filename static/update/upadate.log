@@ -55,3 +55,31 @@ CREATE TABLE `la_wechat_offiaccount_admin` (
   `openid` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'openid',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+2024-05-30
+CREATE TABLE `la_locale_category` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
+  `titlepic` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '图片',
+  `desc` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '描述',
+  `state` int NOT NULL DEFAULT '1' COMMENT '状态',
+  `updated_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `displayorder` int NOT NULL DEFAULT '0' COMMENT '排序权重',
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '标识',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `la_locale_config` (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `title` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称',
+  `desc` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '描述',
+  `parent_id` int NOT NULL DEFAULT '0' COMMENT '上级Id',
+  `state` int NOT NULL DEFAULT '1' COMMENT '状态',
+  `key` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '键值',
+  `message` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '内容',
+  `category_id` int NOT NULL DEFAULT '0' COMMENT '分类',
+  `updated_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `displayorder` int NOT NULL DEFAULT '0' COMMENT '排序权重',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
