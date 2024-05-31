@@ -1093,6 +1093,7 @@ class DevService
             
             return [
                 'id'=>$item['id'],
+                'label'=>$item['title'],
                 'title'=>$item['title'],
                 'value'=>$item['id'],
                 'isLeaf'=>true,
