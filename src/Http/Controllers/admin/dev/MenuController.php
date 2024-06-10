@@ -87,7 +87,7 @@ class MenuController extends CrudController
         //d($data);
         
         $search['menus'] = $ds->getMenusTree();
-        return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
+        return $this->list($data,count($data),$search);
 
     }
 

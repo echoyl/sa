@@ -29,6 +29,14 @@ class UserController extends CrudController
 		        ],
 		        'where_type' => 'like',
 		    ],
+			[
+		        'name' => 'keyword',
+		        'columns' => [
+		            'username',
+		            'mobile',
+		        ],
+		        'where_type' => 'like',
+		    ],
 		    [
 		        'name' => 'roleid',
 		        'columns' => [

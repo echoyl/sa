@@ -52,7 +52,7 @@ class ModelController extends CrudController
         $search['foldermodels'] = $ds->getModelsFolderTree();//模型文件夹
         $search['menus'] = $ds->getMenusTree();//增加快速创建内容模块 选择创建到菜单下
         $search['models'] = $ds->getModelsTree();//可选模型
-        return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
+        return $this->list($data,count($data),$search);
     }
 
     public function copyToFolder()

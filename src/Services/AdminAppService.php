@@ -398,11 +398,15 @@ class AdminAppService implements SaAdminAppServiceInterface
         $source10 = [
             'label' => '表单字段',
             'value' => 'source10',
-            'fields' => ['date[]'],
+            'fields' => [
+                ['value'=>'date[]','label'=>'查询的日期']
+            ],
+            'initialValues'=>[
+                'date[]'=>[date("Y-m-d", strtotime("-7 days")), date("Y-m-d")]
+            ],
             'data' => [
                 ['name' => 'date[]', 'props' => [
                     'fieldProps' => [
-                        'defaultValue' => [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")],
                         'presets' => [
                             ['label' => '近7日', 'value' => [date("Y-m-d", strtotime("-7 days")), date("Y-m-d")]],
                             ['label' => '近30日', 'value' => [date("Y-m-d", strtotime("-30 days")), date("Y-m-d")]],
