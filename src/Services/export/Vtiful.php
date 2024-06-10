@@ -20,6 +20,10 @@ class Vtiful
             'path' => storage_path('app/public/'.$this->folder) // xlsx文件保存路径
         ];
         $excel  = new Excel($vconfig);
+        if(!file_exists($vconfig['path']))
+        {
+            mkdir($vconfig['path']);
+        }
         $this->config = $config;
         $this->excel = $excel->fileName($config['filename'], 'sheet1');
 

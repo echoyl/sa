@@ -31,7 +31,8 @@ class Utils
         'modalSelect'=>'modalSelect',
         'saTransfer'=>'saTransfer',
         'html'=>'html',
-        'tmapShow'=>'tmapShow'
+        'tmapShow'=>'tmapShow',
+        'iconSelect'=>'iconSelect'
     ];
 
     public static $title_arr = [

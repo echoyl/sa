@@ -15,6 +15,12 @@ class UploadService
         'jpg', 'jpeg', 'png', 'gif','ico'
     ];
 
+    var $tmp_enable;
+
+    public function __construct($tmp_enable = true)
+    {
+        $this->tmp_enable = $tmp_enable;
+    }
     
 
     public function store(Request $request, $formname = 'file', $type = 0, $insert_db = false,$toSize = false)
@@ -42,13 +48,15 @@ class UploadService
             $ext = 'xls';
         }
 
+        $upload_tmp_enable = config('sa.upload_tmp_enable',false);
+
         $is_image = in_array($ext, $this->image_ext_arr) ? 1 : 0;
 
         $file_type = $is_image == 1 ? 'images' : 'files';
 
         $folder_name = $file_type . '/' . date("Ym");
 
-        $path = $file->store($folder_name);
+        $path = $file->store($upload_tmp_enable && $this->tmp_enable?'tmp/'.$folder_name:$folder_name);
 
         if ($is_image) {
             $new_path = storage_path('app/public/' . $path);
@@ -175,17 +183,23 @@ class UploadService
         }
         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif']) ? 1 : 0;
 
+        $upload_tmp_enable = config('sa.upload_tmp_enable',false);
+
         $fileType = !$isImage ? 'files' : 'images';
         if ($isImage) {
-            $path = $file->store('user/' . $fileType . '/' . date("Ym"), 'public');
+            $filepath = 'user/' . $fileType . '/' . date("Ym");
+            $filepath = $upload_tmp_enable && $this->tmp_enable?'tmp/'.$filepath:$filepath;
+            $path = $file->store($filepath, 'public');
             $newPath = storage_path('app/public/' . $path);
         } else {
             $filename = uniqid() . '.' . $ext;
-            $public_path = storage_path('app/public/user/files/' . date("Ym"));
+            $public_path = storage_path($upload_tmp_enable && $this->tmp_enable?'app/public/tmp/user/files/' . date("Ym"):'app/public/user/files/' . date("Ym"));
             $file->move($public_path, $filename);
             $path = 'user/files/' . date("Ym") . '/' . $filename;
             $newPath = $public_path . '/' . $filename;
         }
+        
+
         //生成缩略图
         $thumb_url = $path;
         if ($isImage && $thumb) {

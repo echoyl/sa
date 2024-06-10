@@ -1,25 +1,11 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
-use Echoyl\Sa\Services\dev\crud\CrudInterface;
-use Echoyl\Sa\Services\HelperService;
-use Illuminate\Support\Arr;
+use Echoyl\Sa\Services\dev\crud\BaseField;
 
-class Json implements CrudInterface
+
+class Json extends BaseField
 {
-    var $config;
-    var $col;
-    var $name;
-    public function __construct($config)
-    {
-        $this->config = $config;
-
-        $this->col = $this->config['col'];
-
-        $this->name = $this->col['name'];
-
-    }
-
     public function encode($options = [])
     {
 
@@ -81,12 +67,5 @@ class Json implements CrudInterface
         }
 
         return $data;
-    }
-
-    public function search($m,$options = [])
-    {
-        //$search_val = $options['search_val'];
-
-        return $m;
     }
 }

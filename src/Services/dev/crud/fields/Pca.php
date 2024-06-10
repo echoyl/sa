@@ -1,11 +1,11 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
-use Echoyl\Sa\Services\dev\crud\CrudInterface;
+use Echoyl\Sa\Services\dev\crud\BaseField;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
-class Pca implements CrudInterface
+class Pca extends BaseField
 {
     var $config;
     var $keys = ['province','city','area'];
@@ -13,9 +13,7 @@ class Pca implements CrudInterface
     var $col;
     public function __construct($config)
     {
-        $this->config = $config;
-
-        $this->col = $this->config['col'];
+        parent::__construct($config);
 
         $col = $this->col;
 

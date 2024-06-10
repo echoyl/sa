@@ -804,7 +804,7 @@ class DevService
                 {
                     $can_be_null_columns[] = $column['name'];
                 }
-                if(!isset($column['form_type']) || in_array($column['form_type'],['textarea','dateTime','tinyEditor','datetime','digit']))
+                if(!isset($column['form_type']) || in_array($column['form_type'],['textarea','dateTime','datetime','digit']))
                 {
                     //不存在type 或者一些不需要parse的字段 直接过滤
                     continue;
@@ -965,6 +965,7 @@ class DevService
                         $d['value'] = $relation['foreign_key'];
                     }
                 }
+                //富文本
                 $parse_columns[] = $d;
             }
         }

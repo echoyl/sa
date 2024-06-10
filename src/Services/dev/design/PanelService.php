@@ -67,7 +67,7 @@ class PanelService extends BaseService
             $new_chart = Arr::get($defaultConfig,'chart',[]);
             $chart = array_merge($chart,$new_chart);
             Arr::set($defaultConfig,'chart',$chart);
-        }elseif($type == 'tab')
+        }elseif($type == 'tab' || $type == 'rows')
         {
             $base['rows'] = $active_data['rows']??[];
         }

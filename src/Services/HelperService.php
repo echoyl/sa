@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\dev\Model;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
@@ -194,6 +195,23 @@ class HelperService
 
     public static function enImages($data, $keys = [])
     {
+        foreach($keys as $key)
+        {
+            $config = [
+                'data'=>$data,'col'=>['name'=>$key,'type'=>'image','default'=>''],
+            ];
+            $cs = new CrudService($config);
+            //make后的图片数据变成了json需要重新转换一下
+            $data = $cs->make('image',[
+                'encode'=>true,
+                'isset'=>isset($data[$key]),
+            ]);
+            if($data[$key])
+            {
+                $data[$key] = json_decode($data[$key],true);
+            }
+        }
+
         return self::parseImages($data, $keys);
     }
     /**

@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * @method mixed checkPost($item) 检测是否可以提交数据
  * @method mixed listData(&$list) 列表数据格式化
  * @method mixed setThis() 设置一个值 在select 获取数据的时候可以当做filter条件使用
+ * @method mixed exportFormatData($val) 导出数据格式化数据方法
  * @property \App\Services\AdminAppService $service
  */
 class CrudController extends ApiBaseController
@@ -727,6 +728,7 @@ class CrudController extends ApiBaseController
             }
             //d($data);
             if (!empty($id)) {
+                $data['originData'] = $item;
                 $this->parseData($data, 'encode', 'update');
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
@@ -764,7 +766,6 @@ class CrudController extends ApiBaseController
             
             return $ret ?: $this->success($new_data);
         } else {
-            
             $this->parseData($item, 'decode');
             $this->parseWiths($item);
             if (method_exists($this, 'postData')) {
@@ -1006,17 +1007,6 @@ class CrudController extends ApiBaseController
                     }
                     
                     break;
-                case 'image':
-                case 'file':
-                    if(!$val && !$encode)
-                    {
-                        $val = '__unset';
-                    }else
-                    {
-                        $par = $type == 'image'?['p'=>'s']:[];
-                        $val = HelperService::uploadParse($val ?? '', $encode ? true : false,$par);
-                    }
-                    break;
                 case 'aliyunVideo':
                     if(!$val && !$encode)
                     {
@@ -1115,8 +1105,15 @@ class CrudController extends ApiBaseController
                     break;
                 case 'pca'://所有独立的类型 都在此集合
                 case 'json':
+                case 'image':
+                case 'file':
+                case 'tinyEditor':
+                case 'price':
+                case 'mprice':
+                case 'mmprice':
                     $data = $cs->make($type,[
-                        'encode'=>$encode
+                        'encode'=>$encode,
+                        'isset'=>$isset,
                     ]);
                     //之后 字段类型都 抽离后 下面两行可以删除
                     $val = '';
@@ -1148,24 +1145,8 @@ class CrudController extends ApiBaseController
                         }
                     }
                     break;
-                case 'price':
-                    if($encode)
-                    {
-                        if($isset)
-                        {
-                            $val = bcmul($val,100);
-                        }
-                    }else
-                    {
-                        if($isset)
-                        {
-                            $val = floatval($val / 100);
-                        }else
-                        {
-                            $val = '__unset';
-                        }
-                    }
-                    break;
+                
+
                 case 'with':
                     if($isset && $val)
                     {
@@ -1344,6 +1325,10 @@ class CrudController extends ApiBaseController
                 $data[$name] = $val;
             }
         }
+        if(isset($data['originData']))
+        {
+            unset($data['originData']);
+        }
 
         return $unsetNames;
     }
@@ -1477,7 +1462,9 @@ class CrudController extends ApiBaseController
         $m = $this->handleSort($m);
 
         $data = $m->with($this->with_column)->get()->toArray();
-		$ret = $es->export($data);
+		$ret = $es->export($data,method_exists($this, 'exportFormatData')?function($val){
+            return $this->exportFormatData($val);
+        }:false);
 		return $this->success($ret);
     }
 }

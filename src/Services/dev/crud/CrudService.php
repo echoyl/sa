@@ -1,8 +1,11 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\dev\crud\fields\Content;
 use Echoyl\Sa\Services\dev\crud\fields\Json;
 use Echoyl\Sa\Services\dev\crud\fields\Pca;
+use Echoyl\Sa\Services\dev\crud\fields\Price;
+use Echoyl\Sa\Services\dev\crud\fields\Upload;
 
 /**
  * crud字段的渲染
@@ -17,7 +20,13 @@ class CrudService
         $this->config = $config;
         $this->items = [
             'pca'=>Pca::class,
-            'json'=>Json::class
+            'json'=>Json::class,
+            'image'=>Upload::class,
+            'file'=>Upload::class,
+            'tinyEditor'=>Content::class,
+            'price'=>Price::class,
+            'mprice'=>Price::class,
+            'mmprice'=>Price::class,
         ];
     }
 
@@ -28,8 +37,13 @@ class CrudService
         //检测字段是否设置
         $fieldname = $this->config['col']['name'];
         $post = $this->config['data'];
+
+        $originData = $post['originData']??[];
+
         $isset = isset($post[$fieldname])?true:false;
         $val = $isset ? $post[$fieldname] : $this->config['col']['default'];//当前字段的值
+
+        $origin_val = $originData[$fieldname]??false;
 
         $cls = $this->getClass($name);
 
@@ -41,7 +55,9 @@ class CrudService
 
         $options = array_merge([
             'isset'=>$isset,
-            'val'=>$val
+            'val'=>$val,
+            'type'=>$name,
+            'origin_val'=>$origin_val
         ],$options);
         
         $data = $cls->$method($options);
@@ -63,6 +79,12 @@ class CrudService
         return $m;
     }
 
+    /**
+     * 获取字段方法
+     *
+     * @param [type] $name
+     * @return BaseField
+     */
     public function getClass($name)
     {
         if(!isset($this->items[$name]))

@@ -25,16 +25,16 @@ class ExcelService
     }
 
     
-    public function export($data)
+    public function export($data,$formatData = false)
     {
         $v = new Vtiful($this->config);
 
-        $data = $this->parseData($data);
+        $data = $this->parseData($data,$formatData);
 
         return $v->export($data);
     }
 
-    public function parseData($data)
+    public function parseData($data,$formatData)
     {
         $head = Arr::get($this->config,'head');
 
@@ -43,9 +43,13 @@ class ExcelService
         $_data = [];
         foreach ($data as $datakey => $val) 
         {
+            if($formatData)
+            {
+                $val = $formatData($val);
+            }
             $data = [];
             foreach ($columns as $col) {
-                $index = $col['key'];
+                $index = $col['key']??$col['cname'];
                 $type = $col['type'] ?? '';
                 $add_t = $col['t'] ?? '';
                 $default = $col['default'] ?? '';

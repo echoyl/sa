@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Setting;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 
 class SetsService
@@ -70,6 +71,24 @@ class SetsService
             // {
             //     $post_data = HelperService::parseImages($post_data,$img_fields);
             // }
+            //d($post_data);
+            $img_fields = HelperService::getImageFields($post_data);
+            foreach($img_fields as $imgf)
+            {
+                $config = [
+                    'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>'image','default'=>''],
+                ];
+                $cs = new CrudService($config);
+                //make后的图片数据变成了json需要重新转换一下
+                $post_data = $cs->make('image',[
+                    'encode'=>true,
+                    'isset'=>true,
+                ]);
+                if($post_data[$imgf])
+                {
+                    $post_data[$imgf] = json_decode($post_data[$imgf],true);
+                }
+            }
             //d($post_data);
 
 			$data = [
