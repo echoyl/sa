@@ -22,4 +22,5 @@ return [
     'adminAppService'=>AdminAppService::class,//后台通用service
     'admin_upload_max_wh'=>1000,//后台上传图片最大的宽高，超过该值后会压缩至该宽高
     'user_upload_max_wh'=>1200,//前台上传图片最大的宽高，超过该值后会压缩至该宽高
+    'upload_tmp_enable'=>true,//上传是否开启tmp，开启后上传数据都会存在tmp中保存数据后才会移动文件（tmp文件过期后删除）
 ];
