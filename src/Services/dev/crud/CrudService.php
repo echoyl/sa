@@ -1,11 +1,26 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\dev\crud\fields\AliyunVideo;
+use Echoyl\Sa\Services\dev\crud\fields\Cascader;
+use Echoyl\Sa\Services\dev\crud\fields\Config;
 use Echoyl\Sa\Services\dev\crud\fields\Content;
+use Echoyl\Sa\Services\dev\crud\fields\Date;
 use Echoyl\Sa\Services\dev\crud\fields\Json;
+use Echoyl\Sa\Services\dev\crud\fields\Latlng;
+use Echoyl\Sa\Services\dev\crud\fields\Link;
+use Echoyl\Sa\Services\dev\crud\fields\ModalSelect;
+use Echoyl\Sa\Services\dev\crud\fields\Model;
+use Echoyl\Sa\Services\dev\crud\fields\Password;
 use Echoyl\Sa\Services\dev\crud\fields\Pca;
 use Echoyl\Sa\Services\dev\crud\fields\Price;
+use Echoyl\Sa\Services\dev\crud\fields\SearchSelect;
+use Echoyl\Sa\Services\dev\crud\fields\Select;
+use Echoyl\Sa\Services\dev\crud\fields\SelectColumns;
+use Echoyl\Sa\Services\dev\crud\fields\Selects;
+use Echoyl\Sa\Services\dev\crud\fields\State;
 use Echoyl\Sa\Services\dev\crud\fields\Upload;
+use Echoyl\Sa\Services\dev\crud\fields\With;
 
 /**
  * crud字段的渲染
@@ -27,6 +42,25 @@ class CrudService
             'price'=>Price::class,
             'mprice'=>Price::class,
             'mmprice'=>Price::class,
+            'password'=>Password::class,
+            'tmapInput'=>Latlng::class,
+            'latlng'=>Latlng::class,
+            'with'=>With::class,
+            'search_select'=>SearchSelect::class,
+            'link'=>Link::class,
+            'date'=>Date::class,
+            'datetime'=>Date::class,
+            'select_columns'=>SelectColumns::class,
+            'config'=>Config::class,
+            'modalSelect'=>ModalSelect::class,
+            'state'=>State::class,
+            'selects'=>Selects::class,
+            'select'=>Select::class,
+            'radioButton'=>Select::class,
+            'cascader'=>Cascader::class,
+            'cascaders'=>Cascader::class,
+            'aliyunVideo'=>AliyunVideo::class,
+            'model'=>Model::class
         ];
     }
 
@@ -87,12 +121,12 @@ class CrudService
      */
     public function getClass($name)
     {
-        if(!isset($this->items[$name]))
+        if(isset($this->items[$name]))
         {
-            return false;
+            return new $this->items[$name]($this->config);
+        }else
+        {
+            return new BaseField($this->config);
         }
-
-        return new $this->items[$name]($this->config);
-
     }
 }

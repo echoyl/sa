@@ -963,7 +963,6 @@ class CrudController extends ApiBaseController
             $encode = $in == 'encode'?true:false;
 
             $isset = isset($data[$name])?true:false;
-            $need_set = true;//如果是true表示需要 将$data[$name] 赋值一遍
             if (!$isset && $from == 'update') {
                 //更新数据时 不写入默认值
                 //d($this->parse_columns,$this->can_be_null_columns);
@@ -974,362 +973,53 @@ class CrudController extends ApiBaseController
             }
             $col['default'] = $col['default']??"";
 
-            
-
             $val = $isset ? $data[$name] : $col['default'];
             if(!$isset)
             {
                 $check_category_field = $this->checkCategoryField($name,$col['default']);
                 $val = $check_category_field['array_val'];
             }
-
-            $config = [
-                'data'=>$data,'col'=>$col,
-            ];
-            $cs = new CrudService($config);
-            switch ($type) {
-                case 'model':
-                    if($encode)
-                    {
-                        //提交数据时 不需要处理 将数据删除
-                        $val = '__unset';
-                    }else
-                    {
-                        $cls = new $col['class'];
-                        $cls_p_c = $cls->getParseColumns();
-                        if(!empty($cls_p_c) && $deep <= 3 && $isset)
-                        {
-                            //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
-                            //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
-                            $this->parseWiths($val,$cls_p_c);
-                            $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
-                        }
-                    }
-                    
-                    break;
-                case 'aliyunVideo':
-                    if(!$val && !$encode)
-                    {
-                        $val = '__unset';
-                    }else
-                    {
-                        $val = HelperService::aliyunVideoParse($val ?? '', $encode ? true : false,);
-                    }
-                    break;
-                case 'cascader':
-                case 'cascaders':
-                    $_name = '_' . $name;
-                    if ($encode) {
-                        if (!empty($val)) {
-                            if(is_numeric($val))
-                            {
-                                //检测数据类型
-                                $val = [$val];
-                            }
-                            $data[$_name] = json_encode($val);
-                            $__val = [];
-                            $val_len = count($val);
-                            foreach ($val as $_key => $_val) {
-                                if (is_numeric($_val)) {
-                                    if($type == 'selects')
-                                    {
-                                        $__val[] = $_val;
-                                    }else
-                                    {
-                                        if ($_key == $val_len - 1) {
-                                            $__val[] = $_val;
-                                        }
-                                    }
-                                } elseif (is_array($_val)) {
-                                    $__val[] = array_pop($_val);
-                                }
-                            }
-                            $val = implode(',', $__val);
-                        } else {
-                            $val = 0;
-                            $data[$_name] = '';
-                        }
-                    } else {
-                        $val = isset($data[$_name]) && $data[$_name] ? json_decode($data[$_name], true) : '';
-                    }
-                    break;
-                case 'select':
-                case 'radioButton':
-                    if ($encode) {
-                        $val = is_numeric($val)?intval($val):$val;
-                    }else{
-                        if($val && $isset)
-                        {
-                            $val = is_numeric($val)?intval($val):$val;
-                        }else
-                        {
-                            $val = '__unset';
-                        }
-                    }
-                    break;
-                case 'selects':
-                    //select 不需要而外字段了
-                    if ($encode) {
-                        $val = is_array($val)?implode(',',$val):$val;
-                    }else{
-                        if($val && $isset)
-                        {
-                            $val = is_string($val)?explode(',',$val):$val;
-                            foreach($val as $k=>$v)
-                            {
-                                if(is_numeric($v))
-                                {
-                                    $val[$k] = intval($v);
-                                }
-                            }
-                        }else
-                        {
-                            $val = '__unset';
-                            
-                        }
-                    }
-                    break;
-                case 'state':
-                    
-                    if ($encode) {
-                        if ($val == 1 || $val == 'enable') {
-                            $val = 'enable';
-                        } else {
-                            $val = 'disable';
-                        }
-                    } else {
-                        if ($from == 'detail') {
-                            $val = $val == 'enable' ? true : false;
-                        }
-                    }
-                    break;
-                case 'pca'://所有独立的类型 都在此集合
-                case 'json':
-                case 'image':
-                case 'file':
-                case 'tinyEditor':
-                case 'price':
-                case 'mprice':
-                case 'mmprice':
-                    $data = $cs->make($type,[
-                        'encode'=>$encode,
-                        'isset'=>$isset,
-                    ]);
-                    //之后 字段类型都 抽离后 下面两行可以删除
-                    $val = '';
-                    $need_set = false;
-                    break;
-                case 'latlng':
-                case 'tmapInput':
-                    if ($encode) {
-                        if($isset)
-                        {
-                            $lat = Arr::get($val,0,'');
-                            $lng = Arr::get($val,1,'');
-                            $data['lat'] = is_null($lat)?'':$lat;
-                            $data['lng'] = is_null($lng)?'':$lng;
-                            
-                            if(!in_array($name,['lat','lng']))
-                            {
-                                //如果用了其它字段需要将该字段移除
-                                $val = '__unset';
-                            }else
-                            {
-                                $need_set = false;//字段重复不需要再设值了
-                            }
-                        }
-                    } else {
-                        if(isset($data['lat']) && $data['lat'])
-                        {
-                            $val = [$data['lat'],$data['lng']];
-                        }
-                    }
-                    break;
-                
-
-                case 'with':
-                    if($isset && $val)
-                    {
-                        foreach($val as $k=>$v)
-                        {
-                            $new_key = implode('_',[$name,$k]);
-                            $data[$new_key] = $v;
-                        }
-                    }
-                    break;
-                case 'search_select':
-                    //表单类型为 搜索select时 
-                    //20240323 前端组件改成了select labelinvalue设置后已不会再将整个数据放入到value中 所以这里要再检测下value字段
-                    $id_name = $col['value']??'id';
-                    if($encode)
-                    {
-                        if($isset && $val)
-                        {
-                            if(isset($val[$id_name]))
-                            {
-                                $val = $val[$id_name];
-                            }elseif(isset($val['value']))
-                            {
-                                $val = $val['value'];
-                            }
-                        }
-                    }else
-                    {
-                        //特定字段名称 label value
-                        if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset)
-                        {
-                            $d = $data[$col['data_name']];
-                            if(!$d)
-                            {
-                                $val = '__unset';
-                            }else
-                            {
-                                $val = ['label'=>$d[$col['label']??'title'],'value'=>$d[$id_name],$id_name=>$d[$id_name]];
-                            }
-                            
-                        }
-                        if(!$val || !$isset)
-                        {
-                            $val = '__unset';
-                        }
-                        
-                    }
-                    break;
-                case 'password':
-                    if($encode)
-                    {
-                        if($isset && $val)
-                        {
-                            $val = HelperService::pwd($val);
-                        }
-                    }else
-                    {
-                        //特定字段名称 label value
-                        $val = '__unset';
-                    }
-                    break;
-                case 'link':
-                    //如果字段是链接类型 返回数据的时候渲染成链接的格式
-                    if($encode)
-                    {
-                        $val = '__unset';
-                    }else
-                    {
-                        if ($from == 'list') 
-                        {
-                            $uris = [];
-                            if(isset($col['uri']) && is_array($col['uri']))
-                            {
-                                foreach($col['uri'] as $uri)
-                                {
-                                    $uris[] = implode('=',[$uri[0],$data[$uri[1]]]);
-                                }
-                            }
-                            $val = [
-                                'title'=>$val,
-                                'href'=>implode('?',[$col['path'],implode('&',$uris)])
-                            ];
-                        }else
-                        {
-                            $val = '__unset';
-                        }
-                        
-                    }
-                    break;
-                case 'date':
-                case 'datetime':
-                    if(!$val)
-                    {
-                        $val = '__unset';
-                    }
-                    if($encode)
-                    {
-
-                    }else
-                    {
-                        
-                    }
-                    break;
-                case 'select_columns':
-                    if($encode)
-                    {
-                        $val = '__unset';
-                    }
-                    break;
-                case 'config':
-                    if($encode)
-                    {
-
-                    }else
-                    {
-                        if($val)
-                        {
-                            $wms = new WebMenuService;
-                            $val = $wms->getSpecs($val,true);
-                        }
-                    }
-                    break;
-                case 'modalSelect':
-                    //表单类型为 搜索select时
-                    $id_name = $col['value']??'id';
-                    if($encode)
-                    {
-                        if($isset && $val)
-                        {
-                            if(isset($val[$id_name]))
-                            {
-                                $val = $val[$id_name];
-                            }elseif(is_array($val))
-                            {
-                                //如果传输的数据是数组 这里暂时数据库中只存储逗号拼接的id值  如果之后需要关联模型处理再说
-                                $_v = [];
-                                foreach($val as $v)
-                                {
-                                    if(isset($v['data']) && isset($v['data'][$id_name]))
-                                    {
-                                        $_v[] = $v['data'][$id_name];
-                                    }
-                                }
-                                if(!empty($_v))
-                                {
-                                    $val = implode(',',$_v);
-                                }else
-                                {
-                                    $val = '';
-                                }
-                            }
-                            
-                        }
-                    }else
-                    {
-                        //特定字段名称 label value
-                        //前端数据暂时不用
-                    }
-                    break;
-                // case 'enum':
-                //     if($from == 'list' && $isset)
-                //     {
-                //         $val = $col['data'][$val]['value'];
-                //     }
-                //     break;
-            }
-            if($val === '__unset')
+            if($type == 'model')
             {
-                
-                $unsetNames[] = $name;
-                unset($data[$name]);
-                continue;
-            }
-            if($need_set)
+                if($encode)
+                {
+                    //提交数据时 不需要处理 将数据删除
+                    $val = '__unset';
+                    if($isset)
+                    {
+                        unset($data[$name]);
+                    }
+                }else
+                {
+                    $cls = new $col['class'];
+                    $cls_p_c = $cls->getParseColumns();
+                    if(!empty($cls_p_c) && $deep <= 3 && $isset)
+                    {
+                        //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
+                        //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
+                        $this->parseWiths($val,$cls_p_c);
+                        $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
+                    }
+                    $data[$name] = $val;
+                }
+            }else
             {
-                $data[$name] = $val;
+                $config = [
+                    'data'=>$data,'col'=>$col,
+                ];
+                $cs = new CrudService($config);
+                $data = $cs->make($type,[
+                    'encode'=>$encode,
+                    'isset'=>$isset,
+                    'from'=>$from,
+                    'deep'=>$deep
+                ]);
             }
         }
         if(isset($data['originData']))
         {
             unset($data['originData']);
         }
-
         return $unsetNames;
     }
 

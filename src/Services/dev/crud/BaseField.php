@@ -23,12 +23,25 @@ class BaseField implements CrudInterface
 
     public function encode($options = [])
     {
-        return $this->config['data'];
+
+        $val = $options['val'];
+
+        $data = $this->getData($val);
+
+        // if($options['type'] == 'switch' && $this->name == 'is_recommend')
+        // {
+        //     d($val,$this->name,$this->config['data'],$data);
+        // }
+
+        return $data;
     }
 
     public function decode($options = [])
     {
-        return $this->config['data'];
+
+        $val = $options['val'];
+
+        return $this->getData($val);
     }
 
     public function search($m,$options = [])
@@ -81,6 +94,24 @@ class BaseField implements CrudInterface
                     Storage::delete($value);
                 }
             }
+        }
+        return $data;
+    }
+
+    public function getData($val,$isset = true)
+    {
+        $data = $this->config['data'];
+        $name = $this->name;
+
+        if($val === '__unset')
+        {
+            if($isset)
+            {
+                unset($data[$name]);
+            }
+        }else
+        {
+            $data[$name] = $val;
         }
         return $data;
     }
