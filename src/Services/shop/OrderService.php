@@ -121,10 +121,11 @@ class OrderService
 
 			}
 		}
+		$num = $data['num'] ?? 0;
 		$ordergoods = [
 			'goods_id'=>$data['goods']['id'],
 			'id'=>$data['id']??0,
-			'num'=>$data['num'] * 100,
+			'num'=>$num * 100,
 			'goods'=>$data['goods']
 		];
 		if(isset($data['price']))

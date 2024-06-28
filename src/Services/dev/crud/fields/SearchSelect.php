@@ -42,6 +42,7 @@ class SearchSelect extends BaseField
         $isset = $options['isset'];
         $col = $this->config['col'];
         $id_name = $col['value']??'id';
+        $val = $options['val'];
         
         if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset)
         {

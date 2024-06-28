@@ -799,11 +799,16 @@ class CrudController extends ApiBaseController
 
             $items = $m->get();
             foreach ($items as $val) {
+                //增加删除检测字段类型是图片附件的，删除文件
+                $pval = [
+                    'originData'=>$val->toArray()
+                ];
+                $this->parseData($pval, 'encode','delete');
                 $val->delete();
             }
-            return ['code' => 0, 'msg' => '删除成功'];
+            return $this->success();
         }
-        return ['code' => 1, 'msg' => '参数错误'];
+        return $this->fail([1,'参数错误']);
     }
 
     public function beforeDestroy($m)

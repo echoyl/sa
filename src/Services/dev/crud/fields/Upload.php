@@ -19,6 +19,12 @@ class Upload extends BaseField
         $val = $options['val'];
         $origin_val = $options['origin_val'];//原数据，先进行对比后如果不一样需要删除原文件
         $isset = $options['isset'];
+        $from = $options['from'];
+
+        if($from == 'delete')
+        {
+            $isset = true;
+        }
         
         if(empty($val) && !$isset)
         {
