@@ -941,7 +941,8 @@ class MenuController extends CrudController
             'schema'=>$item->toArray(),
             'currentUser'=>$this->getUserInfo()
         ];
-        return $this->success($ret); 
+        //design操作不再提示成功信息
+        return $this->success($ret,[0,'']); 
     }
 
     public function remenu()
