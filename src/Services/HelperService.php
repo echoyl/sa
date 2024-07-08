@@ -95,20 +95,26 @@ class HelperService
         }
         foreach($data as $key=>$deep_val)
         {
+            if(in_array($key,$img_fields))
+            {
+                //已经是图片类型的不用再检测了
+                continue;
+            }
             if(is_array($deep_val) && !empty($deep_val))
             {
                 //如果是
-                foreach($deep_val as $k=>$v)
-                {
-                    if(is_array($v))
-                    {
+                //$deep_val = self::autoParseImages($deep_val);
+                // foreach($deep_val as $k=>$v)
+                // {
+                //     if(is_array($v))
+                //     {
                         
-                        $deep_val[$k] = self::autoParseImages($v);
+                //         $deep_val[$k] = self::autoParseImages($v);
                         
-                    }
+                //     }
                     
-                }
-                $data[$key] = $deep_val;
+                // }
+                $data[$key] = self::autoParseImages($deep_val);
                 
             }
         }

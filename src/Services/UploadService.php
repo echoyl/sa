@@ -2,7 +2,10 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Attachment;
+use Echoyl\Sa\Services\utils\WaterMarkService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Facades\Image;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -21,26 +24,68 @@ class UploadService
     {
         $this->tmp_enable = $tmp_enable;
     }
-    
 
+    public function validate($request,$name = 'file',$type = 'image')
+    {
+        $ss = new SetsService();
+        $setkey = implode('.',['system',$type]);
+        $setting = $ss->get($setkey,[]);
+
+        $format = Arr::get($setting,'format');
+        if(!$format)
+        {
+            $format = $type == 'image'?$this->image_ext_arr:$this->file_ext_arr;
+        }
+
+        //d($format);
+
+        $maxsize = Arr::get($setting,'maxsize',5);//默认最大5m
+
+        $rules = ['file','required','max:'.($maxsize*1024),'extensions:'.implode(',',$format)];
+
+        $validator = Validator::make($request->all(),[
+            $name => $rules
+        ],[
+            //验证是否为文件
+            $name.'.file' => '请上传内容',
+            $name.'.required' => '请上传内容',
+            //验证文件上传大小
+            $name.'.max' => '不能超过'.$maxsize.'mb',
+            //验证上传文件格式
+            $name.'.extensions' => '请确认上传为'.implode(',',$format).'的格式',
+        ]);
+        if ($validator->fails()) 
+        {
+            return [1,$validator->errors()->get($name)];
+        }
+
+        return [0,'success'];
+    }
+    
+    /**
+     * 保存图片附件
+     *
+     * @param Request $request
+     * @param string $formname 表单name
+     * @param integer $type 是否是文件
+     * @param boolean $insert_db 是否插入数据库
+     * @param boolean $toSize 是否resize图片宽高
+     * @return void
+     */
     public function store(Request $request, $formname = 'file', $type = 0, $insert_db = false,$toSize = false)
     {
-        if(!$request->hasFile($formname))
+
+        [$code,$msg] = $this->validate($request,$formname,$type == '0'?'image':'file');
+
+        if($code)
         {
-            return ['code' => 1, 'msg' => '无上传数据'];
+            return ['code' => $code, 'msg' => $msg];
         }
+
         $file = $request->file($formname);
 
-        if(!$file)
-        {
-            return ['code' => 1, 'msg' => '无上传数据'];
-        }
+        $ext = $file->getClientOriginalExtension();
 
-        $ext = $file->extension();
-
-        if (!in_array($ext, array_merge($this->file_ext_arr, $this->image_ext_arr))) {
-            return ['code' => 1, 'msg' => '格式错误'];
-        }
 
         if (in_array($ext, ['zip', 'bin'])) {
             $ext = $this->getUnknowName($file);
@@ -52,24 +97,19 @@ class UploadService
 
         $is_image = in_array($ext, $this->image_ext_arr) ? 1 : 0;
 
-        $file_type = $is_image == 1 ? 'images' : 'files';
+        $file_type = $type == 0 ? 'images' : 'files';
 
         $folder_name = $file_type . '/' . date("Ym");
 
         $path = $file->store($upload_tmp_enable && $this->tmp_enable?'tmp/'.$folder_name:$folder_name);
-
-        if ($is_image) {
+        //附件图片不再压缩
+        if (!$type && $is_image) {
             $new_path = storage_path('app/public/' . $path);
 
             $path_parts = pathinfo($new_path);
             $height = Image::make($new_path)->getHeight();
             $width = Image::make($new_path)->getWidth();
-            //d($height,$width,$toSize);
-            //$thumb_url = $folder_name . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
 
-            //$thumbnail_file_path = storage_path('app/public/' . $thumb_url);
-
-            //Image::make($new_path)->resize(200, 200, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
             //获取参数是否压缩原图
             if($toSize)
             {
@@ -101,20 +141,9 @@ class UploadService
 
             $height = Image::make($new_path)->getHeight();
             $width = Image::make($new_path)->getWidth();
-            //d($height,$width);
-            $base_set = (new SetsService)->get('base');
 
-            if (isset($base_set['image_water']) && $base_set['image_water'] && isset($base_set['image_water_url']) && $base_set['image_water_url']) {
-                //图片已经开始上传需要增加水印
+            $this->waterMark($new_path);
 
-                //d(public_path());
-                $img = Image::make($new_path);
-                $width = $img->getWidth() / 15;
-                $x = 15;
-                $y = 15;
-                //d($width);
-                $img->insert(Image::make(storage_path('app/public/' . $base_set['image_water_url']))->resize($width, $width), 'bottom-right', $x, $y)->save($new_path);
-            }
 
         } else {
             $thumb_url = '';
@@ -235,24 +264,26 @@ class UploadService
             $height = $width = 200;
         }
 
-        //新增功能 将图片插入到数据库，统一管理用户上传的图片
-        //前台上传图片不插入数据库中
-
-        $base_set = (new SetsService)->get('base');
-
-        if (isset($base_set['image_water']) && $base_set['image_water'] && isset($base_set['image_water_url']) && $base_set['image_water_url']) {
-            //图片已经开始上传需要增加水印
-
-            //d(public_path());
-            $img = Image::make($newPath);
-            $width = $img->getWidth() / 15;
-            $x = 15;
-            $y = 15;
-            //d($width);
-            $img->insert(Image::make(storage_path('app/public/' . $base_set['image_water_url']))->resize($width, $width), 'bottom-right', $x, $y)->save($newPath);
-        }
+        $this->waterMark($newPath);
 
         return ['code' => 0, 'msg' => '上传成功', 'data' => ['value' => $path, 'src' => tomedia($path), 'thumb_url' => $thumb_url]];
+    }
+
+    public function waterMark($path,$setting = [])
+    {
+        $ss = new SetsService();
+        if(empty($setting))
+        {
+            $setting = $ss->get('system.image',[]);
+        }
+
+        $watermark = Arr::get($setting,'watermark');
+
+        $ws = new WaterMarkService($path,$watermark);
+
+        $ws->create();
+
+        return;
     }
 
     public function getUnknowName($file)

@@ -121,4 +121,15 @@ class IndexController extends ApiBaseController
         return $this->success($this->service->panel2());
     }
 
+    public function lockscreen()
+    {
+        $password = request('base.password');
+        $admin = AdminService::user();
+
+        if(!$password || AdminService::pwd($password) != $admin['password'])
+        {
+            return $this->fail([1,'密码输入错误']);
+        }
+        return $this->success(null,[0,'解锁成功']);
+    }
 }

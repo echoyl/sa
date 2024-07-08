@@ -381,7 +381,10 @@ class MenuService
             //d($name);
             return [$name,$form_menu];
         }
-        
+        if(empty($r))
+        {
+            return [$name,['id'=>0]];
+        }
 
         //通过路由切割来找到菜单
         $m2 = (new Menu())->where(['path'=>$r[0]])->whereIn('type',[env('APP_NAME'),'system']);

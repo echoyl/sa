@@ -26,6 +26,8 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                 Route::any('clearNotice', 'IndexController@clearNotice');
                 //Route::any('index/workplace', 'IndexController@workplace');
                 Route::any('helper/pca', 'HelperController@pca');
+
+                Route::any('lockscreen', 'IndexController@lockscreen');
                 
                 //用户修改信息
                 //Route::any('index/user', 'IndexController@user'); 
