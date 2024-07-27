@@ -167,7 +167,7 @@ class ModelController extends CrudController
      * 修改为导出json格式文件，做到导入导出同步线上线下的功能
      * @return void
      */
-    public function export()
+    public function export($listData = false)
     {
         $c = new Dump;
         [$code,$msg] = $c->export(request('ids'));

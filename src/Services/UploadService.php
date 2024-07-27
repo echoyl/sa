@@ -37,11 +37,11 @@ class UploadService
             $format = $type == 'image'?$this->image_ext_arr:$this->file_ext_arr;
         }
 
-        //d($format);
+        
 
         $maxsize = Arr::get($setting,'maxsize',5);//默认最大5m
 
-        $rules = ['file','required','max:'.($maxsize*1024),'extensions:'.implode(',',$format)];
+        $rules = ['file','required','max:'.($maxsize*1024),'mimes:'.implode(',',$format)];
 
         $validator = Validator::make($request->all(),[
             $name => $rules
@@ -52,7 +52,7 @@ class UploadService
             //验证文件上传大小
             $name.'.max' => '不能超过'.$maxsize.'mb',
             //验证上传文件格式
-            $name.'.extensions' => '请确认上传为'.implode(',',$format).'的格式',
+            $name.'.mimes' => '请确认上传为'.implode(',',$format).'的格式',
         ]);
         if ($validator->fails()) 
         {
@@ -92,6 +92,7 @@ class UploadService
         } elseif ($ext == 'xlsx') {
             $ext = 'xls';
         }
+
 
         $upload_tmp_enable = config('sa.upload_tmp_enable',false);
 
@@ -148,7 +149,8 @@ class UploadService
         } else {
             $thumb_url = '';
             $height = $width = 200;
-			if (in_array($ext, ['chm'])) {
+			if (in_array($ext, ['chm','apk','wgt'])) {
+                //这里未知的文件后缀都会转成zip格式
 				$new_path = storage_path('app/public/' . $path);
 
 				$path_parts = pathinfo($new_path);

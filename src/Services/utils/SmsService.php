@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\Smslog;
 use Echoyl\Sa\Services\AliyunService;
 use Echoyl\Sa\Services\SetsService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Mail;
 
 class SmsService
 {
@@ -111,5 +112,42 @@ class SmsService
 		{
             return [$retcode,$msg];
 		}
+    }
+
+    public function sendEmail($view = '')
+    {
+        $email = $this->mobile;
+
+        [$code,$ecode] = $this->getCode();
+
+        if($code)
+        {
+            return [$code,$ecode];
+        }
+
+        if($view)
+        {
+            Mail::send($view,['code'=>$ecode],function($message) use($email){
+                $message->to($email)->subject('verify code');
+            });
+        }else
+        {
+            Mail::html('your code is '.$ecode,function($message) use($email){
+                $message->to($email)->subject('verify code');
+            });
+        }
+
+        
+
+        $data = [
+            'mobile'=>$email,
+            'code'=>$ecode,
+            'created_at'=>date("Y-m-d H:i:s"),
+            'type'=>2,//type 2 is email
+        ];
+        $model = new Smslog();
+        $model->insert($data);
+
+        return [0,'发送成功'];
     }
 }

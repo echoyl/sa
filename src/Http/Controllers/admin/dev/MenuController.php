@@ -32,7 +32,7 @@ class MenuController extends CrudController
         ];
         if($post_parent_id)
         {
-            $this->default_post['parent_id'] = $post_parent_id;
+            $this->default_post['parent_id'] = intval($post_parent_id);
         }
         $ds = new DevService;
         $this->parse_columns = [
@@ -50,7 +50,10 @@ class MenuController extends CrudController
             ['name'=>'desc','type'=>'json','default'=>'{}'],
             ['name'=>'perms','type'=>'json','default'=>'{}'],
             ['name'=>'icon','type'=>'select','default'=>''],
-            ['name'=>'status','type'=>'switch','default'=>1],
+            ['name'=>'status','type'=>'switch','default'=>1,"with" => true,"data" => [
+                ["label" => "显示","value" => 1],
+                ["label" => "隐藏","value" => 0],
+            ]],
             ['name'=>'form_config','type'=>'json','default'=>'{}'],
             ['name'=>'other_config','type'=>'json','default'=>'{}'],
             ['name'=>'table_config','type'=>'json','default'=>'{}'],
@@ -768,7 +771,7 @@ class MenuController extends CrudController
         return $this->editTableColumn('delete');
     }
 
-    public function export()
+    public function export($listData = false)
     {
         $c = new Dump;
         [$code,$msg] = $c->export(request('ids'),'menu');

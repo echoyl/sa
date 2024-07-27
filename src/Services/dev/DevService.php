@@ -162,17 +162,25 @@ class DevService
                 }
                 $now_fields[$field_name] = $column;
             }
+            if($soft_delete && !key_exists('deleted_at',$dist_field))
+            {
+                $sqls[] = " ADD COLUMN `deleted_at`  datetime DEFAULT NULL";
+            }
 
             //DROP COLUMN `table_name`;
             $tmp = array_diff_key($dist_field,$now_fields);
             if ( !empty($tmp) )  {
-                //多于的字段则删除
+                //多余的字段则删除
                 foreach($tmp as $key=>$column)
                 {
+                    if($key == 'deleted_at' && $soft_delete)
+                    {
+                        continue;
+                    }
                     if(!isset(Utils::$title_arr[$key]))
                     {
                         //非默认字段 需要删除
-                        $sqls[] = " DROP COLUMN {$key}";
+                        $sqls[] = " DROP COLUMN `{$key}`";
                     }
                     
                 }
@@ -927,8 +935,12 @@ class DevService
                 }
                 if($form_type == 'cascaders' || $form_type == 'cascader')
                 {
-                    $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
-                    $d['with'] = true;
+                    if(isset($all_models[$column['name']]))
+                    {
+                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
+                        $d['with'] = true;
+                    }
+                    
                     if($label && $value && $children)
                     {
                         $d['fields'] = ['id'=>$value,'title'=>$label,'children'=>$children];
@@ -1100,7 +1112,7 @@ class DevService
                 'isLeaf'=>true,
                 'selectable'=>true,
             ];
-        },[['displayorder','desc'],['id','asc']]);
+        },[['state','desc'],['displayorder','desc'],['id','desc']]);
 
         return $data;
     }
@@ -1117,7 +1129,7 @@ class DevService
                 'isLeaf'=>$item['type']?true:false,
                 //'selectable'=>$item['type']?true:false,
             ];
-        },[['displayorder', 'desc'],['type', 'asc'],['id', 'asc']]);
+        },[['displayorder', 'desc'],['type', 'asc'],['id', 'desc']]);
         return $data;
     }
 

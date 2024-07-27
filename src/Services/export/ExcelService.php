@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services\export;
 
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
+use \Vtiful\Kernel\Excel;
 
 class ExcelService
 {
@@ -17,6 +18,10 @@ class ExcelService
     //     return Excel::store($obj,$file);
     // }
     var $config;
+    /**
+     * @var array 需要合并的行 [['A',1,2,'内容']]
+     */
+    var $merges = [];
     
     public function __construct($config)
     {
@@ -31,7 +36,7 @@ class ExcelService
 
         $data = $this->parseData($data,$formatData);
 
-        return $v->export($data);
+        return $v->export($data,$this->merges);
     }
 
     public function parseData($data,$formatData)
@@ -41,6 +46,9 @@ class ExcelService
         $columns = Arr::get($head,'columns',[]);
 
         $_data = [];
+        $merges = [];
+        $last_val_arr = [];
+        $last_col_row = [];
         foreach ($data as $datakey => $val) 
         {
             if($formatData)
@@ -48,12 +56,14 @@ class ExcelService
                 $val = $formatData($val);
             }
             $data = [];
-            foreach ($columns as $col) {
+            
+            foreach ($columns as $colkey=>$col) {
                 $index = $col['key']??$col['cname'];
                 $type = $col['type'] ?? '';
                 $add_t = $col['t'] ?? '';
                 $default = $col['default'] ?? '';
                 $setting = Arr::get($col,'setting',[]);
+                $row_merge = Arr::get($setting,'row_merge',false);//是否需要检测该列是否要合并
 
                 if(is_string($index) && strpos($index,'.') !== false)
                 {
@@ -94,10 +104,28 @@ class ExcelService
                 if ($add_t) {
                     $_val .= "\t";
                 }
+                $last_val = Arr::get($last_val_arr,$colkey,false);
+                if($row_merge)
+                {
+                    //开启了行合并
+                    $column_name = Excel::stringFromColumnIndex($colkey);
+                    if($last_val === $_val)
+                    {
+                        //和上一个数据相同表示要合并
+                        $merges[] = [$column_name,$last_col_row[$colkey],$datakey,$_val];
+                    }else
+                    {
+                        //不同重新设置开始行数
+                        $last_col_row[$colkey] = $datakey;
+                    }
+                }
                 $data[] = $_val;
+                
             }
+            $last_val_arr = $data;
             $_data[] = $data;
         }
+        $this->merges = $merges;
         return $_data;
     }
 }

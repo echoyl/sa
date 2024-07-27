@@ -76,6 +76,11 @@ class Pca extends BaseField
         $val = [];
         $keys = $this->keys;
         $data = $this->config['data'];
+        $isset = $options['isset'];
+        if(!$isset)
+        {
+            return $data;
+        }
         foreach($keys as $k=>$v)
         {
             if(isset($data[$v]) && $data[$v] && $k < $this->level)

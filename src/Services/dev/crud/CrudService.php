@@ -19,6 +19,7 @@ use Echoyl\Sa\Services\dev\crud\fields\Select;
 use Echoyl\Sa\Services\dev\crud\fields\SelectColumns;
 use Echoyl\Sa\Services\dev\crud\fields\Selects;
 use Echoyl\Sa\Services\dev\crud\fields\State;
+use Echoyl\Sa\Services\dev\crud\fields\Switchstate;
 use Echoyl\Sa\Services\dev\crud\fields\Upload;
 use Echoyl\Sa\Services\dev\crud\fields\With;
 
@@ -44,6 +45,7 @@ class CrudService
             'mmprice'=>Price::class,
             'password'=>Password::class,
             'tmapInput'=>Latlng::class,
+            'bmapInput'=>Latlng::class,
             'latlng'=>Latlng::class,
             'with'=>With::class,
             'search_select'=>SearchSelect::class,
@@ -54,6 +56,7 @@ class CrudService
             'config'=>Config::class,
             'modalSelect'=>ModalSelect::class,
             'state'=>State::class,
+            'switch'=>Switchstate::class,
             'selects'=>Selects::class,
             'select'=>Select::class,
             'radioButton'=>Select::class,

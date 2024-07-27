@@ -218,9 +218,8 @@ class Vtiful
      * @param [type] $data
      * @return void
      */
-    public function export($data)
+    public function export($data,$merges = [])
     {
-        
 
         $this->data_length = count($data);
 
@@ -240,7 +239,17 @@ class Vtiful
             $this->excel->setRow($all_row,$row_height,$this->getFormat());
         }
 
-        $this->excel->setCurrentLine($data_row_number)->data($data)->output();
+        $this->excel->setCurrentLine($data_row_number)->data($data);
+
+        //合并设置
+        foreach($merges as $merge)
+        {
+            [$col,$start,$end,$val] = $merge;
+            $row_str = implode(':',[$col.($data_row_number + $start + 1),$col.($data_row_number + 1 + $end)]);
+            $this->excel->mergeCells($row_str, $val);
+        }
+
+        $this->excel->output();
 
         $filename = $this->config['filename'];
         $ret = ['url'=>tomedia($this->folder.'/'.$filename),'download'=>$filename];

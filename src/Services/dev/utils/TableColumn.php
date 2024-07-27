@@ -99,6 +99,9 @@ class TableColumn
         $can_search = $config['can_search']??'';
         //是否在列表中隐藏
         $hide_in_table = $config['hide_in_table']??'';
+        //是否在列表中隐藏
+        $rowSpan = $config['rowSpan']??false;
+        
         //ellipsis
         $ellipsis = $props['ellipsis']??'';
         //copyable
@@ -186,6 +189,11 @@ class TableColumn
         if(!empty($hide_in_table))
         {
             $d['hideInTable'] = true;
+        }
+
+        if($rowSpan)
+        {
+            $d['rowSpan'] = true;
         }
 
         if(!empty($tooltip))
@@ -480,7 +488,47 @@ class TableColumn
     public function debounceSelect()
     {
         //搜索选项类型在table中不需要了
-        unset($this->data['valueType']);
+        //如果是search的话开启，只是显示的话关闭
+        $search = Arr::get($this->config,'can_search');
+        if(!$search)
+        {
+            unset($this->data['valueType']);
+        }else{
+            $d = $this->data;
+            $relation = $this->relation;
+            $setting = $this->schema['setting']??[];
+            $label = $setting['label']??'';
+            $value = $setting['value']??'';
+            //输入搜索select
+
+            if($this->readonly)
+            {
+                //unset($d['valueType']);
+                //$d['dataIndex'] = [$relation['name'],$label];
+            }else
+            {
+                $d['fieldProps'] = [];
+                if($relation && $relation['foreign_model'])
+                {
+                    //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
+                    if($relation['foreign_model']['menu'])
+                    {
+                        $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                        $d['fieldProps'] = [
+                            'fetchOptions'=>implode('/',$path)
+                        ];
+                    }
+                    
+                }
+                if($label && $value)
+                {
+                    $d['fieldProps'] = array_merge($d['fieldProps'],['fieldNames'=>['label'=>$label,'value'=>$value]]);
+                }
+            }
+            $this->data = $d;
+        }
+
+        
         return;
     }
 

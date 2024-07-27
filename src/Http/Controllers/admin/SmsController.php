@@ -36,7 +36,7 @@ class SmsController extends ApiBaseController
 
         //默认使用阿里云发送信息
         $ss = new SmsService($mobile,$this->max_times);
-        [$code,$msg] =  $ss->aliyunSMS($mobile,$this->max_times);
+        [$code,$msg] =  $ss->aliyunSMS();
 
         if($code)
         {

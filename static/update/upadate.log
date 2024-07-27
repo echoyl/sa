@@ -83,3 +83,7 @@ CREATE TABLE `la_locale_config` (
   `displayorder` int NOT NULL DEFAULT '0' COMMENT '排序权重',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+2024-07-15
+ALTER TABLE `la_sms_log` 
+MODIFY COLUMN `mobile` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '发送验证码的手机或邮箱地址' AFTER `id`;

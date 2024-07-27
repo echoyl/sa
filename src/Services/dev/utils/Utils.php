@@ -22,6 +22,7 @@ class Utils
         'cascaders'=>'cascader',
         'pca'=>'pca',
         'tmapInput'=>'tmapInput',
+        'bmapInput'=>'bmapInput',
         'tinyEditor'=>'tinyEditor',
         'price'=>'digit',
         'digit'=>'digit',

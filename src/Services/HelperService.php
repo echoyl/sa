@@ -6,7 +6,9 @@ use Echoyl\Sa\Services\dev\crud\CrudService;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use DateTime;
 
 class HelperService
 {
@@ -457,6 +459,33 @@ class HelperService
         return $model;
     }
 
+    public static function searchWhereBetweenIn($model,$columns,$search_val,$where_type = 'whereBetween')
+    {
+        if($search_val)
+        {
+            if(is_numeric($search_val))
+            {
+                $search_val = [$search_val];
+            }else
+            {
+                $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
+                if($where_type == 'whereBetween' && is_array($search_val) && isset($search_val[1]))
+                {
+                    //检测是否是日期
+                    $d = DateTime::createFromFormat("Y-m-d",$search_val[1]);
+                    if($d && $d->format('Y-m-d') === $search_val[1])
+                    {
+                        //是日期 自动追加至当天最后一秒
+                        $search_val[1] .= ' 23:59:59';
+                    }
+                }
+            }
+            $model = $model->$where_type($columns[0],$search_val);
+        }
+
+        return $model;
+    }
+
     public static function searchWhere($model,$columns,$search_val,$type)
     {
         if($search_val === '')
@@ -654,6 +683,11 @@ class HelperService
         $lng = floatval($lng);
         $distance = ' ACOS(SIN((' . $lat . ' * 3.1415) / 180 ) *SIN(('.$lat_name.' * 3.1415) / 180 ) +COS((' . $lat . ' * 3.1415) / 180 ) * COS(('.$lat_name.' * 3.1415) / 180 ) *COS((' . $lng . ' * 3.1415) / 180 - ('.$lng_name.' * 3.1415) / 180 ) ) * 6380';
         return $distance;
+    }
+
+    public static function distanceRawDb($lat,$lng,$lat_name = 'lat',$lng_name = 'lng',$name = 'distance')
+    {
+        return DB::raw(self::distanceRaw($lat,$lng,$lat_name,$lng_name).' as '.$name);
     }
 
     public static function parseMobile($mobile)

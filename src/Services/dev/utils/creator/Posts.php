@@ -49,7 +49,6 @@ class Posts extends Creator
                 'path'=>$name,
                 'parent_id'=>$menu_to_id,
                 'status'=>1,
-                'icon'=>'table',
                 'state'=>1,
                 'type'=>$appname,
             ];

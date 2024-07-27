@@ -139,7 +139,8 @@ class TableService extends BaseService
         //d($columns);
         foreach($columns as $key=>$val)
         {
-            if($uid == $val[$key_name])
+            $uid_val = Arr::get($val,$key_name);
+            if($uid == $uid_val)
             {
                 $index = $key;
                 $index_data = $val;

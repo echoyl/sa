@@ -498,11 +498,15 @@ class WechatService
                 'province' => $original['province'],
                 'country' => $original['country'],
                 'unionid' => $original['unionid'] ?? '',
-                'subscribe' => $original['subscribe'] ?? 0,
+                //'subscribe' => $original['subscribe'] ?? 0,
                 'created_at' => date("Y-m-d H:i:s"),
                 'appid' => $app_id,
                 'state'=>1
             ];
+            if(isset($original['subscribe']))
+            {
+                $data['subscribe'] = $original['subscribe']?1:0;
+            }
             if (isset($original['subscribe_time'])) {
                 $data['subscribe_at'] = date("Y-m-d H:i:s", $original['subscribe_time']);
             }

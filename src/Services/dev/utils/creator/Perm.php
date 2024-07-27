@@ -21,16 +21,16 @@ class Perm extends Creator
 
         $this->confJson = [
             'user'=>[
-                'form_config'=>'[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"username","required":true},{"key":["mobile"],"required":true}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"password","placeholder":"请输入密码，为空时表示不修改密码"}]},{"columns":[{"key":"state"}]}]',
-                'table_config'=>'[{"key":"id"},{"key":"username","can_search":[],"props":[]},{"id":"6lhcymlljjz","key":["mobile"],"can_search":[]},{"key":["role","title"]},{"key":"desc"},{"key":["created_at"]},{"key":["latest_login_at"]},{"key":"state","left_menu":[],"table_menu":[1]},{"key":["option"]},{"key":["roleid"],"can_search":[1],"hide_in_table":[1]},{"key":["id"],"type":"userPerm","props":{"title":"权限配置","dataIndex":"id"}},{"id":"w24r2cz55kj","key":["username"],"can_search":[1],"props":{"title":"检索","fieldProps":{"placeholder":"请输入用户姓名或手机号码"}}}]',
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"username","required":true},{"key":["password"],"type":"password","props":{"tip":{"placeholder":"不填写不修改密码"},"rules":{"data":[{"min":6,"message":"密码最小长度6"}]}}}]},{"columns":[{"key":["roleid"],"readonly":false,"required":true}]},{"columns":[{"key":["perms2"],"type":"permGroup","props":{"dependencyOn":{"type":"show","condition":[{"name":["roleid"],"exp":"{{true}}"}]}}}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"state"}]}]}]}',
+                'table_config'=>'[{"key":"id"},{"key":"username","can_search":[1]},{"key":["role","title"]},{"key":"desc"},{"key":["created_at"]},{"key":["latest_login_at"]},{"key":"state","left_menu":[],"table_menu":[1]},{"key":["option"]},{"key":["roleid"],"can_search":[1],"hide_in_table":[1]}]',
             ],
             'role'=>[
-                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"state"},{"key":"id"}]},{"columns":[{"key":"perms2","type":"permGroup","props":[]}]},{"id":"2c0q2fcmkw6","columns":[{"key":["sync_user"]}]}]}]}',
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true}]},{"columns":[{"key":["perms2"],"type":"permGroup"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"state"},{"key":"id"},{"key":["sync_user"]}]}]}]}',
                 'table_config'=>'[{"key":"id"},{"key":"title","can_search":[1]},{"key":"desc"},{"key":["created_at"]},{"key":"state","table_menu":[1]},{"key":["option"]}]',
             ],
             'log'=>[
-                'form_config'=>'[{"columns":[{"key":"id","readonly":true}]},{"columns":[{"key":"user","label":"username","readonly":true}]},{"columns":[{"key":"url","readonly":true}]},{"columns":[{"key":"request","readonly":true,"type":"jsonCode"}]},{"columns":[{"key":"ip","readonly":true}]},{"columns":[{"key":"type","readonly":true},{"key":"created_at","title":"请求时间","readonly":true}]}]',
-                'table_config'=>'[{"key":"id"},{"key":["user","username"]},{"key":"url"},{"key":"ip"},{"key":"type"},{"key":["created_at"],"title":"操作时间"},{"key":["created_at"],"title":"操作时间","can_search":[1],"hide_in_table":[1],"type":"dateRange"},{"key":["option"]}]'
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"user","label":"username","readonly":true}]},{"columns":[{"key":"url","readonly":true}]},{"columns":[{"key":"request","readonly":true,"type":"jsonCode"}]},{"columns":[{"key":"ip","readonly":true}]},{"columns":[{"key":"type","readonly":true},{"key":"created_at","title":"请求时间","readonly":true}]}]}]}',
+                'table_config'=>'[{"key":"id"},{"key":["user","username"],"props":{"width":"150"}},{"key":"url","props":{"width":"450"}},{"key":"ip","props":{"width":"180"}},{"key":"type"},{"key":["created_at"],"title":"操作时间"},{"key":["created_at"],"title":"操作时间","can_search":[1],"hide_in_table":[1],"type":"dateRange"},{"key":["option"]}]'
             ]
         ];
     }
@@ -59,7 +59,7 @@ class Perm extends Creator
 
         $relation_type = 'one';
         $model_data = array_merge([
-            'title'=>'用户信息',
+            'title'=>'后台用户',
             'name'=>$name,
             'admin_type'=>$appname,
             'type'=>1,
@@ -153,7 +153,7 @@ class Perm extends Creator
             'state'=>1,
             'type'=>$appname,
             'page_type'=>'table',
-            'open_type'=>'drawer',
+            'open_type'=>'modal',
             'admin_model_id'=>$model_category_id,
         ],$role_config);
         //5.2列表
@@ -169,7 +169,7 @@ class Perm extends Creator
             'admin_model_id'=>$model_id
         ],$user_config);
         $log_menu = array_merge([
-            'title'=>'操作记录',
+            'title'=>'日志',
             'path'=>'log',
             'parent_id'=>$big_menu_id,
             'status'=>1,

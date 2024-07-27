@@ -31,6 +31,13 @@ class MenuService
     ];
 
     /**
+     * @var array 仅列表类型基础权限子集
+     */
+    var $justTablePerms = [
+        'index' => '列表',
+    ];
+
+    /**
      * 获取后台菜单信息
      *
      * @param integer $id
@@ -215,13 +222,14 @@ class MenuService
                     [$routers,$routers_disable] = $this->getFormBasePerms($val['id'],$enable_keys);
                 }else
                 {
-                    $menu_perms = [];
+                    $menu_perms = $val['page_type'] == 'justTable'?$this->justTablePerms:[];
                     if($val['perms'])
                     {
                         //如果设置了子权限
-                        $menu_perms = json_decode($val['perms'],true);
+                        $menu_perms = array_merge($menu_perms,json_decode($val['perms'],true));
                     }
-                    [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?true:false,$enable_keys);
+
+                    [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?($val['page_type'] == 'justTable'?false:true):false,$enable_keys);
                 }
                 
                 //$more = false;

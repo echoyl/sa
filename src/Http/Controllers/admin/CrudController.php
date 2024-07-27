@@ -2,7 +2,6 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
-use DateTime;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\export\ExcelService;
@@ -51,6 +50,9 @@ class CrudController extends ApiBaseController
             'field_name'=>'category_id',//数据库字段名 
         ]
     ];
+
+    var $listDataName = 'listData';
+    var $handleSearchName = 'handleSearch';
 
     /**
      * 搜索项配置
@@ -365,28 +367,7 @@ class CrudController extends ApiBaseController
                         }
                     }elseif($where_type == 'whereBetween' || $where_type == 'whereIn')
                     {
-                        
-                        if($search_val)
-                        {
-                            if(is_numeric($search_val))
-                            {
-                                $search_val = [$search_val];
-                            }else
-                            {
-                                $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
-                                if($where_type == 'whereBetween' && is_array($search_val) && isset($search_val[1]))
-                                {
-                                    //检测是否是日期
-                                    $d = DateTime::createFromFormat("Y-m-d",$search_val[1]);
-                                    if($d && $d->format('Y-m-d') === $search_val[1])
-                                    {
-                                        //是日期 自动追加至当天最后一秒
-                                        $search_val[1] .= ' 23:59:59';
-                                    }
-                                }
-                            }
-                            $m = $m->$where_type($columns[0],$search_val);
-                        }
+                        $m = HelperService::searchWhereBetweenIn($m,$columns,$search_val,$where_type);
                     }else
                     {
                         $m = HelperService::searchWhere($m,$columns,$search_val,$where_type);
@@ -453,7 +434,14 @@ class CrudController extends ApiBaseController
 
         $this->parseWiths($search);
 
-        [$m, $csearch] = $this->handleSearch($search);
+        if (method_exists($this, $this->handleSearchName)) 
+        {
+            $method = $this->handleSearchName;
+            [$m, $csearch] = $this->$method($search);
+        }else
+        {
+            [$m, $csearch] = $this->handleSearch($search);
+        }
 
         $search = array_merge($search,$csearch);
 
@@ -508,8 +496,16 @@ class CrudController extends ApiBaseController
             $list[$key] = $val;
         }
 
-        if (method_exists($this, 'listData')) {
-            $this->listData($list);
+        if (method_exists($this, $this->listDataName)) {
+            $method = $this->listDataName;
+            $rlist = $this->$method($list);
+
+            if($rlist)
+            {
+                //增加如果自定义处理了列表数据使用处理过的数据 比如增加了行(可能会碰到合并行的雪球)
+                $list = $rlist;
+            }
+
         }
         return $this->list($list, $count, $search);
 
@@ -562,15 +558,16 @@ class CrudController extends ApiBaseController
                 $key = $key?$key:implode('-',$keys).'数据已存在';
                 foreach($keys as $f)
                 {
-                    if(!isset($data[$f]))
+                    if(!isset($data[$f]) && $data[$f])
                     {
+                        //未设置该值或无该值时不进行检测
                         continue;
                     }
                     $where[$f] = $data[$f];
                 }
             }else
             {
-                if(!isset($data[$field]))
+                if(!isset($data[$field]) && $data[$field])
                 {
                     continue;
                 }
@@ -1106,7 +1103,7 @@ class CrudController extends ApiBaseController
         return [];
     }
 
-    public function export()
+    public function export($listData = false)
     {
         $model = HelperService::getDevModel($this->model->model_id);
         if(!$model)
@@ -1115,6 +1112,14 @@ class CrudController extends ApiBaseController
         }
 
         [$m,] = $this->handleSearch();
+        if (method_exists($this, $this->handleSearchName)) 
+        {
+            $method = $this->handleSearchName;
+            [$m,] = $this->$method();
+        }else
+        {
+            [$m,] = $this->handleSearch();
+        }
 
 		$ids = request('ids');
 		if($ids)
@@ -1156,10 +1161,28 @@ class CrudController extends ApiBaseController
 
         $m = $this->handleSort($m);
 
+        if (!empty($this->with_sum)) {
+            foreach($this->with_sum as $with_sum)
+            {
+                $m = $m->withSum($with_sum[0],$with_sum[1]);
+            }
+            
+        }
+
         $data = $m->with($this->with_column)->get()->toArray();
-		$ret = $es->export($data,method_exists($this, 'exportFormatData')?function($val){
-            return $this->exportFormatData($val);
-        }:false);
+
+        if($listData && method_exists($this, $listData))
+        {
+            $data = $this->$listData($data);
+            $formatData = false;
+        }else
+        {
+            $formatData = method_exists($this, 'exportFormatData')?function($val){
+                return $this->exportFormatData($val);
+            }:false;
+        }
+
+		$ret = $es->export($data,$formatData);
 		return $this->success($ret);
     }
 }

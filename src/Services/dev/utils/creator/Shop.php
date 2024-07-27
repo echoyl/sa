@@ -18,7 +18,7 @@ class Shop extends Creator
         $this->confJson = [
             'shop'=>[
                 'table_config'=>'[{"key":"id"},{"key":"title"},{"key":"titlepic"},{"key":"desc"},{"key":"username"},{"key":"mobile"},{"key":"province"},{"key":"address"},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"},{"id":"5aa6x9qokiq","key":["id"],"can_search":[1],"hide_in_table":[1],"props":{"title":"关键字检索","dataIndex":"keyword","tip":{"placeholder":"请输入门店名称，联系人，联系电话等"}}}]',
-                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"id"}]},{"columns":[{"key":"title"}]},{"id":"wbeki0juh5p","columns":[{"key":["username"]},{"key":["mobile"]}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"province"},{"key":["address"]}]},{"columns":[{"key":"lat"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]}]}'
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true}]},{"id":"wbeki0juh5p","columns":[{"key":["username"]},{"key":["mobile"]}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"province"},{"key":["address"]}]},{"columns":[{"key":"lat"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]}]}'
             ]
         ];
     }
