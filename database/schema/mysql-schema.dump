@@ -3922,16 +3922,16 @@ INSERT INTO `la_setting` VALUES (31, 'setting', '{\"title\":\"Deadmin\",\"tech\"
 -- Table structure for la_sms_log
 -- ----------------------------
 DROP TABLE IF EXISTS `la_sms_log`;
-CREATE TABLE `la_sms_log`  (
+CREATE TABLE `la_sms_log` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `mobile` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `mobile` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '发送验证码的手机或邮箱地址',
   `code` varchar(6) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   `content` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `created_at` datetime NULL DEFAULT NULL,
-  `type` int NOT NULL DEFAULT 1,
-  `status` int NOT NULL DEFAULT 0 COMMENT '1为删除了',
+  `created_at` datetime DEFAULT NULL,
+  `type` int NOT NULL DEFAULT '1',
+  `status` int NOT NULL DEFAULT '0' COMMENT '1为删除了',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of la_sms_log
