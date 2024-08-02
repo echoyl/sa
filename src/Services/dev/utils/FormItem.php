@@ -151,14 +151,11 @@ class FormItem
         {
             $form_type = $schema['form_type']??'';
             $this->form_type = $form_type;
-            if(isset(Utils::$value_type_map[$form_type]))
-            {
-                $form_type = Utils::$value_type_map[$form_type];
-            }
         }
+
         if($form_type)
         {
-            $d['valueType'] = $form_type;
+            $d['valueType'] = Utils::$value_type_map[$form_type]??$form_type;
         }
         
 
@@ -189,9 +186,17 @@ class FormItem
         
         $this->data = $d;
 
-        if($form_type && method_exists(self::class,$form_type))
+        if(method_exists(self::class,$form_type))
         {
             $this->$form_type();
+        }else
+        {
+            $call_form_type = Utils::$value_type_map[$form_type]??'';
+
+            if($call_form_type && method_exists(self::class,$call_form_type))
+            {
+                $this->$call_form_type();
+            }
         }
 
         if(!isset($this->data['fieldProps']))
@@ -518,38 +523,33 @@ class FormItem
         $setting = $this->schema['setting']??[];
         $table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
+
+        $label = $setting['label']??'';
+        $value = $setting['value']??'';
+        
+        if($this->form_type == 'select' || $this->form_type == 'radioButton')
+        {
+            $label = $label?:'title';
+            $value = $value?:'id';
+        }
+
+        if(!$table_menu && ($label || $value))
+        {
+            $d['fieldProps']['fieldNames'] = [
+                'label'=>$label,'value'=>$value
+            ];
+        }
+
         if($this->relation && $this->schema)
         {
             $d['requestDataName'] = $this->schema['name'].'s';
-            $label = $value = '';
-            if(isset($setting['label']) && isset($setting['value']))
-            {
-                $label = $setting['label'];
-                $value = $setting['value'];
-            }else
-            {
-                if($this->schema['form_type'] == 'select' || $this->schema['form_type'] == 'radioButton')
-                {
-                    $label = 'title';
-                    $value = 'id';
-                }
-                
-            }
-            if(!$table_menu && $label)
-            {
-                $d['fieldProps'] = ['fieldNames'=>[
-                    'label'=>$label,'value'=>$value
-                ]];
-            }
-            if($this->schema['form_type'] == 'selects')
+            
+            
+            if($this->form_type == 'selects')
             {
                 $d['fieldProps']['mode'] = 'multiple';
             }
-            if($this->schema['form_type'] == 'radioButton')
-            {
-                $d['valueType'] = 'radioButton';
-                $d['fieldProps']['buttonStyle'] = 'solid';
-            }
+            
         }else
         {
             if(isset($setting['json']))
@@ -567,7 +567,14 @@ class FormItem
                 $d['fieldProps']['mode'] = 'tags';
             }
         }
-        if($this->form_type == 'select' || $this->schema['form_type'] == 'select')
+
+        if($this->form_type == 'radioButton')
+        {
+            $d['valueType'] = 'radioButton';
+            $d['fieldProps']['buttonStyle'] = 'solid';
+        }
+
+        if($this->form_type == 'select')
         {
             $d['fieldProps']['showSearch'] = true;
         }

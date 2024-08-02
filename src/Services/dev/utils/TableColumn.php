@@ -149,10 +149,6 @@ class TableColumn
         {
             $form_type = $schema['form_type']??'';
             $this->form_type = $form_type;
-            if(isset(Utils::$value_type_map[$form_type]))
-            {
-                $form_type = Utils::$value_type_map[$form_type];
-            }
         }
 
         if($form_type)
@@ -240,10 +236,19 @@ class TableColumn
             $this->data['fieldProps'] = [];
         }
 
-        if($form_type && method_exists(self::class,$form_type))
+        if(method_exists(self::class,$form_type))
         {
             $this->$form_type();
+        }else
+        {
+            $call_form_type = Utils::$value_type_map[$form_type]??'';
+
+            if($call_form_type && method_exists(self::class,$call_form_type))
+            {
+                $this->$call_form_type();
+            }
         }
+        
 
         if($fieldProps && !is_string($fieldProps))
         {
@@ -364,9 +369,10 @@ class TableColumn
     public function customerColumn()
     {
         $props = $this->props;
-        
+
         if(!$props || !isset($props['items']) || !$props['items'])return;
         $items = $props['items'];
+
         $direction = $props['dom_direction']??'horizontal';//默认元素都是水平排列
 
         //检测是否有modalTable 有的话通过关联数据设置属性值
@@ -438,26 +444,26 @@ class TableColumn
         $label = $setting['label']??'';
         $value = $setting['value']??'';
         $table_menu = $this->schema['table_menu']??'';
+        $d['fieldProps'] = [];
+
+        if($this->form_type == 'select' || $this->form_type == 'radioButton')
+        {
+            $label = $label?:'title';
+            $value = $value?:'id';
+        }
+        if(!$table_menu && ($label || $value))
+        {
+            //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
+            $d['fieldProps']['fieldNames'] = [
+                'label'=>$label,'value'=>$value
+            ];
+        }
+
         if($this->relation)
         {
             //关联的select 需要获取数据
             $d['requestDataName'] = $this->schema['name'].'s';
-            $d['fieldProps'] = [];
-            if(!$value || !$label)
-            {
-                if($this->schema['form_type'] == 'select' || $this->schema['form_type'] == 'radioButton')
-                {
-                    $label = 'title';
-                    $value = 'id';
-                }
-            }
-            if(!$table_menu && $label)
-            {
-                //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
-                $d['fieldProps']['fieldNames'] = [
-                    'label'=>$label,'value'=>$value
-                ];
-            }
+            
             if($this->form_type == 'selects')
             {
                 $d['fieldProps']['mode'] = 'multiple';
@@ -479,6 +485,11 @@ class TableColumn
                 // {
                 //     $d['fieldProps']['mode'] = 'tags';
                 // }
+            }
+            if($this->form_type == 'radioButton')
+            {
+                $d['valueType'] = 'radioButton';
+                //$d['fieldProps']['buttonStyle'] = 'solid';
             }
         }
         $this->data = $d;

@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\Attachment;
 use Echoyl\Sa\Services\utils\WaterMarkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Facades\Image;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -41,7 +42,13 @@ class UploadService
 
         $maxsize = Arr::get($setting,'maxsize',5);//默认最大5m
 
-        $rules = ['file','required','max:'.($maxsize*1024),'mimes:'.implode(',',$format)];
+        $sufix = 'extensions';
+        if(version_compare(App::version(),'10') < 0)
+        {
+            //小于版本10的用 mimes
+            $sufix = 'mimes';
+        }
+        $rules = ['file','required','max:'.($maxsize*1024),$sufix.':'.implode(',',$format)];
 
         $validator = Validator::make($request->all(),[
             $name => $rules
@@ -52,7 +59,7 @@ class UploadService
             //验证文件上传大小
             $name.'.max' => '不能超过'.$maxsize.'mb',
             //验证上传文件格式
-            $name.'.mimes' => '请确认上传为'.implode(',',$format).'的格式',
+            $name.'.'.$sufix => '请确认上传为'.implode(',',$format).'的格式',
         ]);
         if ($validator->fails()) 
         {

@@ -129,6 +129,23 @@ class CrudController extends ApiBaseController
             $check_search_val = $this->checkCategoryField($name);
             $search_val = $check_search_val['search_val'];
 
+            if(isset($col['table_menu']) && $col['table_menu'])
+            {
+                //d($search_val);
+                if($search_val != 'all' && $search_val !== '')
+                {
+                    if(is_array($search_val))
+                    {
+                        $m = $m->whereIn($name, $search_val);
+                    }else
+                    {
+                        $m = $m->where($name, $search_val);
+                    }
+                    
+                }
+                continue;
+            }
+
             if (empty($search_val) && $search_val !== 0) {
                 //无查询值情况的默认查询
                 switch ($type) {
@@ -143,23 +160,6 @@ class CrudController extends ApiBaseController
                             $m = $m->whereIn($name, $big_cids);
                         }
                         break;
-                }
-                continue;
-            }
-
-            if(isset($col['table_menu']) && $col['table_menu'])
-            {
-                //d($search_val);
-                if($search_val != 'all')
-                {
-                    if(is_array($search_val))
-                    {
-                        $m = $m->whereIn($name, $search_val);
-                    }else
-                    {
-                        $m = $m->where($name, $search_val);
-                    }
-                    
                 }
                 continue;
             }
