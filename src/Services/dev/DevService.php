@@ -1186,12 +1186,17 @@ class DevService
      * @param [列配置] $col
      * @return void
      */
-    public function modelColumn2JsonTable($model,$col)
+    public function modelColumn2JsonTable($model,$col,$setting = [])
     {
         $menus = $this->allMenu();
         $models = $this->allModel();
         $tableColumn = new TableColumn($col,$model,$menus,$models);
-        return $tableColumn->data;
+        $data = $tableColumn->data;
+        if(!isset($data['width']) && isset($setting['table']) && isset($setting['table']['scroll'])  && isset($setting['table']['scroll']['x']))
+        {
+            $data['width'] = 100;
+        }
+        return $data;
     }
 
     public function modelColumn2Export($model)

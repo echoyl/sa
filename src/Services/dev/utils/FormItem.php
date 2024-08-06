@@ -451,16 +451,34 @@ class FormItem
         {
             $fieldProps['readonly'] = true;
         }
-        //如果是saFormTable 表单中的table 需要读取该关联模型所对应的第一个菜单的所形成的地址，这样组件可以在页面中根据这个path获取该页面的配置参数信息
-        if($relation && $relation['foreign_model'] && $relation['foreign_model']['menu'])
+
+        $page = Arr::get($this->props,'page');
+        $page_menu = false;
+        if($page)
         {
-            $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+            //选择了page不再检测关系类型
+            //因为模型存在多个菜单的关系 使用关系数据的话 可能找不到对应的菜单
+            $page_menu = Utils::arrGet($this->menus,'id',$page);
+        }else
+        {
+            //如果是saFormTable 表单中的table 需要读取该关联模型所对应的第一个菜单的所形成的地址，这样组件可以在页面中根据这个path获取该页面的配置参数信息
+            if($relation && $relation['foreign_model'] && $relation['foreign_model']['menu'])
+            {
+                $page_menu = $relation['foreign_model']['menu'];
+            }
+        }
+
+        if($page_menu)
+        {
+            $path = array_reverse(Utils::getPath($page_menu,$this->menus,'path'));
             $fieldProps['path'] = implode('/',$path);
             $fieldProps['foreign_key'] = $relation['foreign_key'];
             $fieldProps['local_key'] = $relation['local_key'];
             $fieldProps['name'] = $d['title'];
             unset($d['title']);
         }
+
+        
         
         if(!empty($fieldProps))
         {

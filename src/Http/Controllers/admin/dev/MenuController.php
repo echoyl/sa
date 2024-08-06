@@ -364,6 +364,7 @@ class MenuController extends CrudController
         $need_update_config = false;
         $need_update_perms = false;
         $perms = $item['perms']?json_decode($item['perms'],true):[];
+        $setting = $item['setting']?json_decode($item['setting'],true):[];
 
         foreach($config as $kv=>$val)
         {
@@ -383,7 +384,7 @@ class MenuController extends CrudController
             }
             if($item['admin_model'])
             {
-                $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val);
+                $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val,$setting);
             }else
             {
                 $columns = [];
