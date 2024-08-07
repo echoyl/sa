@@ -11,7 +11,8 @@ class LogController extends CrudController
 	var $model;
 	var $with_column = [];
 	var $search_config = [
-		["name" => "created_at","columns" => ["created_at"],"where_type" => "whereBetween"]
+		["name" => "created_at","columns" => ["created_at"],"where_type" => "whereBetween"],
+		["name" => "keyword","columns" => ["type"],"where_type" => "like"]
 	];
     public function __construct(Log $model)
 	{
