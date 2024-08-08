@@ -139,7 +139,7 @@ class AdminService
         $setting['loginBgImgage'] = $setting['loginBgImgage']['url']?:false;
         $setting['loginBgCardColor'] = Arr::get($setting,'loginBgCardColor','none');
         $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
-        $setting['colorPrimary'] = Arr::get($setting,'colorPrimary','#006eff');
+        //$setting['colorPrimary'] = Arr::get($setting,'colorPrimary','#006eff');
         $login_type = Arr::get($setting,'loginType',[]);
 
         if(in_array($setting['loginTypeDefault'],$login_type))
