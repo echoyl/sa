@@ -153,7 +153,7 @@ class TableColumn
 
         if($form_type)
         {
-            $d['valueType'] = $form_type;
+            $d['valueType'] = Utils::$value_type_map[$form_type]??$form_type;
         }
 
         //前端使用cascader自动获取key 这里后端不再检测

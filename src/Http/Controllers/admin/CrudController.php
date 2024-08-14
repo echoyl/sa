@@ -558,7 +558,7 @@ class CrudController extends ApiBaseController
                 $key = $key?$key:implode('-',$keys).'数据已存在';
                 foreach($keys as $f)
                 {
-                    if(!isset($data[$f]) && $data[$f])
+                    if(!isset($data[$f]) || !$data[$f])
                     {
                         //未设置该值或无该值时不进行检测
                         continue;
@@ -567,7 +567,7 @@ class CrudController extends ApiBaseController
                 }
             }else
             {
-                if(!isset($data[$field]) && $data[$field])
+                if(!isset($data[$field]) || !$data[$field])
                 {
                     continue;
                 }
