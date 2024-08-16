@@ -180,8 +180,13 @@ class AdminService
 
     public static function parseUser($user)
     {
-        $avatar = HelperService::uploadParse($user['avatar'], false);
-        $avatar = !empty($avatar) ? tomedia($avatar[0]['url']) : '';
+        $ss = new SetsService();
+        $setting = $ss->getSet('setting');
+        HelperService::deImagesOne($setting,['logo']);
+
+        HelperService::deImagesOne($user,['avatar']);
+        $avatar = $user['avatar']['url']?:($setting['logo']['url']?:'');
+
 		$as = new MenuService;
         $rolename = $user['role']?$user['role']['title']:'超级管理员';
         $is_super = self::isSuper($user);

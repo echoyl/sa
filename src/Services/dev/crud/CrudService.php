@@ -52,6 +52,7 @@ class CrudService
             'link'=>Link::class,
             'date'=>Date::class,
             'datetime'=>Date::class,
+            'time'=>Date::class,
             'select_columns'=>SelectColumns::class,
             'config'=>Config::class,
             'modalSelect'=>ModalSelect::class,
