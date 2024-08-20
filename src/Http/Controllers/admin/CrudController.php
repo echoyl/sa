@@ -979,7 +979,12 @@ class CrudController extends ApiBaseController
             if(!$isset)
             {
                 $check_category_field = $this->checkCategoryField($name,$col['default']);
-                $val = $check_category_field['array_val'];
+                //$val = $check_category_field['array_val'];
+                if($check_category_field['array_val'])
+                {
+                    $data[$name] = $check_category_field['array_val'];
+                    $val = $check_category_field['array_val'];
+                }
             }
             if($type == 'model')
             {
