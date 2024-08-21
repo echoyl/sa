@@ -47,20 +47,20 @@ class MenuController extends CrudController
                 ["label" => "启用","value" => 1],
                 ["label" => "禁用","value" => 0],
             ],"table_menu" => true],
-            ['name'=>'desc','type'=>'json','default'=>'{}'],
-            ['name'=>'perms','type'=>'json','default'=>'{}'],
+            ['name'=>'desc','type'=>'json','default'=>''],
+            ['name'=>'perms','type'=>'json','default'=>''],
             ['name'=>'icon','type'=>'select','default'=>''],
             ['name'=>'status','type'=>'switch','default'=>1,"with" => true,"data" => [
                 ["label" => "显示","value" => 1],
                 ["label" => "隐藏","value" => 0],
             ]],
-            ['name'=>'form_config','type'=>'json','default'=>'{}'],
-            ['name'=>'other_config','type'=>'json','default'=>'{}'],
-            ['name'=>'table_config','type'=>'json','default'=>'{}'],
+            ['name'=>'form_config','type'=>'json','default'=>''],
+            ['name'=>'other_config','type'=>'json','default'=>''],
+            ['name'=>'table_config','type'=>'json','default'=>''],
             ['name'=>'setting','type'=>'json','default'=>''],
         ];
 
-        $this->can_be_null_columns = ['title','admin_model_id','icon'];
+        $this->can_be_null_columns = ['title','admin_model_id','icon','category_id','other_config'];
 
         $this->with_column = ['adminModel.relations.foreignModel.menu'];
     }
@@ -108,10 +108,12 @@ class MenuController extends CrudController
         {
             $this->tableConfig($id);
             $this->formConfig($id);
+            $this->otherConfig($id);
         }else
         {
             $desc = $data['desc']?json_decode($data['desc'],true):[];
             $this->updateDesc($desc,$data);
+            $this->otherConfig($id);
         }
         $this->clearCache();
         return;
@@ -173,7 +175,13 @@ class MenuController extends CrudController
         //新增菜单的初始化数据
         if(!$id)
         {
-            $page_type = $data['page_type']??'';
+            $page_type = $data['page_type']??'table';
+            $data['page_type'] = $page_type;
+
+            if(!isset($data['admin_model_id']))
+            {
+                return;
+            }
 
             $table = [
                 ['key'=>'option']
@@ -475,7 +483,7 @@ class MenuController extends CrudController
         
         $desc['tableColumns'] = $tableColumns;
 
-        return $this->updateDesc($desc,$item,['table_config'=>json_encode($config)]);
+        return $this->updateDesc($desc,$item,['table_config'=>empty($config)?'':json_encode($config)]);
 
     }
 
@@ -638,7 +646,7 @@ class MenuController extends CrudController
             }
         }
         //默认还是会更新一次form_config 在之前已经生成了group的uid 和 columns 的uid
-        return $this->updateDesc($desc,$item,['form_config'=>json_encode($config)]);
+        return $this->updateDesc($desc,$item,['form_config'=>empty($config)?'':json_encode($config)]);
     }
 
     /**
@@ -671,8 +679,8 @@ class MenuController extends CrudController
             }
         }
         $desc = array_merge($_desc,$config);
-        //d($desc);
-        return $this->updateDesc($desc,$item,['other_config'=>json_encode($config)]);
+
+        return $this->updateDesc($desc,$item,['other_config'=>empty($config)?'':json_encode($config)]);
     }
 
     protected function updateDesc($desc,$item,$data = [])

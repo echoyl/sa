@@ -298,36 +298,44 @@ class AdminService
         $ms = new MenuService;
         [$name,$menu] = $ms->getMenuByRouter($now_router);
         //d($menu,$now_router);
-        if($menu && $menu['id'] && $menu['other_config'])
+        $other_config = Arr::get($menu,'other_config');
+        $_category_id = Arr::get($menu,'_category_id');
+
+        $defaultData = [];
+
+        if($other_config)
         {
-            $other_config = json_decode($menu['other_config'],true);
-            if($other_config && isset($other_config['defaultData']))
+            $other_config = json_decode($other_config,true);
+            $defaultData = $other_config['defaultData']??[];
+        }
+
+        if($_category_id)
+        {
+            $defaultData['cid'] = json_decode($_category_id,true);
+        }
+        
+        foreach($defaultData as $key=>$val)
+        {
+            $has_request_val = request($key);
+            //d($has_request_val,333);
+            if($has_request_val)
             {
-                //d($other_config);
-                foreach($other_config['defaultData'] as $key=>$val)
+                if(is_array($val))
                 {
-                    $has_request_val = request($key);
-                    //d($has_request_val,333);
-                    if($has_request_val)
+                    if(is_array($has_request_val))
                     {
-                        if(is_array($val))
+                        $val = array_intersect($val,$has_request_val);
+                    }else
+                    {
+                        if(in_array($has_request_val,$val))
                         {
-                            if(is_array($has_request_val))
-                            {
-                                $val = array_intersect($val,$has_request_val);
-                            }else
-                            {
-                                if(in_array($has_request_val,$val))
-                                {
-                                    $val = [$has_request_val];
-                                }
-                            }
+                            $val = [$has_request_val];
                         }
-                        //d($val);
                     }
-                    request()->offsetSet($key,$val);
                 }
+                //d($val);
             }
+            request()->merge([$key=>$val]);
         }
 
         return true;
