@@ -64,6 +64,7 @@ class LoginController extends ApiBaseController
             $info['userinfo'] = $this->service->parseUserInfo($info['userinfo'],$info['user']);
             unset($info['user']);
             $as->loginErrorLog('clear');
+            $this->service->triggerLogin($info);
             return $this->success($info,[0,'登录成功，页面跳转中...']);
         }else
         {

@@ -154,6 +154,10 @@ class AdminAppService implements SaAdminAppServiceInterface
     {
         return $userinfo;
     }
+    public function triggerLogin($info)
+    {
+        return;
+    }
 
     public function areaMap($data,$type = 'cn')
     {

@@ -147,7 +147,7 @@ class SocketService
      * @param 'user' | 'token' $type
      * @return void
      */
-    public static function send($id = 0 ,$message,$type = 'user')
+    public static function send($id,$message,$type = 'user')
     {
         $model = self::getModel();
 
