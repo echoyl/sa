@@ -877,15 +877,22 @@ class CrudController extends ApiBaseController
                                 $with_where = [];
                                 foreach($with['where'] as $ww)
                                 {
-                                    if(strpos($ww[2],'this.') !== false)
+                                    if(in_array($ww[1],['in','between']))
                                     {
-                                        $data_key = str_replace('this.','',$ww[2]);
-                                        if(isset($this_data[$data_key]))
+                                        $_m = HelperService::searchWhereBetweenIn($_m,[$ww[0]],$ww[2],$ww[1] == 'in'?'whereIn':'whereBetween');
+                                    }else
+                                    {
+                                        if(strpos($ww[2],'this.') !== false)
                                         {
-                                            $ww[2] = $this_data[$data_key];
+                                            $data_key = str_replace('this.','',$ww[2]);
+                                            if(isset($this_data[$data_key]))
+                                            {
+                                                $ww[2] = $this_data[$data_key];
+                                            }
                                         }
+                                        $with_where[] = $ww;
                                     }
-                                    $with_where[] = $ww;
+                                    
                                 }
                                 $_m = $_m->where($with_where);
                             }

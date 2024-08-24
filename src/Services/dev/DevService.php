@@ -338,21 +338,21 @@ class DevService
                     $with_default = '->withDefault('.Dev::export($with_default,2).')';
                 }
             }
-            //加入筛选条件
+            //加入筛选条件 应该只有1对多的时候才加入
             $filter_where = '';
-            if($val['filter'])
+            if($val['filter'] && $val['type'] == 'many')
             {
                 $filter = json_decode($val['filter'],true);
-                //关联模型不支持变量参数过滤掉
+                //关联模型不支持变量参数过滤掉 
                 $_filter = [];
                 foreach($filter as $f)
                 {
-                    if(isset($f[1]) && $f[1] == 'in' && is_array($f[2]))
+                    if(isset($f[1]) && ($f[1] == 'in' || $f[1] == 'between') && is_array($f[2]))
                     {
-                        $filter_where .= '->whereIn("'.$f[0].'",'.json_encode($f[2]).')';
+                        $filter_where .= '->'.($f[1] == 'in'?'whereIn':'whereBetween').'("'.$f[0].'",'.json_encode($f[2]).')';
                         continue;
                     }
-                    if(isset($f[2]) && strpos($f[2],'this.') !== false)
+                    if(isset($f[2]) && is_string($f[2]) && strpos($f[2],'this.') !== false)
                     {
                         continue;
                     }

@@ -553,7 +553,7 @@ class MenuController extends CrudController
     public function formConfig($id = 0)
     {
         $item_data = $this->getItem('form_config',$id);
-        
+
         if(!is_array($item_data))
         {
             return $item_data;
@@ -609,6 +609,10 @@ class MenuController extends CrudController
                     $tab['uid'] = HelperService::uuid();
                     $need_update_config = true;
                 }
+                if(isset($tab['props']) && isset($tab['props']['outside']))
+                {
+                    $tab['tab']['props'] = $tab['props']['outside'];
+                }
                 $_tabs[] = [
                     'tab'=>$tab['tab'],
                     'uid'=>$tab['uid'],
@@ -638,12 +642,25 @@ class MenuController extends CrudController
             {
                 unset($desc['tabs']);
             }
+            //将默认加入tab（所有form都将是 tab模式 tab => [[row=>[...columns]]]） 去掉 单独 formColumns
             [$formColumns,$update] = $this->formTabConfig($item,$config);
-            $desc['formColumns'] = $formColumns;
+            $base_tab = [
+                'tab'=>['title'=>'基础信息'],
+                'uid'=>HelperService::uuid()
+            ];
+            $_tabs = [
+                array_merge($base_tab,['formColumns'=>$formColumns])
+            ];
+            if(isset($desc['formColumns']))
+            {
+                unset($desc['formColumns']);
+            }
+            $desc['tabs'] = $_tabs;
             if($update)
             {
                 $config = $update;
             }
+            $config = ['tabs'=>[array_merge($base_tab,['config'=>$config])]];
         }
         //默认还是会更新一次form_config 在之前已经生成了group的uid 和 columns 的uid
         return $this->updateDesc($desc,$item,['form_config'=>empty($config)?'':json_encode($config)]);

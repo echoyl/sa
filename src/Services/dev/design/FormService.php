@@ -347,6 +347,10 @@ class FormService extends BaseService
             {
                 foreach($tab['config'] as $gk => $group)
                 {
+                    if(!isset($group['uid']))
+                    {
+                        continue;
+                    }
                     if($group['uid'] == $uid)
                     {
                         $index = [$tk,'config',$gk];
