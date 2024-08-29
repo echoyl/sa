@@ -266,4 +266,20 @@ class ModelController extends CrudController
         }
         return $m;
     }
+
+    public function getJsonFromTable()
+    {
+        $name = request('name');
+        $parent_id = request('parent_id');
+
+        $ds = new DevService;
+        [$code,$ret] = $ds->tabel2SchemaJson($name,$parent_id);
+
+        if($code)
+        {
+            return $this->fail([$code,$ret]);
+        }
+
+        return $this->success($ret);
+    }
 }

@@ -85,6 +85,9 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         Route::post('model/createModelFile', 'ModelController@createModelFile');
                         Route::post('model/createControllerFile', 'ModelController@createControllerFile');
                         Route::post('model/copyToFolder', 'ModelController@copyToFolder');
+                        //通过已有数据表生成json
+                        Route::get('model/getJsonFromTable', 'ModelController@getJsonFromTable');
+                        
                         Route::resource('model', 'ModelController');
                         Route::resource('relation', 'RelationController');
                     });

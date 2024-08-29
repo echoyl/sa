@@ -21,13 +21,13 @@ class Selects extends BaseField
         if($val && $isset)
         {
             $val = is_string($val)?explode(',',$val):$val;
-            foreach($val as $k=>$v)
-            {
-                if(is_numeric($v))
-                {
-                    $val[$k] = intval($v);
-                }
-            }
+            // foreach($val as $k=>$v)
+            // {
+            //     if(is_numeric($v))
+            //     {
+            //         $val[$k] = intval($v);
+            //     }
+            // }
         }else
         {
             $val = '__unset';

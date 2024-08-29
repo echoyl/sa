@@ -45,11 +45,15 @@ class IndexController extends ApiBaseController
             $msg = '';
             $pwd = false;
 
+            $base['originData'] = $uinfo;
+
+            $avatar_data = HelperService::enImages($base,['avatar']);
+
             $update = [
                 'realname' => $base['realname']??'',
                 'desc' => $base['desc']??'',
                 'mobile' => $base['mobile']??'',
-                'avatar' => HelperService::uploadParse($base['avatar']??''),
+                'avatar' => $avatar_data['avatar'],
             ];
 
             if ($new_password && $old_password) {

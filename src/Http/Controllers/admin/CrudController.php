@@ -898,6 +898,13 @@ class CrudController extends ApiBaseController
                             }
                             
                             $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
+                            if($with['type'] == 'selects')
+                            {
+                                $data[$name] = collect($data[$name])->map(function($v){
+                                    $v['id'] = strval($v['id']);
+                                    return $v;
+                                });
+                            }
                         }else
                         {
                             if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))

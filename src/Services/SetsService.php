@@ -62,8 +62,9 @@ class SetsService
         return implode('_',[$this->cache_prefix,$key]);
     }
 
-    public function parseImgField($post_data,$imgf)
+    public function parseImgField($post_data,$imgf,$originData = false)
     {
+        $post_data['originData'] = $originData;//原始数据 更新后需要删除该文件
         $config = [
             'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>'image','default'=>''],
         ];
@@ -86,6 +87,14 @@ class SetsService
         $app_name = $this->appName();
         $item = $this->getData($key);
         //新增自动检测字段是否是图片 及 配置 类型
+        if($item && $item['value'])
+        {
+            $data = json_decode($item['value'],true);
+            $data = HelperService::autoParseImages($data);
+        }else
+        {
+            $data = [];
+        }
 
 
 		if(request()->isMethod('post'))
@@ -105,7 +114,7 @@ class SetsService
             {
                 if(is_string($imgf))
                 {
-                    $post_data = $this->parseImgField($post_data,$imgf);
+                    $post_data = $this->parseImgField($post_data,$imgf,$data);
                 }elseif(is_array($imgf))
                 {
                     $d = Arr::get($post_data,implode('.',$imgf));
@@ -113,7 +122,8 @@ class SetsService
                     {
                         $name = array_pop($imgf);
                         $top = Arr::get($post_data,implode('.',$imgf));
-                        $top = $this->parseImgField($top,$name);
+                        $top_ata = Arr::get($data,implode('.',$imgf));
+                        $top = $this->parseImgField($top,$name,$top_ata);
                         Arr::set($post_data,implode('.',$imgf), $top);
                     }
                 }
@@ -133,18 +143,10 @@ class SetsService
                 $data['app_name'] = $app_name;
 				$this->model->insert($data);
 			}
-            Cache::delete($this->getCacheKey($key));
+            Cache::forget($this->getCacheKey($key));
 			return ['code'=>0,'msg'=>'提交成功'];
 		}else
 		{
-			if($item && $item['value'])
-			{
-				$data = json_decode($item['value'],true);
-                $data = HelperService::autoParseImages($data);
-			}else
-			{
-				$data = [];
-			}
 			return ['code'=>0,'data'=>$data];
 		}
 	}

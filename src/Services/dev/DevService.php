@@ -117,6 +117,86 @@ class DevService
         return $field_sql;
     }
 
+    public function tabel2SchemaJson($name,$parent_id)
+    {
+        $all = $this->allModel(true);
+        $parent_model = (new Model())->where(['id'=>$parent_id])->first();
+        $table_name = [];
+        if($parent_model)
+        {
+            $table_name = array_reverse(DevService::getPath($parent_model, $all));
+            $table_name[] = $name;
+        }else
+        {
+            $table_name = [self::appname(),$name];
+        }
+
+        $table_name = implode('_',$table_name);
+
+        if(!Schema::hasTable($table_name))
+        {
+            return [1,'数据表未创建,请先创建后重试'];
+        }
+
+        $table_name = 'la_'.$table_name;
+        $dist_f = DB::getPdo()->query('SHOW FULL COLUMNS from '.$table_name);
+
+        $items = [];
+
+        foreach($dist_f as $val)
+        {
+            $field = $val['Field'];
+            if(array_key_exists($field,Utils::$title_arr))
+            {
+                continue;
+            }
+
+            $type = $val['Type'];
+            $comment = $val['Comment'];
+            //长度大于5个字符的直接使用Field
+            if(!$comment || mb_strlen($comment) > 5)
+            {
+                $title = $field;
+            }else
+            {
+                $title = $comment;
+                $comment = '';//重置
+            }
+
+            $item = [
+                "title"=> $title,
+                "name"=> $field,
+                'type'=>$type
+            ];
+
+            if($comment)
+            {
+                $item['desc'] = $comment;
+            }
+
+            
+            if(strpos($type,'varchar') !== false)
+            {
+                $item['type'] = 'varchar';
+                $length = substr($type,8,-1);
+                if($length != 255)
+                {
+                    $item['length'] = $length;
+                }
+            }
+            if($val['Default'])
+            {
+                $item['default'] = $val['Default'];
+            }
+            
+
+            $items[] = $item;
+        }
+
+        return [0,$items];
+
+    }
+
     public function createModelSchema($model)
     {
         $all = $this->allModel(true);
@@ -690,6 +770,11 @@ class DevService
                 }
 
                 $foreign_model = $val['foreign_model'];
+
+                if(!$foreign_model)
+                {
+                    d($val);
+                }
                 
                 if(isset($useModelArr[$foreign_model['id']]))
                 {
