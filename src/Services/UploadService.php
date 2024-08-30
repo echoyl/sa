@@ -38,8 +38,6 @@ class UploadService
             $format = $type == 'image'?$this->image_ext_arr:$this->file_ext_arr;
         }
 
-        
-
         $maxsize = Arr::get($setting,'maxsize',5);//默认最大5m
 
         $sufix = 'extensions';
@@ -49,13 +47,12 @@ class UploadService
             $sufix = 'mimes';
         }
         $rules = ['file','required','max:'.($maxsize*1024),$sufix.':'.implode(',',$format)];
-
         $validator = Validator::make($request->all(),[
             $name => $rules
         ],[
             //验证是否为文件
-            $name.'.file' => '请上传内容',
-            $name.'.required' => '请上传内容',
+            $name.'.file' => '请上传图片文件',
+            $name.'.required' => '上传的图片为空',
             //验证文件上传大小
             $name.'.max' => '不能超过'.$maxsize.'mb',
             //验证上传文件格式

@@ -30,6 +30,14 @@ class DevService
         return env('APP_NAME','');
     }
 
+    /**
+     * 生成单个表的sql
+     *
+     * @param [type] $table_name
+     * @param [type] $columns
+     * @param array $par
+     * @return void
+     */
     public function createSchemaSql($table_name,$columns,$par = [])
     {
         $table_sql = ['CREATE TABLE `la_'.$table_name.'` ('];
@@ -64,6 +72,12 @@ class DevService
         return $table_sql;
     }
 
+    /**
+     * 生成单个字段的sql
+     *
+     * @param [单个字段信息] $val
+     * @return void
+     */
     public function schemaColumnSql($val)
     {
         $field_sql = '';
@@ -71,6 +85,7 @@ class DevService
         $comment = $val['desc']??$val['title'];
         $name = $val['name'];
         $length = $val['length']??0;
+        $setting = Arr::get($val,'setting',[]);
         switch($val['type'])
         {
             case 'int':
@@ -113,10 +128,36 @@ class DevService
             case 'decimal':
                 $field_sql = "`{$name}`  decimal(10,2) NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
             break;
+            case 'enum':
+                //读取预设的数据
+                //
+                $json = Arr::get($setting,'json',[]);
+                $enums = collect($json)->map(function($v){
+                    return $v['id'];
+                })->toArray();
+                if(!empty($enums))
+                {
+                    if(!in_array($default_value,$enums))
+                    {
+                        $default_value = $enums[0];
+                    }
+                    $field_sql = "`{$name}` enum('".implode("','",$enums)."') NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}' FIRST";
+                }else
+                {
+                    $field_sql = "`{$name}` enum NULL DEFAULT NULL COMMENT '{$comment}' FIRST";
+                }
+            break;
         }
         return $field_sql;
     }
 
+    /**
+     * 通过table的信息生成json字段信息
+     *
+     * @param [type] $name
+     * @param [type] $parent_id
+     * @return void
+     */
     public function tabel2SchemaJson($name,$parent_id)
     {
         $all = $this->allModel(true);
@@ -182,6 +223,20 @@ class DevService
                 if($length != 255)
                 {
                     $item['length'] = $length;
+                }
+            }
+            if(strpos($type,'enum') !== false)
+            {
+                $item['type'] = 'enum';
+                preg_match('/\((.+)\)/',$type,$match);
+                if($match && isset($match[1]))
+                {
+                    $enums = explode(',',str_replace("'",'',$match[1]));
+                    $item['setting'] = [
+                        'json'=>collect($enums)->map(function($v){
+                            return ['id'=>$v,'title'=>$v];
+                        })->toArray()
+                    ];
                 }
             }
             if($val['Default'])
