@@ -474,6 +474,12 @@ class MenuController extends CrudController
         if(isset($table_menu_key))
         {
             $desc['table_menu_key'] = $table_menu_key;
+        }else
+        {
+            if(isset($desc['table_menu_key']))
+            {
+                unset($desc['table_menu_key']);
+            }
         }
 
         //工具菜单

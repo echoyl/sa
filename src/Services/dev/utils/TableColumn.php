@@ -443,7 +443,7 @@ class TableColumn
         $setting = $this->schema['setting']??[];
         $label = $setting['label']??'';
         $value = $setting['value']??'';
-        $table_menu = $this->schema['table_menu']??'';
+        //$table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
 
         if($this->form_type == 'select' || $this->form_type == 'radioButton')
@@ -451,19 +451,17 @@ class TableColumn
             $label = $label?:'title';
             $value = $value?:'id';
         }
-        if(!$table_menu && ($label || $value))
+        if($label || $value)
         {
-            //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可
+            //如果设置该列为table_menu 则不需要设置fieldNames，使用默认即可 去除了 table_menu的检测
             $d['fieldProps']['fieldNames'] = [
                 'label'=>$label,'value'=>$value
             ];
         }
-
+        //关联的select 需要获取数据
+        $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
         if($this->relation)
         {
-            //关联的select 需要获取数据
-            $d['requestDataName'] = $this->schema['name'].'s';
-            
             if($this->form_type == 'selects')
             {
                 $d['fieldProps']['mode'] = 'multiple';
@@ -471,15 +469,16 @@ class TableColumn
         }else
         {
             //非关联的话 手动设置数据源
+            //直接使用requestDataName 更改数据后不用再次编辑表单
             if(isset($setting['json']) && $setting['json'])
             {
-                if(is_string($setting['json']))
-                {
-                    $d['fieldProps']['options'] = json_decode($setting['json'],true);
-                }else
-                {
-                    $d['fieldProps']['options'] = $setting['json'];
-                }
+                // if(is_string($setting['json']))
+                // {
+                //     $d['fieldProps']['options'] = json_decode($setting['json'],true);
+                // }else
+                // {
+                //     $d['fieldProps']['options'] = $setting['json'];
+                // }
                 
                 // if($this->form_type == 'selects')
                 // {

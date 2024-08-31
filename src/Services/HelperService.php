@@ -497,6 +497,12 @@ class HelperService
             $search_val = '%' . $search_val . '%';
         }
 
+        if($search_val == 'all')
+        {
+            //保留关键字 搜索all 过滤掉
+            return $model;
+        }
+
         if(count($columns) == 1)
         {
             //只搜索一个字段

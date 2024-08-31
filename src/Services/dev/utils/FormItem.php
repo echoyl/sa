@@ -557,29 +557,27 @@ class FormItem
                 'label'=>$label,'value'=>$value
             ];
         }
+        $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
 
         if($this->relation && $this->schema)
         {
-            $d['requestDataName'] = $this->schema['name'].'s';
-            
-            
             if($this->form_type == 'selects')
             {
                 $d['fieldProps']['mode'] = 'multiple';
             }
-            
         }else
         {
-            if(isset($setting['json']))
-            {
-                if(is_string($setting['json']))
-                {
-                    $d['fieldProps']['options'] = json_decode($setting['json'],true);
-                }else
-                {
-                    $d['fieldProps']['options'] = $setting['json'];
-                }
-            }
+            //直接使用requestDataName 更改数据后不用再次编辑表单
+            // if(isset($setting['json']))
+            // {
+            //     if(is_string($setting['json']))
+            //     {
+            //         $d['fieldProps']['options'] = json_decode($setting['json'],true);
+            //     }else
+            //     {
+            //         $d['fieldProps']['options'] = $setting['json'];
+            //     }
+            // }
             if($this->form_type == 'selects')
             {
                 $d['fieldProps']['mode'] = 'tags';

@@ -939,7 +939,19 @@ class CrudController extends ApiBaseController
             //检测是否有table_menu设置
             if(isset($with['table_menu']) && !isset($data['table_menu']))
             {
-                $table_menu[$with['name']] = $with['data']??$data[$name];
+                //这里处理下数据
+                $table_menu_data = $with['data']??$data[$name];
+                $table_menu[$with['name']] = collect($table_menu_data)->map(function($v){
+                    if(isset($v['id']))
+                    {
+                        $v['value'] = $v['id'];
+                    }
+                    if(isset($v['title']))
+                    {
+                        $v['label'] = $v['title'];
+                    }
+                    return $v;
+                });
             }
         }
 
