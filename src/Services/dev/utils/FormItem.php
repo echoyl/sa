@@ -539,7 +539,6 @@ class FormItem
     {
         $d = $this->data;
         $setting = $this->schema['setting']??[];
-        $table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
 
         $label = $setting['label']??'';
@@ -551,7 +550,7 @@ class FormItem
             $value = $value?:'id';
         }
 
-        if(!$table_menu && ($label || $value))
+        if($label || $value)
         {
             $d['fieldProps']['fieldNames'] = [
                 'label'=>$label,'value'=>$value
