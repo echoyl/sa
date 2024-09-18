@@ -196,7 +196,12 @@ class AdminService
             $perms2 = explode(',',$user['perms2']);
             foreach($perms2 as $perm)
             {
-                [$id] = explode('.',$perm);
+                [$id,$action_name] = explode('.',$perm);
+                if($action_name && $action_name == 'dataList')
+                {
+                    //将不需要菜单的action 过滤掉
+                    continue;
+                }
                 $parent_ids = $as->getParentId($id);
                 if($parent_ids)
                 {

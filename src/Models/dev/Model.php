@@ -30,7 +30,7 @@ class Model extends Category
                     ["label" => "系统", "value" => 'system'],
                 ], "with" => true],
                 ['name'=>'columns','type'=>'json','default'=>''],
-                ['name'=>'search_columns','type'=>'json','default'=>'{}'],
+                ['name'=>'search_columns','type'=>'json','default'=>''],
                 ['name'=>'unique_fields','type'=>'json','default'=>''],
                 ['name'=>'setting','type'=>'json','default'=>''],
                 //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],

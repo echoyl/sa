@@ -102,6 +102,23 @@ class ModelController extends CrudController
     }
 
     /**
+     * 提交前置操作 将多余的参数删掉
+     *
+     * @param [type] $data
+     * @param integer $id
+     * @param array $item
+     * @return void
+     */
+    public function beforePost(&$data, $id = 0, $item = [])
+    {
+        if(isset($data['createModelSchema']))
+        {
+            unset($data['createModelSchema']);
+        }
+        return;
+    }
+
+    /**
      * 保存完后就直接创建 文件
      *
      * @param [type] $id
@@ -115,6 +132,12 @@ class ModelController extends CrudController
             //文件夹直接跳过
             return;
         }
+
+        if(env('APP_ENV') != 'local')
+        {
+            return;//生产环境直接返回
+        }
+
         $ds = new DevService;
 
         $ds->createControllerFile($data);
@@ -122,6 +145,13 @@ class ModelController extends CrudController
         $ds->createModelFile($data);
 
         $ds->modelColumn2Export($data);
+
+        //检测如果需要创建数据库表
+        $createModelSchema = request('base.createModelSchema');
+        if(!empty($createModelSchema))
+        {
+            $ds->createModelSchema($data);
+        }
 
         $this->clearCache();
 

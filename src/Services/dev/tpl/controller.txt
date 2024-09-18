@@ -21,6 +21,7 @@ class $name$Controller extends CrudController
 		parent::__construct();
 		$crud_config$
 		$this->model = new $modelname$();
+		$this->model_class = $modelname$::class;
 		//customer construct start
 		$customer_construct$
 		//customer construct end

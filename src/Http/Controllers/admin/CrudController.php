@@ -21,10 +21,12 @@ use Illuminate\Support\Arr;
  * @method mixed setThis() 设置一个值 在select 获取数据的时候可以当做filter条件使用
  * @method mixed exportFormatData($val) 导出数据格式化数据方法
  * @property \App\Services\AdminAppService $service
+ * @property \Illuminate\Database\Eloquent\Model $model
  */
 class CrudController extends ApiBaseController
 {
     public $model;
+    public $model_class;
     public $with_column = [];
     public $with_sum = [];//hasmany需要求和的配置
     public $dont_post_columns = []; //多余字段不需要提交数据库
@@ -55,7 +57,12 @@ class CrudController extends ApiBaseController
     var $handleSearchName = 'handleSearch';
 
     /**
-     * 搜索项配置
+     * @var array 自定义失败消息提醒文字
+     */
+    var $fail_reason_customer = [];
+
+    /**
+     * @var array 搜索项配置
      */
     public $search_config = [];
 
@@ -102,6 +109,7 @@ class CrudController extends ApiBaseController
 
     public function defaultSearch($m)
     {
+        $m = $this->globalDataSearch($m,$this->getModel());
         //
         $title = request('title', '');
         if ($title) {
@@ -490,21 +498,30 @@ class CrudController extends ApiBaseController
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)
             ->get()->toArray();
-
+        $has_customer_list = method_exists($this, $this->listDataName);
         foreach ($list as $key => $val) {
+            if($has_customer_list)
+            {
+                $val['origin_data'] = $val;//保存原始数据 可以在自定义列表数据中消费
+            }
             $this->parseData($val, 'decode', 'list');
             $list[$key] = $val;
         }
 
-        if (method_exists($this, $this->listDataName)) {
+        if ($has_customer_list) {
             $method = $this->listDataName;
             $rlist = $this->$method($list);
 
             if($rlist)
             {
-                //增加如果自定义处理了列表数据使用处理过的数据 比如增加了行(可能会碰到合并行的雪球)
+                //增加如果自定义处理了列表数据使用处理过的数据 比如增加了行(可能会碰到合并行的需求)
                 $list = $rlist;
             }
+            //再次循环一次将 原始数据删除
+            $list = collect($list)->map(function($v){
+                unset($v['origin_data']);
+                return $v;
+            });
 
         }
         return $this->list($list, $count, $search);
@@ -723,6 +740,12 @@ class CrudController extends ApiBaseController
                     }
 
             }
+            //全局数据提交检测
+            $fail = $this->globalPostCheck($data,$item);
+            if($fail)
+            {
+                return $fail;
+            }
             //d($data);
             if (!empty($id)) {
                 $data['originData'] = $item;
@@ -734,12 +757,17 @@ class CrudController extends ApiBaseController
                 }
                 $this->model->where(['id' => $id])->update($data);
             } else {
+                //插入数据
                 $data['created_at'] = $data['created_at']??now();
                 $this->parseData($data);
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
                 {
                     return $this->fail([1,$check_uniue_result]);
+                }
+                if($this->model->with_system_admin_id)
+                {
+                    $data = $this->model->getSysAdminIdData($data);
                 }
                 $id = $this->model->insertGetId($data);
             }
@@ -791,19 +819,33 @@ class CrudController extends ApiBaseController
                 $id = [$id];
             }
         }
+        //$id_count = count($id);
+        $item_count = 0;
         if (!empty($id)) {
-            $m = $this->beforeDestroy($this->model->whereIn('id', $id));
+            $m = $this->getModel();
+            $m = $this->beforeDestroy($m->whereIn('id', $id));
 
             $items = $m->get();
+            $item_count = count($items);
+            if(!$item_count)
+            {
+                return $this->fail([1,$this->failMessage('delete_at','删除失败')]);
+            }
             foreach ($items as $val) {
                 //增加删除检测字段类型是图片附件的，删除文件
+                $fake_val = [];
+                $fail = $this->globalPostCheck($fake_val,$val);
+                if($fail)
+                {
+                    return $fail;
+                }
                 $pval = [
                     'originData'=>$val->toArray()
                 ];
                 $this->parseData($pval, 'encode','delete');
                 $val->delete();
             }
-            return $this->success();
+            return $this->success(null,[0,'成功删除 '.$item_count.' 条记录']);
         }
         return $this->fail([1,'参数错误']);
     }
@@ -854,6 +896,7 @@ class CrudController extends ApiBaseController
                 if(isset($with['class']))
                 {
                     $_m = new $with['class'];
+                    $_m = $this->globalDataSearch($_m,$_m);
                     $no_category = Arr::get($with,'no_category',false);//不是分类模型
                     if($with['type'] == 'select_columns')
                     {
@@ -939,7 +982,9 @@ class CrudController extends ApiBaseController
             //检测是否有table_menu设置
             if(isset($with['table_menu']) && !isset($data['table_menu']))
             {
-                //这里处理下数据
+                //已经默认 在select 中 columns 加入了label和value字段 不再处理数据
+                //$table_menu[$with['name']] = $with['data']??$data[$name];
+                //这里处理下数据 之后将移除
                 $table_menu_data = $with['data']??$data[$name];
                 $table_menu[$with['name']] = collect($table_menu_data)->map(function($v){
                     if(isset($v['id']))
@@ -990,7 +1035,7 @@ class CrudController extends ApiBaseController
             $type = $col['type'];
             $encode = $in == 'encode'?true:false;
 
-            $isset = isset($data[$name])?true:false;
+            $isset = array_key_exists($name,$data) ? true : false;
             if (!$isset && $from == 'update') {
                 //更新数据时 不写入默认值
                 //d($this->parse_columns,$this->can_be_null_columns);
@@ -1026,7 +1071,7 @@ class CrudController extends ApiBaseController
                 {
                     $cls = new $col['class'];
                     $cls_p_c = $cls->getParseColumns();
-                    if(!empty($cls_p_c) && $deep <= 3 && $isset)
+                    if(!empty($cls_p_c) && $deep <= 3 && $isset && $val)
                     {
                         //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                         //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
@@ -1215,5 +1260,68 @@ class CrudController extends ApiBaseController
 
 		$ret = $es->export($data,$formatData);
 		return $this->success($ret);
+    }
+    /**
+     * 获取菜单对应的模型对象 防止设置$this->model 对象改变
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function getModel()
+    {
+        if($this->model_class)
+        {
+            return new $this->model_class;
+        }else
+        {
+            return $this->model;
+        }
+    }
+    /**
+     * 全局修改数据前置检测
+     *
+     * @param [type] $data
+     * @param [type] $item
+     * @return void
+     */
+    public function globalPostCheck(&$data,$item)
+    {
+        $origin_model = $this->getModel();
+        if(property_exists($origin_model,'admin_post_check'))
+        {
+            if(!$this->service->postCheck($data,$item,$origin_model))
+            {
+                return $this->fail([1,$this->failMessage('global_post_check')]);
+            }
+        }
+        return;
+    }
+    /**
+     * 全局筛选数据条件
+     *
+     * @param [type] $m
+     * @param boolean $origin_model
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function globalDataSearch($m,$origin_model = false)
+    {
+        $origin_model = $origin_model?:$this->getModel();
+        if(property_exists($origin_model,'admin_data_search'))
+        {
+            $m = $this->service->dataSearch($m,$origin_model);
+        }
+        return $m;
+    }
+
+    /**
+     * 自定义返回错误提示信息
+     *
+     * @param [type] $type
+     * @param string $default
+     * @return string
+     */
+    public function failMessage($type,$default = '')
+    {
+        $arr = array_merge($this->service->fail_reason,$this->fail_reason_customer);
+        return $arr[$type]??$default;
     }
 }

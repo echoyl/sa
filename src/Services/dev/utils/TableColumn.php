@@ -57,18 +57,20 @@ class TableColumn
         $this->key = $key;
         //fixed
         $fixed = $props['fixed']??'';
+        $value_type = '';
         if(in_array($key,['option','coption','created_at_s','displayorder']))
         {
-            $this->data = [
-                'valueType'=>$key,
-                'uid'=>$uid,
-                'search'=>false
-            ];
-            if($fixed)
-            {
-                $this->data['fixed'] = $fixed;
-            }
-            return $this->data;
+            $value_type = $key;
+            // $this->data = [
+            //     'valueType'=>$key,
+            //     'uid'=>$uid,
+            //     'search'=>false
+            // ];
+            // if($fixed)
+            // {
+            //     $this->data['fixed'] = $fixed;
+            // }
+            // return $this->data;
         }
 
         $columns = json_decode($model['columns'],true);
@@ -132,6 +134,10 @@ class TableColumn
         }
 
         $d = ['dataIndex'=>$dataIndex,'uid'=>$uid,'title'=>$title?:($schema?$schema['title']:($relation_title?:Utils::$title_arr[$key]??''))];
+        if($value_type)
+        {
+            $d['valueType'] = $value_type;
+        }
         if($unset_dataindex)
         {
             unset($d['dataIndex']);

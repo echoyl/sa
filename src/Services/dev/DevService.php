@@ -31,12 +31,40 @@ class DevService
     }
 
     /**
+     * 获取默认字段即设置追加的字段
+     *
+     * @param [array] $columns
+     * @param array $par
+     * @return array
+     */
+    public function mergeSchemaColumns($columns,$par = [])
+    {
+        $sys_columns = [
+            ['name'=>'updated_at','type'=>'datetime','desc'=>'最后更新时间'],
+            ['name'=>'created_at','type'=>'datetime','desc'=>'生成时间'],
+            ['name'=>'displayorder','type'=>'int','desc'=>'排序值']
+        ];
+
+        if(Arr::get($par,'soft_delete'))
+        {
+            $sys_columns[] = ['name'=>'deleted_at','type'=>'datetime','desc'=>'删除时间'];
+        }
+
+        if(Arr::get($par,'with_system_admin_id'))
+        {
+            $sys_columns[] = ['name'=>'sys_admin_id','type'=>'int','desc'=>'系统用户id'];
+        }
+
+        return array_merge($sys_columns,$columns);
+    }
+
+    /**
      * 生成单个表的sql
      *
      * @param [type] $table_name
      * @param [type] $columns
      * @param array $par
-     * @return void
+     * @return array
      */
     public function createSchemaSql($table_name,$columns,$par = [])
     {
@@ -44,6 +72,9 @@ class DevService
         $has_id = false;
         
         //$table_sql[] = '`id`  int NOT NULL AUTO_INCREMENT ,';
+
+        $columns = $this->mergeSchemaColumns($columns,$par);
+
         foreach($columns as $val)
         {
             
@@ -53,15 +84,6 @@ class DevService
             }
             $field_sql = $this->schemaColumnSql($val);
             $table_sql[] = $field_sql.',';
-        }
-        $table_sql[] = "`updated_at`  datetime DEFAULT NULL ,";
-        $table_sql[] = "`created_at`  datetime DEFAULT NULL ,";
-        $table_sql[] = "`displayorder`  int(11) NOT NULL DEFAULT 0 COMMENT '排序权重',";
-
-        $soft_delete = Arr::get($par,'soft_delete');
-        if($soft_delete)
-        {
-            $table_sql[] = "`deleted_at`  datetime DEFAULT NULL ,";
         }
 
         if($has_id)
@@ -160,26 +182,40 @@ class DevService
      */
     public function tabel2SchemaJson($name,$parent_id)
     {
-        $all = $this->allModel(true);
-        $parent_model = (new Model())->where(['id'=>$parent_id])->first();
-        $table_name = [];
-        if($parent_model)
+        //先直接检测表是否存在
+        $table_name = '';
+        if(Schema::hasTable($name))
         {
-            $table_name = array_reverse(DevService::getPath($parent_model, $all));
-            $table_name[] = $name;
+            $table_name = $name;
+        }elseif(Schema::hasTable(self::appname().'_'.$name))
+        {
+            $table_name = self::appname().'_'.$name;
         }else
         {
-            $table_name = [self::appname(),$name];
-        }
+            $all = $this->allModel(true);
+        
+            $parent_model = (new Model())->where(['id'=>$parent_id])->first();
+            $table_name = [];
+            if($parent_model)
+            {
+                $table_name = array_reverse(DevService::getPath($parent_model, $all));
+                $table_name[] = $name;
+            }else
+            {
+                $table_name = [self::appname(),$name];
+            }
+    
+            $table_name = implode('_',$table_name);
 
-        $table_name = implode('_',$table_name);
-
-        if(!Schema::hasTable($table_name))
-        {
-            return [1,'数据表未创建,请先创建后重试'];
+            if(!Schema::hasTable($table_name))
+            {
+                return [1,'数据表未创建,请先创建后重试'];
+            }
+            
         }
 
         $table_name = 'la_'.$table_name;
+        
         $dist_f = DB::getPdo()->query('SHOW FULL COLUMNS from '.$table_name);
 
         $items = [];
@@ -263,12 +299,11 @@ class DevService
             $columns = json_decode($model['columns'], true);
         }
         $setting = $model['setting']?json_decode($model['setting'],true):[];
-        $soft_delete = Arr::get($setting,'soft_delete');
         //Schema::dropIfExists($table_name);
         
         if(!Schema::hasTable($table_name))
         {
-            $table_sql = $this->createSchemaSql($table_name,$columns,['soft_delete'=>$soft_delete]);
+            $table_sql = $this->createSchemaSql($table_name,$columns,$setting);
             DB::statement(implode('',$table_sql));
             $this->line('创建数据表:'.$table_name.'成功');
         }else
@@ -282,6 +317,9 @@ class DevService
             }
             $now_fields = [];
             $sqls = [];
+
+            $columns = $this->mergeSchemaColumns($columns,$setting);
+
             foreach($columns as $column)
             {
                 $field_name = $column['name'];
@@ -297,10 +335,6 @@ class DevService
                 }
                 $now_fields[$field_name] = $column;
             }
-            if($soft_delete && !key_exists('deleted_at',$dist_field))
-            {
-                $sqls[] = " ADD COLUMN `deleted_at`  datetime DEFAULT NULL";
-            }
 
             //DROP COLUMN `table_name`;
             $tmp = array_diff_key($dist_field,$now_fields);
@@ -308,16 +342,7 @@ class DevService
                 //多余的字段则删除
                 foreach($tmp as $key=>$column)
                 {
-                    if($key == 'deleted_at' && $soft_delete)
-                    {
-                        continue;
-                    }
-                    if(!isset(Utils::$title_arr[$key]))
-                    {
-                        //非默认字段 需要删除
-                        $sqls[] = " DROP COLUMN `{$key}`";
-                    }
-                    
+                    $sqls[] = " DROP COLUMN `{$key}`";
                 }
             }
             $sqls = "ALTER TABLE `{$table_name}`\r".implode(",\r",$sqls).';';
@@ -412,12 +437,26 @@ class DevService
 
         $setting = $model['setting']?json_decode($model['setting'],true):[];
 
-        $soft_delete = Arr::get($setting,'soft_delete');
-        $use = [];
-        if($soft_delete)
+        $use_items = [];
+        $use = '';
+        $traits = [
+            'soft_delete'=>['SoftDeletes','use Illuminate\Database\Eloquent\SoftDeletes;'],
+            'with_system_admin_id'=>['InsertAdminId','use Echoyl\Sa\Helpers\InsertAdminId;'],
+            'global_data_search'=>['AdminDataSearch','use Echoyl\Sa\Helpers\AdminDataSearch;'],
+            'global_post_check'=>['AdminPostCheck','use Echoyl\Sa\Helpers\AdminPostCheck;'],
+        ];
+        foreach($traits as $tkey=>$tval)
         {
-            $namespace_data[] = 'use Illuminate\Database\Eloquent\SoftDeletes;';
-            $use[] = 'use SoftDeletes;';
+            if(Arr::get($setting,$tkey))
+            {
+                $namespace_data[] = $tval[1];
+                $use_items[] = $tval[0];
+            }
+        }
+        
+        if(!empty($use_items))
+        {
+            $use = "use ".implode(',',$use_items).';';
         }
 
         if(empty($relations))
@@ -603,7 +642,7 @@ class DevService
 
         $replace_arr = [
             '/\$use_namespace\$/'=> implode("\r",$use_namespace),
-            '/\$use\$/'=> implode("\r",$use),
+            '/\$use\$/'=> $use,
             '/\$namespace\$/'=>$namespace,
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
@@ -961,12 +1000,22 @@ class DevService
                 $setting = $column['setting']??[];
                 $form_type = $column['form_type'];
                 $default_value = $column['default']??'';
+
+                $int_value_form_types = ['price'];//需要直接转化为int类型
+                $int_value_form_types_need_relation = ['select','search_select','radioButton'];
+
+                if(in_array($form_type,$int_value_form_types) || (in_array($form_type,$int_value_form_types_need_relation) && isset($all_models[$column['name']])))
+                {
+                    $default_value = $default_value?intval($default_value):0;
+                }
+
                 //['name' => 'shop_id', 'type' => 'search_select', 'default' => '0','data_name'=>'shop','label'=>'name'],
                 $d = [
                     'name' => $column['name'], 
                     'type' => $form_type, 
-                    'default' => in_array($form_type,['select','search_select','price'])?($default_value?intval($default_value):0):$default_value,
+                    'default' => $default_value,
                 ];
+
                 $table_menu = isset($column['table_menu']) && $column['table_menu'];
                 $label = $setting['label']??'';
                 $value = $setting['value']??'';
@@ -978,10 +1027,18 @@ class DevService
                 // {
                 //     d($relation);
                 // }
-
-                if($relation && $relation['filter'])
+                $_columns = [$label?:'title',$value?:'id'];
+                if($relation)
                 {
-                    $d['where'] = json_decode($relation['filter'],true);
+                    if($relation['filter'])
+                    {
+                        $d['where'] = json_decode($relation['filter'],true);
+                    }
+
+                    if($relation['in_page_select_columns'])
+                    {
+                        $_columns = explode(',',$relation['in_page_select_columns']);
+                    }
                 }
 
                 if($form_type == 'select' || $form_type == 'radioButton')
@@ -994,9 +1051,11 @@ class DevService
                         //$filter = $clo
                         if($table_menu && $label && $value)
                         {
-                            $d['columns'] = ["{$label} as label","{$value} as value",$label,$value];
+                            //$d['columns'] = ["{$label} as label","{$value} as value",$label,$value];
+                            $_columns = array_merge($_columns,["{$label} as label","{$value} as value"]);
                         }
                         $d['no_category'] = true;
+                        $d['columns'] = $_columns;
                     }else
                     {
                         if(isset($setting['json']) && $setting['json'])
@@ -1062,8 +1121,6 @@ class DevService
                 if($form_type == 'search_select' && isset($all_relations[$column['name']]))
                 {
                     $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]['name']);
-                    $label = $setting['label']??'';
-                    $value = $setting['value']??'';
                     if($label)
                     {
                         $d['label'] = $label;
@@ -1130,6 +1187,13 @@ class DevService
         return [$namespace_data,$crud_config,$parse_columns,$useModelArr];
     }
 
+    /**
+     * 获取模型的的namespace
+     *
+     * @param [type] $foreign_model
+     * @param array $exist_names
+     * @return void
+     */
     public function getNamespace($foreign_model,$exist_names = [])
     {
         $foreign_model_names = array_reverse(self::getPath($foreign_model,$this->allModel()));
@@ -1137,16 +1201,22 @@ class DevService
         $foreign_model_name = ucfirst(array_pop($foreign_model_names));
 
         $namespace_prefix = 'App\Models';
-        if($foreign_model['admin_type'] == 'system')
-        {
-            //系统模型需要获取单独的namespace 前缀
-            $namespace_prefix = 'Echoyl\Sa\Models';
-        }
+        
         if(!empty($foreign_model_names))
         {
             $namespace_prefix .= '\\'.implode('\\',$foreign_model_names);
         }
         $namespace_prefix .= '\\'.$foreign_model_name;
+
+        if($foreign_model['admin_type'] == 'system')
+        {
+            //系统模型需要获取单独的namespace 前缀
+            //先检测下如果项目中重写了系统的模型 那就直接引入项目中复写的模型
+            if(!class_exists($namespace_prefix))
+            {
+                $namespace_prefix = str_replace('App\Models','Echoyl\Sa\Models',$namespace_prefix);
+            }
+        }
 
         //如果模型名字一样的话 需要添加一个别名 
         

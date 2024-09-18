@@ -18,6 +18,7 @@ class $name$Controller extends CategoryBaseController
 	{
 		$crud_config$
 		$this->model = new $modelname$();
+		$this->model_class = $modelname$::class;
 		$post_parent_id = request('parent_id', 0);
         $this->default_post = [
             'parent_id' => $post_parent_id ?: $this->cid,

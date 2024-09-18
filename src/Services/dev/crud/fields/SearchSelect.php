@@ -44,7 +44,7 @@ class SearchSelect extends BaseField
         $id_name = $col['value']??'id';
         $val = $options['val'];
         
-        if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset)
+        if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset && $val)
         {
             $d = $data[$col['data_name']];
             if(!$d)
@@ -52,7 +52,7 @@ class SearchSelect extends BaseField
                 $val = '__unset';
             }else
             {
-                $val = ['label'=>$d[$col['label']??'title'],'value'=>$d[$id_name],$id_name=>$d[$id_name]];
+                $val = ['label'=>$d[$col['label']??'title']??'','value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??''];
             }
             
         }

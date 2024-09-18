@@ -16,6 +16,7 @@ class MenuService
         // ['label'=>'修改','value'=>'edit'],
         // ['label'=>'删除','value'=>'destroy'],
         'index' => '列表',
+        'dataList'=>'数据列表',
         'show' => '查看',
         'add' => '新增',
         'edit' => '修改',
@@ -309,15 +310,21 @@ class MenuService
 
         //通过路由找到 admin menu 数据
         [$name,$menu] = $this->getMenuByRouter($router);
+        //如果是index 需要检测dataList是否也在perms中
         //d(implode('.',[$menu['id'],$name]),$perms);
-        if(in_array(implode('.',[$menu['id'],$name]),$perms))
+        $p_names = [$name];
+        if($name == 'index')
         {
-            return true;
-        }else
-        {
-            return false;
+            $p_names[] = 'dataList';
         }
-        
+        foreach($p_names as $name)
+        {
+            if(in_array(implode('.',[$menu['id'],$name]),$perms))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getMenuByRouter($router)

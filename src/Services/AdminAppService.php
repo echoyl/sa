@@ -4,10 +4,17 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Models\Pca;
-use stdClass;
 
 class AdminAppService implements SaAdminAppServiceInterface
 {
+    /**
+     * @var array 默认失败消息提醒文字
+     */
+    var $fail_reason = [
+        'delete_at' => 'delete fail',//删除失败信息
+        'global_post_check'=> 'post check fail',//全局数据提交检测失败信息
+    ];
+
     public function  chartData()
     {
         $carr = function($length){
@@ -439,5 +446,28 @@ class AdminAppService implements SaAdminAppServiceInterface
     }
     public function random_float($min, $max) {
         return number_format($min + mt_rand() / mt_getrandmax() * ($max - $min),2,'.');
+    }
+
+    /**
+     * 开启全局数据过滤检索
+     *
+     * @param [type] $m
+     * @param [type] $search
+     * @return void
+     */
+    public function dataSearch($m,$model)
+    {
+        return $m;
+    }
+
+    /**
+     * 开启全局数据提交检测
+     *
+     * @param [type] $data
+     * @return void
+     */
+    public function postCheck(&$data,$item,$model)
+    {
+        return true;
     }
 }

@@ -17,6 +17,7 @@ class Select extends BaseField
 
         $val = $options['val'];
         $isset = $options['isset'];
+        $from = $options['from'];
 
         if($val && $isset)
         {
