@@ -209,7 +209,7 @@ class GoodsService
                 $v = '';
                 if($ctype == 'price')
                 {
-                    $v = intval(($val[$cname]??0)*100);
+                    $v = bcmul($val[$cname]??0,100);//小数精度问题
                 }elseif($ctype == 'int')
                 {
                     $v = $val[$cname]??0;

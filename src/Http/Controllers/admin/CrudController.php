@@ -79,7 +79,7 @@ class CrudController extends ApiBaseController
 
         if($field)
         {
-            $rval = request($field['request_name']);//预设请求值
+            $rval = request($field['request_name'],$default);//预设请求值
             if($rval)
             {
                 if(is_array($rval))
@@ -139,7 +139,6 @@ class CrudController extends ApiBaseController
 
             if(isset($col['table_menu']) && $col['table_menu'])
             {
-                //d($search_val);
                 if($search_val != 'all' && $search_val !== '')
                 {
                     if(is_array($search_val))
