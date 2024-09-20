@@ -40,6 +40,7 @@ class CrudService
             'image'=>Upload::class,
             'file'=>Upload::class,
             'tinyEditor'=>Content::class,
+            'mdEditor'=>Content::class,
             'price'=>Price::class,
             'mprice'=>Price::class,
             'mmprice'=>Price::class,

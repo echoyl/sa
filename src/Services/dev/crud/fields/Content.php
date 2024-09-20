@@ -5,13 +5,14 @@ use Echoyl\Sa\Services\dev\crud\BaseField;
 
 class Content extends BaseField
 {
-
+    var $type;//增加type支持。如果是mdeditor 另外匹配图片
     public function encode($options = [])
     {
         $name = $this->name;
         $data = $this->config['data'];
         $val = $options['val'];
         $origin_val = $options['origin_val'];
+        $this->type = $options['type'];
         
         $src_val = $this->getSrc($val);
         $origin_src_val = $this->getSrc($origin_val);
@@ -25,6 +26,12 @@ class Content extends BaseField
         return $data;
     }
 
+    /**
+     * 获取src匹配次数，然后tmp替换为正式路径
+     *
+     * @param [type] $content
+     * @return void
+     */
     public function replace($content)
     {
         $matches = $this->getMatch($content);
@@ -40,15 +47,44 @@ class Content extends BaseField
         return $content;
     }
 
+    /**
+     * 获取内容中有src匹配的数据
+     *
+     * @param [type] $content
+     * @return array
+     */
     public function getMatch($content)
     {
-        $pattern = '/<img[^>]*src=[\'"]([^\'"]+)[\'"]/i';
+        if($this->type == 'mdEditor')
+        {
+            $pattern = '/\((.*)\)/i';
+        }else
+        {
+            $pattern = '/<img[^>]*src=[\'"]([^\'"]+)[\'"]/i';
+        }
 
         preg_match_all($pattern, $content, $matches);
 
-        return $matches[1];
+        $mt = [];
+
+        $prefix = rtrim(env('APP_URL'),'/').'/storage/';
+
+        foreach($matches[1] as $src)
+        {
+            if(strpos($src,$prefix) !== false)
+            {
+                $mt[] = $src;
+            }
+        }
+        return $mt;
     } 
 
+    /**
+     * 获取格式化的src数据
+     *
+     * @param [type] $content
+     * @return array
+     */
     public function getSrc($content)
     {
         $data = [];
@@ -59,13 +95,9 @@ class Content extends BaseField
 
         foreach($matches as $src)
         {
-            if(strpos($src,$prefix) !== false)
-            {
-                $data[] = [
-                    'value'=>str_replace($prefix,'',$src),
-                ];
-            }
-            
+            $data[] = [
+                'value'=>str_replace($prefix,'',$src),
+            ];
         }
 
         return $data;

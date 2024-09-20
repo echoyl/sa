@@ -59,6 +59,10 @@ class CategoryBaseController extends CrudController
                 }
             }
         }
+		if(empty($displayorder))
+		{
+			$displayorder[] = ['displayorder','desc'];
+		}
 		if(!empty($this->select_columns))
 		{
 			$this->model = $this->model->select($this->select_columns);
