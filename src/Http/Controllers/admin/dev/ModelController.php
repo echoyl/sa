@@ -115,6 +115,12 @@ class ModelController extends CrudController
         {
             unset($data['createModelSchema']);
         }
+        if(isset($data['columns']))
+        {
+            $data['columns'] = array_values(collect($data['columns'])->sortBy('name')->toArray());
+        }
+        
+
         return;
     }
 

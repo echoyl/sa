@@ -544,7 +544,7 @@ class FormItem
         $label = $setting['label']??'';
         $value = $setting['value']??'';
         
-        if($this->form_type == 'select' || $this->form_type == 'radioButton')
+        if(in_array($this->form_type,['select','selects','radioButton']))
         {
             $label = $label?:'title';
             $value = $value?:'id';

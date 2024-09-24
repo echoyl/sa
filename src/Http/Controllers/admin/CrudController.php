@@ -14,7 +14,7 @@ use Illuminate\Support\Arr;
  * @method mixed afterPost($id,$data)  提交完数据后通过返回id再继续操作
  * @method mixed beforePost(&$data,$id = 0,$item = [])  提交数据前的检测数据
  * @method mixed beforeMultiplePost(&$data,$id = []) 批量操作前检测
- * @method mixed handleSearch($search = []) 数据列表中额外的搜索调价等
+ * @method mixed handleSearch($search = []) 数据列表中额外的搜索条件等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
  * @method mixed listData(&$list) 列表数据格式化

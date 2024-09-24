@@ -139,6 +139,7 @@ class AdminService
         $setting['loginBgImgage'] = $setting['loginBgImgage']['url']?:false;
         $setting['loginBgCardColor'] = Arr::get($setting,'loginBgCardColor','none');
         $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
+        $setting['fileImagePrefix'] = HelperService::getFileImagePrefix();//图片文件路径前缀，是前端支持字符串显示图片
         //$setting['colorPrimary'] = Arr::get($setting,'colorPrimary','#006eff');
         $login_type = Arr::get($setting,'loginType',[]);
 

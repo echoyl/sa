@@ -1041,7 +1041,7 @@ class DevService
                     }
                 }
 
-                if($form_type == 'select' || $form_type == 'radioButton')
+                if(in_array($form_type,['select','selects','radioButton']))
                 {
                     if(isset($all_models[$column['name']]))
                     {
@@ -1142,22 +1142,6 @@ class DevService
                     {
                         $d['fields'] = ['id'=>$value,'title'=>$label,'children'=>$children];
                     }
-                }
-                if($form_type == 'selects')
-                {
-                    if(isset($all_models[$column['name']]))
-                    {
-                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
-                        $d['with'] = true;
-                        //多选的话 关联模型应该不是分类 不再使用format
-                        $d['no_category'] = true;
-                        // if($label && $value)
-                        // {
-                        //     $d['fields'] = ['id'=>$value,'title'=>$label];
-                        // }
-                    }
-                    
-                    
                 }
                 //省市区选择器
                 if($form_type == 'pca')

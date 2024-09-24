@@ -465,7 +465,10 @@ class TableColumn
             ];
         }
         //关联的select 需要获取数据
-        $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
+        if($this->schema)
+        {
+            $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
+        }
         if($this->relation)
         {
             if($this->form_type == 'selects')

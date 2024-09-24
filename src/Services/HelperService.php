@@ -331,6 +331,50 @@ class HelperService
         }
     }
 
+    /**
+     * 处理图片附件链接 完整
+     *
+     * @param [type] $url
+     * @param boolean $img
+     * @return void
+     */
+    public static function tomedia($url,$img = false)
+    {
+        if(is_array($url))
+        {
+            $rt = [];
+            foreach($url as $val)
+            {
+                if($val)
+                {
+                    $rt[] = self::tomedia($val);
+                }
+                
+            }
+            return $rt;
+        }else
+        {
+            if(strpos($url,'http') !== false || strpos($url,'https') !== false)
+            {
+                return $url;
+            }else
+            {
+                return $url?self::getFileImagePrefix().$url:'';
+            }
+        }
+    }
+
+    public static function getFileImagePrefix($img = false)
+    {
+        $prefix = $img ?rtrim(env('APP_URL'),'/').'/img/storage' : rtrim(env('APP_URL'),'/').'/storage';//本地存储
+        if(env('ALIYUN_OSS'))
+        {
+            //如果开启阿里云存储 返回
+            $prefix = implode('/',[env('ALIYUN_DOMAIN'),env('ALIYUN_OSS')]);
+        }
+        return rtrim($prefix).'/';
+    }
+
     public static function uploadParse($data,$encode = true,$params = [])
     {
         if($encode)
@@ -370,10 +414,10 @@ class HelperService
 
                         if(isset($val['value']))
                         {
-                            $media = tomedia($val['value'],$query?true:false);
+                            $media = self::tomedia($val['value'],$query?true:false);
                         }elseif(isset($val['url']))
                         {
-                            $media = tomedia($val['url'],$query?true:false);
+                            $media = self::tomedia($val['url'],$query?true:false);
                         }
 
                         if($media)
