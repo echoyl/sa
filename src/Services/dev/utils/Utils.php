@@ -1,9 +1,6 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
-
-use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
-use Illuminate\Support\Facades\Log;
 
 class Utils
 {

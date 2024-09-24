@@ -263,6 +263,15 @@ class FormItem
         {
             $this->data['fieldProps'] = array_merge(['if'=>$if],$this->data['fieldProps']);
         }
+        //是否字段多语言
+        if($schema)
+        {
+            $locale = Arr::get($schema,'setting.locale');
+            if($locale)
+            {
+                $this->data['fieldProps']['localesopen'] = 1;
+            }
+        }
 
         if($formItemProps && !is_string($formItemProps))
         {

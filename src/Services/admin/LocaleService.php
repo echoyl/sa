@@ -27,22 +27,33 @@ class LocaleService
             return false;
         }
     }
-    
-    public static function getSetting()
+
+    public static function list()
     {
         $model = self::getModel();
         if(!$model)
         {
             return [];
         }
-        $all_configs = (new Config())->get()->toArray();
+        $languages = $model->select(['id','title','name'])->where(['state'=>1])->get()->toArray();
+        return $languages;
+    }
+    
+    public static function getSetting()
+    {
+        if(!self::enable())
+        {
+            return [];
+        }
 
-        $languages = $model->where(['state'=>1])->get()->toArray();
+        $all_configs = (new Config())->get()->toArray();
+        $languages = self::list();
         $ret = [];
         foreach($languages as $lang)
         {
             $ret[] = [
                 'name'=>$lang['name'],
+                'title'=>$lang['title'],
                 'configs'=>self::formatData($all_configs,$lang['id'])
             ];
         }
