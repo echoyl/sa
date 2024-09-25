@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use DateTime;
+use Echoyl\Sa\Services\admin\LocaleService;
 
 class HelperService
 {
@@ -530,7 +531,17 @@ class HelperService
         return $model;
     }
 
-    public static function searchWhere($model,$columns,$search_val,$type)
+    /**
+     * 模型搜索
+     *
+     * @param [type] $model 模型或query
+     * @param [type] $columns 检索的字段
+     * @param [type] $search_val 检索内容
+     * @param [type] $type 检索类型 
+     * @param array $more 更多参数 5个参数疯了
+     * @return void
+     */
+    public static function searchWhere($model,$columns,$search_val,$type,$more = [])
     {
         if($search_val === '')
         {
@@ -547,28 +558,47 @@ class HelperService
             return $model;
         }
 
+        $search_val = urldecode($search_val);
+
+        $origin_model = Arr::get($more,'origin_model');
+
         if(count($columns) == 1)
         {
             //只搜索一个字段
-            $model = $model->where([[$columns[0], $type, $search_val]]);
+            $model = self::searchLocales($model,[$columns[0], $type, $search_val],$origin_model);
         }else
         {
             //多个字段搜索
-            $model = $model->where(function($q) use($columns,$search_val,$type){
+            $model = $model->where(function($q) use($columns,$search_val,$type,$origin_model){
                 foreach($columns as $key=>$val)
                 {
-                    if($key == 0)
-                    {
-                        $q->where([[$val, $type, $search_val]]);
-                    }else
-                    {
-                        $q->orWhere([[$val, $type, $search_val]]);
-                    }
+                    $q = self::searchLocales($q,[$val, $type, $search_val],$origin_model,$key);
                 }
             });
         }
-
         return $model;
+    }
+
+    public static function searchLocales($query,$item,$model,$index = 0)
+    {
+        $name = $item[0];
+
+        if(!$model || !$model->locale_columns || !in_array($name,$model->locale_columns))
+        {
+            return $index == 0 ? $query->where([$item]):$query->orWhere([$item]);
+        }
+        $locales = LocaleService::list();
+        
+        $fn = function($q) use ($locales,$item,$name){
+            $q->where([$item]);
+            foreach($locales as $lang)
+            {
+                $new_item = $item;
+                $new_item[0] = implode('_',[$name,$lang['name']]);
+                $q->orWhere([$new_item]);
+            }
+        };
+        return $index == 0 ? $query->where($fn):$query->orWhere($fn);
     }
 
     public static function uncamelize($camelCaps,$separator='_')

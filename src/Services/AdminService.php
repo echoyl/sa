@@ -167,7 +167,7 @@ class AdminService
         $setting['splitMenus'] = Arr::get($setting,'splitMenus',true);
         $setting['locales'] = LocaleService::getSetting();
         //加入开发环境时 全局数据
-        if($dev)
+        if($setting['dev'])
         {
             $ds = new DevService;
             $setting['dev'] = [

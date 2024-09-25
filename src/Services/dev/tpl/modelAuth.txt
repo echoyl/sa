@@ -24,6 +24,13 @@ class $name$ extends BaseAuth
      */
     public $model_id = $model_id$;
 
+    /**
+     * 模型存在多语言的字段
+     *
+     * @var array
+     */
+    public $locale_columns = $locale_columns$;
+
     $parse_columns$
 
     //relationship start

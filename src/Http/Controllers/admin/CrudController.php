@@ -109,7 +109,8 @@ class CrudController extends ApiBaseController
 
     public function defaultSearch($m)
     {
-        $m = $this->globalDataSearch($m,$this->getModel());
+        $origin_model = $this->getModel();
+        $m = $this->globalDataSearch($m,$origin_model);
         //
         $title = request('title', '');
         if ($title) {
@@ -118,7 +119,7 @@ class CrudController extends ApiBaseController
             });
             if(!$has_customer_search)
             {
-                $m = $m->where([['title', 'like', '%' . urldecode($title) . '%']]);
+                $m = HelperService::searchLocales($m,['title', 'like', '%' . urldecode($title) . '%'],$origin_model);
             }
         }
 
@@ -377,7 +378,7 @@ class CrudController extends ApiBaseController
                         $m = HelperService::searchWhereBetweenIn($m,$columns,$search_val,$where_type);
                     }else
                     {
-                        $m = HelperService::searchWhere($m,$columns,$search_val,$where_type);
+                        $m = HelperService::searchWhere($m,$columns,$search_val,$where_type,['origin_model'=>$origin_model]);
                     }
                     
                 }

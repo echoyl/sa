@@ -292,7 +292,7 @@ class DevService
 
         $this->line('开始生成model文件：');
 
-        [$use_namespace,$crud_config,$parse_columns,$useModelArr] = $this->createControllerRelation($data);
+        [$use_namespace,$crud_config,$parse_columns,$useModelArr,$locale_columns] = $this->createControllerRelation($data);
         [$use_namespace2,$tpl,$use] = $this->createModelRelation($data,$useModelArr);
         
         $use_namespace = array_unique(array_merge($use_namespace,$use_namespace2));
@@ -328,6 +328,7 @@ class DevService
             '/\$table_name\$/'=>$table_name,
             '/\$name\$/'=>$name,
             '/\$model_id\$/'=>$data['id'],
+            '/\$locale_columns\$/'=>json_encode($locale_columns),
             '/\$relationship\$/'=>implode("\r",$tpl),
             '/\$parse_columns\$/'=>$parse_columns,
             '/\$customer_code\$/'=>$customer_code,
@@ -465,7 +466,7 @@ class DevService
         $namespace_data = [];
         $parse_columns = [];
         $crud_config = [];
-        $with_sum = $with_count = $with_columns = $search_config = $can_be_null_columns = [];//配置处理好后 直接返回代码了
+        $with_sum = $with_count = $with_columns = $search_config = $can_be_null_columns = $locale_columns = [];//配置处理好后 直接返回代码了
 
         $relations = (new Relation())->where(['model_id'=>$model_id])->with(['foreignModel.relations'])->get()->toArray();
 
@@ -668,9 +669,17 @@ class DevService
             {
                 //字段是否可为空
                 $empty = Arr::get($column,'empty',0);
+                $name = $column['name'];
+                $setting = $column['setting']??[];
                 if($empty)
                 {
-                    $can_be_null_columns[] = $column['name'];
+                    $can_be_null_columns[] = $name;
+                }
+                //字段是否多语言
+                $is_locale = Arr::get($setting,'locale');
+                if($is_locale)
+                {
+                    $locale_columns[] = $name;
                 }
                 if(!isset($column['form_type']) || in_array($column['form_type'],['textarea','dateTime','datetime','digit']))
                 {
@@ -678,21 +687,21 @@ class DevService
                     continue;
                 }
                 //$form_data = $column['form_data']??'';
-                $setting = $column['setting']??[];
+                
                 $form_type = $column['form_type'];
                 $default_value = $column['default']??'';
 
                 $int_value_form_types = ['price'];//需要直接转化为int类型
                 $int_value_form_types_need_relation = ['select','search_select','radioButton'];
 
-                if(in_array($form_type,$int_value_form_types) || (in_array($form_type,$int_value_form_types_need_relation) && isset($all_models[$column['name']])))
+                if(in_array($form_type,$int_value_form_types) || (in_array($form_type,$int_value_form_types_need_relation) && isset($all_models[$name])))
                 {
                     $default_value = $default_value?intval($default_value):0;
                 }
 
                 //['name' => 'shop_id', 'type' => 'search_select', 'default' => '0','data_name'=>'shop','label'=>'name'],
                 $d = [
-                    'name' => $column['name'], 
+                    'name' => $name, 
                     'type' => $form_type, 
                     'default' => $default_value,
                 ];
@@ -702,12 +711,8 @@ class DevService
                 $value = $setting['value']??'';
                 $children = $setting['children']??'';
 
-                $relation = $all_relations[$column['name']]??false;//当前字段有的关联
+                $relation = $all_relations[$name]??false;//当前字段有的关联
 
-                // if($column['name'] == 'leimu_id')
-                // {
-                //     d($relation);
-                // }
                 $_columns = [$label?:'title',$value?:'id'];
                 if($relation)
                 {
@@ -724,9 +729,9 @@ class DevService
 
                 if(in_array($form_type,['select','selects','radioButton']))
                 {
-                    if(isset($all_models[$column['name']]))
+                    if(isset($all_models[$name]))
                     {
-                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
+                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
                         //如果是select 且设置了tabel menu，那么form_data设置的label 和value 
                         //新增数据筛选配置
                         //$filter = $clo
@@ -799,9 +804,9 @@ class DevService
                     }
 
                 }
-                if($form_type == 'search_select' && isset($all_relations[$column['name']]))
+                if($form_type == 'search_select' && isset($all_relations[$name]))
                 {
-                    $d['data_name'] = Utils::uncamelize($all_relations[$column['name']]['name']);
+                    $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
                     if($label)
                     {
                         $d['label'] = $label;
@@ -813,9 +818,9 @@ class DevService
                 }
                 if($form_type == 'cascaders' || $form_type == 'cascader')
                 {
-                    if(isset($all_models[$column['name']]))
+                    if(isset($all_models[$name]))
                     {
-                        $d['class'] = "@php".$all_models[$column['name']]."::class@endphp";
+                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
                         $d['with'] = true;
                     }
                     
@@ -841,6 +846,7 @@ class DevService
                 }
                 //富文本
                 $parse_columns[] = $d;
+                
             }
         }
 
@@ -849,7 +855,7 @@ class DevService
             $crud_config[] = '$this->can_be_null_columns = '.(json_encode($can_be_null_columns)).';';
         }
     
-        return [$namespace_data,$crud_config,$parse_columns,$useModelArr];
+        return [$namespace_data,$crud_config,$parse_columns,$useModelArr,$locale_columns];
     }
 
     /**
