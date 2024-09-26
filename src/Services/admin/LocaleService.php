@@ -77,4 +77,47 @@ class LocaleService
         }
         return $ret;
     }
+
+    public static function getData($class,$data,$locale)
+    {
+        $model = new $class;
+        if(!$model->locale_columns)
+        {
+            return $data;
+        }
+
+        foreach($model->locale_columns as $column)
+        {
+            $name = implode('_',[$column,$locale]);
+            if(isset($data[$name]) && $data[$name])
+            {
+                //仅当字段存在且非空的时候才读取该语言字段信息
+                $data[$column] = $data[$name];
+            }
+        }
+
+        return $data;
+    }
+
+    public static function search($query,$item,$model,$index = 0)
+    {
+        $name = $item[0];
+
+        if(!$model || !$model->locale_columns || !in_array($name,$model->locale_columns))
+        {
+            return $index == 0 ? $query->where([$item]):$query->orWhere([$item]);
+        }
+        $locales = self::list();
+        
+        $fn = function($q) use ($locales,$item,$name){
+            $q->where([$item]);
+            foreach($locales as $lang)
+            {
+                $new_item = $item;
+                $new_item[0] = implode('_',[$name,$lang['name']]);
+                $q->orWhere([$new_item]);
+            }
+        };
+        return $index == 0 ? $query->where($fn):$query->orWhere($fn);
+    }
 }

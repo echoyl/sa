@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
+use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
@@ -119,7 +120,7 @@ class CrudController extends ApiBaseController
             });
             if(!$has_customer_search)
             {
-                $m = HelperService::searchLocales($m,['title', 'like', '%' . urldecode($title) . '%'],$origin_model);
+                $m = LocaleService::search($m,['title', 'like', '%' . urldecode($title) . '%'],$origin_model);
             }
         }
 
@@ -769,7 +770,8 @@ class CrudController extends ApiBaseController
                 {
                     $data = $this->model->getSysAdminIdData($data);
                 }
-                $id = $this->model->insertGetId($data);
+                $create = $this->model_class::create($data);
+                $id = $create->id;
             }
             $ret = null;
             

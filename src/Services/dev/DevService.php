@@ -125,6 +125,7 @@ class DevService
             'with_system_admin_id'=>['InsertAdminId','use Echoyl\Sa\Helpers\InsertAdminId;'],
             'global_data_search'=>['AdminDataSearch','use Echoyl\Sa\Helpers\AdminDataSearch;'],
             'global_post_check'=>['AdminPostCheck','use Echoyl\Sa\Helpers\AdminPostCheck;'],
+            'has_uuids'=>['HasUuids','use Illuminate\Database\Eloquent\Concerns\HasUuids;'],
         ];
         foreach($traits as $tkey=>$tval)
         {
@@ -254,6 +255,16 @@ class DevService
         return [$namespace_data,$hasone_data,$use];
     }
 
+    public function getFileTpl($name)
+    {
+        $file = implode('/',[$this->tpl_path,$name.'.txt']);
+        if(file_exists($file))
+        {
+            return file_get_contents($file);
+        }
+        return '';
+    }
+
     /**
      * 生成模型文件
      *
@@ -280,15 +291,10 @@ class DevService
         {
             $model_file_path = implode('/',[app_path('Models'),$name.'.php']);
         }
-        $tpl_name = 'model';
-        if($data['leixing'] == 'category')
-        {
-            $tpl_name = 'model2';
-        }elseif($data['leixing'] == 'auth')
-        {
-            $tpl_name = 'modelAuth';
-        }
-        $content = file_get_contents(implode('/',[$this->tpl_path,$tpl_name.'.txt']));
+        
+        $tpl_names = ['category'=>'model2','auth'=>'modelAuth'];
+        $tpl_name = Arr::get($tpl_names,$data['leixing'],'model');
+        $content = implode("\r",[$this->getFileTpl($tpl_name),$this->getFileTpl('modelContent')]);
 
         $this->line('开始生成model文件：');
 
@@ -337,6 +343,19 @@ class DevService
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
+
+        //是否开启uuid
+        $setting = $data['setting']?json_decode($data['setting'],true):[];
+        if(Arr::get($setting,'has_uuids'))
+        {
+            $uuid_name_default = 'sys_admin_uuid';
+            $uuid_name = Arr::get($setting,'has_uuids_name',$uuid_name_default);
+            $content = preg_replace('/\s+\$sys_admin_uuid\$/',"\r".$this->getFileTpl($uuid_name == $uuid_name_default?'uuid':'uuid_customer'),$content);
+            $replace_arr['/\$has_uuid_name\$/'] = $uuid_name;
+        }else
+        {
+            $replace_arr['/\s+\$sys_admin_uuid\$/'] = "\r";
+        }
 
         $search = $replace = [];
         

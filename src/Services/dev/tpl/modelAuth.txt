@@ -8,38 +8,3 @@ $customer_namespace$
 //customer namespace end
 
 class $name$ extends BaseAuth
-{
-    $use$
-    /**
-     * 与模型关联的数据表
-     *
-     * @var string
-     */
-    protected $table = '$table_name$';
-
-    /**
-     * 在模型表中的id
-     *
-     * @var int
-     */
-    public $model_id = $model_id$;
-
-    /**
-     * 模型存在多语言的字段
-     *
-     * @var array
-     */
-    public $locale_columns = $locale_columns$;
-
-    $parse_columns$
-
-    //relationship start
-    $relationship$
-    
-    //relationship end
-
-    //customer code start
-	$customer_code$
-	//customer code end
-    
-}

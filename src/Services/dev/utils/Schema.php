@@ -37,6 +37,12 @@ class Schema
             $sys_columns[] = ['name'=>'deleted_at','type'=>'datetime','desc'=>'删除时间'];
         }
 
+        if(Arr::get($par,'has_uuids'))
+        {
+            $has_uuids_name = Arr::get($par,'has_uuids_name','sys_admin_uuid');
+            $sys_columns[] = ['name'=>$has_uuids_name,'type'=>'varchar','desc'=>'系统自动插入uuid','length'=>36,'pk'=>true];
+        }
+
         if(Arr::get($par,'with_system_admin_id'))
         {
             $sys_columns[] = ['name'=>'sys_admin_id','type'=>'int','desc'=>'系统用户id'];
@@ -47,11 +53,11 @@ class Schema
         foreach($columns as $column)
         {
             $locale = Arr::get($column,'setting.locale');
-            
+            $form_type = Arr::get($column,'form_type');
+            $name = Arr::get($column,'name');
+            $title = Arr::get($column,'title');
             if($locale)
-            {
-                $name = Arr::get($column,'name');
-                $title = Arr::get($column,'title');
+            {   
                 foreach($locales as $lang)
                 {
                     $lang_columns = $column;
@@ -60,8 +66,14 @@ class Schema
                     $columns[] = $lang_columns;
                 }
             }
+            //如果类型是 cascader cascaders需要自动注入_ + 字段名称 的字段
+            if(in_array($form_type,['cascader','cascader']))
+            {
+                $columns[] = ['name'=>'_'.$name,'type'=>'varchar','desc'=>$title,'length'=>1000];;
+            }
         }
-        return collect(array_merge($sys_columns,$columns))->sortBy('name')->toArray();
+        //去重排序后返回
+        return collect(array_merge($sys_columns,$columns))->unique('name')->sortBy('name')->values()->all();
     }
 
     /**
@@ -81,22 +93,29 @@ class Schema
 
         $columns = $this->mergeSchemaColumns($columns,$par);
 
+        $primarys = [];
+
+        $sql_columns = [];
+
         foreach($columns as $val)
         {
-            
-            if($val['name'] == 'id')
+            if($val['name'] == 'id' || isset($val['pk']))
             {
-                $has_id = true;
+                $primarys[] = $val['name'];
             }
             $field_sql = $this->schemaColumnSql($val);
-            $table_sql[] = $field_sql.',';
+            $sql_columns[] = $field_sql;
         }
 
-        if($has_id)
+        if(!empty($primarys))
         {
-            $table_sql[] = "PRIMARY KEY (`id`))ENGINE=MyISAM;";
+            $primarys = collect($primarys)->map(fn ($v) => "`{$v}`")->values()->all();
+            $sql_columns[] = "PRIMARY KEY (". implode(',',$primarys) .") USING BTREE";
         }
 
+        $table_sql[] = implode(",\r",$sql_columns);
+
+        $table_sql[] = ')ENGINE=MyISAM;';
         return $table_sql;
     }
 
@@ -317,10 +336,17 @@ class Schema
         {
             $table_name = 'la_'.$table_name;
             $dist_f = DB::getPdo()->query('desc '.$table_name);
+            
             $dist_field = [];
+            $pris = [];//索引
+            $add_primary = false;
             foreach($dist_f as $key=>$val)
             {
                 $dist_field[$val[0]] = $val;
+                if($val['Key'] == 'PRI')
+                {
+                    $pris[] = $val[0];
+                }
             }
             $now_fields = [];
             $sqls = [];
@@ -339,6 +365,12 @@ class Schema
                 {
                     //未存在字段则新增字段
                     $sqls[] = " ADD COLUMN ".$sql;
+                    $pk = Arr::get($column,'pk');
+                    if($pk)
+                    {
+                        $pris[] = $field_name;
+                        $add_primary = true;//标记重新生成primary key
+                    }
                 }
                 $now_fields[$field_name] = $column;
             }
@@ -350,7 +382,19 @@ class Schema
                 foreach($tmp as $key=>$column)
                 {
                     $sqls[] = " DROP COLUMN `{$key}`";
+                    if(in_array($key,$pris))
+                    {
+                        $pris = collect($pris)->filter(fn ($v) => $v != $key)->values()->all();
+                        $add_primary = true;
+                    }
                 }
+            }
+            $sqls = collect($sqls)->sort()->values()->all();
+            if($add_primary)
+            {
+                $sqls[] = ' DROP PRIMARY KEY';
+                $primarys = collect($pris)->map(fn ($v) => "`{$v}`")->values()->all();
+                $sqls[] = ' ADD PRIMARY KEY ('. implode(',',$primarys) .') USING BTREE';
             }
             $sqls = "ALTER TABLE `{$table_name}`\r".implode(",\r",$sqls).';';
             DB::table('dev_sqllog')->insert([

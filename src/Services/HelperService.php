@@ -565,40 +565,18 @@ class HelperService
         if(count($columns) == 1)
         {
             //只搜索一个字段
-            $model = self::searchLocales($model,[$columns[0], $type, $search_val],$origin_model);
+            $model = LocaleService::search($model,[$columns[0], $type, $search_val],$origin_model);
         }else
         {
             //多个字段搜索
             $model = $model->where(function($q) use($columns,$search_val,$type,$origin_model){
                 foreach($columns as $key=>$val)
                 {
-                    $q = self::searchLocales($q,[$val, $type, $search_val],$origin_model,$key);
+                    $q = LocaleService::search($q,[$val, $type, $search_val],$origin_model,$key);
                 }
             });
         }
         return $model;
-    }
-
-    public static function searchLocales($query,$item,$model,$index = 0)
-    {
-        $name = $item[0];
-
-        if(!$model || !$model->locale_columns || !in_array($name,$model->locale_columns))
-        {
-            return $index == 0 ? $query->where([$item]):$query->orWhere([$item]);
-        }
-        $locales = LocaleService::list();
-        
-        $fn = function($q) use ($locales,$item,$name){
-            $q->where([$item]);
-            foreach($locales as $lang)
-            {
-                $new_item = $item;
-                $new_item[0] = implode('_',[$name,$lang['name']]);
-                $q->orWhere([$new_item]);
-            }
-        };
-        return $index == 0 ? $query->where($fn):$query->orWhere($fn);
     }
 
     public static function uncamelize($camelCaps,$separator='_')

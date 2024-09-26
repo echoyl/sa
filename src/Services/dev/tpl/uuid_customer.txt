@@ -1,0 +1,18 @@
+
+    /**
+     * The attributes that aren't mass assignable.
+     * 默认设置为不能覆写的字段 系统自动生成
+     *
+     * @var array<string>|bool
+     */
+    protected $guarded = ['$has_uuid_name$','id'];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array
+     */
+    public function uniqueIds()
+    {
+        return ['$has_uuid_name$'];
+    }
