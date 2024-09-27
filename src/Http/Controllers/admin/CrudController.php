@@ -770,7 +770,8 @@ class CrudController extends ApiBaseController
                 {
                     $data = $this->model->getSysAdminIdData($data);
                 }
-                $create = $this->model_class::create($data);
+                $model_class = $this->model_class?$this->model_class:get_class($this->model);
+                $create = $model_class::create($data);
                 $id = $create->id;
             }
             $ret = null;
