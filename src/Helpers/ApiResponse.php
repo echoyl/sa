@@ -23,6 +23,12 @@ trait ApiResponse
         return $this->jsonResponse('success', $codeResponse, $data, null);
     }
 
+    public function successMsg($msg = ''): JsonResponse
+    {
+        [$code] = ResponseEnum::HTTP_OK;
+        return $this->success(null, [$code,$msg]);
+    }
+
     public function list($data,$total,$search = [])
     {
         list($code, $message) = ResponseEnum::HTTP_OK;
