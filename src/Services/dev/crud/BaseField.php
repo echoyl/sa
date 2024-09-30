@@ -36,6 +36,21 @@ class BaseField implements CrudInterface
         return $data;
     }
 
+    public function checkUpdateUnset($options)
+    {
+        $from = $options['from'];
+        $isset = $options['isset'];
+
+        if($from == 'update' && !$isset)
+        {
+            //更新时 如果未传参数 则不更新
+            $val = '__unset';
+            return $this->getData($val);
+        }
+
+        return false;
+    }
+
     public function decode($options = [])
     {
 

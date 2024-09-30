@@ -98,6 +98,16 @@ class CrudService
             'type'=>$name,
             'origin_val'=>$origin_val
         ],$options);
+
+        //如果是更新且数据未传过来 则不更新该字段
+        if($method == 'encode')
+        {
+            $check = $cls->checkUpdateUnset($options);
+            if($check !== false)
+            {
+                return $check;
+            }
+        }
         
         $data = $cls->$method($options);
 

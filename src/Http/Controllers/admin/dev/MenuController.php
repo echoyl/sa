@@ -80,7 +80,9 @@ class MenuController extends CrudController
         //d($table_menu_id);
         if($table_menu_id != 'all')
         { 
-            $model = $model->where('state',$table_menu_id);
+            $model = $model->where(function($q) use($table_menu_id){
+                $q->where(['state'=>$table_menu_id,'parent_id'=>0])->orWhere([['parent_id','!=',0]]);
+            });
         }
 
         $data = HelperService::getChildFromData($model->get()->toArray(),function($item){

@@ -416,6 +416,16 @@ class DevService
 
     public function createControllerFile($data,$customer_init = [])
     {
+        //新增 如果模型仅设置仅模型文件 这里不生成控制器文件了
+        $setting = $data['setting']?json_decode($data['setting'],true):[];
+
+        $justModelFile = Arr::get($setting,'justModelFile');
+
+        if($justModelFile)
+        {
+            return;
+        }
+
         $all = $this->allModel(true);
 
         $names = array_reverse(self::getPath($data, $all));

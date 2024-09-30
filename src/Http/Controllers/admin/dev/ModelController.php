@@ -111,9 +111,9 @@ class ModelController extends CrudController
      */
     public function beforePost(&$data, $id = 0, $item = [])
     {
-        if(isset($data['createModelSchema']))
+        if(isset($data['afterPostOptions']))
         {
-            unset($data['createModelSchema']);
+            unset($data['afterPostOptions']);
         }
         if(isset($data['columns']))
         {
@@ -146,6 +146,8 @@ class ModelController extends CrudController
 
         $ds = new DevService;
 
+        $afterPostOptions = request('base.afterPostOptions',[]);
+
         $ds->createControllerFile($data);
 
         $ds->createModelFile($data);
@@ -153,8 +155,7 @@ class ModelController extends CrudController
         $ds->modelColumn2Export($data);
 
         //检测如果需要创建数据库表
-        $createModelSchema = request('base.createModelSchema');
-        if(!empty($createModelSchema))
+        if(in_array('createModelSchema',$afterPostOptions))
         {
             $ds->createModelSchema($data);
         }

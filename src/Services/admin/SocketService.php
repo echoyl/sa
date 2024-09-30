@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Services\admin;
 
 use Echoyl\Sa\Models\socket\Log;
+use Exception;
 use GatewayWorker\Lib\Gateway;
 use Illuminate\Support\Facades\Log as FacadesLog;
 use Illuminate\Support\Facades\Schema;
@@ -130,12 +131,27 @@ class SocketService
         return self::send($user_id,$message);
     }
 
+    public static function sendToClients($client_ids,$message)
+    {
+        foreach($client_ids as $client_id)
+        {
+            self::sendToClient($client_id,$message);
+        }
+        return;
+    }
+
     public static function sendToClient($client_id,$message)
     {
-        if(Gateway::isOnline($client_id))
+        try{
+            if(Gateway::isOnline($client_id))
+            {
+                Gateway::sendToClient($client_id, json_encode($message));
+            }
+        }catch(Exception $e)
         {
-            Gateway::sendToClient($client_id, json_encode($message));
+            return;
         }
+        
         return;
     }
 
@@ -171,12 +187,10 @@ class SocketService
             $where = ['token_id'=>$id];
         }
 
-        $logs = $model->where($where)->get()->toArray();
+        $client_ids = $model->where($where)->pluck('client_id')->toArray();
 
-        foreach($logs as $log)
-        {
-            self::sendToClient($log['client_id'],$message);
-        }
+        self::sendToClients($client_ids,$message);
+
         return;
     }
 }
