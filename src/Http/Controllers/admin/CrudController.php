@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\crud\CrudService;
+use Echoyl\Sa\Services\dev\crud\relation\Relation;
 use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\WebMenuService;
@@ -747,6 +748,7 @@ class CrudController extends ApiBaseController
             {
                 return $fail;
             }
+            $model_class = $this->model_class?$this->model_class:get_class($this->model);
             //d($data);
             if (!empty($id)) {
                 $data['originData'] = $item;
@@ -756,7 +758,7 @@ class CrudController extends ApiBaseController
                 {
                     return $this->fail([1,$check_uniue_result]);
                 }
-                $this->model->where(['id' => $id])->update($data);
+                $model_class::where(['id' => $id])->update($data);
             } else {
                 //插入数据
                 $data['created_at'] = $data['created_at']??now();
@@ -770,17 +772,17 @@ class CrudController extends ApiBaseController
                 {
                     $data = $this->model->getSysAdminIdData($data);
                 }
-                $model_class = $this->model_class?$this->model_class:get_class($this->model);
+                
                 $create = $model_class::create($data);
                 $id = $create->id;
             }
             $ret = null;
-            
-            //操作完数据后 读取可操作关联模型的数据处理
-            $this->afterPostParseData($id,request('base'));
 
             //返回插入或更新后的数据
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
+
+            //操作完数据后 读取可操作关联模型的数据处理
+            (new Relation($model_class,$new_data))->afterPost(request('base'));
 
             if (method_exists($this, 'afterPost')) {
                 $ret = $this->afterPost($id,$new_data); //数据更新或插入后的 补充操作
@@ -1060,7 +1062,7 @@ class CrudController extends ApiBaseController
                     $val = $check_category_field['array_val'];
                 }
             }
-            if($type == 'model')
+            if($type == 'model' || $type == 'models')
             {
                 if($encode)
                 {
@@ -1078,8 +1080,19 @@ class CrudController extends ApiBaseController
                     {
                         //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                         //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
-                        $this->parseWiths($val,$cls_p_c);
-                        $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
+                        if($type == 'models')
+                        {
+                            foreach($val as $k=>$v)
+                            {
+                                //1对多不获取withs的内容了
+                                $this->parseData($v,$in,$from,$cls_p_c,$deep+1);
+                                $val[$k] = $v;
+                            }
+                        }else
+                        {
+                            $this->parseWiths($val,$cls_p_c);
+                            $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
+                        }
                     }
                     $data[$name] = $val;
                 }
@@ -1102,79 +1115,6 @@ class CrudController extends ApiBaseController
             unset($data['originData']);
         }
         return $unsetNames;
-    }
-
-    /**
-     * 数据更新或插入后的操作
-     *
-     * @param [type] $id
-     * @param [type] $data
-     * @return void
-     */
-    public function afterPostParseData($id,$data)
-    {
-        $parse_columns = $this->getParseColumns();
-        foreach($parse_columns as $column)
-        {
-            $type = $column['type'];
-            $name = $column['name'];
-            
-            switch ($type) {
-                case 'model':
-                    if(isset($data[$name]))
-                    {
-                        $idata = filterEmpty($data[$name]);
-                        $foreign_key = $column['foreign_key'];//外键名称
-                        if($foreign_key != 'id')
-                        {
-                            //只有外键名称不是id的时候才去更新 关联数据信息
-                            $this->modelData($idata,$column['class'],[$foreign_key=>$id]);
-                        }
-                    }
-                break;
-            }
-        }
-        return;
-    }
-
-    /**
-     * 处理管理模型数据 function
-     * 1-1关系
-     * @param [type] $data  数据
-     * @param [type] $class 模型
-     * @param [type] $where 模型的唯一条件
-     * @return void
-     */
-    public function modelData($data,$class,$where)
-    {
-        $model = new $class;
-        $item = $model->where($where)->first();
-
-        $cls_p_c = $model->getParseColumns();
-        if($item)
-        {
-            //更新
-            $from = 'update';
-        }else
-        {
-            //新增
-            $from = 'insert';
-        }
-        if(!empty($cls_p_c))
-        {
-            $this->parseData($data,true,$from,$cls_p_c);
-        }
-
-        $data = array_merge($data,$where);
-
-        if($from == 'update')
-        {
-            $model->where($where)->update($data);
-        }else
-        {
-            $model->where($where)->insert($data);
-        }
-        return;
     }
 
     public function setThis()

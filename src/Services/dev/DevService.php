@@ -349,7 +349,8 @@ class DevService
         if(Arr::get($setting,'has_uuids'))
         {
             $uuid_name_default = 'sys_admin_uuid';
-            $uuid_name = Arr::get($setting,'has_uuids_name',$uuid_name_default);
+            $uuid_name = Arr::get($setting,'has_uuids_name');
+            $uuid_name = $uuid_name?:$uuid_name_default;
             $content = preg_replace('/\s+\$sys_admin_uuid\$/',"\r".$this->getFileTpl($uuid_name == $uuid_name_default?'uuid':'uuid_customer'),$content);
             $replace_arr['/\$has_uuid_name\$/'] = $uuid_name;
         }else
@@ -545,6 +546,32 @@ class DevService
                     ];
                 }
 
+                
+
+                $foreign_model = $val['foreign_model'];
+
+                if(!$foreign_model)
+                {
+                    d($val);
+                }
+                
+                if(isset($useModelArr[$foreign_model['id']]))
+                {
+                    $f_model_name = $useModelArr[$foreign_model['id']];
+                }else
+                {
+                    [$namespace,$f_model_name] = $this->getNamespace($foreign_model,$has_model);
+                    $useModelArr[$foreign_model['id']] = $f_model_name;
+                    $namespace_data[] = $namespace.';';
+                }
+    
+                $has_model[] = $f_model_name;
+                $all_models[$val['local_key']] = $f_model_name;
+                if(!isset($all_relations[$val['local_key']]))
+                {
+                    $all_relations[$val['local_key']] = $val;
+                }
+
                 if($val['type'] == 'many')
                 {
                     //hasMany 检测是否需要with_count 和 with_sum 的字段
@@ -572,33 +599,12 @@ class DevService
                             $with_sum[] = [$val['name'],$with_sum_name];
                         }
                     }
-                }
-
-                $foreign_model = $val['foreign_model'];
-
-                if(!$foreign_model)
-                {
-                    d($val);
-                }
-                
-                if(isset($useModelArr[$foreign_model['id']]))
-                {
-                    $f_model_name = $useModelArr[$foreign_model['id']];
-                }else
-                {
-                    [$namespace,$f_model_name] = $this->getNamespace($foreign_model,$has_model);
-                    $useModelArr[$foreign_model['id']] = $f_model_name;
-                    $namespace_data[] = $namespace.';';
-                }
-    
-                
-                
-    
-                $has_model[] = $f_model_name;
-                $all_models[$val['local_key']] = $f_model_name;
-                if(!isset($all_relations[$val['local_key']]))
-                {
-                    $all_relations[$val['local_key']] = $val;
+                    $parse_columns[] = [
+                        'name'=>Utils::uncamelize($val['name']),
+                        'type'=>'models',
+                        'class'=>'@php'.$f_model_name.'::class@endphp',
+                        'foreign_key'=>$val['foreign_key']
+                    ];
                 }
                 
 

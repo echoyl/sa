@@ -72,7 +72,7 @@ class RelationController extends CrudController
         {
             $ds = new DevService;
             $data = array_merge($data,[
-                'columns'=>$this->getModelColumns($this->model_id),
+                //'columns'=>$this->getModelColumns($this->model_id),
                 'models'=>$ds->getModelsTree(),
                 'allModels'=>$this->allModels(),
             ]);

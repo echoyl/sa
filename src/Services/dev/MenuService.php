@@ -230,7 +230,7 @@ class MenuService
                         $menu_perms = array_merge($menu_perms,json_decode($val['perms'],true));
                     }
 
-                    [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?($val['page_type'] == 'justTable'?false:true):false,$enable_keys);
+                    [$routers,$routers_disable] = $this->getBasePerms($val['id'],$menu_perms,$val['admin_model_id']?(in_array($val['page_type'],['justTable','api'])?false:true):false,$enable_keys);
                 }
                 
                 //$more = false;
@@ -375,7 +375,7 @@ class MenuService
         }
 
         //先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
-        $m = (new Menu())->where(['path'=>$name,'state'=>1])->whereIn('page_type',['form','panel','panel2','justTable'])->whereIn('type',[env('APP_NAME'),'system']);
+        $m = (new Menu())->where(['path'=>$name,'state'=>1])->whereIn('page_type',['form','panel','panel2','justTable','api'])->whereIn('type',[env('APP_NAME'),'system']);
         if(!empty($r))
         {
             $m = $this->searchParent($m,$r);

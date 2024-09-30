@@ -39,8 +39,8 @@ class Schema
 
         if(Arr::get($par,'has_uuids'))
         {
-            $has_uuids_name = Arr::get($par,'has_uuids_name','sys_admin_uuid');
-            $sys_columns[] = ['name'=>$has_uuids_name,'type'=>'varchar','desc'=>'系统自动插入uuid','length'=>36,'pk'=>true];
+            $has_uuids_name = Arr::get($par,'has_uuids_name');
+            $sys_columns[] = ['name'=>$has_uuids_name?:'sys_admin_uuid','type'=>'varchar','desc'=>'系统自动插入uuid','length'=>36,'pk'=>true];
         }
 
         if(Arr::get($par,'with_system_admin_id'))
