@@ -78,14 +78,18 @@ class SetsService
         {
             $post_data[$imgf] = json_decode($post_data[$imgf],true);
         }
-
+        if(isset($post_data['originData']))
+        {
+            unset($post_data['originData']);
+        }
         return $post_data;
     }
 
     public function post($key,$deep_img_fields = [])
     {
         $app_name = $this->appName();
-        $item = $this->getData($key);
+        //编辑模式不再读取缓存
+        $item = $this->getData($key,true);
         //新增自动检测字段是否是图片 及 配置 类型
         if($item && $item['value'])
         {
@@ -128,7 +132,7 @@ class SetsService
                     }
                 }
             }
-            //d($post_data);
+            d($post_data);
 
 			$data = [
 				'key'=>$key,
@@ -186,7 +190,7 @@ class SetsService
         }
         return $sets[$key];
     }
-    public function getData($key)
+    public function getData($key,$force = false)
     {
         static $data = [];
         if(isset($data[$key]) && $data[$key])
@@ -195,7 +199,11 @@ class SetsService
         }
         //加入缓存设置
         $cache_key = $this->getCacheKey($key);
-        $item = Cache::get($cache_key);
+        $item = false;
+        if(!$force)
+        {
+            $item = Cache::get($cache_key);
+        }
         if(!$item)
         {
             $item = $this->model->where(['key'=>$key,'app_name'=>$this->appName()])->first();

@@ -96,7 +96,8 @@ class CrudService
             'isset'=>$isset,
             'val'=>$val,
             'type'=>$name,
-            'origin_val'=>$origin_val
+            'origin_val'=>$origin_val,
+            'from'=>'update'
         ],$options);
 
         //如果是更新且数据未传过来 则不更新该字段
