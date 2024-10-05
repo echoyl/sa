@@ -104,6 +104,7 @@ class TableColumn
         //是否在列表中隐藏
         $rowSpan = $config['rowSpan']??false;
         
+        
         //ellipsis
         $ellipsis = $props['ellipsis']??'';
         //copyable
@@ -186,6 +187,14 @@ class TableColumn
         if(empty($can_search))
         {
             $d['search'] = false;
+        }
+
+        //表中可编辑
+        $editable = $config['editable']??'';
+        $editable_type = $config['editable_type']??'string';
+        if($editable)
+        {
+            $d['editable'] = ['type'=>$editable_type];
         }
 
         if(!empty($hide_in_table))
