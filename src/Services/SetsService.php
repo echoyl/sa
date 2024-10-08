@@ -132,7 +132,7 @@ class SetsService
                     }
                 }
             }
-            d($post_data);
+            //d($post_data);
 
 			$data = [
 				'key'=>$key,
