@@ -461,7 +461,7 @@ class TableColumn
         //$table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
 
-        if($this->form_type == 'select' || $this->form_type == 'radioButton')
+        if(in_array($this->form_type,['select','radioButton','checkbox']))
         {
             $label = $label?:'title';
             $value = $value?:'id';
@@ -480,10 +480,7 @@ class TableColumn
         }
         if($this->relation)
         {
-            if($this->form_type == 'selects')
-            {
-                $d['fieldProps']['mode'] = 'multiple';
-            }
+            
         }else
         {
             //非关联的话 手动设置数据源
@@ -508,6 +505,10 @@ class TableColumn
                 $d['valueType'] = 'radioButton';
                 //$d['fieldProps']['buttonStyle'] = 'solid';
             }
+        }
+        if(in_array($this->form_type,['selects','checkbox']))
+        {
+            $d['fieldProps']['mode'] = 'multiple';
         }
         $this->data = $d;
     }

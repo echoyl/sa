@@ -778,6 +778,14 @@ class MenuController extends CrudController
 
         $base = request('base');
 
+        //检测是否只选了 hide in table
+        $hide_in_table = Arr::get($base,'hide_in_table');
+        $can_search = Arr::get($base,'can_search');
+        if(!empty($hide_in_table) && empty($can_search))
+        {
+            return $this->failMsg('该元素页面中未显示，请不要只勾选表中隐藏');
+        }
+
         $edit_type = request('type','base');
         
         $ts = new TableService($id);

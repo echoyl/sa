@@ -88,7 +88,7 @@ class UploadService
 
         $file = $request->file($formname);
 
-        $ext = $file->getClientOriginalExtension();
+        $ext = strtolower($file->getClientOriginalExtension());
 
 
         if (in_array($ext, ['zip', 'bin'])) {
@@ -196,7 +196,7 @@ class UploadService
             return ['code' => 1, 'msg' => '获取数据错误'];
         }
 
-        $ext = $file->getClientOriginalExtension();
+        $ext = strtolower($file->getClientOriginalExtension());
 
         if ($sizelimit > 0) {
             //$size = $file->size

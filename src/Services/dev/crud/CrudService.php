@@ -3,6 +3,7 @@ namespace Echoyl\Sa\Services\dev\crud;
 
 use Echoyl\Sa\Services\dev\crud\fields\AliyunVideo;
 use Echoyl\Sa\Services\dev\crud\fields\Cascader;
+use Echoyl\Sa\Services\dev\crud\fields\Checkbox;
 use Echoyl\Sa\Services\dev\crud\fields\Config;
 use Echoyl\Sa\Services\dev\crud\fields\Content;
 use Echoyl\Sa\Services\dev\crud\fields\Date;
@@ -65,7 +66,8 @@ class CrudService
             'cascader'=>Cascader::class,
             'cascaders'=>Cascader::class,
             'aliyunVideo'=>AliyunVideo::class,
-            'model'=>Model::class
+            'model'=>Model::class,
+            'checkbox'=>Checkbox::class
         ];
     }
 

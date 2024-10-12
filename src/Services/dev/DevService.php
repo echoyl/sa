@@ -762,7 +762,7 @@ class DevService
                     }
                 }
 
-                if(in_array($form_type,['select','selects','radioButton']))
+                if(in_array($form_type,['select','selects','radioButton','checkbox']))
                 {
                     if(isset($all_models[$name]))
                     {

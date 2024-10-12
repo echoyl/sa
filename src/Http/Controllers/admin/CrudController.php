@@ -274,6 +274,7 @@ class CrudController extends ApiBaseController
 
                     break;
                 case 'selects':
+                case 'checkbox':
                     if (is_numeric($search_val)) {
                         $category_id = [$search_val];
                     } else {

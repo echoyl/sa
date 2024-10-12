@@ -553,7 +553,7 @@ class FormItem
         $label = $setting['label']??'';
         $value = $setting['value']??'';
         
-        if(in_array($this->form_type,['select','selects','radioButton']))
+        if(in_array($this->form_type,['select','selects','radioButton','checkbox']))
         {
             $label = $label?:'title';
             $value = $value?:'id';
@@ -594,8 +594,12 @@ class FormItem
 
         if($this->form_type == 'radioButton')
         {
-            $d['valueType'] = 'radioButton';
             $d['fieldProps']['buttonStyle'] = 'solid';
+        }
+
+        if(in_array($this->form_type,['radioButton','checkbox']))
+        {
+            $d['valueType'] = $this->form_type;
         }
 
         if($this->form_type == 'select')

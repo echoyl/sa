@@ -25,6 +25,7 @@ class Utils
         'digit'=>'digit',
         'confirm'=>'confirm',
         'radioButton'=>'select',
+        'checkbox'=>'select',
         'aliyunVideo'=>'aliyunVideo',
         'modalSelect'=>'modalSelect',
         'saTransfer'=>'saTransfer',
