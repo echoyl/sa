@@ -8,6 +8,7 @@ use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Creator;
 use Echoyl\Sa\Services\dev\utils\Dump;
+use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 
 class ModelController extends CrudController
@@ -23,6 +24,8 @@ class ModelController extends CrudController
         $this->default_post = [
             'parent_id' => $post_parent_id ?: $this->cid,
             'displayorder' => 0,
+            'type'=>0,
+            'leixing'=>'normal'
         ];
     }
 
@@ -34,19 +37,20 @@ class ModelController extends CrudController
         $this->parseWiths($search);
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
 
-        $table_menu_id = request('admin_type', $ds->appname());
-        if ($table_menu_id == 'all') {
-            $types = ['system', $ds->appname(), ''];
-        } else {
-            $types = [$table_menu_id, ''];
+        $table_menu_id = request('admin_type', DevService::appname());
+        $q = $this->model;
+        if ($table_menu_id != 'all') {
+            $q = $q->where('admin_type',$table_menu_id);
         }
 
-        $data = HelperService::getChildFromData($this->model->whereIn('admin_type',$types)->get()->toArray(),function ($item) {
+        $data = HelperService::getChildFromData($q->get()->toArray(),function ($item) {
             $this->parseData($item, 'decode', 'list');
             return $item;
         },[['type','asc'],['id','asc']]);
 
-        $search['table_menu'] = ['admin_type'=>[['value' => $ds->appname(), 'label' => '项目'], ['value' => 'system', 'label' => '系统']]];
+        $search['table_menu'] = [
+            'admin_type'=>Utils::packageTypes()
+        ];
         //d($data);
         
         $search['foldermodels'] = $ds->getModelsFolderTree();//模型文件夹

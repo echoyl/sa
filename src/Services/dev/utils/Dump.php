@@ -165,7 +165,7 @@ class Dump
         return $this;
     }
 
-    public function import($content)
+    public function import($content,$to_menu_id = 0,$to_model_id = 0)
     {
         if (!$content) {
             return [1, '请上传系统导出的sql文件'];
@@ -178,14 +178,19 @@ class Dump
 
         $model_count = $relation_count = $menu_count = 0;
 
+        $menu_ids = [];
+
         foreach ($content as $val) {
             $menu = $val['menu'] ?? false;
             if ($menu) {
                 $menu_count++;
+                $menu['parent_id'] = $to_menu_id ? : $menu['parent_id'];
                 Menu::updateOrInsert(['id' => $menu['id']], $menu);
+                $menu_ids[] = $menu['id'];
             }
             $model = $val['model'] ?? false;
             if ($model) {
+                $model['parent_id'] = $to_model_id ? : $model['parent_id'];
                 Model::updateOrInsert(['id' => $model['id']], $model);
                 $model_count++;
             }
@@ -197,7 +202,7 @@ class Dump
                 }
             }
         }
-        return [0, '操作成功，模型:' . $model_count . ' 菜单:' . $menu_count . ' 关系:' . $relation_count];
+        return [0, '操作成功，模型:' . $model_count . ' 菜单:' . $menu_count . ' 关系:' . $relation_count,$menu_ids];
     }
 
     public function exportModel($model_id)

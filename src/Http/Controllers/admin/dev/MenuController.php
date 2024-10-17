@@ -39,10 +39,7 @@ class MenuController extends CrudController
             ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
             ['name' => 'admin_model', 'type' => 'model', 'default' => '','class'=>Model::class],
             ['name' => 'admin_model_id', 'type' => 'select', 'default' => 0,'with'=>true,'data'=>$ds->getModelsTree()],
-            ["name" => "type", "type" => "select", "default" => 'system', "data" => [
-                ["label" => "项目", "value" => env('APP_NAME')],
-                ["label" => "系统", "value" => 'system'],
-            ], "with" => true],
+            ["name" => "type", "type" => "select", "default" => 'system', "data" => Utils::packageTypes(), "with" => true],
             ["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
                 ["label" => "启用","value" => 1],
                 ["label" => "禁用","value" => 0],
@@ -74,9 +71,8 @@ class MenuController extends CrudController
         //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
         //$search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
         $search['table_menu'] = ['state'=>$search['states']];
-        $types = ['system',$ds->appname()];
         $table_menu_id = request('state',1);
-        $model = $this->model->whereIn('type',$types);
+        $model = $this->model->whereIn('type',Utils::packageTypeArr());
         //d($table_menu_id);
         if($table_menu_id != 'all')
         { 
@@ -834,13 +830,15 @@ class MenuController extends CrudController
 
         $dump = new Dump;
 
-        [$code,$msg] = $dump->import($content);
+        [$code,$msg,$menu_ids] = $dump->import($content,request('id'));
 
         if($code)
         {
             return $this->fail([1,$msg]);
         }else
         {
+            //刷新数据
+            $this->updateMenuDesc($menu_ids);
             return $this->success(null,[0,$msg]);
         }
     }

@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\dev;
 
 use Echoyl\Sa\Models\dev\Menu;
+use Echoyl\Sa\Services\dev\utils\Utils;
 use stdClass;
 
 class MenuService
@@ -50,10 +51,10 @@ class MenuService
         $data = $this->getAll()->filter(function ($item) use ($id,$auth_ids) {
             if($auth_ids)
             {
-                return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true && in_array($item->id,$auth_ids) === true;
+                return $item->parent_id === $id && in_array($item->type,Utils::packageTypeArr()) === true && in_array($item->id,$auth_ids) === true;
             }else
             {
-                return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
+                return $item->parent_id === $id && in_array($item->type,Utils::packageTypeArr()) === true;
             }
             
         });
@@ -195,7 +196,7 @@ class MenuService
     public function perms($id = 0,$enable_keys = [])
     {
         $data = $this->getAll2()->filter(function ($item) use ($id) {
-            return $item->parent_id === $id && in_array($item->type,['system',env('APP_NAME'),'']) === true;
+            return $item->parent_id === $id && in_array($item->type,Utils::packageTypeArr()) === true;
         })->toArray();
         $ret = [];
         $total = count($data);

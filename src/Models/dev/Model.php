@@ -3,6 +3,8 @@ namespace Echoyl\Sa\Models\dev;
 
 use Echoyl\Sa\Models\Category;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\utils\Utils;
 
 class Model extends Category
 {
@@ -25,10 +27,7 @@ class Model extends Category
         {
             $data = [
                 ['name' => 'parent_id', 'type' => '', 'default' => 0],
-                ["name" => "admin_type", "type" => "select", "default" => env('APP_NAME'), "data" => [
-                    ["label" => "项目", "value" => env('APP_NAME')],
-                    ["label" => "系统", "value" => 'system'],
-                ], "with" => true],
+                ["name" => "admin_type", "type" => "select", "default" => DevService::appname(), "data" => Utils::packageTypes(), "with" => true],
                 ['name'=>'columns','type'=>'json','default'=>''],
                 ['name'=>'search_columns','type'=>'json','default'=>''],
                 ['name'=>'unique_fields','type'=>'json','default'=>''],

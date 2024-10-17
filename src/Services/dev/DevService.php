@@ -47,13 +47,14 @@ class DevService
         //加一个判断如果最后一个不是项目名称就自动追加name 限于获取模型的路径
         $type = Arr::get($val,'admin_type','');
         
-        if(isset($val['admin_type']) && $type != 'system' && $pl > 0)
+        if($type && $type != 'system' && $pl > 0)
         {
-            $app_name = self::appname();
-            if($path[$pl-1] != $app_name)
-            {
-                $path[] = $app_name;
-            }
+            $path[] = $type;
+            // $app_name = self::appname();
+            // if($path[$pl-1] != $app_name)
+            // {
+            //     $path[] = $app_name;
+            // }
         }
         return $path;
     }
@@ -276,8 +277,6 @@ class DevService
         $all = $this->allModel(true);
 
         $names = array_reverse(self::getPath($data, $all));
-        
-        //d($names);
 
         $table_name = implode('_',$names);
         $name = ucfirst(array_pop($names));
@@ -978,15 +977,26 @@ class DevService
         {
             //获取全部的话 将系统模型归类到一起
             $system = $this->getModelsTreeData(['system'],$all_selectable);
+            $plugin = $this->getModelsTreeData(['plugin'],$all_selectable);
             $app = $this->getModelsTreeData([self::appname()],$all_selectable);
-            return array_merge($app,[[
-                'id'=>0,
-                'title'=>'系统相关',
-                'value'=>0,
-                'isLeaf'=>false,
-                'selectable'=>false,
-                'children'=>$system
-            ]]);
+            return array_merge($app,[
+                [
+                    'id'=>0,
+                    'title'=>'系统相关',
+                    'value'=>0,
+                    'isLeaf'=>false,
+                    'selectable'=>false,
+                    'children'=>$system
+                ],
+                [
+                    'id'=>-1,
+                    'title'=>'插件',
+                    'value'=>-1,
+                    'isLeaf'=>false,
+                    'selectable'=>false,
+                    'children'=>$plugin
+                ]
+            ]);
         }
     }
     /**
@@ -994,12 +1004,12 @@ class DevService
      *
      * @param string $admin_type
      * @param boolean $all_selectable
-     * @return void
+     * @return array
      */
     public function getModelsTreeData($admin_type = '',$all_selectable = false)
     {
         $model = new Model();
-        $types = $admin_type?:['system',self::appname(),''];
+        $types = $admin_type?:Utils::packageTypeArr();
         $data = HelperService::getChildFromData($model->whereIn('admin_type',$types)->get()->toArray(),function($item) use($all_selectable){
             
             return [
@@ -1016,7 +1026,7 @@ class DevService
     public function getMenusTree($admin_type = '',$all_selectable = false)
     {
         $model = new Menu();
-        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $types = $admin_type?:Utils::packageTypeArr();
 
         $data = HelperService::getChildFromData($model->whereIn('type',$types)->get()->toArray(),function($item) use($all_selectable){
             
@@ -1035,7 +1045,7 @@ class DevService
 
     public function getModelsFolderTree($admin_type = '')
     {
-        $types = $admin_type?:['system',env('APP_NAME'),''];
+        $types = $admin_type?:Utils::packageTypeArr();
         $model = (new Model())->whereIn('admin_type',$types)->where(['type'=>0]);
         $data = HelperService::getChildFromData($model->get()->toArray(),function($item){
             return [
@@ -1254,7 +1264,7 @@ class DevService
                             }else
                             {
                                 Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
-                                //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>implode('/',$model_path).'/'.ucfirst($name).'Controller',]);
+                                //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller',]);
                             }
                             
                             
@@ -1312,9 +1322,10 @@ class DevService
     {
         $model = new Model();
         $data = [];
+        $types = Utils::packageTypeArr();
         $list = $model->where(['type'=>1])->with(['relations'=>function($query){
             $query->select(['id','title','model_id','name','foreign_model_id','type'])->whereIn('type',['one','many']);
-        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
+        }])->whereIn('admin_type',$types)->get()->toArray();
         foreach($list as $val)
         {
             $data[] = [

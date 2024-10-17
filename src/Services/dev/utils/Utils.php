@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\dev\DevService;
 
 class Utils
 {
@@ -39,6 +40,21 @@ class Utils
         'updated_at'=>'最后更新时间',
         'displayorder'=>'排序权重',
     ];
+
+
+    public static function packageTypes()
+    {
+        return [
+            ['value' =>DevService::appname(), 'label' => '项目'],
+            ['value' => 'plugin', 'label' => '插件'], 
+            ['value' => 'system', 'label' => '系统']
+        ];
+    }
+
+    public static function packageTypeArr()
+    {
+        return collect(self::packageTypes())->pluck('value')->toArray();
+    }
 
     public static function uncamelize($camelCaps,$separator='_')
     {
