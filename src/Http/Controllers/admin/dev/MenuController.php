@@ -55,7 +55,8 @@ class MenuController extends CrudController
             ['name'=>'other_config','type'=>'json','default'=>''],
             ['name'=>'table_config','type'=>'json','default'=>''],
             ['name'=>'setting','type'=>'json','default'=>''],
-        ];
+            ['name'=>'parent_id','type'=>'select']
+ ,       ];
 
         $this->can_be_null_columns = ['title','admin_model_id','icon','category_id','other_config'];
 

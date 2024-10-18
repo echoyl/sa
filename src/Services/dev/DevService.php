@@ -1043,20 +1043,39 @@ class DevService
         return $data;
     }
 
-    public function getModelsFolderTree($admin_type = '')
+    public function getModelsFolderTree()
     {
-        $types = $admin_type?:Utils::packageTypeArr();
-        $model = (new Model())->whereIn('admin_type',$types)->where(['type'=>0]);
-        $data = HelperService::getChildFromData($model->get()->toArray(),function($item){
-            return [
-                'id'=>$item['id'],
-                'title'=>$item['title'],
-                'value'=>$item['id'],
-                'isLeaf'=>$item['type']?true:false,
-                //'selectable'=>$item['type']?true:false,
-            ];
-        },[['displayorder', 'desc'],['type', 'asc'],['id', 'desc']]);
-        return $data;
+        $types = Utils::packageTypes();
+        $datas = [];
+        foreach($types as $key=>$type)
+        {
+            $model = (new Model())->where('admin_type',$type)->where(['type'=>0]);
+            $data = HelperService::getChildFromData($model->get()->toArray(),function($item){
+                return [
+                    'id'=>$item['id'],
+                    'title'=>$item['title'],
+                    'value'=>$item['id'],
+                    'isLeaf'=>$item['type']?true:false,
+                    //'selectable'=>$item['type']?true:false,
+                ];
+            },[['displayorder', 'desc'],['type', 'asc'],['id', 'desc']]);
+            if($type['value'] == DevService::appname())
+            {
+                $datas = array_merge($data,$datas);
+            }else
+            {
+                $datas[] = [
+                    'id'=>$key - 2,
+                    'title'=>$type['label'],
+                    'value'=>$key - 2,
+                    'isLeaf'=>false,
+                    'selectable'=>false,
+                    'children'=>$data
+                ];
+            }
+        }
+        
+        return $datas;
     }
 
     /**
