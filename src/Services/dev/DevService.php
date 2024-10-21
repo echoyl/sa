@@ -783,12 +783,18 @@ class DevService
                             //d(json_decode($column['form_data'],true));
                             if(is_string($setting['json']))
                             {
-                                $d['data'] = json_decode($setting['json'],true);
+                                $json_data = json_decode($setting['json'],true);
                             }else
                             {
-                                $d['data'] = $setting['json'];
+                                $json_data = $setting['json'];
                             }
-                            
+                            $d['data'] = collect($json_data)->map(function($v){
+                                if(is_numeric($v['id']))
+                                {
+                                    $v['id'] = intval($v['id']);
+                                }
+                                return $v;
+                            })->toArray();
                             //d($d['data']);
                         }else
                         {

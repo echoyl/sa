@@ -125,7 +125,7 @@ class WechatService
             "description" => $title,
             "notify_url" => $notify_url,
             "amount" => [
-                "total" => $pay_log['money'],
+                "total" => intval($pay_log['money']),
                 "currency" => "CNY"
             ],
             "payer" => [
@@ -136,12 +136,19 @@ class WechatService
         Log::channel('daily')->info('pay_msg_body:', $par);
 
         //发起订单
-        $result = $app->getClient()->postJson("v3/pay/transactions/jsapi",);
+        try{
+            $result = $app->getClient()->postJson("v3/pay/transactions/jsapi",$par)->toArray();
+        }catch(Exception $e)
+        {
+            return [1, '请求失败:' . $e->getMessage()];
+        }
+        
+        
         //$result = $app->order->unify($par);
-        Log::channel('daily')->info('pay_msg_result:', $result);
+        Log::channel('daily')->info('pay_msg_result:', ['result'=>$result]);
         $jssdk = $app->getUtils();
 
-        if ($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK') {
+        if (isset($result['prepay_id']) && $result['prepay_id']) {
             //buildSdkConfig - 网页js获取
             $config = $jssdk->buildMiniAppConfig($result['prepay_id'], $app_id);
 
@@ -149,7 +156,7 @@ class WechatService
 
             return [0, $config];
         } else {
-            return [1, '支付调用失败:' . $result['return_msg']];
+            return [1, '支付调用失败'];
         }
     }
 
