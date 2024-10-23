@@ -18,6 +18,7 @@ class RelationController extends CrudController
         $this->model_id = $post_parent_id?:0;
         $this->default_post = [
             'model_id' => $this->model_id,
+            'is_with'=>0
             //'displayorder' => 0,
         ];
 
