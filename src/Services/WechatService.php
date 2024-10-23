@@ -15,6 +15,7 @@ use Echoyl\Sa\Models\wechat\offiaccount\Account;
 use Echoyl\Sa\Models\wechat\offiaccount\User;
 use Echoyl\Sa\Models\wechat\Pay;
 use Echoyl\Sa\Models\wechat\pay\Log as PayLog;
+use Echoyl\Sa\Models\wechat\pay\Refund;
 use Exception;
 
 class WechatService
@@ -55,7 +56,8 @@ class WechatService
             // 必要配置
             'app_id'             => $appid ?: $pay['appid'],
             'mch_id'             => $pay['mch_id'],
-            'secret_key'                => $pay['apikey'],   // API 密钥
+            'v2_secret_key'                => $pay['apikey'],   // v2 API 秘钥
+            'secret_key'                => $pay['apikey_v3'],   // v3 API 秘钥
 
             // 如需使用敏感接口（如退款、发送红包等）需要配置 API 证书路径(登录商户平台下载 API 证书)
             // 'cert_path'          => 'path/to/your/cert.pem', // XXX: 绝对路径！！！！
@@ -575,49 +577,85 @@ class WechatService
         return;
     }
 
-    public static function payRefund($pay_log_id, $tran_amt, $app)
+    public static function payRefund($pay_log_id, $tran_amt = 0, $app)
     {
         $model = new PayLog();
-        $pay_log = $model->where(['id' => $pay_log_id])->first();
+        $pay_log = $model->with(['refunds'=>function($q){
+            $q->whereIn('state',[1,2]);
+        }])->where(['id' => $pay_log_id])->first();
         if (!$pay_log) {
             return [1, '订单未发起支付，不能进行退款操作'];
         }
         if ($pay_log['state'] != 1) {
             return [1, '订单未支付，不能进行退款操作'];
         }
+        $tran_amt = $tran_amt ? :$pay_log['money'];
+        $refunded_money = collect($pay_log['refunds'])->sum('money');
 
-        if ($pay_log['refund_state'] == 1) {
-            return [1, '订单已退款'];
+        if($pay_log['money'] - $refunded_money < $tran_amt)
+        {
+            return [1, '订单无可退款金额'];
         }
 
-        [$code, $refund] = self::payRefundQuery($pay_log['sn'], $app);
-        if (!$code) {
-            $model->where(['id' => $pay_log['id']])->update([
-                'state' => 2,
-                'refund_at' => now(),
-                'refund_out_sn' => $refund['refund_id_0'],
-                'refund_sn' => $refund['out_refund_no_0'],
-                'refund_money' => $tran_amt
-            ]);
-            return [0, '退款成功'];
-        }
+        // [$code, $refund] = self::payRefundQuery($pay_log['sn'], $app);
+        // if (!$code) {
+        //     $model->where(['id' => $pay_log['id']])->update([
+        //         'state' => 2,
+        //         'refund_at' => now(),
+        //         'refund_out_sn' => $refund['refund_id_0'],
+        //         'refund_sn' => $refund['out_refund_no_0'],
+        //         'refund_money' => $tran_amt
+        //     ]);
+        //     return [0, '退款成功'];
+        // }
 
         $rf = $pay_log['sn'] . 'TK' . rand(10, 99);
-        $result = $app->refund->byOutTradeNumber($pay_log['sn'], $rf, $pay_log['money'], $tran_amt);
+        $par = [
+            'out_trade_no'=>$pay_log['sn'],
+            'out_refund_no'=>$rf,
+            'amount'=>[
+                'refund'=>$tran_amt,
+                'total'=>$pay_log['money'],
+                'currency'=>'CNY'
+            ],
+            'notify_url'=>env('APP_URL') . '/wx/wxrefundnotifys'
+        ];
+
+        //插入数据
+        $refund_data = [
+            'log_id'=>$pay_log['id'],
+            'money'=>$tran_amt,
+            'sn'=>$rf,
+            'created_at'=>now(),
+        ];
+
+        Log::channel('daily')->info('refund data:', ['refund par'=>$par]);
+
+        $refund = Refund::create($refund_data);
+
+        try{
+            $result = $app->getClient()->postJson("v3/refund/domestic/refunds",$par)->toArray();
+        }catch(Exception $e)
+        {
+            return [1, '请求失败:' . $e->getMessage()];
+        }
 
         Log::channel('daily')->info('wechat tuikuan_result:', $result);
-        if ($result['return_code'] == 'SUCCESS' && $result['return_msg'] == 'OK' && $result['result_code'] == 'SUCCESS') {
-            $model->where(['id' => $pay_log['id']])->update([
-                'state' => 2,
-                'refund_at' => now(),
-                'refund_out_sn' => $result['refund_id'],
-                'refund_sn' => $rf,
-                'refund_money' => $tran_amt
-            ]);
-            return [0, '退款成功'];
-        } else {
-            return [1, $result['err_code_des'] ?? '未知原因'];
+        $message = '退款成功';
+
+        if($result['status'] == 'SUCCESS')
+        {
+            $refund->state = 1;
+            $refund->refund_at = now();
+        }elseif($result['status'] == 'PROCESSING')
+        {
+            $message = '退款处理中';
+            $refund->state = 2;
         }
+        $refund->out_sn = $result['refund_id'];
+        $refund->save();
+
+        return [0, $message];
     }
 
     public static function payRefundQuery($sn, $app)
