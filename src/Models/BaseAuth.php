@@ -15,6 +15,14 @@ class BaseAuth extends Authenticatable
      * @var string
      */
     
+    /**
+     * The attributes that aren't mass assignable.
+     * 默认设置为不能覆写的字段 系统自动生成
+     *
+     * @var array<string>|bool
+     */
+    protected $guarded = ['sys_admin_uuid','id']; 
+
     protected function serializeDate(\DateTimeInterface $date)
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
