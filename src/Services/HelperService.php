@@ -348,7 +348,7 @@ class HelperService
             {
                 if($val)
                 {
-                    $rt[] = self::tomedia($val);
+                    $rt[] = self::tomedia($val,$img);
                 }
                 
             }
@@ -360,7 +360,7 @@ class HelperService
                 return $url;
             }else
             {
-                return $url?self::getFileImagePrefix().$url:'';
+                return $url?self::getFileImagePrefix($img).$url:'';
             }
         }
     }

@@ -130,13 +130,13 @@ class AdminService
             $setting = array_merge($theme,$setting);
         }
 
-        HelperService::deImagesOne($setting,['logo','favicons','loginBgImgage']);
+        HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
         $setting['title'] = Arr::get($setting,'title','Deadmin');
         $setting['tech'] = Arr::get($setting,'tech','Deadmin 技术支持');
         $setting['subtitle'] = Arr::get($setting,'subtitle','后台管理系统');
         $setting['baseurl'] = Arr::get($setting,'baseurl','/antadmin/');
         $setting['logo'] = $setting['logo']['url']?:false;
-        $setting['loginBgImgage'] = $setting['loginBgImgage']['url']?:false;
+        $setting['loginBgImage'] = $setting['loginBgImage']['url']?:false;
         $setting['loginBgCardColor'] = Arr::get($setting,'loginBgCardColor','none');
         $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
         $setting['fileImagePrefix'] = HelperService::getFileImagePrefix();//图片文件路径前缀，是前端支持字符串显示图片
