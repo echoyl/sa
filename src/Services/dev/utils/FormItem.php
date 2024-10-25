@@ -548,6 +548,7 @@ class FormItem
     {
         $d = $this->data;
         $setting = $this->schema['setting']??[];
+        $json = Arr::get($setting,'json',[]);
         $d['fieldProps'] = [];
 
         $label = $setting['label']??'';
@@ -565,7 +566,11 @@ class FormItem
                 'label'=>$label,'value'=>$value
             ];
         }
-        $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
+
+        if($this->relation || !empty($json))
+        {
+            $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
+        }
 
         if($this->relation && $this->schema)
         {
