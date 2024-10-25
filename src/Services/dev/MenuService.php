@@ -126,7 +126,9 @@ class MenuService
 
     public function getFirstChildPath($menu)
     {
-        $first_child = $menu['routes'][0];
+        $first_child = collect($menu['routes'])->first(function($v){
+            return !isset($v['hideInMenu']) || !$v['hideInMenu'];
+        });
         //d($children);
         if(!empty($first_child['routes']))
         {
