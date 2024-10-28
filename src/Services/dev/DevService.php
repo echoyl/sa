@@ -1173,6 +1173,7 @@ class DevService
             {
                 $exportColumn = new ExportColumn($col,$model,$menus,$models);
                 $col['title'] = $exportColumn->data['title'];
+                $col['width'] = $col['width'] ?? 15;
                 $columns[$k] = $col;
             }
             //d($columns);
