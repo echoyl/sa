@@ -159,7 +159,12 @@ class AppApiService implements SaServiceInterface
     }
 
 
-
+    /**
+     * 通过手机号码检测用户
+     *
+     * @param [type] $mobile
+     * @return void
+     */
     public function checkUserByMobile($mobile)
     {
         $model = $this->userModel;
@@ -175,6 +180,41 @@ class AppApiService implements SaServiceInterface
                 'mobile'=>$mobile,
                 'last_used_at'=>now(),
             ];
+            $id = $model->insertGetId($user);
+            return $model->where(['id'=>$id])->first();
+        }else
+        {
+            return $has;
+        }
+    }
+
+    /**
+     * 通过openid检测用户
+     *
+     * @param [type] $openid
+     * @param integer $from_user_id
+     * @return void
+     */
+    public function checkUserByOpenid($openid,$from_user_id = 0)
+    {
+        $model = $this->userModel;
+
+        $has = $model->where(['openid'=>$openid])->first();
+
+        if(!$has)
+        {
+            $user = [
+                //'name'=>$miniprogramUser['nickname'],
+                //'avatar'=>$miniprogramUser['avatar'],
+                'created_at'=>now(),
+                'openid'=>$openid,
+                'last_used_at'=>now(),
+                'username'=>'微信用户'
+            ];
+            if($from_user_id)
+            {
+                $user['from_user_id'] = $from_user_id;
+            }
             $id = $model->insertGetId($user);
             return $model->where(['id'=>$id])->first();
         }else
@@ -277,5 +317,17 @@ class AppApiService implements SaServiceInterface
     public function postParse($val, $menu)
     {
         return $val;
+    }
+
+    /**
+     * 获取微信支付app实例
+     *
+     * @return void
+     */
+    public function getPayApp($key = 'base.pay')
+    {
+        $ss = new SetsService();
+        $pay = $ss->get($key);
+        return WechatService::getPayment($pay['id']);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers\admin$namespace$;
-use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use App\Http\Controllers\admin\BaseController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
 
@@ -8,10 +8,7 @@ $use_namesapce$
 $customer_namespace$
 //customer namespace end
 
-/**
- * @property \App\Services\$app_name$\AdminAppService $service
- */
-class $name$Controller extends CrudController
+class $name$Controller extends BaseController
 {
 	//customer property start
 	$customer_property$

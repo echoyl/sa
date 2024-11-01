@@ -758,12 +758,17 @@ class HelperService
         return preg_match("/^1\d{10}$/",$mobile);
     }
 
-    public static function get($url,$query = [],$body = false)
+    public static function get($url,$query = [],$body = false,$pre = false)
     {
         //Log::channel('daily')->info('request query:',['query'=>$query,'url'=>$url]);
 
         try{
-            $res = Http::timeout(10)->get($url,$query);
+            $ins = Http::timeout(10);
+            if($pre)
+            {
+                $ins = $pre($ins);
+            }
+            $res = $ins->get($url,$query);
         }catch(Exception $e)
         {
             return [1,$e->getMessage()];
@@ -774,11 +779,16 @@ class HelperService
         return [0,$data];
     }
 
-    public static function post($url,$post,$body = false)
+    public static function post($url,$post,$body = false,$pre = false)
     {
         //Log::channel('daily')->info('post start:',['params'=>$post]);
         try{
-            $res = Http::timeout(10)->post($url,$post);
+            $ins = Http::timeout(10);
+            if($pre)
+            {
+                $ins = $pre($ins);
+            }
+            $res = $ins->post($url,$post);
         }catch(Exception $e)
         {
             return [1,$e->getMessage()];
