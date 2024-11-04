@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services;
 use Echoyl\Sa\Models\Setting;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\utils\Utils;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 
@@ -62,25 +63,47 @@ class SetsService
         return implode('_',[$this->cache_prefix,$key]);
     }
 
-    public function parseImgField($post_data,$imgf,$originData = false)
+    public function parseImgField($post_data,$field,$originData = false,$encode = true)
     {
         $post_data['originData'] = $originData;//原始数据 更新后需要删除该文件
+        [$imgf,$type] = $field;
         $config = [
-            'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>'image','default'=>''],
+            'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>$type,'default'=>''],
         ];
         $cs = new CrudService($config);
         //make后的图片数据变成了json需要重新转换一下
-        $post_data = $cs->make('image',[
-            'encode'=>true,
-            'isset'=>true,
+        $post_data = $cs->make($type,[
+            'encode'=>$encode
         ]);
-        if($post_data[$imgf])
+        if(isset($post_data[$imgf]) && $post_data[$imgf] && ($type == 'image' || $type == 'file'))
         {
-            $post_data[$imgf] = json_decode($post_data[$imgf],true);
+            $post_data[$imgf] = is_string($post_data[$imgf])?json_decode($post_data[$imgf],true):$post_data[$imgf];
         }
-        if(isset($post_data['originData']))
+        Arr::forget($post_data,'originData');
+        return $post_data;
+    }
+
+    public function parse($post_data,$img_fields,$data,$type = 'encode')
+    {
+        $encode = $type == 'encode'?true:false;
+        foreach($img_fields as $field)
         {
-            unset($post_data['originData']);
+            [$imgf,$type] = $field;
+            if(is_string($imgf))
+            {
+                $post_data = $this->parseImgField($post_data,$field,$data,$encode);
+            }elseif(is_array($imgf))
+            {
+                $d = Arr::get($post_data,implode('.',$imgf));
+                if($d)
+                {
+                    $name = array_pop($imgf);
+                    $top = Arr::get($post_data,implode('.',$imgf));
+                    $top_ata = Arr::get($data,implode('.',$imgf));
+                    $top = $this->parseImgField($top,[$name,$type],$top_ata,$encode);
+                    Arr::set($post_data,implode('.',$imgf), $top);
+                }
+            }
         }
         return $post_data;
     }
@@ -90,49 +113,20 @@ class SetsService
         $app_name = $this->appName();
         //编辑模式不再读取缓存
         $item = $this->getData($key,true);
-        //新增自动检测字段是否是图片 及 配置 类型
+        $img_fields = Utils::getImageFieldFromMenu(request('dev_menu'));
         if($item && $item['value'])
         {
             $data = json_decode($item['value'],true);
-            $data = HelperService::autoParseImages($data);
         }else
         {
             $data = [];
         }
 
-
 		if(request()->isMethod('post'))
 		{
 			$post_data = filterEmpty(request('base'));
 
-            // $img_fields = HelperService::getImageFields($post_data);
-            
-            // if(!empty($img_fields))
-            // {
-            //     $post_data = HelperService::parseImages($post_data,$img_fields);
-            // }
-            //d($post_data);
-            //只能获取到第一层的字段是否是图片类型
-            $img_fields = array_merge($deep_img_fields,HelperService::getImageFields($post_data));
-            foreach($img_fields as $imgf)
-            {
-                if(is_string($imgf))
-                {
-                    $post_data = $this->parseImgField($post_data,$imgf,$data);
-                }elseif(is_array($imgf))
-                {
-                    $d = Arr::get($post_data,implode('.',$imgf));
-                    if($d)
-                    {
-                        $name = array_pop($imgf);
-                        $top = Arr::get($post_data,implode('.',$imgf));
-                        $top_ata = Arr::get($data,implode('.',$imgf));
-                        $top = $this->parseImgField($top,$name,$top_ata);
-                        Arr::set($post_data,implode('.',$imgf), $top);
-                    }
-                }
-            }
-            //d($post_data);
+            $post_data = $this->parse($post_data,$img_fields,$data);
 
 			$data = [
 				'key'=>$key,
@@ -151,6 +145,7 @@ class SetsService
 			return ['code'=>0,'msg'=>'提交成功'];
 		}else
 		{
+            $data = $this->parse($data,$img_fields,$data,'decode');
 			return ['code'=>0,'data'=>$data];
 		}
 	}

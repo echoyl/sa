@@ -32,6 +32,6 @@ class SettingController extends ApiBaseController
 
 	public function system()
 	{
-		return (new SetsService)->post('system',[['image','watermark','image','url']]);
+		return (new SetsService)->post('system');
 	}
 }

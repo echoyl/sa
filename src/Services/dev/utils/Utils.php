@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\dev\utils;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\DevService;
+use Illuminate\Support\Arr;
 
 class Utils
 {
@@ -225,5 +226,53 @@ class Utils
         $ret = str_replace($search,$replace,$ret);
         return $ret;
         
+    }
+
+    /**
+     * 通过菜单获取包含了图片属性的字段信息
+     *
+     * @param [菜单] $menu
+     * @return array
+     */
+    public static function getImageFieldFromMenu($menu)
+    {
+        $desc = Arr::get($menu,'desc');
+        
+        if(!$desc)
+        {
+            return [];
+        }
+
+        $desc = json_decode($desc,true);
+
+        $tabs = Arr::get($desc,'tabs',[]);
+
+        $fields = [];
+
+        $value_map = array_flip(self::$value_type_map);
+
+        foreach($tabs as $tab)
+        {
+            $formColumns = Arr::get($tab,'formColumns',[]);
+            foreach($formColumns as $cf)
+            {
+                $columns = Arr::get($cf,'columns',[]);
+                foreach($columns as $col)
+                {
+                    $type = Arr::get($col,'valueType');
+                    $type = $value_map[$type]??$type;
+                    if(!in_array($type,['image','file','tinyEditor','mdEditor']))
+                    {
+                        continue;
+                    }
+                    $field = Arr::get($col,'dataIndex');
+                    if($field)
+                    {
+                        $fields[] = [$field,$type];
+                    }
+                }
+            }
+        }
+        return $fields;
     }
 }

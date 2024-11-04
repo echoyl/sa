@@ -303,6 +303,7 @@ class AdminService
         //检测菜单是否有默认请求参数
         $ms = new MenuService;
         [$name,$menu] = $ms->getMenuByRouter($now_router);
+        request()->merge(['dev_menu'=>$menu]);
         //d($menu,$now_router);
         $other_config = Arr::get($menu,'other_config');
         $_category_id = Arr::get($menu,'_category_id');
