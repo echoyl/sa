@@ -404,7 +404,7 @@ class TableColumn
                     $first_level_relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model[0]));
                     $relation['foreign_key'] = $first_level_relation['foreign_key'];
                 }
-                if($relation['foreign_model']['menu'])
+                if($relation['foreign_model'] && $relation['foreign_model']['menu'])
                 {
                     //检测关联的菜单数量 多个的话 根据前端传的page参数选择该菜单
                     $menu_id = Arr::get($item,'modal.page');

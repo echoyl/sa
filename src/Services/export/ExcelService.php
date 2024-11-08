@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\export;
 
+use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 use \Vtiful\Kernel\Excel;
@@ -69,6 +70,7 @@ class ExcelService
                 {
                     $index = explode('.',$index);
                 }
+                $index = Utils::uncamelize($index);
 
                 if (is_array($index)) {
                     //数组index

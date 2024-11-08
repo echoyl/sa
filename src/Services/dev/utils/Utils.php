@@ -59,7 +59,19 @@ class Utils
 
     public static function uncamelize($camelCaps,$separator='_')
     {
-        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+        if(is_array($camelCaps))
+        {
+            $data = [];
+            foreach($camelCaps as $item)
+            {
+                $data[] = self::uncamelize($item,$separator);
+            }
+            return $data;
+        }else
+        {
+            return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+        }
+        
     }
 
     public static function getPath($val, $menus,$field = 'name')

@@ -220,7 +220,8 @@ class HelperService
                 $data[$key] = json_decode($data[$key],true);
             }
         }
-
+        //如果有原始数据 将原始数据删除
+        Arr::forget($data,'originData');
         return self::parseImages($data, $keys);
     }
     /**

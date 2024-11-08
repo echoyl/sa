@@ -23,10 +23,10 @@ trait ApiResponse
         return $this->jsonResponse('success', $codeResponse, $data, null);
     }
 
-    public function successMsg($msg = ''): JsonResponse
+    public function successMsg($msg = '',$data = null): JsonResponse
     {
         [$code] = ResponseEnum::HTTP_OK;
-        return $this->success(null, [$code,$msg]);
+        return $this->success($data, [$code,$msg]);
     }
 
     public function failMsg($msg = ''): JsonResponse
