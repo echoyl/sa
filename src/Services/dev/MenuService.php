@@ -111,7 +111,7 @@ class MenuService
     {
         foreach($menus as $key=>$bigmenu)
         {
-            if(!empty($bigmenu['routes']))
+            if(!empty($bigmenu['routes']) && !isset($bigmenu['hideInMenu']))
             {
                 $first = $this->getFirstChildPath($bigmenu);
                 //将大菜单去取到的第一个有页面的子菜单的路径放入数据中，前端中转页面判断后跳转页面

@@ -758,6 +758,9 @@ class DevService
                     if($relation['in_page_select_columns'])
                     {
                         $_columns = explode(',',$relation['in_page_select_columns']);
+                    }elseif($relation['select_columns'])
+                    {
+                        $_columns = explode(',',$relation['select_columns']);
                     }
                 }
 

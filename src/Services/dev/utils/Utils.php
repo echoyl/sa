@@ -33,7 +33,8 @@ class Utils
         'saTransfer'=>'saTransfer',
         'html'=>'html',
         'tmapShow'=>'tmapShow',
-        'iconSelect'=>'iconSelect'
+        'iconSelect'=>'iconSelect',
+        'saSlider'=>'saSlider'
     ];
 
     public static $title_arr = [

@@ -16,6 +16,6 @@ class SettingController extends ApiBaseController
 
 	public function setting()
     {
-		return (new SetsService)->post('setting');
+		return (new SetsService)->post('setting',[['logo','image'],['loginBgImage','image']]);
 	}
 }

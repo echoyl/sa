@@ -50,8 +50,10 @@ class Schema
 
         //检测字段是否开启多语言
         $locales = LocaleService::list();
+        $ret_columns = [];
         foreach($columns as $column)
         {
+            $delete_column = false;
             $locale = Arr::get($column,'setting.locale');
             $form_type = Arr::get($column,'form_type');
             $name = Arr::get($column,'name');
@@ -63,17 +65,31 @@ class Schema
                     $lang_columns = $column;
                     $lang_columns['name'] = implode('_',[$name,$lang['name']]);
                     $lang_columns['title'] = implode('-',[$title,$lang['title']]);
-                    $columns[] = $lang_columns;
+                    $ret_columns[] = $lang_columns;
                 }
             }
             //如果类型是 cascader cascaders需要自动注入_ + 字段名称 的字段
             if(in_array($form_type,['cascader','cascader']))
             {
-                $columns[] = ['name'=>'_'.$name,'type'=>'varchar','desc'=>$title,'length'=>1000];;
+                $ret_columns[] = ['name'=>'_'.$name,'type'=>'varchar','desc'=>$title,'length'=>1000];
+            }
+            //如果是slider 自动追加name_min name_max 字段
+            if(in_array($form_type,['saSlider']))
+            {
+                $default_value = Arr::get($column,'default');
+                $default_value = $default_value?explode(',',$default_value):[0,0];
+                $ret_columns[] = ['name'=>implode('_',[$name,'min']),'type'=>'int','default'=>$default_value[0],'desc'=>$title.' min','length'=>11];
+                $ret_columns[] = ['name'=>implode('_',[$name,'max']),'type'=>'int','default'=>$default_value[1]??0,'desc'=>$title.' max','length'=>11];
+                //删除原有字段
+                $delete_column = true;
+            }
+            if(!$delete_column)
+            {
+                $ret_columns[] = $column;
             }
         }
         //去重排序后返回
-        return collect(array_merge($sys_columns,$columns))->unique('name')->sortBy('name')->values()->all();
+        return collect(array_merge($sys_columns,$ret_columns))->unique('name')->sortBy('name')->values()->all();
     }
 
     /**

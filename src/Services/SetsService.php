@@ -114,6 +114,7 @@ class SetsService
         //编辑模式不再读取缓存
         $item = $this->getData($key,true);
         $img_fields = Utils::getImageFieldFromMenu(request('dev_menu'));
+        $img_fields = array_merge($img_fields,$deep_img_fields);
         if($item && $item['value'])
         {
             $data = json_decode($item['value'],true);

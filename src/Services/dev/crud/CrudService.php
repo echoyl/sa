@@ -19,6 +19,7 @@ use Echoyl\Sa\Services\dev\crud\fields\SearchSelect;
 use Echoyl\Sa\Services\dev\crud\fields\Select;
 use Echoyl\Sa\Services\dev\crud\fields\SelectColumns;
 use Echoyl\Sa\Services\dev\crud\fields\Selects;
+use Echoyl\Sa\Services\dev\crud\fields\Slider;
 use Echoyl\Sa\Services\dev\crud\fields\State;
 use Echoyl\Sa\Services\dev\crud\fields\Switchstate;
 use Echoyl\Sa\Services\dev\crud\fields\Upload;
@@ -67,7 +68,8 @@ class CrudService
             'cascaders'=>Cascader::class,
             'aliyunVideo'=>AliyunVideo::class,
             'model'=>Model::class,
-            'checkbox'=>Checkbox::class
+            'checkbox'=>Checkbox::class,
+            'saSlider'=>Slider::class
         ];
     }
 

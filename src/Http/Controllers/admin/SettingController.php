@@ -25,11 +25,6 @@ class SettingController extends ApiBaseController
 		return (new SetsService)->post('web');
 	}
 
-	public function setting()
-    {
-		return (new SetsService)->post('setting');
-	}
-
 	public function system()
 	{
 		return (new SetsService)->post('system');
