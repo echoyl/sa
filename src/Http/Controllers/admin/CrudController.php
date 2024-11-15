@@ -1036,6 +1036,11 @@ class CrudController extends ApiBaseController
 
         $parse_columns = $this->getParseColumns($parse_columns);
 
+        if(!is_array($data))
+        {
+            $data = $data->toArray();
+        }
+
         foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
