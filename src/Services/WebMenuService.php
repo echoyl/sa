@@ -205,7 +205,7 @@ class WebMenuService
         }
         if (!$menu) {
             $uri = str_replace(env('APP_PREFIX', ''), '', request()->route()->uri);
-            if($uri != '/')
+            if($uri && $uri != '/')
             {
                 $menu = $this->getByUri(explode('/', $uri));
             }
