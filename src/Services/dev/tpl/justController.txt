@@ -1,0 +1,28 @@
+<?php
+namespace App\Http\Controllers\admin$namespace$;
+use App\Http\Controllers\admin\BaseController;
+$use_namesapce$
+
+//customer namespace start
+$customer_namespace$
+//customer namespace end
+
+class $name$Controller extends BaseController
+{
+	//customer property start
+	$customer_property$
+	//customer property end
+    public function __construct()
+	{
+		parent::__construct();
+		$crud_config$
+		//customer construct start
+		$customer_construct$
+		//customer construct end
+	}
+
+	//customer code start
+	$customer_code$
+	//customer code end
+	
+}

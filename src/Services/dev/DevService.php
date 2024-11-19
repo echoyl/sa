@@ -274,6 +274,16 @@ class DevService
      */
     public function createModelFile($data)
     {
+        //新增 仅生成控制器文件
+        $setting = $data['setting']?json_decode($data['setting'],true):[];
+
+        $just_controller_file = Arr::get($setting,'justControllerFile');
+
+        if($just_controller_file)
+        {
+            return;
+        }
+
         $all = $this->allModel(true);
 
         $names = array_reverse(self::getPath($data, $all));
@@ -419,9 +429,10 @@ class DevService
         //新增 如果模型仅设置仅模型文件 这里不生成控制器文件了
         $setting = $data['setting']?json_decode($data['setting'],true):[];
 
-        $justModelFile = Arr::get($setting,'justModelFile');
+        $just_model_file = Arr::get($setting,'justModelFile');
+        $just_controller_file = Arr::get($setting,'justControllerFile');
 
-        if($justModelFile)
+        if($just_model_file)
         {
             return;
         }
@@ -445,6 +456,9 @@ class DevService
         if($data['leixing'] == 'category')
         {
             $tpl_name = 'controller2';
+        }elseif($just_controller_file)
+        {
+            $tpl_name = 'justController';
         }
         $content = file_get_contents(implode('/',[$this->tpl_path,$tpl_name.'.txt']));
 
