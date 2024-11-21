@@ -130,4 +130,19 @@ class ExcelService
         $this->merges = $merges;
         return $_data;
     }
+
+    /**
+     * 通过UploadedFile 获取excel数据
+     *
+     * @param [\Illuminate\Http\UploadedFile] $file
+     * @return array
+     */
+    public static function getData($file)
+    {
+        $v = new Vtiful();
+
+        $data = $v->getSheetData($file);
+
+        return $data;
+    }
 }

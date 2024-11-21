@@ -417,12 +417,15 @@ class MenuController extends CrudController
             if(isset($val['table_menu']) && !empty($val['table_menu']))
             {
                 //如果该字段设置了 table_menu
-                $key = $val['key'];
+                $key = $val['key']??Arr::get($val,'props.dataIndex');
                 if(is_array($key))
                 {
                     $key = $key[0];
                 }
-                $table_menu_key = $key;
+                if($key)
+                {
+                    $table_menu_key = $key;
+                }
             }
 
             if(isset($val['left_menu']) && !empty($val['left_menu']))

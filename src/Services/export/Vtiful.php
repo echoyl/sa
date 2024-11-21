@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\export;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use \Vtiful\Kernel\Format;
 use \Vtiful\Kernel\Excel;
 class Vtiful
@@ -13,11 +14,12 @@ class Vtiful
     var $folder = 'export';
     var $config;
     var $has_top = false;
+    var $storage_path = 'app/public/';
 
-    public function __construct($config)
+    public function __construct($config = [])
     {
         $vconfig = [
-            'path' => storage_path('app/public/'.$this->folder) // xlsx文件保存路径
+            'path' => storage_path($this->storage_path.$this->folder) // xlsx文件保存路径
         ];
         $excel  = new Excel($vconfig);
         if(!file_exists($vconfig['path']))
@@ -25,9 +27,12 @@ class Vtiful
             mkdir($vconfig['path']);
         }
         $this->config = $config;
-        $this->excel = $excel->fileName($config['filename'], 'sheet1');
-
-        $this->handle = $excel->getHandle();
+        $this->excel = $excel;
+        if(isset($config['filename']))
+        {
+            $this->excel = $this->excel->fileName($config['filename'], 'sheet1');
+            $this->handle = $excel->getHandle();
+        }
 
         $this->column_length = $this->getColumnLength();
     }
@@ -274,5 +279,29 @@ class Vtiful
         //d($sum_col,$row,$key);
         $this->excel->insertFormula($row, $key, '=SUM('.$sum_col.')',$this->getFormat());
         return;
+    }
+
+    /**
+     * 通过UploadedFile 获取excel数据
+     *
+     * @param [\Illuminate\Http\UploadedFile] $file
+     * @return void
+     */
+    public function getSheetData($file)
+        {
+
+        $file_path = $file->store($this->folder);
+
+        $filename = str_replace($this->folder.'/','',$file_path);
+
+        //d($filename);
+
+        $data = $this->excel->openFile($filename)->openSheet()->getSheetData();
+        
+        $this->excel->close();
+        //读取后将文件删除
+        Storage::delete($file_path);
+
+        return $data;
     }
 }

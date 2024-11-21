@@ -1280,6 +1280,8 @@ class DevService
                             $controller_prefix = '\Echoyl\Sa\Http\Controllers\admin\\'.$c;
                         }
 
+                        $controller = $controller_prefix.ucfirst($name).'Controller';
+
                         if(count($model_path) > 1)
                         {
                             //默认所有路由都走这里 因为都有一个项目namespace
@@ -1294,23 +1296,20 @@ class DevService
                                 {
                                     foreach($perms as $key=>$title)
                                     {
-                                        Route::any(implode('/',array_merge($_prefix,[$key])), $controller_prefix.ucfirst($name).'Controller@'.$key);
+                                        Route::any(implode('/',array_merge($_prefix,[$key])), $controller.'@'.$key);
                                     }
                                 }
                             }
-
                             if(in_array($menu['page_type'],$only_action_types))
                             {
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
-                                Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
+                                Route::any(implode('/',$_prefix), $controller.'@'.$key);
                             }else
                             {
-                                Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
+                                Route::resource(implode('/',$_prefix), $controller);
                                 //Log::channel('daily')->info('createRoute group:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller',]);
                             }
-                            
-                            
                         }else
                         {
                             if(in_array($menu['page_type'],$only_action_types))
@@ -1318,13 +1317,12 @@ class DevService
                                 //如果是form直接指向控制器方法
                                 $key = $menu['path'];
                                 //Log::channel('daily')->info('createRoute form:',['name'=>implode('/',$_prefix),'to'=>$controller_prefix.ucfirst($name).'Controller@'.$key,]);
-                                Route::any(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller@'.$key);
+                                Route::any(implode('/',$_prefix), $controller.'@'.$key);
                             }else
                             {
                                 //Log::channel('daily')->info('createRoute:',['name'=>implode('/',$_prefix),'to'=>$name]);
-                                Route::resource(implode('/',$_prefix), $controller_prefix.ucfirst($name).'Controller');
+                                Route::resource(implode('/',$_prefix), $controller);
                             }
-                            
                         }
                     }
                 }
