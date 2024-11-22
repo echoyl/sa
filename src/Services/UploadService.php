@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
-use Intervention\Image\Facades\Image;
+use Echoyl\Sa\Services\utils\ImageService as Image;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UploadService
@@ -97,7 +97,6 @@ class UploadService
             $ext = 'xls';
         }
 
-
         $upload_tmp_enable = config('sa.upload_tmp_enable',false);
 
         $is_image = in_array($ext, $this->image_ext_arr) ? 1 : 0;
@@ -112,8 +111,9 @@ class UploadService
             $new_path = storage_path('app/public/' . $path);
 
             $path_parts = pathinfo($new_path);
-            $height = Image::make($new_path)->getHeight();
-            $width = Image::make($new_path)->getWidth();
+            $image = Image::read($new_path);
+            $height = $image->height();
+            $width = $image->width();
 
             //获取参数是否压缩原图
             if($toSize)
@@ -122,14 +122,14 @@ class UploadService
                 {
                     if($toSize < $height || $toSize < $width)
                     {
-                        Image::make($new_path)->resize($toSize, $toSize, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
+                        $image->scale($toSize, $toSize)->save($new_path);
                     }
                     
                 }elseif(is_array($toSize) && isset($toSize[1]))
                 {
                     if($toSize[1] < $height || $toSize[0] < $width)
                     {
-                        Image::make($new_path)->resize($toSize[0], $toSize[1], function ($constraint) {$constraint->aspectRatio();})->save($new_path);
+                        $image->scale($toSize[0], $toSize[1])->save($new_path);
                     }
                     
                 }
@@ -140,12 +140,13 @@ class UploadService
                 $max_size = config('sa.admin_upload_max_wh',1000);
                 if($height > $max_size || $width > $max_size)
                 {
-                    Image::make($new_path)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($new_path);
+                    $image->scale($max_size, $max_size)->save($new_path);
                 }
             }
 
-            $height = Image::make($new_path)->getHeight();
-            $width = Image::make($new_path)->getWidth();
+            $image = Image::read($new_path);
+            $height = $image->height();
+            $width = $image->width();
 
             $this->waterMark($new_path);
 
@@ -233,41 +234,20 @@ class UploadService
             $path = 'user/files/' . date("Ym") . '/' . $filename;
             $newPath = $public_path . '/' . $filename;
         }
-        
 
         //生成缩略图
         $thumb_url = $path;
         if ($isImage && $thumb) {
             $max_size = config('sa.user_upload_max_wh',800);//读取压缩图片配置信息
-            $height = Image::make($newPath)->getHeight();
-            $width = Image::make($newPath)->getWidth();
-            //d($width,$height,$max_size,$newPath);
-            //$path_parts = pathinfo($newPath);
-            //$thumbnail_file_path = storage_path('app/public/user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']));
+            $image = Image::read($newPath);
+            $height = $image->height();
+            $width = $image->width();
             if($height > $max_size || $width > $max_size)
             {
-                Image::make($newPath)->resize($max_size, $max_size, function ($constraint) {$constraint->aspectRatio();})->save($newPath);
-                //$thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
-                //d($newPath);
-            }else
-            {
-                //$thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . $path_parts['basename'];
+                Image::read($newPath)->scale($max_size, $max_size)->save($newPath);
             }
-            
-            // Image::make($newPath)->resize(800, 800, function ($constraint) {$constraint->aspectRatio();})->save($thumbnail_file_path);
-            // $thumb_url = 'user/' . $fileType . '/' . date('Ym') . '/' . str_replace('.', '_thumb.', $path_parts['basename']);
-            $height = Image::make($newPath)->getHeight();
-            $width = Image::make($newPath)->getWidth();
-            //检测图片如果大小还大于500kb 再次压缩图片至 600*600
-
-            if ($rewrite) {
-                //删除原始图片
-                //@unlink($newPath);
-            }
-
         } else {
             $thumb_url = '';
-            $height = $width = 200;
         }
 
         $this->waterMark($newPath);
@@ -333,7 +313,7 @@ class UploadService
         if (file_put_contents($image_url, $decode)) {
 
             //在这里压缩下图片
-            Image::make($image_url)->resize(1000, 1000, function ($constraint) {$constraint->aspectRatio();})->save($image_url);
+            Image::read($image_url)->scale(1000, 1000)->save($image_url);
 
             $data['code'] = 0;
             $data['url'] = $image_value;
@@ -372,9 +352,9 @@ class UploadService
 
         $qrbg = storage_path('app/public/' . $bg);
 
-        $img = Image::make($qrbg);
+        $img = Image::read($qrbg);
 
-        $img->insert(Image::make($qrcode), 'top-left', 34, 106)->text('text', 107, 42, function ($font) {
+        $img->place(Image::read($qrcode), 'top-left', 34, 106)->text('text', 107, 42, function ($font) {
             $font->file(public_path('font/msyhbd.ttc'));
             $font->color('#333333');
             $font->size(18);
@@ -504,8 +484,8 @@ class UploadService
             return false;
         }
 
-        $height = Image::make($file)->getHeight();
-        $width = Image::make($file)->getWidth();
+        $height = Image::read($file)->height();
+        $width = Image::read($file)->width();
 
         if($height <= $size[1] && $width <= $size[0])
         {
@@ -535,7 +515,7 @@ class UploadService
             $toWitdh = $toSize[0];
             $toHeight = $toSize[1];
         }
-        Image::make($file)->resize($toWitdh, $toHeight, function ($constraint) {$constraint->aspectRatio();})->save($file);
+        Image::read($file)->scale($toWitdh, $toHeight)->save($file);
         return;
     }
 

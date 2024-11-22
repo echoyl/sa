@@ -2,7 +2,7 @@
 namespace Echoyl\Sa\Services\utils;
 
 use Illuminate\Support\Arr;
-use Intervention\Image\Facades\Image;
+use Echoyl\Sa\Services\utils\ImageService as Image;
 
 class WaterMarkService
 {
@@ -51,26 +51,27 @@ class WaterMarkService
         {
             return;
         }
-        $img = Image::make($path);
+        $img = Image::read($path);
         $watermark_path = storage_path('app/public/'.$url[0]['value']);
 
         $align = Arr::get($setting,'align','left');
         $valign = Arr::get($setting,'valign','bottom');
         $offset_x = Arr::get($setting,'offset_x',0);
         $offset_y = Arr::get($setting,'offset_y',0);
+        $opacity = Arr::get($setting,'opacity',100);
 
         $angle = Arr::get($setting,'angle',0);
 
         $position = implode('-',[$align,$valign]);
 
-        $watermark_image = Image::make($watermark_path);
+        $watermark_image = Image::read($watermark_path);
 
         if($angle)
         {
-            $watermark_image = $watermark_image->rotate($angle);
+            $watermark_image->manager->rotate($angle);
         }
 
-        $img->insert($watermark_image, $position, $offset_x, $offset_y)->save($path);
+        $img->place($watermark_image, $position, $offset_x, $offset_y,$opacity)->save($path);
 
         return;
     }
@@ -99,7 +100,7 @@ class WaterMarkService
         //d($text);
         //d($fontsize);
         $path = $this->path;
-        $img = Image::make($path);
+        $img = Image::read($path);
 
         $align = Arr::get($setting,'align','left');
         $valign = Arr::get($setting,'valign','bottom');
@@ -110,10 +111,10 @@ class WaterMarkService
 
         $position = implode('-',[$align,$valign]);
 
-        $image_size = $img->getSize()->align($position, $offset_x, $offset_y);
+        $image_size = $img->align($position, $offset_x, $offset_y);
         //d($image_size);
 
-        $img->text($content, $image_size->pivot->x, $image_size->pivot->y, function ($font) use($color,$fontsize,$align,$valign,$angle) {
+        $img->text($content, $image_size[0],$image_size[1], function ($font) use($color,$fontsize,$align,$valign,$angle) {
             $font->file(storage_path('app/public/font/msyhbd.ttc'));
             $font->color($color);
             $font->size(intval($fontsize));
