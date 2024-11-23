@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Models\wechat\miniprogram\user;
 
 use Echoyl\Sa\Models\Base;
+use Echoyl\Sa\Models\wechat\miniprogram\User;
 
 class Bind extends Base
 {
@@ -13,6 +14,11 @@ class Bind extends Base
     protected $table = 'wechat_miniprogram_user_bind';
 
     public $timestamps = false;
+
+    public function user()
+    {
+        return $this->hasOne(User::class,'openid','openid');
+    }
     
     //relationship end
 }

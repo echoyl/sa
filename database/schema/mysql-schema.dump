@@ -196,6 +196,7 @@ INSERT INTO `la_dev_model_relation` VALUES (326, 7, '登录绑定', 'bind', 'one
 INSERT INTO `la_dev_model_relation` VALUES (332, 356, '退款记录', 'refunds', 'many', 357, 'log_id', 'id', '2023-09-15 18:25:24', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
 INSERT INTO `la_dev_model_relation` VALUES (333, 380, '微信用户', 'user', 'one', 65, 'openid', 'openid', '2024-03-30 17:20:36', '2024-03-30 17:35:00', 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
 INSERT INTO `la_dev_model_relation` VALUES (334, 404, '语言', 'category', 'one', 403, 'id', 'category_id', '2024-05-27 11:22:52', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (335, 353, '微信用户', 'user', 'one', 7, 'openid', 'openid', '2024-11-23 14:26:09', '2024-11-23 14:26:09', 0, '', '', 0, '', 0, '', NULL, '', '', '', '');
 
 -- ----------------------------
 -- Table structure for la_dev_sqllog
