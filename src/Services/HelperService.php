@@ -548,10 +548,6 @@ class HelperService
         {
             return $model;
         }
-        if($type == 'like')
-        {
-            $search_val = '%' . $search_val . '%';
-        }
 
         if($search_val == 'all')
         {
@@ -560,6 +556,11 @@ class HelperService
         }
 
         $search_val = urldecode($search_val);
+
+        if($type == 'like')
+        {
+            $search_val = '%' . $search_val . '%';
+        }
 
         $origin_model = Arr::get($more,'origin_model');
 
