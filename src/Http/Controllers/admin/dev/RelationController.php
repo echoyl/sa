@@ -43,12 +43,10 @@ class RelationController extends CrudController
     {
         $m = $this->model;
         $m = $m->where(['model_id'=>$this->model_id]);
-        $ds = new DevService;
-        $search = array_merge([
-            'columns'=>$this->getModelColumns($this->model_id),
-            'models'=>$ds->getModelsTree(),
-            'allModels'=>$this->allModels(),
-        ],$search);
+        // $ds = new DevService;
+        // $search = array_merge([
+        //     'models'=>$ds->getModelsTree(),
+        // ],$search);
         return [$m,$search];
 
     }
@@ -68,18 +66,68 @@ class RelationController extends CrudController
 
     public function postData(&$data)
     {
-        //$data['columns'] = $this->getModelColumns($this->model_id);
-        if(!request()->isMethod('post'))
-        {
-            $ds = new DevService;
-            $data = array_merge($data,[
-                //'columns'=>$this->getModelColumns($this->model_id),
-                'models'=>$ds->getModelsTree(),
-                'allModels'=>$this->allModels(),
-            ]);
-        }
+        // if(!request()->isMethod('post'))
+        // {
+        //     $ds = new DevService;
+        //     $data = array_merge($data,[
+        //         'models'=>$ds->getModelsTree(),
+        //     ]);
+        // }
         
         return;
+    }
+
+    public function copyToModel()
+    {
+        if(!request()->isMethod('post'))
+        {
+            return $this->success([]);
+        }
+        $id = request('base.id');
+        $toid = request('base.toid');
+        $type = request('base.type','create');//复制方式 create 插入如果已存在则跳过 update更新如果已存在则更新 copy复制如果已存在则复制
+        //当前模型
+        $data = $this->model->where(['id'=>$id])->first();
+        $to_model = (new Model())->where(['id'=>$toid])->first();
+        if(!$data || !$to_model)
+        {
+            return $this->fail([1,'数据错误']);
+        }
+        if($to_model['type'] != 1)
+        {
+            return $this->fail([1,'所选模型类型错误']);
+        }
+
+        $data = $data->toArray();
+        unset($data['id']);
+        $data['model_id'] = $to_model['id'];
+
+        //检测是否已存在关联
+        $model = $this->getModel();
+        $has = $model->where(['name'=>$to_model['name'],'model_id'=>$to_model['id'],'foreign_model_id'=>$data['foreign_model_id']]);
+        if($has->first())
+        {
+            if($type == 'update')
+            {
+                $has->update($data);
+            }elseif($type == 'copy')
+            {
+                $data['name'] = $data['name'].'copy';
+                $has->insert($data);
+            }else
+            {
+                return $this->fail([1,'关系已经存在不能重复添加']);
+            }
+        }else
+        {
+            $model->insert($data);
+        }
+
+        $this->createFile($to_model['id']);
+
+        return $this->success('操作成功');
+
+
     }
 
     protected function createFile($model_id)
@@ -103,38 +151,6 @@ class RelationController extends CrudController
     public function afterPost($id, $data)
     {
         return $this->createFile($data['model_id']);
-    }
-
-    public function getModelColumns($id)
-    {
-        $model_data = (new Model())->where(['id'=>$id])->first();
-        $columns = [];
-        if($model_data['columns'])
-        {
-            $columns = json_decode($model_data['columns'],true);
-            $columns = collect($columns)->map(function($item){
-                return ['label'=>implode(' - ',[$item['title'],$item['name']]),'value'=>$item['name']];
-            });
-        }
-        return $columns;
-    }
-
-    public function allModels()
-    {
-        $model = new Model();
-        $data = [];
-        $list = $model->where(['type'=>1])->with(['relations'=>function($query){
-            $query->select(['id','title','model_id','name','foreign_model_id'])->whereIn('type',['one','many']);
-        }])->whereIn('admin_type',['system',env('APP_NAME'),''])->get()->toArray();
-        foreach($list as $val)
-        {
-            $data[] = [
-                'id'=>$val['id'],
-                'columns'=>$val['columns']?json_decode($val['columns'],true):[],
-                'relations'=>$val['relations']?:[]
-            ];
-        }
-        return $data;
     }
 
     public function destroy()

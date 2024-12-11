@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Echoyl\Sa\Helpers;
+namespace Echoyl\Sa\Traits;
 
 trait AdminPostCheck
 {

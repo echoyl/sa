@@ -7,6 +7,7 @@ use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\utils\Creator;
+use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
@@ -19,6 +20,7 @@ class ModelController extends CrudController
     var $with_column = ['relations.foreignModel'];
     public function __construct(Model $model)
     {
+        parent::__construct();
         $this->model = $model;
         $post_parent_id = request('parent_id', 0);
         $this->default_post = [
@@ -103,6 +105,16 @@ class ModelController extends CrudController
         return $this->success('操作成功');
 
 
+    }
+
+    public function postData(&$item)
+    {
+        $customer_columns = $this->service->modelCustomerColumns();
+        if(!empty($customer_columns))
+        {
+            $item['add_customer_columns'] = $customer_columns;
+        }
+        return;
     }
 
     /**
@@ -322,5 +334,50 @@ class ModelController extends CrudController
         }
 
         return $this->success($ret);
+    }
+
+    /**
+     * 通过模型字段信息生成一个form插入数据的php $data 格式代码
+     *
+     * @return void
+     */
+    public function getFormCodeByColumns()
+    {
+        $item = $this->model->find(request('id'));
+        if(!$item)
+        {
+            return $this->failMsg('参数错误');
+        }
+        $columns = $item->columns?json_decode($item->columns,true):[];
+        $code = [];
+        $required = $msg = $data_var = [];
+        foreach($columns as $col)
+        {
+            $name = $col['name'];
+            if(strpos($name,'id') !== false)
+            {
+                continue;
+            }
+            $title = $col['title'];
+            $data_var[$name] = 'Arr::get($request,"'.$name.'"),//'.$title;
+            $required[$name] = 'required';
+            $msg[$name.'.required'] = $title.'为必填项';
+        }
+        $vali = '$validator = Validator::make($data,'.Dev::export($required,0).','.Dev::export($msg,0).');
+if ($validator->fails()) 
+{
+    return $this->failMsg($validator->errors()->first());
+}';
+        $vali = str_replace(['\'required\''],['[\'required\']'],$vali);
+        $data_var = '$data = '.Dev::export($data_var,0).';';
+        //替换 '$ 和 ',
+        $data_var = str_replace(['\'Arr','\','],['Arr',''],$data_var);
+
+        $code = ['use Illuminate\Support\Arr;','use Illuminate\Support\Facades\Validator;','$request = request()->all();',$data_var,$vali];
+
+        $data = [
+            'code'=>implode("\n\r",$code),
+        ];
+        return $this->success($data);
     }
 }

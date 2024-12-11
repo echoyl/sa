@@ -19,7 +19,7 @@ class Posts extends Creator
         $this->confJson = [
             'posts'=>[
                 'table_config'=>'[{"key":"id","props":[]},{"key":"title","can_search":[1],"props":{"width":"300","copyable":true,"ellipsis":true}},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
-                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"created_at","props":{"width":"100%"}}]},{"columns":[{"key":"author"},{"key":"hits"}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]},{"columns":[{"key":"specs","type":"jsonForm"}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]}]}'
+                'form_config'=>'{"tabs":[{"tab":{"title":"详情"},"config":[{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]}]},{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"created_at","props":{"width":"100%"}}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]},{"tab":{"title":"其它信息"},"config":[{"columns":[{"key":"author"},{"key":"hits"}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]}]}]}'
             ]
         ];
     }

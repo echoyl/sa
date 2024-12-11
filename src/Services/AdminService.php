@@ -131,8 +131,8 @@ class AdminService
         }
 
         HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
-        $setting['title'] = Arr::get($setting,'title','Deadmin');
-        $setting['tech'] = Arr::get($setting,'tech','Deadmin 技术支持');
+        $setting['title'] = Arr::get($setting,'title','DeAdmin');
+        $setting['tech'] = Arr::get($setting,'tech','DeAdmin 技术支持');
         $setting['subtitle'] = Arr::get($setting,'subtitle','后台管理系统');
         $setting['baseurl'] = Arr::get($setting,'baseurl','/antadmin/');
         $setting['logo'] = $setting['logo']['url']?:false;
@@ -173,6 +173,8 @@ class AdminService
             $setting['dev'] = [
                 'allMenus' => $ds->getMenusTree(),
                 'allModels'=> DevService::allModels(),
+                'allModelsTree'=>$ds->getModelsTree(),
+                'folderModelsTree'=>$ds->getModelsFolderTree()
             ];
         }
 

@@ -87,6 +87,9 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         Route::post('model/copyToFolder', 'ModelController@copyToFolder');
                         //通过已有数据表生成json
                         Route::get('model/getJsonFromTable', 'ModelController@getJsonFromTable');
+                        Route::get('model/getFormCodeByColumns', 'ModelController@getFormCodeByColumns');
+                        //复制关联
+                        Route::any('relation/copyToModel', 'RelationController@copyToModel');
                         
                         Route::resource('model', 'ModelController');
                         Route::resource('relation', 'RelationController');

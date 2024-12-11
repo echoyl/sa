@@ -12,7 +12,7 @@ class TableService extends BaseService
      * 所有编辑操作
      *
      * @param [type] $base
-     * @param ['edit','add','addTab','addGroup','delete'] $action_type
+     * @param ['edit','add','addTab','addGroup','delete','copyToMenu'] $action_type
      * @return void
      */
     public function edit($base,$action_type = 'edit',$form_type = 'base')
@@ -43,13 +43,13 @@ class TableService extends BaseService
             [$active,$old_value] = $this->getColumnIndex($columns,$uid);
         }
 
+        if($action_type == 'copyToMenu')
+        {
+            return $this->copyToMenu($base,$old_value);
+        }
+
+
         //d($active,$old_value,$action_type);
-        
-        
-
-        
-
-        
 
         $new_uid = HelperService::uuid();
 
@@ -85,8 +85,13 @@ class TableService extends BaseService
         }else
         {
             //添加列
+            $copy = Arr::get($base,'copy');
+            //如果是复制过来的列，就不使用新的uid，这样可以实现复制更新列
+            if(!isset($base['uid']) || !$copy)
+            {
+                $base['uid'] = $new_uid;
+            }
             
-            $base['uid'] = $new_uid;
             if($active === false)
             {
                 //最后插入
@@ -102,6 +107,34 @@ class TableService extends BaseService
 
         $this->model->where(['id'=>$this->id])->update([$name=>json_encode($columns)]);
         return;
+    }
+
+    /**
+     * 复制列至目标菜单中
+     *
+     * @param [type] $base
+     * @return int
+     */
+    public function copyToMenu($base,$col)
+    {
+        $to_id = Arr::get($base,'props.toMenuId');
+        if(!$to_id)
+        {
+            return 0;
+        }
+        $new_table_service = new TableService($to_id);
+        //如果之前复制过，后检测为跟新同步列，而不再插入数据
+        [$active,$old_value] = $new_table_service->getColumnIndex([],$col['uid']);
+        if($active)
+        {
+            $new_table_service->edit($col,'edit');
+        }else
+        {
+            $col['copy'] = true;
+            $new_table_service->edit($col,'add');
+        }
+        
+        return $to_id;
     }
 
     public function sort($columns)
@@ -135,6 +168,12 @@ class TableService extends BaseService
      */
     public function getColumnIndex($columns,$uid,$key_name = 'uid')
     {
+        if(empty($columns))
+        {
+            $config = $this->config;
+            $columns = $config?$config:[];
+        }
+        
         $index = $index_data = false;
         //d($columns);
         foreach($columns as $key=>$val)

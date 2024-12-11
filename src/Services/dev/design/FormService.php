@@ -32,6 +32,7 @@ class FormService extends BaseService
                     'uid'=>HelperService::uuid()
                 ]
             ];
+            $this->config['tabs'] = $config['tabs'];
         }
 
         $tabs = $config['tabs'];
@@ -60,6 +61,11 @@ class FormService extends BaseService
         }else
         {
             [$active,$old_value] = $this->getColumnIndex($tabs,$uid);
+        }
+
+        if($action_type == 'copyToMenu')
+        {
+            return $this->copyToMenu($base,$old_value);
         }
 
         //d('test');
@@ -157,7 +163,12 @@ class FormService extends BaseService
         {
             //快速新增列
             $keys = implode('.',$active);
-            $base['uid'] = $new_uid;
+            $copy = Arr::get($base,'copy');
+            //如果是复制过来的列，就不使用新的uid，这样可以实现复制更新列
+            if(!isset($base['uid']) || !$copy)
+            {
+                $base['uid'] = $new_uid;
+            }
             $group = [
                 'columns'=>[
                     $base
@@ -204,6 +215,35 @@ class FormService extends BaseService
         $config['tabs'] = $tabs;
         $this->updateConfig($config);
         return;
+    }
+
+    /**
+     * 复制列至目标菜单中
+     *
+     * @param [type] $base
+     * @return int
+     */
+    public function copyToMenu($base,$col)
+    {
+        $to_id = Arr::get($base,'props.toMenuId');
+        if(!$to_id)
+        {
+            return 0;
+        }
+        $new_form_service = new FormService($to_id);
+        //如果之前复制过，后检测为跟新同步列，而不再插入数据
+        [$active,$old_value] = $new_form_service->getColumnIndex([],$col['uid']);
+        if($active)
+        {
+            $new_form_service->edit($col,'edit');
+        }else
+        {
+            $col['copy'] = true;
+            $col['checked'] = true;
+            $new_form_service->edit($col,'setColumns');
+        }
+        
+        return $to_id;
     }
 
     /**
@@ -335,6 +375,11 @@ class FormService extends BaseService
      */
     public function getColumnIndex($tabs,$uid,$key_name = 'uid')
     {
+        if(empty($tabs))
+        {
+            $config = $this->config;
+            $tabs = $config?$config['tabs']:[];
+        }
         $index = $index_data = false;
         foreach($tabs as $tk => $tab)
         {

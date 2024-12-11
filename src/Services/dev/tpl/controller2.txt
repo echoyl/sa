@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\admin$namespace$;
 use App\Http\Controllers\admin\BaseController;
-use Echoyl\Sa\Helpers\TraitCategory;
+use Echoyl\Sa\Traits\Category as TraitsCategory;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
 
@@ -11,13 +11,14 @@ $customer_namespace$
 
 class $name$Controller extends BaseController
 {
-	use TraitCategory;
+	use TraitsCategory;
 	public $cid = 0;
 	//customer property start
 	$customer_property$
 	//customer property end
     public function __construct()
 	{
+		parent::__construct();
 		$crud_config$
 		$this->model = new $modelname$();
 		$this->model_class = $modelname$::class;

@@ -123,9 +123,9 @@ class DevService
         $use = '';
         $traits = [
             'soft_delete'=>['SoftDeletes','use Illuminate\Database\Eloquent\SoftDeletes;'],
-            'with_system_admin_id'=>['InsertAdminId','use Echoyl\Sa\Helpers\InsertAdminId;'],
-            'global_data_search'=>['AdminDataSearch','use Echoyl\Sa\Helpers\AdminDataSearch;'],
-            'global_post_check'=>['AdminPostCheck','use Echoyl\Sa\Helpers\AdminPostCheck;'],
+            'with_system_admin_id'=>['InsertAdminId','use Echoyl\Sa\Traits\InsertAdminId;'],
+            'global_data_search'=>['AdminDataSearch','use Echoyl\Sa\Traits\AdminDataSearch;'],
+            'global_post_check'=>['AdminPostCheck','use Echoyl\Sa\Traits\AdminPostCheck;'],
             'has_uuids'=>['HasUuids','use Illuminate\Database\Eloquent\Concerns\HasUuids;'],
         ];
         foreach($traits as $tkey=>$tval)
@@ -670,6 +670,7 @@ class DevService
                     ];
                 }
             }
+            //d($with_trees,$model_id);
             $with_columns = Utils::withTree($with_trees,2,$model_id);
             //d($with_columns);
         }

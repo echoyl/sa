@@ -800,8 +800,21 @@ class MenuController extends CrudController
         {
             unset($base['actionType']);
         }
+        
 
-        $ts->edit($base,$action_type,$edit_type);
+        $edit_ret = $ts->edit($base,$action_type,$edit_type);
+
+        if($action_type == 'copyToMenu')
+        {
+            //复制后 需要更新的是目标菜单的desc字段
+            if(!$edit_ret)
+            {
+                return $this->failMsg('复制失败');
+            }
+            $this->tableConfig($edit_ret);
+
+            return $this->devEditRet($edit_ret);
+        }
 
         $this->tableConfig($id);
 
@@ -936,7 +949,20 @@ class MenuController extends CrudController
             unset($base['actionType']);
         }
 
-        $fs->edit($base,$action_type,$edit_type);
+        
+        $edit_ret = $fs->edit($base,$action_type,$edit_type);
+
+        if($action_type == 'copyToMenu')
+        {
+            //复制后 需要更新的是目标菜单的desc字段
+            if(!$edit_ret)
+            {
+                return $this->failMsg('复制失败');
+            }
+            $this->formConfig($edit_ret);
+
+            return $this->devEditRet($edit_ret,'form');
+        }
 
         $this->formConfig($id);
 

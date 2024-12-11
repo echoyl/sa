@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Echoyl\Sa\Helpers;
+namespace Echoyl\Sa\Traits;
 
 use Echoyl\Sa\Services\AdminService;
 

@@ -470,4 +470,9 @@ class AdminAppService implements SaAdminAppServiceInterface
     {
         return true;
     }
+
+    public function modelCustomerColumns()
+    {
+        return [];
+    }
 }

@@ -1,11 +1,11 @@
 <?php
 
 
-namespace Echoyl\Sa\Helpers;
+namespace Echoyl\Sa\Traits;
 
 use Echoyl\Sa\Services\HelperService;
 
-trait TraitCategory
+trait Category
 {
 
     public function beforePost(&$data, $id = 0, $item = [])

@@ -9,6 +9,14 @@ class Pca extends Category
      * @var string
      */
     protected $table = 'pca';
+
+    /**
+     * 在模型表中的id
+     *
+     * @var int
+     */
+    public $model_id = 25;
+
     public $timestamps = false;
     public function children($pid = 0)
     {

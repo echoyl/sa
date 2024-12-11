@@ -7,7 +7,9 @@ use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Helpers\ApiResponse;
 use Echoyl\Sa\Helpers\VerifyRequestInput;
 
-
+/**
+ * @property \Echoyl\Sa\Services\AdminAppService                $service
+ */
 class ApiBaseController extends Controller
 {
     // API接口响应
