@@ -774,8 +774,7 @@ class CrudController extends ApiBaseController
                     $data = $this->model->getSysAdminIdData($data);
                 }
                 
-                $create = $model_class::create($data);
-                $id = $create->id;
+                $id = (new $model_class)->insertGetId($data);
             }
             $ret = null;
 
@@ -835,7 +834,7 @@ class CrudController extends ApiBaseController
             $item_count = count($items);
             if(!$item_count)
             {
-                return $this->fail([1,$this->failMessage('delete_at','删除失败')]);
+                return $this->failMsg($this->failMessage('delete_at','删除失败'));
             }
             foreach ($items as $val) {
                 //增加删除检测字段类型是图片附件的，删除文件
@@ -853,7 +852,7 @@ class CrudController extends ApiBaseController
             }
             return $this->success(null,[0,'成功删除 '.$item_count.' 条记录']);
         }
-        return $this->fail([1,'参数错误']);
+        return $this->failMsg('参数错误');
     }
 
     public function beforeDestroy($m)

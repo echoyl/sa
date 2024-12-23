@@ -14,13 +14,12 @@ class Checkbox extends BaseField
 
     public function decode($options = [])
     {
-
         $val = $options['val'];
         $isset = $options['isset'];
-        $from = $options['from'];
 
-        if($val && $isset)
+        if($val)
         {
+            //未设置，但是有默认值也需要处理下
             $val = explode(',',$val);
         }else
         {

@@ -195,9 +195,10 @@ class DevService
                     $with_default = '->withDefault('.Dev::export($with_default,2).')';
                 }
             }
-            //加入筛选条件 应该只有1对多的时候才加入
+            //加入筛选条件 应该只有1对多的时候才加入 1对一也需要加入
+            //20241217 当时1对1是可能存在类型字段，类型不同时hasone就需要筛选
             $filter_where = '';
-            if($val['filter'] && $val['type'] == 'many')
+            if($val['filter'] && ($val['type'] == 'many' || $val['type'] == 'one'))
             {
                 $filter = json_decode($val['filter'],true);
                 //关联模型不支持变量参数过滤掉 

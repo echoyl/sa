@@ -539,6 +539,13 @@ class MenuController extends CrudController
             if($columns !== false)
             {
                 $json_item = ['valueType'=>'group','uid'=>$val['uid'],'columns'=>$columns];
+                //这里新增group也可以设置if条件
+                $if = Arr::get($val,'props.if',false);
+                if($if)
+                {
+                    $json_item['fieldProps'] = ['if'=>$if];
+                }
+                
                 if($group_title)
                 {
                     $json_item['title'] = $group_title;

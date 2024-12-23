@@ -52,13 +52,15 @@ class PayController extends CrudController
             //写入文件
             
         }
-		$f = fopen($cert_path,'w');
-		fwrite($f,$data['cert']);
-		fclose($f);
-		$f = fopen($key_path,'w');
-		fwrite($f,$data['key']);
-		fclose($f);
-
+		if($data['cert'] || $data['key'])
+		{
+			$f = fopen($cert_path,'w');
+			fwrite($f,$data['cert']);
+			fclose($f);
+			$f = fopen($key_path,'w');
+			fwrite($f,$data['key']);
+			fclose($f);
+		}
         return;
 	}
 	//customer code end

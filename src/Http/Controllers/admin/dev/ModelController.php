@@ -162,7 +162,8 @@ class ModelController extends CrudController
 
         $ds = new DevService;
 
-        $afterPostOptions = request('base.afterPostOptions',[]);
+        //默认都重新更新数据表结构
+        $afterPostOptions = request('base.afterPostOptions',['createModelSchema']);
 
         $ds->createControllerFile($data);
 

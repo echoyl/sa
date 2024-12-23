@@ -96,27 +96,14 @@ class WechatService
         return $pay_log;
     }
 
-    public static function wxJsapi($pay_log, $pay_id, $title = '支付', $app_id = '')
+    public static function wxJsapi($pay_log, $pay_id, $title = '支付', $app_id = '',$attach = '')
     {
-        //$msg_body = '{"tran_cd":"1192","acc_mod":"01","prod_cd":"1151","biz_cd":"0000007","mcht_cd":"996180418866693","tran_dt_tm":"20200904143149","order_id":"PGC20200904143149E43505","sys_order_id":"202009040196060","tran_order_id":"10001866202009040196060","resp_cd":"00","tran_amt":"1","sett_dt":"20200609","qr_code_info":{"wx_jsapi":"{\"appId\":\"wx2421b1c4370ec43b\",\"timeStamp\":\"1599201115\",\"package\":\"prepay_id\\u003dwx04143155547501cb1eacfffa8582310000\",\"signType\":\"RSA\",\"nonceStr\":\"3d6d9afe47394464ba262cbf2e600072\",\"paySign\":\"Yyhir9cY5tRLeFJ/oGsMi47UOMgSqTzsgHr+KApJU1paeWPIaUF1aSixKHMkZxjPRwOrBKzetDQ4rqR9ZE+xVMoouhpeWLhitYBQ7iG0HtJNcsbeJNatPfX2t7xxIYYklgq15FzqZ1yLt8kB8pLlQBRvViKOB9Vq+IgwWS6RtYxZCQl6+IxL2mdTnZ2uafAGnfVX8Dl34WEVZ7bG/9c0pKnQGzF8TSMVRafY5ZnmT3d5LX892+C4LjWPKAH8SjgAjpgRvepPLUfLAoV+ChkaNouzr+43PTyrJf23KGz9omnR6+L2yeXAF8GMe6TInCqP1t86FrKIr6kUZTjD3TNM9Q\\u003d\\u003d\"}"}}';
-        //return ['code'=>0,'msg'=>'','data'=>json_decode($msg_body,true)];
-
-
         [$code, $app] = self::getPayment($pay_id, $app_id);
 
         if ($code) {
             return [$code, $app];
         }
 
-        // $par = [
-        //     'body' => $title,
-        //     'out_trade_no' => $pay_log['sn'],
-        //     'total_fee' => $pay_log['money'],
-        //     //'spbill_create_ip' => '123.12.12.123', // 可选，如不传该参数，SDK 将会自动获取相应 IP 地址
-        //     'notify_url' => env('APP_URL').'/wx/wxnotifys', // 支付结果通知网址，如果不设置则会使用配置里的默认地址
-        //     'trade_type' => 'JSAPI', // 请对应换成你的支付方式对应的值类型
-        //     'openid' => $pay_log['openid']
-        // ];
         $app_id = $app->getConfig()->get('app_id');
         $mch_id = $app->getConfig()->get('mch_id');
         $notify_url = $app->getConfig()->get('notify_url');
@@ -126,6 +113,7 @@ class WechatService
             "appid" => $app_id, // <---- 请修改为服务号的 appid
             "description" => $title,
             "notify_url" => $notify_url,
+            "attach"=>$attach,
             "amount" => [
                 "total" => intval($pay_log['money']),
                 "currency" => "CNY"
@@ -631,29 +619,42 @@ class WechatService
 
         Log::channel('daily')->info('refund data:', ['refund par'=>$par]);
 
-        $refund = Refund::create($refund_data);
+        $model = new Refund();
 
-        try{
-            $result = $app->getClient()->postJson("v3/refund/domestic/refunds",$par)->toArray();
-        }catch(Exception $e)
+        $refund_id = $model->insertGetId($refund_data);
+        
+        if(env('APP_ENV') == 'local')
         {
-            return [1, '请求失败:' . $e->getMessage()];
+            //模拟退款成功
+            $result = [
+                'status'=>'SUCCESS',
+                'refund_id'=>HelperService::uuid(),
+            ];
+        }else
+        {
+            try{
+                $result = $app->getClient()->postJson("v3/refund/domestic/refunds",$par)->toArray();
+            }catch(Exception $e)
+            {
+                return [1, '请求失败:' . $e->getMessage()];
+            }
         }
 
         Log::channel('daily')->info('wechat tuikuan_result:', $result);
         $message = '退款成功';
 
+        $update= [];
         if($result['status'] == 'SUCCESS')
         {
-            $refund->state = 1;
-            $refund->refund_at = now();
+            $update['state'] = 1;
+            $update['refund_at'] = now();
         }elseif($result['status'] == 'PROCESSING')
         {
             $message = '退款处理中';
-            $refund->state = 2;
+            $update['state'] = 2;
         }
-        $refund->out_sn = $result['refund_id'];
-        $refund->save();
+        $update['out_sn'] = $result['refund_id'];
+        $model->where(['id'=>$refund_id])->update($update);
 
         return [0, $message];
     }

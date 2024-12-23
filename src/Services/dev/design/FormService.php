@@ -42,17 +42,28 @@ class FormService extends BaseService
             //form 快速设置列字段展示
             //勾选后未增加操作 会增加一个组加当前字段的列。
             $checked = $base['checked'];
-            $key = $base['key'];
             unset($base['checked']);
             if($checked)
             {
                 //勾选 新增
-                //增加一个group 
+                //增加一个group
+                //检测如果有columns字段表示是分组，类型变为addgroup
                 $action_type = 'quickAdd';
                 $active = [0];
                 $old_value = $tabs[0];
+                if(isset($base['columns']))
+                {
+                    //复制行
+                    $action_type = 'addGroup';
+                }elseif(isset($base['tab']))
+                {
+                    //复制tab
+                    $action_type = 'addTab';
+                    $active = false;
+                }
             }else
             {
+                $key = $base['key'];
                 //取消勾选 删除
                 $action_type = 'delete';
                 [$active,$old_value] = $this->getColumnIndex($tabs,$key,'key');
@@ -107,7 +118,16 @@ class FormService extends BaseService
         }elseif($action_type == 'addTab')
         {
             //新增tab
-            $base = array_merge($base,['config'=>[],'uid'=>$new_uid]);
+            $copy = Arr::get($base,'copy');
+            if(!isset($base['uid']) || !$copy)
+            {
+                $base['uid'] = $new_uid;
+            }
+            if(!isset($base['config']))
+            {
+                $base['config'] = [];
+            }
+            
             if($active)
             {
                 //向后插入tab
@@ -130,7 +150,11 @@ class FormService extends BaseService
             $count = count($active);
             //原值
             $keys = implode('.',$active);
-            $base['uid'] = $new_uid;
+            $copy = Arr::get($base,'copy');
+            if(!isset($base['uid']) || !$copy)
+            {
+                $base['uid'] = $new_uid;
+            }
             $empty_group_data = ['columns'=>[]];
             if($count == 1)
             {

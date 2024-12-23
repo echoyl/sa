@@ -8,7 +8,7 @@ class Select extends BaseField
     public function encode($options = [])
     {
         $val = $options['val'];
-        $val = is_numeric($val)?intval($val):$val;
+        $val = is_numeric($val)?intval($val):(is_array($val)?implode(',',$val):$val);
         return $this->getData($val);
     }
 

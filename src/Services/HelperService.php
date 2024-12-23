@@ -817,9 +817,15 @@ class HelperService
         return str_pad($hours, 2, '0', STR_PAD_LEFT).':'.str_pad($minutes, 2, '0', STR_PAD_LEFT).':'.str_pad($seconds, 2, '0', STR_PAD_LEFT);
       
     }
-    public static function uuid()
+    /**
+     * 生成随机字符串
+     *
+     * @param integer $length
+     * @return string
+     */
+    public static function uuid($length = 10)
     {
-        return Str::random(10);
+        return Str::random($length);
     }
 
     /**

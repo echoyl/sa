@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Creator;
+use Illuminate\Support\Arr;
 
 class Posts extends Creator
 {
@@ -19,7 +20,7 @@ class Posts extends Creator
         $this->confJson = [
             'posts'=>[
                 'table_config'=>'[{"key":"id","props":[]},{"key":"title","can_search":[1],"props":{"width":"300","copyable":true,"ellipsis":true}},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
-                'form_config'=>'{"tabs":[{"tab":{"title":"详情"},"config":[{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]}]},{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"created_at","props":{"width":"100%"}}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]},{"tab":{"title":"其它信息"},"config":[{"columns":[{"key":"author"},{"key":"hits"}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]}]}]}'
+                'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"created_at","props":{"width":"100%"}}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]},{"tab":{"title":"详情"},"config":[{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]}]},{"tab":{"title":"其它信息"},"config":[{"columns":[{"key":"author"},{"key":"hits"}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]}]}]}'
             ]
         ];
     }
@@ -114,10 +115,11 @@ class Posts extends Creator
         
         //5.2列表
         $form_config = json_decode($this->confJson['posts']['form_config'],true);
-        $tabs = json_encode($form_config['tabs'][0]);
-        //d($tabs);
-        $tabs = $this->addColumns($tabs,$category['menu_form_columns'],'config');
-        $form_config = json_encode(['tabs'=>[json_decode($tabs,true)]]);
+        $tabs = Arr::get($form_config,'tabs',[]);
+        $tabs0 = json_encode(Arr::get($tabs,0,[]));
+        $tabs0 = $this->addColumns($tabs0,$category['menu_form_columns'],'config');
+        Arr::set($tabs,0,json_decode($tabs0,true));
+        $form_config = json_encode(['tabs'=>$tabs]);
 
         $menu = array_merge([
             'title'=>$menu_name,
