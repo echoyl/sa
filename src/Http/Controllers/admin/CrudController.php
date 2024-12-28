@@ -670,6 +670,7 @@ class CrudController extends ApiBaseController
             }
         }
         $type = request('actype');
+        $base = request('base');
 
         if ($this->is_post) {
             //+检测字段的唯一性
@@ -716,16 +717,15 @@ class CrudController extends ApiBaseController
                     return $this->success();
                     break;
                 default:
-                    $data = filterEmpty(request('base'), $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
-                    
                     //设置不需要提交字段
                     if (!empty($this->dont_post_columns)) {
                         foreach ($this->dont_post_columns as $c) {
-                            if (isset($data[$c])) {
-                                unset($data[$c]);
+                            if (isset($base[$c])) {
+                                unset($base[$c]);
                             }
                         }
                     }
+                    $data = filterEmpty($base, $this->can_be_null_columns); //后台传入数据统一使用base数组，懒得每个字段赋值
                     //json数据列
                     if (!empty($this->json_columns)) {
                         foreach ($this->json_columns as $c) {
@@ -781,8 +781,8 @@ class CrudController extends ApiBaseController
             //返回插入或更新后的数据
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
 
-            //操作完数据后 读取可操作关联模型的数据处理
-            (new Relation($model_class,$new_data))->afterPost(request('base'));
+            //操作完数据后 读取可操作关联模型的数据处理 base为已经处理过不包含设定不传字段的数据
+            (new Relation($model_class,$new_data))->afterPost($base);
 
             if (method_exists($this, 'afterPost')) {
                 $ret = $this->afterPost($id,$new_data); //数据更新或插入后的 补充操作

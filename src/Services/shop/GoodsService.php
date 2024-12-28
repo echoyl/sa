@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\shop;
 
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Support\Arr;
 
 class GoodsService
 {
@@ -25,9 +26,9 @@ class GoodsService
     }
 
 
-    public function parseGuige($goods)
+    public function parseGuige($goods,$admin = false)
     {
-        if(!isset($goods['items']))
+        if(!isset($goods['items']) || !$goods['items'])
         {
             return [
                 'items'=>[],
@@ -76,16 +77,11 @@ class GoodsService
             {
                 $ctype = $col['type'];
                 $cname = $col['name'];
-                $v = '';
+                $v = Arr::get($guige,$cname,$ctype == 'int' || $ctype == 'price' ? 0:'');
                 if($ctype == 'price')
                 {
-                    $v = $guige[$cname]/100;
-                }elseif($ctype == 'int')
-                {
-                    $v = $guige[$cname]??0;
-                }else
-                {
-                    $v = $guige[$cname]??'';
+                    //后台调用的时候根据关联性质 已经处理一遍价格属性
+                    $v = !$admin ? $v/100 : $v;
                 }
                 $_guige[$cname] = $v;
             }
@@ -206,6 +202,11 @@ class GoodsService
             {
                 $ctype = $col['type'];
                 $cname = $col['name'];
+                if(!isset($val[$cname]))
+                {
+                    //未设置属性不写入
+                    continue;
+                }
                 $v = '';
                 if($ctype == 'price')
                 {
@@ -225,7 +226,11 @@ class GoodsService
             }
 			$sku += $update['sku']??0;
 			$price[] = $update['price']??0;
-			$old_price[] = $update['old_price']??0;
+            if(isset($update['old_price']))
+            {
+                $old_price[] = $update['old_price'];
+            }
+			
 			if($has)
 			{
 				$has_guige_ids[] = $has['id'];
@@ -239,15 +244,18 @@ class GoodsService
 		//将没有的删除
 		$guigeModel->whereNotIn('id',$has_guige_ids)->where(['goods_id'=>$goods_id])->delete();
 		sort($price);
-		rsort($old_price);
 		//最小价格及最大原价
 		$update = [
 			'sku'=>$sku,
-			'old_price'=>$old_price[0],
 			'price'=>$price[0],
             'max_price'=>$price[count($price)-1],
             'guige_open'=>1
 		];
+        if(!empty($old_price))
+        {
+            rsort($old_price);
+            $update['old_price'] = $old_price[0];
+        }
 
 		$this->goodsModel->where(['id'=>$goods_id])->update($update);
     }

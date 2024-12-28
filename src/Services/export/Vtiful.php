@@ -131,11 +131,9 @@ class Vtiful
             $setting = Arr::get($column,'setting',[]);
             $style = $this->getStyle(array_merge($head,$setting));
             $this->excel->insertText($head_row_number, $key, $column['title'],'',$style);
-            if(isset($column['width']) && $column['width'])
-            {
-                $column_name = Excel::stringFromColumnIndex($key);
-                $this->excel->setColumn(implode(':',[$column_name,$column_name]),$column['width']);
-            }
+            $width = Arr::get($column,'width',20);//默认给一个宽度
+            $column_name = Excel::stringFromColumnIndex($key);
+            $this->excel->setColumn(implode(':',[$column_name,$column_name]),$width);
             //summary 检测
             $this->summary($key,$column);
 
@@ -156,6 +154,7 @@ class Vtiful
         $border = Arr::get($set,'border');
         $color = Arr::get($set,'color');
         $fontsize = Arr::get($set,'fontsize');
+        $bold = Arr::get($set,'bold');
         $fileHandle = $this->handle;
         $format = new Format($fileHandle);
         $style = NULL;
@@ -177,6 +176,10 @@ class Vtiful
             {
                 //边框默认使用薄边框风格
                 $format->border(Format::BORDER_THIN);
+            }
+            if($bold)
+            {
+                $format->bold();
             }
             $style = $this->getFormat($format);
         }
@@ -228,19 +231,22 @@ class Vtiful
 
         $this->data_length = count($data);
 
-        $this->top()->head();
-
         $data_row_number = $this->has_top ? 2 : 1;
 
         $data_style = Arr::get($this->config,'data');
 
         $row_height = Arr::get($data_style,'height');
 
+        $default_style = $this->getStyle($data_style);
+
+        $this->excel->defaultFormat($default_style);
+
+        $this->top()->head();
+
         if($row_height)
         {
             //设置行高
-            
-            $all_row = implode(':',['A'.($data_row_number + 1),'A'.($data_row_number + 1 + $this->data_length)]);
+            $all_row = implode(':',['A'.($data_row_number + 1),'A'.($data_row_number + $this->data_length)]);
             $this->excel->setRow($all_row,$row_height,$this->getFormat());
         }
 

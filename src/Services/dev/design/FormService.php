@@ -22,6 +22,8 @@ class FormService extends BaseService
         
         $uid = Arr::get($base,'uid');
 
+        $new_uid = HelperService::uuid();
+
         if(!isset($config['tabs']))
         {
             //未设置默认设置一个初始化tab
@@ -80,8 +82,6 @@ class FormService extends BaseService
         }
 
         //d('test');
-
-        $new_uid = HelperService::uuid();
 
         if($action_type == 'edit')
         {
@@ -250,6 +250,7 @@ class FormService extends BaseService
     public function copyToMenu($base,$col)
     {
         $to_id = Arr::get($base,'props.toMenuId');
+        $type = Arr::get($base,'props.type','updateOrInsert');//updateOrInsert ,insert
         if(!$to_id)
         {
             return 0;
@@ -257,17 +258,59 @@ class FormService extends BaseService
         $new_form_service = new FormService($to_id);
         //如果之前复制过，后检测为跟新同步列，而不再插入数据
         [$active,$old_value] = $new_form_service->getColumnIndex([],$col['uid']);
-        if($active)
+        if($active && $type == 'updateOrInsert')
         {
             $new_form_service->edit($col,'edit');
         }else
         {
             $col['copy'] = true;
             $col['checked'] = true;
+            if($type == 'insert')
+            {
+                //如果强制新增 子元素也需要重新设置uid tab - formColumns - columns
+                $col = $this->renewUid($col);
+            }
             $new_form_service->edit($col,'setColumns');
         }
         
         return $to_id;
+    }
+
+    /**
+     * 将表单元素的uid全部重新new一遍，因为只有3层 这里直接枚举写完
+     *
+     * @param [type] $col
+     * @return void
+     */
+    public function renewUid($col)
+    {
+        $col['uid'] = HelperService::uuid();
+
+        if(isset($col['config']))
+        {
+            foreach($col['config'] as $key=>$column)
+            {
+                $column['uid'] = HelperService::uuid();
+                if(isset($column['columns']))
+                {
+                    foreach($column['columns'] as $k=>$c)
+                    {
+                        $column['columns'][$k]['uid'] = HelperService::uuid();
+                    }
+                }
+                $col['config'][$key] = $column;
+            }
+        }
+
+        if(isset($col['columns']))
+        {
+            foreach($col['columns'] as $k=>$c)
+            {
+                $col['columns'][$k]['uid'] = HelperService::uuid();
+            }
+        }
+
+        return $col;
     }
 
     /**

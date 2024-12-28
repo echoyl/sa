@@ -446,6 +446,17 @@ class FormItem
                 $data['requestDataName'] = [$first,$data['requestDataName']];
             }
         }
+
+        if(isset($data['fieldProps']) && isset($data['fieldProps']['requestDataName']))
+        {
+            if(is_array($data['fieldProps']['requestDataName']))
+            {
+                array_unshift($data['fieldProps']['requestDataName'],$first);
+            }else
+            {
+                $data['fieldProps']['requestDataName'] = [$first,$data['fieldProps']['requestDataName']];
+            }
+        }
        
         return $data;
     }

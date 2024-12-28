@@ -70,8 +70,7 @@ class Relation
 			{
 				//插入
 				$data[$foreign_key] = $data_id;
-				$create = $class::create($data);
-                $ids[] = $create->id;
+                $ids[] = (new $class)->insertGetId($data);
 			}
 		}
 		//删除没有的
@@ -128,12 +127,12 @@ class Relation
             $model->where($where)->update($data);
         }else
         {
-            $create = $class::create($data);
+            $id = (new $class)->insertGetId($data);
             if($foreign_key == 'id')
             {
                 //反向更新主数据 关联键值
                 $local_key = implode('_',[$name,'id']);
-                $this->model_class::where(['id'=>$this->data['id']])->update([$local_key=>$create->id]);
+                $this->model_class::where(['id'=>$this->data['id']])->update([$local_key=>$id]);
             }
         }
         return;
