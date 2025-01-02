@@ -46,7 +46,7 @@ class MenuService
      * @param boolean | array $auth_ids
      * @return void
      */
-    public function getMenuData($id = 0,$auth_ids = false)
+    public function getMenuData($id = 0,$auth_ids = false,$prefix = [])
     {
         $data = $this->getAll()->filter(function ($item) use ($id,$auth_ids) {
             if($auth_ids)
@@ -61,12 +61,14 @@ class MenuService
         
         $ret = [];
         foreach ($data as $val) {
+            $path = array_merge($prefix,[$val['path']]);
             $item = [
                 'name' => $val['title'],
                 'path' => $val['path'],
+                'ab_path'=>'/'.implode('/',$path),
                 'icon' => $val['icon'],
                 "access" => 'routeFilter',
-                'routes' => $this->getMenuData($val['id'],$auth_ids),
+                'routes' => $this->getMenuData($val['id'],$auth_ids,$path),
                 //'data' => (new stdClass),
                 'data'=>[],
                 'page_type'=>$val['page_type'],
@@ -116,8 +118,11 @@ class MenuService
                 $first = $this->getFirstChildPath($bigmenu);
                 //将大菜单去取到的第一个有页面的子菜单的路径放入数据中，前端中转页面判断后跳转页面
                 $bigmenu['data'] = [
-                    'redirect'=>'/'. implode('/',$first['path'])
+                    //'redirect'=>'/'. implode('/',$first['path'])
+                    'redirect'=>$first
                 ];
+                //$bigmenu['redirect'] = $first;
+                
             }
             $menus[$key] = $bigmenu;
         }
@@ -133,17 +138,18 @@ class MenuService
         if(!empty($first_child['routes']))
         {
             //d($this->getFirstChildPath($first_child['routes'],$first_child['path']));
-            $c = $this->getFirstChildPath($first_child);
-            $path = array_merge([$menu['path']],$c['path']);
-            $name = array_merge([$menu['name']],$c['name']);
-            return ['path'=>$path,'name'=>$name,'route'=>$c['route']];
+            $path = $this->getFirstChildPath($first_child);
+            // $path = array_merge([$menu['path']],$c['path']);
+            // $name = array_merge([$menu['name']],$c['name']);
+            // return ['path'=>$path,'name'=>$name,'route'=>$c['route']];
         }else
         {
-            $path = [
-                'path'=>[$menu['path'],$first_child['path']],
-                'name'=>[$menu['name'],$first_child['name']],
-                'route'=>$first_child
-            ];
+            $path = $first_child['ab_path'];
+            // $path = [
+            //     'path'=>[$menu['path'],$first_child['path']],
+            //     'name'=>[$menu['name'],$first_child['name']],
+            //     'route'=>$first_child
+            // ];
         }
         return $path;
     }

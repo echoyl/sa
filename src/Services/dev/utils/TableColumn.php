@@ -404,28 +404,39 @@ class TableColumn
                     $first_level_relation = Utils::arrGet($this->model['relations'],'name',Utils::uncamelize($model[0]));
                     $relation['foreign_key'] = $first_level_relation['foreign_key'];
                 }
-                if($relation['foreign_model'] && $relation['foreign_model']['menu'])
+
+                //如果选择了指定的菜单配置
+                $menu_id = Arr::get($item,'modal.page');
+                $foreign_menu = false;
+                if($menu_id)
+                {
+                    $menu = (new Menu())->where(['id'=>$menu_id])->first();
+                    if($menu)
+                    {
+                        $foreign_menu = $menu;
+                        $path = array_reverse(Utils::getPath($foreign_menu,$this->menus,'path'));
+                        $fieldProps['path'] = implode('/',$path);
+                    }
+                }
+
+                if($relation && $relation['foreign_model'] && $relation['foreign_model']['menu'])
                 {
                     //检测关联的菜单数量 多个的话 根据前端传的page参数选择该菜单
-                    $menu_id = Arr::get($item,'modal.page');
-                    $foreign_menu = false;
-                    if($menu_id)
+                    if(!$foreign_menu)
                     {
-                        $menu = (new Menu())->where(['id'=>$menu_id])->first();
-                        if($menu && $menu['admin_model_id'] == $relation['foreign_model']['id'])
-                        {
-                            $foreign_menu = $menu;
-                        }
+                        //没有选指定菜单 读取第一个
+                        $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                        $fieldProps['path'] = implode('/',$path);
                     }
-                    $path = array_reverse(Utils::getPath($foreign_menu?:$relation['foreign_model']['menu'],$this->menus,'path'));
-                    $fieldProps['path'] = implode('/',$path);
+                    
                     //多层聚合的话 foreign_key 需要使用数组第一级的relation的foreign_key值
                     //示例：活动预约->预约订单->预约人 直接在预约活动列表展示预约人，foreign_key读取 活动预约活动的id 而不是 预约订单id
                     $fieldProps['foreign_key'] = $relation['foreign_key'];//请求参数 类似这种格式 {foreign_key:record.local_key}
                     $fieldProps['local_key'] = $relation['local_key'];//前端读取record的字段名称 ；record指当前行的数据
                     $fieldProps['name'] = $relation['title'];
-                    $item['fieldProps'] = $fieldProps;
+                    
                 }
+                $item['fieldProps'] = $fieldProps;
                 $items[$key] = $item;
             }
             if($action == 'confirmForm')

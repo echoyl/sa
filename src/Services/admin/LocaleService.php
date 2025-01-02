@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services\admin;
 
 use Echoyl\Sa\Models\locale\Category;
 use Echoyl\Sa\Models\locale\Config;
+use Echoyl\Sa\Services\AdminService;
 use Illuminate\Support\Facades\Schema;
 
 class LocaleService
@@ -38,23 +39,44 @@ class LocaleService
         $languages = $model->select(['id','title','name'])->where(['state'=>1])->get()->toArray();
         return $languages;
     }
-    
-    public static function getSetting()
+
+    public static function getMenu($data,$prefix = false)
     {
+        $ret = [];
+        $_prefix = $prefix ? $prefix : ['menu'];
+        foreach($data as $val){
+            $now_prefix = array_merge($_prefix,[$val['path']]);
+            $key = implode('.',$now_prefix);
+            $ret[$key] = $val['name'];
+            if (!empty($val['routes'])) {
+                $ret = array_merge($ret, self::getMenu($val['routes'], $now_prefix));
+            }
+        }
+        return $ret;
+    }
+    
+    public static function getSetting($user = false)
+    {
+        //读取菜单的多语言，当开启tab时需要设置 不管是否开启了多语言设置
+        $menu_data = AdminService::menuData($user);
+        $user_menu = self::getMenu($menu_data);
+
         if(!self::enable())
         {
-            return [];
+            return [
+                ['name'=>'zh-CN','title'=>'中文简体','configs'=>$user_menu],
+            ];
         }
 
         $all_configs = (new Config())->get()->toArray();
         $languages = self::list();
-        $ret = [];
+        
         foreach($languages as $lang)
         {
             $ret[] = [
                 'name'=>$lang['name'],
                 'title'=>$lang['title'],
-                'configs'=>self::formatData($all_configs,$lang['id'])
+                'configs'=>array_merge($user_menu,self::formatData($all_configs,$lang['id']))
             ];
         }
         return $ret;

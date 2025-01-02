@@ -165,7 +165,7 @@ class AdminService
         $setting['dev'] = $dev && ($is_super || $is_dev);
         $setting['lang'] = Arr::get($setting,'lang',true);
         //$setting['splitMenus'] = Arr::get($setting,'splitMenus',false);//默认不再开启自动分割菜单
-        $setting['locales'] = LocaleService::getSetting();
+        $setting['locales'] = LocaleService::getSetting($user);
         //加入开发环境时 全局数据
         if($setting['dev'])
         {
@@ -181,19 +181,19 @@ class AdminService
         return $setting;
     }
 
-    public static function parseUser($user)
+    public static function menuData($user = false)
     {
-        $ss = new SetsService();
-        $setting = $ss->getSet('setting');
-        HelperService::deImagesOne($setting,['logo']);
-
-        HelperService::deImagesOne($user,['avatar']);
-        $avatar = $user['avatar']['url']?:($setting['logo']['url']?:'');
-
-		$as = new MenuService;
-        $rolename = $user['role']?$user['role']['title']:'超级管理员';
+        if(!$user)
+        {
+            $user = self::user();
+        }
+        if(!$user)
+        {
+            return [];
+        }
         $is_super = self::isSuper($user);
         $auth_ids = [];
+        $ms = new MenuService;
         if(!$is_super)
         {
             $perms2 = explode(',',$user['perms2']);
@@ -205,7 +205,7 @@ class AdminService
                     //将不需要菜单的action 过滤掉
                     continue;
                 }
-                $parent_ids = $as->getParentId($id);
+                $parent_ids = $ms->getParentId($id);
                 if($parent_ids)
                 {
                     $auth_ids = array_merge($parent_ids,$auth_ids);
@@ -214,6 +214,20 @@ class AdminService
             }
             $auth_ids = array_unique($auth_ids);
         }
+        return $ms->get(0,$is_super?false:$auth_ids);
+    }
+
+    public static function parseUser($user)
+    {
+        $ss = new SetsService();
+        $setting = $ss->getSet('setting');
+        HelperService::deImagesOne($setting,['logo']);
+
+        HelperService::deImagesOne($user,['avatar']);
+        $avatar = $user['avatar']['url']?:($setting['logo']['url']?:'');
+
+		$as = new MenuService;
+        $rolename = $user['role']?$user['role']['title']:'超级管理员';
         $info = [
             'id' => $user['id'],
             'username' => $user['username'],
@@ -223,7 +237,7 @@ class AdminService
             'name' => $user['username'],
             'avatar' => $avatar,
             'permission' => $user['perms2'],
-			'menuData'=>$as->get(0,$is_super?false:$auth_ids),
+			'menuData'=>self::menuData($user),
         ];
         return $info;
     }
