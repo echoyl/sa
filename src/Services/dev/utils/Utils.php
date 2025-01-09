@@ -336,7 +336,7 @@ class Utils
         $img_fields = array_merge($img_fields,$deep_img_fields);
         foreach($img_fields as $field)
         {
-            [$imgf,$vtype,$deep_menu] = $field;
+            [$imgf,$vtype,$deep_menu] = [$field[0],$field[1],$field[2]??[]];
             if($vtype == 'deep')
             {
                 //如果是formlist 类型需要深层次去检索
