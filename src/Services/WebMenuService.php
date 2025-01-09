@@ -3,9 +3,13 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\web\Menu;
 use App\Services\WeburlService;
+use Echoyl\Sa\Models\dev\Menu as DevMenu;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
+use Echoyl\Sa\Services\web\LangService;
+use Echoyl\Sa\Services\web\UrlService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
@@ -210,7 +214,6 @@ class WebMenuService
                 $menu = $this->getByUri(explode('/', $uri));
             }
         }
-
         if ($menu) {
             if (!$flag) {
                 $menu = $this->getMenuFromAllMenus($menu);
@@ -230,10 +233,9 @@ class WebMenuService
 
             //获取banner 往上推
             $menu['banner'] = $this->getBanner($menu);
-            if($menu['specs'] && !is_array($menu['specs']))
+            if($menu['specs'])
             {
-                $menu['specs'] = $menu['specs']?json_decode($menu['specs'],true):[];
-                $menu['specs'] = $this->getSpecs($menu['specs']??'');
+                $menu['specs'] = $this->getSpecsNew($menu);
             }
             
             
@@ -291,7 +293,9 @@ class WebMenuService
             $href = $menu['link'];
         } else {
             //现在 alias 改为必填参数 故直接返回链接
-            $href = '/' . env('APP_PREFIX', '') . $menu['alias'];
+            $us = new UrlService;
+
+            $href = $us->url($menu['alias']);
         }
         return $href;
     }
@@ -318,6 +322,7 @@ class WebMenuService
             $index_menu = [
                 'id' => 0,
                 'cid' => 0,
+                'alias'=>'',
                 'href' => '/',
                 'title' => $index_name,
                 'banner' => '',
@@ -329,10 +334,16 @@ class WebMenuService
                 'bottom' => 1,
                 'children' => [],
                 'content'=>'',
+                'desc'=>'',
                 'path'=>''
             ];
             array_unshift($list, $index_menu);
         }
+
+        $list = collect($list)->map(function ($item) {
+            $item['topchildren_count'] = collect($item['children'])->filter(fn($v) => $v['top'])->count();
+            return $item;
+        })->toArray();
         
         $list = self::selected($list, $selected); //选中菜单
         //d($list['selected'],$list['data'][3]);
@@ -463,7 +474,7 @@ class WebMenuService
 
         static $all = [];
         if (empty($all) && Schema::hasTable('web_menu')) {
-            $all = Menu::where(['state' => '1','type'=>env('APP_NAME')])->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
+            $all = Menu::where(['state' => '1'])->with(['adminModel'])->orderBy('parent_id', 'asc')->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get()->toArray();
         }
         return $all;
     }
@@ -485,11 +496,11 @@ class WebMenuService
             $val['selected'] = 0;
             if(isset($val['specs']))
             {
-                $val['specs'] = $val['specs']?json_decode($val['specs'],true):[];
-                $val['specs'] = $ms->getSpecs($val['specs']??'');
+                $val['specs_json'] = $val['specs']?json_decode($val['specs'],true):[];
+                //$val['specs'] = $ms->getSpecs($val['specs']??'');
             }else
             {
-                $val['specs'] = [];
+                $val['specs_json'] = [];
             }
             $val['category'] = false;
             if(isset($val['category_id']) && $val['category_id'])
@@ -602,7 +613,7 @@ class WebMenuService
     public static function categoryToMenuData($category, $menu)
     {
         $category = HelperService::deImages($category, ['titlepic'], true);
-        return [
+        return array_merge($category,[
             'id' => -1,
             'cid' => $category['id'],
             'href' => self::parseHref($menu) . '/' . $category['id'],
@@ -612,10 +623,10 @@ class WebMenuService
             'desc' => $category['desc']??'',
             'category'=>$category,
             'selected' => 0,
-            'top' => 1,
-            'bottom' => 1,
+            'top' => $menu['category_show_top'],
+            'bottom' => $menu['category_show_bottom'],
             'blank' => 0,
-        ];
+        ]);
     }
 
     public static function categoryToMenu($categorys, $topMenu, $cid = false)
@@ -720,6 +731,61 @@ class WebMenuService
 
         }
         return $cids;
+    }
+
+    public function getDevMenu($id = 30)
+    {
+        static $menus;
+        if(!isset($menus[$id]))
+        {
+            $menus[$id] = (new DevMenu())->select(['form_config','desc'])->where(['id'=>$id])->first();
+        }
+        return $menus[$id];
+    }
+
+    /**
+     * 获取菜单中类型是jsonform的配置信息数据
+     *
+     * @param array $data 数据信息
+     * @param string $key 数据的key
+     * @param integer $dev_menu_id 菜单id
+     * @return array
+     */
+    public function getSpecsNew($data,$key = 'specs',$dev_menu_id = 30)
+    {
+        $menu = $this->getDevMenu($dev_menu_id);
+        if($menu)
+        {
+            request()->offsetSet('dev_menu',$menu);
+        }
+        $config = [
+            'data'=>$data,'col'=>['name'=>$key,'type'=>'config','default'=>''],
+        ];
+        $cs = new CrudService($config);
+        //make后的图片数据变成了json需要重新转换一下
+        $data = $cs->make('config',[
+            'encode'=>false,
+            'isset'=>isset($data[$key]),
+        ]);
+        return $data[$key];
+    }
+
+    /**
+     * 直接通过生成的配置数据 获取解析后的数据信息
+     *
+     * @param [type] $data
+     * @param integer $dev_menu_id
+     * @param array $deep_img_fields
+     * @return void
+     */
+    public function getSpecsPage($data,$dev_menu_id = 0,$deep_img_fields = [])
+    {
+        $menu = $this->getDevMenu($dev_menu_id);
+        if(!$menu)
+        {
+            return $data;
+        }
+        return Utils::parseImageInPage($data,$menu,false,'decode',$deep_img_fields);
     }
 
     public function getSpecs($_specs,$hasConfig = false)

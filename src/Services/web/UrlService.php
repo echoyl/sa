@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\web;
 
 use Echoyl\Sa\Services\WebMenuService;
+use Illuminate\Support\Facades\URL;
 
 class UrlService
 {
@@ -28,16 +29,24 @@ class UrlService
             if (!empty($selected_cids)) {
                 $mid = '/' . implode('_', $selected_cids);
             }
-            return url('/' . env('APP_PREFIX', '') . $menu['alias'] . $mid . '/' . $id . '.html');
+            $href = $menu['alias'] . $mid . '/' . $id . '.html';
         } else {
             //没有的话 那么就是列表了
-            return url('/' . env('APP_PREFIX', '') . $menu['alias']);
+            $href = $menu['alias'];
         }
+        return (new self)->url($href);
     }
 
-    public function url($url)
+    public function url($url,$query = [])
     {
-        return url('/' . env('APP_PREFIX', '') . $url);
+        //加入多语言检测
+        $lang = LangService::getLang();
+        $url = $lang?implode('/',[$lang,$url]):$url;
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query);
+        }
+        return URL::to('/' . env('APP_PREFIX', '') . $url);
+        //return url('/' . env('APP_PREFIX', '') . $url,$query);
     }
 
 }

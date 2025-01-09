@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 use Illuminate\Support\Arr;
 
@@ -34,7 +35,8 @@ class Utils
         'html'=>'html',
         'tmapShow'=>'tmapShow',
         'iconSelect'=>'iconSelect',
-        'saSlider'=>'saSlider'
+        'saSlider'=>'saSlider',
+        'config'=>'config'
     ];
 
     public static $title_arr = [
@@ -250,13 +252,13 @@ class Utils
     public static function getImageFieldFromMenu($menu)
     {
         $desc = Arr::get($menu,'desc');
-        
+
         if(!$desc)
         {
             return [];
         }
 
-        $desc = json_decode($desc,true);
+        $desc = is_string($desc)?json_decode($desc,true):$desc;
 
         $tabs = Arr::get($desc,'tabs',[]);
 
@@ -266,26 +268,119 @@ class Utils
 
         foreach($tabs as $tab)
         {
-            $formColumns = Arr::get($tab,'formColumns',[]);
+            $formColumns = Arr::get($tab,'formColumns',[]);//表单行
             foreach($formColumns as $cf)
             {
-                $columns = Arr::get($cf,'columns',[]);
+                $columns = Arr::get($cf,'columns',[]);//行中的列
                 foreach($columns as $col)
                 {
-                    $type = Arr::get($col,'valueType');
+                    $type = Arr::get($col,'valueType');//检测每列类型
                     $type = $value_map[$type]??$type;
+                    $field = Arr::get($col,'dataIndex');
+                    if(in_array($type,['formList','saFormList']))
+                    {
+                        $fields[] = [$field,'deep',['desc'=>['tabs'=>[
+                            ['formColumns'=>$col['columns']]
+                        ]]]];
+                    }
                     if(!in_array($type,['image','file','tinyEditor','mdEditor']))
                     {
                         continue;
                     }
-                    $field = Arr::get($col,'dataIndex');
+                    
                     if($field)
                     {
-                        $fields[] = [$field,$type];
+                        $fields[] = [$field,$type,''];
                     }
                 }
             }
         }
         return $fields;
+    }
+
+    public static function parseImgField($post_data,$field,$originData = false,$encode = true)
+    {
+        $post_data['originData'] = $originData;//原始数据 更新后需要删除该文件
+        [$imgf,$type] = $field;
+        $config = [
+            'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>$type,'default'=>''],
+        ];
+        $cs = new CrudService($config);
+        //make后的图片数据变成了json需要重新转换一下
+        $post_data = $cs->make($type,[
+            'encode'=>$encode
+        ]);
+        if(isset($post_data[$imgf]) && $post_data[$imgf] && ($type == 'image' || $type == 'file'))
+        {
+            $post_data[$imgf] = is_string($post_data[$imgf])?json_decode($post_data[$imgf],true):$post_data[$imgf];
+        }
+        Arr::forget($post_data,'originData');
+        return $post_data;
+    }
+
+    /**
+     * 根据dev菜单的form配置将字段内容decode或encode 用于配置页面或 jsonForm
+     *
+     * @param array $post_data 表单数据
+     * @param boolean $dev_menu 菜单数据 格式为['desc'=>['tabs'=>[['formColumns'=>[]]]],'form_config'=>[]] desc为已生成的前端页面可使用的配置数据
+     * @param boolean $originData 原始数据
+     * @param string $type encode/decode 编码 - 入数据库/解码 - 页面展示 自动补齐url等
+     * @param array $deep_img_fields 手动设置需要解析的字段索引
+     * @param boolean $is_array 是否是数组 如果是数组则需要循环处理 比如formlist saFormlist
+     * @return array
+     */
+    public static function parseImageInPage($post_data,$dev_menu = false,$originData = false,$type = 'encode',$deep_img_fields = [],$is_array = false)
+    {
+        $encode = $type == 'encode'?true:false;
+        $img_fields = Utils::getImageFieldFromMenu($dev_menu);
+        $img_fields = array_merge($img_fields,$deep_img_fields);
+        foreach($img_fields as $field)
+        {
+            [$imgf,$vtype,$deep_menu] = $field;
+            if($vtype == 'deep')
+            {
+                //如果是formlist 类型需要深层次去检索
+                //d($deep_menu);
+                $deep_data = self::parseImageInPage(Arr::get($post_data,$imgf),$deep_menu,Arr::get($originData,$imgf),$type,[],true);
+                Arr::set($post_data,$imgf, $deep_data);
+            }else
+            {
+                if($is_array)
+                {
+                    if($post_data)
+                    {
+                        foreach($post_data as $key=>$pd)
+                        {
+                            $post_data[$key] = self::parseImgFields($imgf,$pd,$field,Arr::get($originData,$key),$encode,$vtype);
+                        }
+                    }
+                    
+                }else
+                {
+                    $post_data = self::parseImgFields($imgf,$post_data,$field,$originData,$encode,$vtype);
+                }
+            }
+        }
+        return $post_data;
+    }
+
+    public static function parseImgFields($imgf,$post_data,$field,$originData,$encode,$type)
+    {
+        if(is_string($imgf))
+        {
+            $post_data = self::parseImgField($post_data,$field,$originData,$encode);
+        }elseif(is_array($imgf))
+        {
+            $d = Arr::get($post_data,implode('.',$imgf));
+            if($d)
+            {
+                $name = array_pop($imgf);
+                $top = Arr::get($post_data,implode('.',$imgf));
+                $top_ata = Arr::get($originData,implode('.',$imgf));
+                $top = self::parseImgField($top,[$name,$type],$top_ata,$encode);
+                Arr::set($post_data,implode('.',$imgf), $top);
+            }
+        }
+        return $post_data;
     }
 }

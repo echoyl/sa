@@ -237,8 +237,7 @@ class FormService extends BaseService
             $tabs = $this->clearEmptyGroup($tabs);
         }
         $config['tabs'] = $tabs;
-        $this->updateConfig($config);
-        return;
+        return $this->updateConfig($config);
     }
 
     /**
@@ -428,9 +427,7 @@ class FormService extends BaseService
 
         $config['tabs'] = $tabs;
 
-        $this->model->where(['id'=>$this->id])->update([$name=>json_encode($config)]);
-
-        return true;
+        return $this->updateConfig($config);
     }
 
      /**
@@ -451,7 +448,7 @@ class FormService extends BaseService
         foreach($tabs as $tk => $tab)
         {
             //如果是tab的话
-            if(isset($tab['uid']) && $tab['uid'] == $uid)
+            if(isset($tab['uid']) && (!$uid || $tab['uid'] == $uid))
             {
                 $index = [$tk];
                 $index_data = $tab;

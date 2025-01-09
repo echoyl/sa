@@ -563,26 +563,31 @@ class MenuController extends CrudController
     /**
      * 表单配置信息
      *
-     * @return void
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function formConfig($id = 0)
+    public function formConfig($id = 0,$config = [])
     {
-        $item_data = $this->getItem('form_config',$id);
-
-        if(!is_array($item_data))
+        if($id)
         {
-            return $item_data;
+            $item_data = $this->getItem('form_config',$id);
+            if(!is_array($item_data))
+            {
+                return $item_data;
+            }
+            $item = $item_data['item'];
+            $config = $item_data['config'];
+        }else
+        {
+            $item = ['id'=>0,'desc'=>'','admin_model'=>false,'admin_model_id'=>0];
         }
-
-        $item = $item_data['item'];
-        $config = $item_data['config'];
-        $desc = json_decode($item['desc'],true);
+        
+        $desc = $item['desc']?json_decode($item['desc'],true):[];
         //如果有tab
 
         $input_tabs = request('base.tags');
         $tabs = false;
         //数据库读取配置 + 配置中已经有了tabs设置
-        if($id && isset($config['tabs']))
+        if(isset($config['tabs']))
         {
             $tabs = $config['tabs'];
         }else
@@ -720,15 +725,26 @@ class MenuController extends CrudController
         $desc = $this->getDescUrl($item,$desc);
 
         $data['desc'] = json_encode($desc);
-        $this->model->where(['id'=>$item['id']])->update($data);
-        return $this->success('操作成功');
+        if($item['id'])
+        {
+            $this->model->where(['id'=>$item['id']])->update($data);
+        }
+        foreach($data as $key=>$value)
+        {
+            $json = HelperService::json_validate($value);
+            if($json !== false)
+            {
+                $data[$key] = $json;
+            }
+        }
+        return $this->success($data);
     }
     /**
      * 根据menu记录获取desc字段中的url 和 postUrl
      *
      * @param [type] $item
      * @param array $desc
-     * @return void
+     * @return array
      */
     public function getDescUrl($item,$desc = [])
     {
@@ -876,16 +892,17 @@ class MenuController extends CrudController
     {
         $id = request('id');
         $columns = request('columns');
+        $fs = new FormService($id,request('config.form_config',[]));
 
-        $fs = new FormService($id);
-
-        if($fs->sort($columns))
+        $edit_ret = $fs->sort($columns);
+        $ret_data = false;
+        if($edit_ret)
         {
             //需要排序后再执行
-            $this->formConfig($id);
+            $ret_data = $this->formConfig($id,$edit_ret);
         }
 
-        return $this->devEditRet($id,'form');
+        return $this->devEditRet($id,'form',$ret_data?Arr::get($ret_data->getData(true),'data'):[]);
 
     }
     public function sortPanelColumns()
@@ -941,11 +958,16 @@ class MenuController extends CrudController
     {
         $id = request('base.id');
         
-        $fs = new FormService($id);
+        $fs = new FormService($id,request('base.config.form_config',[]));
 
         $edit_type = request('type','base');
 
         $base = request('base');
+
+        if(isset($base['config']))
+        {
+            unset($base['config']);
+        }
 
         unset($base['id']);
 
@@ -959,6 +981,8 @@ class MenuController extends CrudController
         
         $edit_ret = $fs->edit($base,$action_type,$edit_type);
 
+        //d($edit_ret);
+
         if($action_type == 'copyToMenu')
         {
             //复制后 需要更新的是目标菜单的desc字段
@@ -971,9 +995,9 @@ class MenuController extends CrudController
             return $this->devEditRet($edit_ret,'form');
         }
 
-        $this->formConfig($id);
+        $ret_data = $this->formConfig($id,$edit_ret);
 
-        return $this->devEditRet($id,'form');
+        return $this->devEditRet($id,'form',Arr::get($ret_data->getData(true),'data'));
     }
 
     public function deleteFormColumn()
@@ -997,19 +1021,32 @@ class MenuController extends CrudController
      * @param [type] $schema
      * @return void
      */
-    public function devEditRet($id,$type = 'table')
+    public function devEditRet($id,$type = 'table',$item_data = [])
     {
-        $item = $this->model->where(['id'=>$id])->first();
-        $desc = json_decode($item['desc'],true);
-        $data = $columns = [];
+        if($id)
+        {
+            $item = $this->model->where(['id'=>$id])->first();
+        }else
+        {
+            $item = $item_data;
+        }
+
+        if(empty($item))
+        {
+            return $this->successMsg('',['columns'=>[]]);
+        }
+        
+        $desc = ($item['desc'] && is_string($item['desc'])) ? json_decode($item['desc'],true) : $item['desc'];
+        $columns = [];
+        //$data = [];
         if($type == 'table')
         {
             $columns = $desc['tableColumns'];
-            $data = ['tabs'=>$desc['tableColumns']];
+            //$data = ['tabs'=>$desc['tableColumns']];
         }elseif($type == 'form')
         {
             $columns = $desc['tabs'];
-            $data = ['tabs'=>$desc['tabs']];
+            //$data = ['tabs'=>$desc['tabs']];
         }elseif($type == 'panel')
         {
             $columns = $desc['panel'];
@@ -1017,10 +1054,12 @@ class MenuController extends CrudController
 
         $ret = [
             'columns'=>$columns,
-            'data'=>$data,
-            'schema'=>$item->toArray(),
-            'currentUser'=>$this->getUserInfo()
+            'data'=>$item_data,
         ];
+        if($id)
+        {
+            $ret['currentUser'] = $this->getUserInfo();
+        }
         //design操作不再提示成功信息
         return $this->success($ret,[0,'']); 
     }

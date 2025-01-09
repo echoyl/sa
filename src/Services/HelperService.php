@@ -91,6 +91,10 @@ class HelperService
 
     public static function autoParseImages($data)
     {
+        if(!$data)
+        {
+            return $data;
+        }
         $img_fields = self::getImageFields($data);
         if(!empty($img_fields))
         {
@@ -215,7 +219,7 @@ class HelperService
                 'encode'=>true,
                 'isset'=>isset($data[$key]),
             ]);
-            if($data[$key])
+            if(isset($data[$key]) && $data[$key])
             {
                 $data[$key] = json_decode($data[$key],true);
             }
@@ -230,7 +234,7 @@ class HelperService
      * @param array $data 数据
      * @param array $keys 需要转化为图片的键值
      * @param boolean $fill_empty 是否自动填充 空白数据
-     * @return void
+     * @return array
      */
     public static function deImages(&$data, $keys = [], $fill_empty = false)
     {

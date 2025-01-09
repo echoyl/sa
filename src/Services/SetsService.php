@@ -2,10 +2,8 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Setting;
-use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 
 class SetsService
@@ -63,58 +61,11 @@ class SetsService
         return implode('_',[$this->cache_prefix,$key]);
     }
 
-    public function parseImgField($post_data,$field,$originData = false,$encode = true)
-    {
-        $post_data['originData'] = $originData;//原始数据 更新后需要删除该文件
-        [$imgf,$type] = $field;
-        $config = [
-            'data'=>$post_data,'col'=>['name'=>$imgf,'type'=>$type,'default'=>''],
-        ];
-        $cs = new CrudService($config);
-        //make后的图片数据变成了json需要重新转换一下
-        $post_data = $cs->make($type,[
-            'encode'=>$encode
-        ]);
-        if(isset($post_data[$imgf]) && $post_data[$imgf] && ($type == 'image' || $type == 'file'))
-        {
-            $post_data[$imgf] = is_string($post_data[$imgf])?json_decode($post_data[$imgf],true):$post_data[$imgf];
-        }
-        Arr::forget($post_data,'originData');
-        return $post_data;
-    }
-
-    public function parse($post_data,$img_fields,$data,$type = 'encode')
-    {
-        $encode = $type == 'encode'?true:false;
-        foreach($img_fields as $field)
-        {
-            [$imgf,$type] = $field;
-            if(is_string($imgf))
-            {
-                $post_data = $this->parseImgField($post_data,$field,$data,$encode);
-            }elseif(is_array($imgf))
-            {
-                $d = Arr::get($post_data,implode('.',$imgf));
-                if($d)
-                {
-                    $name = array_pop($imgf);
-                    $top = Arr::get($post_data,implode('.',$imgf));
-                    $top_ata = Arr::get($data,implode('.',$imgf));
-                    $top = $this->parseImgField($top,[$name,$type],$top_ata,$encode);
-                    Arr::set($post_data,implode('.',$imgf), $top);
-                }
-            }
-        }
-        return $post_data;
-    }
-
     public function post($key,$deep_img_fields = [])
     {
         $app_name = $this->appName();
         //编辑模式不再读取缓存
         $item = $this->getData($key,true);
-        $img_fields = Utils::getImageFieldFromMenu(request('dev_menu'));
-        $img_fields = array_merge($img_fields,$deep_img_fields);
         if($item && $item['value'])
         {
             $data = json_decode($item['value'],true);
@@ -122,12 +73,13 @@ class SetsService
         {
             $data = [];
         }
+        $dev_menu = request('dev_menu');
 
 		if(request()->isMethod('post'))
 		{
 			$post_data = filterEmpty(request('base'));
 
-            $post_data = $this->parse($post_data,$img_fields,$data);
+            $post_data = Utils::parseImageInPage($post_data,$dev_menu,$data,'encode',$deep_img_fields);
 
 			$data = [
 				'key'=>$key,
@@ -143,10 +95,10 @@ class SetsService
 				$this->model->insert($data);
 			}
             Cache::forget($this->getCacheKey($key));
-			return ['code'=>0,'msg'=>'提交成功'];
+			return ['code'=>0,'msg'=>'提交成功','data'=>Utils::parseImageInPage($post_data,$dev_menu,false,'decode',$deep_img_fields)];
 		}else
 		{
-            $data = $this->parse($data,$img_fields,$data,'decode');
+            $data = Utils::parseImageInPage($data,$dev_menu,false,'decode',$deep_img_fields);
 			return ['code'=>0,'data'=>$data];
 		}
 	}

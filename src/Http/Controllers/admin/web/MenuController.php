@@ -10,10 +10,12 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\Posts;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\HelperService;
+use Echoyl\Sa\Traits\Category as TraitsCategory;
 
 class MenuController extends CrudController
 {
-    //
+    use TraitsCategory;
+	public $cid = 0;
     public $model;
     public $spec_arr = [
         ['key' => 'key', 'title' => '名称', 'type' => 'input'],
@@ -34,40 +36,14 @@ class MenuController extends CrudController
         ],
     ];
 
-    public $parse_columns = [
-        //['name' => 'state', 'type' => 'state', 'default' => 'disable'],
-        ['name' => 'parent_id', 'type' => '', 'default' => '0'],
-        ['name' => 'banner', 'type' => 'image', 'default' => ''],
-        ['name' => 'specs', 'type' => 'config', 'default' => ''],
-        ['name' => 'pics', 'type' => 'image', 'default' => ''],
-        ['name' => 'category_id', 'type' => 'cascader', 'default' => 0],
-        ['name' => 'relate_menu_id', 'type' => 'cascaders', 'default' => ''],
-        ['name' => 'content_id', 'type' => 'search_select', 'default' => '0'],
-        [
-            'name' => 'state',
-            'type' => 'switch',
-            'default' => 1,
-            'table_menu' => true,
-            'with' => true,
-            'data' => [
-                [
-                    'label' => '禁用',
-                    'value' => 0,
-                ],
-                [
-                    'label' => '启用',
-                    'value' => 1,
-                ],
-            ],
-        ],
-    ];
-
     var $can_be_null_columns = ['tpl','small_title','desc','content_detail','category_id'];
-    public function __construct(Menu $model)
+
+    public function __construct()
     {
-        $this->model = $model;
+        $this->model = new Menu;
+        $post_parent_id = request('parent_id', 0);
         $this->default_post = [
-            'parent_id' => request('parent_id', 0),
+            'parent_id' => $post_parent_id ?: $this->cid,
             'category' => ['id' => 0, 'title' => ''],
             'content' => ['id' => 0, 'title' => ''],
             'id' => 0,
@@ -92,20 +68,10 @@ class MenuController extends CrudController
     {
         $ws = new WebsiteService;
         $data['spec_arr'] = $ws->spec_arr;
-        $data['modules'] = collect($ws->modules)->map(function($v){
-            return ['value'=>$v['id'],'label'=>$v['title']];
-        });
+        $data['modules'] = $ws->modules;
         $ds = new DevService;
         $data['admin_model_ids'] = $ds->getModelsTreeData([env('APP_NAME')]);
         //$data['admin_model_folder_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
-        if ($data['id']) {
-
-            //$data['content_id'] = $ws->menuContent($data);
-        }
-        // if(isset($data['specs']))
-        // {
-        //     $data['specs'] = json_decode($data['specs'],true);
-        // }
         HelperService::deImagesFromConfig($data);
         return;
     }

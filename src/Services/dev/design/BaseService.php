@@ -11,12 +11,13 @@ class BaseService
     var $model;
     var $config;
     var $name = 'form_config';
-    public function __construct($id = 0)
+    public function __construct($id = 0,$config = [])
     {
         
         $name = $this->name;
         $this->id = $id;
         $this->model = new Menu();
+        $this->config = $config?$config:[];
 
         $item = $this->model->where(['id'=>$id])->first();
         if($item)
@@ -128,8 +129,16 @@ class BaseService
      */
     public function updateConfig($config)
     {
-        $name = $this->name;
-        $this->model->where(['id'=>$this->id])->update([$name=>json_encode($config)]);
-        return;
+        if($this->id)
+        {
+            //有id则更新
+            $value = json_encode($config);
+            $name = $this->name;
+            $this->model->where(['id'=>$this->id])->update([$name=>$value]);
+            return true;
+        }else
+        {
+            return $config;
+        }
     }
 }

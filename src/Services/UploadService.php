@@ -227,12 +227,14 @@ class UploadService
             $filepath = $upload_tmp_enable && $this->tmp_enable?'tmp/'.$filepath:$filepath;
             $path = $file->store($filepath, 'public');
             $newPath = storage_path('app/public/' . $path);
+            $this->waterMark($newPath);
         } else {
             $filename = uniqid() . '.' . $ext;
-            $public_path = storage_path($upload_tmp_enable && $this->tmp_enable?'app/public/tmp/user/files/' . date("Ym"):'app/public/user/files/' . date("Ym"));
+            $path = ($upload_tmp_enable && $this->tmp_enable?'tmp/':'').'user/files/' . date("Ym");
+            $public_path = storage_path('app/public/'.$path);
             $file->move($public_path, $filename);
-            $path = 'user/files/' . date("Ym") . '/' . $filename;
-            $newPath = $public_path . '/' . $filename;
+            $path = $path . '/' . $filename;
+            $newPath = storage_path('app/public/' . $path);
         }
 
         //生成缩略图
@@ -250,7 +252,7 @@ class UploadService
             $thumb_url = '';
         }
 
-        $this->waterMark($newPath);
+        
 
         return ['code' => 0, 'msg' => '上传成功', 'data' => ['value' => $path, 'src' => tomedia($path), 'thumb_url' => $thumb_url]];
     }

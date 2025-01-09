@@ -239,7 +239,10 @@ class Vtiful
 
         $default_style = $this->getStyle($data_style);
 
-        $this->excel->defaultFormat($default_style);
+        if($default_style)
+        {
+            $this->excel->defaultFormat($default_style);
+        }
 
         $this->top()->head();
 
