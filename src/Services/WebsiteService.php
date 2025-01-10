@@ -179,8 +179,8 @@ class WebsiteService
     {
         $setservice = new SetsService();
         $data = $setservice->getWeb();
-        HelperService::deImagesFromConfig($data);
-        $data = HelperService::autoParseImages($data);
+        // HelperService::deImagesFromConfig($data);
+        // $data = HelperService::autoParseImages($data);
         return $data;
     }
 

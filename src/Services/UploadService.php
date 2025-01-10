@@ -29,8 +29,7 @@ class UploadService
     public function validate($request,$name = 'file',$type = 'image')
     {
         $ss = new SetsService();
-        $setkey = implode('.',['system',$type]);
-        $setting = $ss->get($setkey,[]);
+        $setting = $ss->getSystem($type);
 
         $format = Arr::get($setting,'format');
         if(!$format)
@@ -262,7 +261,7 @@ class UploadService
         $ss = new SetsService();
         if(empty($setting))
         {
-            $setting = $ss->get('system.image',[]);
+            $setting = $ss->getSystem('image');
         }
 
         $watermark = Arr::get($setting,'watermark');

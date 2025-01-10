@@ -3,12 +3,10 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\web\Menu;
 use App\Services\WeburlService;
-use Echoyl\Sa\Models\dev\Menu as DevMenu;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
-use Echoyl\Sa\Services\web\LangService;
 use Echoyl\Sa\Services\web\UrlService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -673,8 +671,7 @@ class WebMenuService
     public function seo($detail = false)
     {
         $ss = new SetsService;
-        $key = 'web';
-        $seo = $ss->get($key);
+        $seo = $ss->getWeb();
         //计算seo 的 title description keyword之类的
         $menu = $this->getMenu();
         //d(caInfo('controller'));
@@ -733,16 +730,6 @@ class WebMenuService
         return $cids;
     }
 
-    public function getDevMenu($id = 30)
-    {
-        static $menus;
-        if(!isset($menus[$id]))
-        {
-            $menus[$id] = (new DevMenu())->select(['form_config','desc'])->where(['id'=>$id])->first();
-        }
-        return $menus[$id];
-    }
-
     /**
      * 获取菜单中类型是jsonform的配置信息数据
      *
@@ -753,7 +740,7 @@ class WebMenuService
      */
     public function getSpecsNew($data,$key = 'specs',$dev_menu_id = 30)
     {
-        $menu = $this->getDevMenu($dev_menu_id);
+        $menu = Utils::getDevMenu($dev_menu_id);
         if($menu)
         {
             request()->offsetSet('dev_menu',$menu);
@@ -768,24 +755,6 @@ class WebMenuService
             'isset'=>isset($data[$key]),
         ]);
         return $data[$key];
-    }
-
-    /**
-     * 直接通过生成的配置数据 获取解析后的数据信息
-     *
-     * @param [type] $data
-     * @param integer $dev_menu_id
-     * @param array $deep_img_fields
-     * @return void
-     */
-    public function getSpecsPage($data,$dev_menu_id = 0,$deep_img_fields = [])
-    {
-        $menu = $this->getDevMenu($dev_menu_id);
-        if(!$menu)
-        {
-            return $data;
-        }
-        return Utils::parseImageInPage($data,$menu,false,'decode',$deep_img_fields);
     }
 
     public function getSpecs($_specs,$hasConfig = false)

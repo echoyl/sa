@@ -1,5 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\utils;
+
+use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
@@ -382,5 +384,15 @@ class Utils
             }
         }
         return $post_data;
+    }
+
+    public static function getDevMenu($id = 0)
+    {
+        static $menus;
+        if(!isset($menus[$id]))
+        {
+            $menus[$id] = (new Menu())->select(['form_config','desc'])->where(['id'=>$id])->first();
+        }
+        return $menus[$id]??false;
     }
 }
