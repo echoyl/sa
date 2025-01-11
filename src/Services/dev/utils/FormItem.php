@@ -567,8 +567,13 @@ class FormItem
         
         if(in_array($this->form_type,['select','selects','radioButton','checkbox']))
         {
-            $label = $label?:'title';
-            $value = $value?:'id';
+            if($this->schema)
+            {
+                //当有数据库字段时，自动获取字段名 否则还是使用组件自带的label 和 value
+                $label = $label?:'title';
+                $value = $value?:'id';
+            }
+            
         }
 
         if($label || $value)
