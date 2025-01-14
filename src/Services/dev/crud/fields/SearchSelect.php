@@ -43,19 +43,21 @@ class SearchSelect extends BaseField
         $col = $this->config['col'];
         $id_name = $col['value']??'id';
         $val = $options['val'];
-        
-        if(isset($col['data_name']) && isset($data[$col['data_name']]) && $isset && $val)
+
+        if($val && $isset)
         {
-            $d = $data[$col['data_name']];
-            if(!$d)
+            //未设置with数据，这个时候我们手动组合成值的结构，不然当选项中不存在该值时前端会报错
+            $val = ['value'=>$val,$id_name=>$val];
+            if(isset($col['data_name']) && isset($data[$col['data_name']]))
             {
-                $val = '__unset';
-            }else
-            {
-                $val = ['label'=>$d[$col['label']??'title']??'','value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??''];
+                $d = $data[$col['data_name']];
+                if($d)
+                {
+                    $val = ['label'=>$d[$col['label']??'title']??'','value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??''];
+                }
             }
-            
         }
+        
         if(!$val || !$isset)
         {
             $val = '__unset';
