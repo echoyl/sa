@@ -130,4 +130,15 @@ class BaseField implements CrudInterface
         }
         return $data;
     }
+
+    public function valToInt(array $val = [])
+    {
+        //如果是非json配置选项，而使用数据表数据 那么检测值是数字的情况下需要格式化explode后数字变成了字符串导致前端组件无法默认选中选项
+        $class = Arr::get($this->col,'class');
+        if($class)
+        {
+            $val = collect($val)->map(fn ($v)=>intval($v))->toArray();
+        }
+        return $val;
+    }
 }

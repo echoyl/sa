@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
+use Illuminate\Support\Arr;
 
 class Checkbox extends BaseField
 {
@@ -20,7 +21,8 @@ class Checkbox extends BaseField
         if($val)
         {
             //未设置，但是有默认值也需要处理下
-            $val = explode(',',$val);
+            $val = is_string($val)?explode(',',$val):(is_numeric($val)?[$val]:$val);
+            $val = $this->valToInt($val);
         }else
         {
             $val = '__unset';

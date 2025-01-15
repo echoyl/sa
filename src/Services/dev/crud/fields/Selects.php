@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
+use Illuminate\Support\Arr;
 
 class Selects extends BaseField
 {
@@ -20,14 +21,8 @@ class Selects extends BaseField
 
         if($val && $isset)
         {
-            $val = is_string($val)?explode(',',$val):$val;
-            // foreach($val as $k=>$v)
-            // {
-            //     if(is_numeric($v))
-            //     {
-            //         $val[$k] = intval($v);
-            //     }
-            // }
+            $val = is_string($val)?explode(',',$val):(is_numeric($val)?[$val]:$val);
+            $val = $this->valToInt($val);
         }else
         {
             $val = '__unset';
