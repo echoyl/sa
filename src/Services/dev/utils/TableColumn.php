@@ -527,7 +527,10 @@ class TableColumn
         }
         $this->data = $d;
     }
-
+    public function searchSelect()
+    {
+        return $this->debounceSelect();
+    }
     
     public function debounceSelect()
     {

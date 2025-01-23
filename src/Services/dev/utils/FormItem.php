@@ -245,7 +245,7 @@ class FormItem
         {
             //默认给每个表单设置 placeholder
 
-            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','switch','debounceSelect']))
+            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','switch','debounceSelect','searchSelect']))
             {
                 $this->data['fieldProps']['placeholder'] = $this->placeholder().$d['title'];
             }else
@@ -634,6 +634,11 @@ class FormItem
             //$d['dataIndex'] = [$relation['name'],$label];
         }
         $this->data = $d;
+    }
+
+    public function searchSelect()
+    {
+        return $this->debounceSelect();
     }
 
     public function debounceSelect()

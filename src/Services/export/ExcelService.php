@@ -20,14 +20,43 @@ class ExcelService
     // }
     var $config;
     /**
+     * @var array 列表中返回的search数据。这里内置一个渲染数据的方法，当search中存在 name+s的数据时 自动获取数据
+     */
+    var $search = [];
+    /**
      * @var array 需要合并的行 [['A',1,2,'内容']]
      */
     var $merges = [];
     
-    public function __construct($config)
+    public function __construct($config,$search = [])
     {
         $config['filename'] = date("YmdHis").'.xlsx';
         $this->config = $config;
+        foreach($search as $key=>$val)
+        {
+            $_search = [];
+            if(!is_array($val))
+            {
+                continue;
+            }
+            foreach($val as $k=>$v)
+            {
+                if(!is_numeric($k))
+                {
+                    continue;
+                }
+                $value = Arr::get($v,'value');
+                $label = Arr::get($v,'label');
+                if($value !== null)
+                {
+                    $_search[$value] = $label;
+                }
+            }
+            if(!empty($_search))
+            {
+                $this->search[$key] = $_search;
+            }
+        }
     }
 
     
@@ -56,7 +85,7 @@ class ExcelService
             {
                 $val = $formatData($val);
             }
-            $data = [];
+            $data_item = [];
             
             foreach ($columns as $colkey=>$col) {
                 $index = $col['key']??$col['cname'];
@@ -71,15 +100,22 @@ class ExcelService
                     $index = explode('.',$index);
                 }
                 $index = Utils::uncamelize($index);
-
                 if (is_array($index)) {
                     //数组index
                     $_val = HelperService::getFromObject($val, $index);
-                    $_val = $_val ?: $default;
+                    $_val = $_val || $_val === 0 ?$_val: $default;//如果值为0需要保留下来
                 } else {
                     //字符串 直接读取
                     $_val = $val[$index] ?? $default;
                 }
+
+                //读取search数据
+                $names = (is_array($index)?implode('.',$index):$index).'s';
+                if(isset($this->search[$names]) && isset($this->search[$names][$_val]))
+                {
+                    $_val = $this->search[$names][$_val];
+                }
+
                 if ($type) {
                     switch ($type) {
                         case 'date':
@@ -121,11 +157,11 @@ class ExcelService
                         $last_col_row[$colkey] = $datakey;
                     }
                 }
-                $data[] = $_val;
+                $data_item[] = $_val;
                 
             }
-            $last_val_arr = $data;
-            $_data[] = $data;
+            $last_val_arr = $data_item;
+            $_data[] = $data_item;
         }
         $this->merges = $merges;
         return $_data;

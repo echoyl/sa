@@ -13,7 +13,8 @@ class Utils
     public static $value_type_map = [
         'select'=>'select',
         'selects'=>'select',
-        'search_select'=>'debounceSelect',
+        'search_select'=>'debounceSelect',//只使用cascader 但是兼容之前的select
+        'searchSelect'=>'searchSelect',//只使用select
         'textarea'=>'textarea',
         'image'=>'uploader',
         'file'=>'uploader',
@@ -38,7 +39,7 @@ class Utils
         'tmapShow'=>'tmapShow',
         'iconSelect'=>'iconSelect',
         'saSlider'=>'saSlider',
-        'config'=>'config'
+        'config'=>'jsonForm'
     ];
 
     public static $title_arr = [

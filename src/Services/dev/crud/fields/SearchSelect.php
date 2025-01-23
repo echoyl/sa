@@ -30,7 +30,6 @@ class SearchSelect extends BaseField
                 $val = $val['value'];
             }
         }
-
         $data[$name] = $val;
 
         return $data;
@@ -53,7 +52,8 @@ class SearchSelect extends BaseField
                 $d = $data[$col['data_name']];
                 if($d)
                 {
-                    $val = ['label'=>$d[$col['label']??'title']??'','value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??''];
+                    $label = $d[$col['label']]??($d['title']??'');
+                    $val = array_merge($d,['label'=>$label,'value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??'']);
                 }
             }
         }

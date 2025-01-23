@@ -15,6 +15,7 @@ use Echoyl\Sa\Services\dev\crud\fields\Model;
 use Echoyl\Sa\Services\dev\crud\fields\Password;
 use Echoyl\Sa\Services\dev\crud\fields\Pca;
 use Echoyl\Sa\Services\dev\crud\fields\Price;
+use Echoyl\Sa\Services\dev\crud\fields\Radio;
 use Echoyl\Sa\Services\dev\crud\fields\SearchSelect;
 use Echoyl\Sa\Services\dev\crud\fields\Select;
 use Echoyl\Sa\Services\dev\crud\fields\SelectColumns;
@@ -52,6 +53,7 @@ class CrudService
             'latlng'=>Latlng::class,
             'with'=>With::class,
             'search_select'=>SearchSelect::class,
+            'searchSelect'=>SearchSelect::class,
             'link'=>Link::class,
             'date'=>Date::class,
             'datetime'=>Date::class,
@@ -63,7 +65,7 @@ class CrudService
             'switch'=>Switchstate::class,
             'selects'=>Selects::class,
             'select'=>Select::class,
-            'radioButton'=>Select::class,
+            'radioButton'=>Radio::class,
             'cascader'=>Cascader::class,
             'cascaders'=>Cascader::class,
             'aliyunVideo'=>AliyunVideo::class,

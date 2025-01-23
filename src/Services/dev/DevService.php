@@ -742,7 +742,7 @@ class DevService
                 $default_value = $column['default']??'';
 
                 $int_value_form_types = ['price'];//需要直接转化为int类型
-                $int_value_form_types_need_relation = ['select','search_select','radioButton'];
+                $int_value_form_types_need_relation = ['select','search_select','radioButton','searchSelect'];
 
                 if(in_array($form_type,$int_value_form_types) || (in_array($form_type,$int_value_form_types_need_relation) && isset($all_models[$name])))
                 {
@@ -863,7 +863,7 @@ class DevService
                     }
 
                 }
-                if($form_type == 'search_select' && isset($all_relations[$name]))
+                if(($form_type == 'search_select' || $form_type == 'searchSelect') && isset($all_relations[$name]))
                 {
                     $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
                     if($label)

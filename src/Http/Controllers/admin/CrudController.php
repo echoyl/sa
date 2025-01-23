@@ -8,7 +8,6 @@ use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\crud\relation\Relation;
 use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
-use Echoyl\Sa\Services\WebMenuService;
 use Illuminate\Support\Arr;
 
 /**
@@ -495,7 +494,8 @@ class CrudController extends ApiBaseController
             
             if(!empty($select_columns))
             {
-                $m = $m->select($select_columns);
+                //$m = $m->select($select_columns);
+                //清除前端传来的select列
             }
         }
         $list = $m->offset(($page - 1) * $psize)
@@ -1124,15 +1124,16 @@ class CrudController extends ApiBaseController
         {
             return $this->fail([1,'model error']);
         }
-
-        [$m,] = $this->handleSearch();
+        $search = [];//search数据将用于导出数据时数据的默认渲染
+        $this->parseWiths($search);
         if (method_exists($this, $this->handleSearchName)) 
         {
+            //handleSearchName 不为handleSearch时走自己的流程，如果需要调用handleSearch请在handleSearchName方法中调用
             $method = $this->handleSearchName;
-            [$m,] = $this->$method();
+            [$m,$search] = $this->$method($search);
         }else
         {
-            [$m,] = $this->handleSearch();
+            [$m,$search] = $this->handleSearch($search);
         }
 
 		$ids = request('ids');
@@ -1169,9 +1170,8 @@ class CrudController extends ApiBaseController
             $config = $export_config[0];
         }
         //$ds->modelColumn2Export($model);
-        //d(1);
         
-		$es = new ExcelService($config['config']);
+		$es = new ExcelService($config['config'],$search);
 
         $m = $this->handleSort($m);
 
@@ -1180,7 +1180,6 @@ class CrudController extends ApiBaseController
             {
                 $m = $m->withSum($with_sum[0],$with_sum[1]);
             }
-            
         }
 
         $data = $m->with($this->with_column)->get()->toArray();
@@ -1195,7 +1194,6 @@ class CrudController extends ApiBaseController
                 return $this->exportFormatData($val);
             }:false;
         }
-
 		$ret = $es->export($data,$formatData);
 		return $this->success($ret);
     }
