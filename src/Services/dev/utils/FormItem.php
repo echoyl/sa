@@ -650,7 +650,7 @@ class FormItem
         $value = $setting['value']??'';
         //输入搜索select
 
-        if($this->readonly)
+        if($this->readonly && $this->form_type == 'search_select')
         {
             //unset($d['valueType']);
             //$d['dataIndex'] = [$relation['name'],$label];

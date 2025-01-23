@@ -94,3 +94,7 @@ ALTER TABLE `la_perm_log`
  ADD COLUMN `displayorder`  int(11) NOT NULL DEFAULT 0 COMMENT '排序值',
  ADD COLUMN `desc`  text NULL COMMENT '备注',
  ADD COLUMN `ipaddr`  varchar(255) NOT NULL DEFAULT '' COMMENT '归属地';
+
+ 2025-01-23
+ ALTER TABLE `la_dev_model_relation` 
+ADD COLUMN `setting` text NULL COMMENT '其它设置放在这里，之后不再新增字段' AFTER `order_by`;

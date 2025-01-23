@@ -23,6 +23,14 @@ class Relation
         {
             $type = $column['type'];
             $name = $column['name'];
+
+            $disable_after_post = Arr::get($column,'setting.disable_after_post',false);
+
+            if($disable_after_post)
+            {
+                //禁用了关联后续操作
+                continue;
+            }
             
             switch ($type) {
                 case 'model':
@@ -42,6 +50,8 @@ class Relation
         }
         return;
     }
+
+    
 
     public function hasMany($datas,$column)
     {

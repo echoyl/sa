@@ -23,20 +23,6 @@ class RelationController extends CrudController
         ];
 
         $this->can_be_null_columns = ['with_default'];
-
-        $this->parse_columns = [
-            //['name' => 'parent_id', 'type' => '', 'default' => $this->cid],
-            //['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
-            
-            ['name' => 'search_columns', 'type' => 'selects', 'default' => ''],
-            ['name' => 'with_sum', 'type' => 'selects', 'default' => ''],
-            ['name' => 'select_columns', 'type' => 'selects', 'default' => ''],
-            ['name' => 'in_page_select_columns', 'type' => 'selects', 'default' => ''],
-            ['name' => 'with_default', 'type' => 'json', 'default' => ''],
-            ['name' => 'filter', 'type' => 'json', 'default' => ''],
-            ['name' => 'order_by', 'type' => 'json', 'default' => ''],
-        ];
-
     }
 
     public function handleSearch($search = [])

@@ -9,6 +9,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use DateTime;
+use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
+use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Services\admin\LocaleService;
 
 class HelperService
@@ -885,5 +887,15 @@ class HelperService
             $data = $data->toArray();
         }
         return $data;
+    }
+
+    public static function getAdminService()
+    {
+        return app()->make(SaAdminAppServiceInterface::class);
+    }
+
+    public static function getAppService()
+    {
+        return app()->make(SaServiceInterface::class);
     }
 }

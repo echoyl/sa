@@ -1,7 +1,9 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 
 class ParseData
 {
@@ -9,11 +11,13 @@ class ParseData
     //由于这些参数设置在了控制器，导致无法获取。暂时不用。先只适用于relation处理
     //之后需要将控制器的部分属性转移至模型
     var $params = [];
+    var $adminService;
 
     public function __construct($class,$params = [])
     {
         $this->model_class = $class;
         $this->params = $params;
+        $this->adminService = HelperService::getAdminService();
     }
 
     public function getParam($name,$default = [])
@@ -21,25 +25,34 @@ class ParseData
         return Arr::get($this->params,$name,$default);
     }
 
-    public function make(&$data, $in = 'encode', $from = 'detail',$deep = 1)
+    public function getParseColumns()
     {
-        $unsetNames = [];
-
         $model = new $this->model_class;
-
         $parse_columns = [];
-
-        $can_be_null_columns = $this->getParam('can_be_null_columns');
-
         if(method_exists($model,'getParseColumns'))
         {
             $parse_columns = $model->getParseColumns();
+        }
+        return $parse_columns;
+    }
+
+    public function make(&$data, $in = 'encode', $from = 'detail',$deep = 1)
+    {
+        $parse_columns = $this->getParseColumns();
+
+        $can_be_null_columns = $this->getParam('can_be_null_columns');//这个属性 后面需要设置在model中
+
+        $encode = $in == 'encode'?true:false;
+
+        if(!is_array($data))
+        {
+            $data = $data->toArray();
         }
 
         foreach ($parse_columns as $col) {
             $name = $col['name'];
             $type = $col['type'];
-            $encode = $in == 'encode'?true:false;
+            
 
             $isset = array_key_exists($name,$data) ? true : false;
             if (!$isset && $from == 'update') {
@@ -63,7 +76,7 @@ class ParseData
                     $val = $check_category_field['array_val'];
                 }
             }
-            if($type == 'model')
+            if($type == 'model' || $type == 'models')
             {
                 if($encode)
                 {
@@ -82,7 +95,20 @@ class ParseData
                         //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
                         //20240930 更深一层的 parseWiths 暂时取消掉
                         //$this->parseWiths($val,$cls_p_c);
-                        (new ParseData($cls))->make($val,$in,$from,$deep+1);
+                        $ps = new ParseData($cls);
+                        if($type == 'models')
+                        {
+                            foreach($val as $k=>$v)
+                            {
+                                //1对多不获取withs的内容了
+                                $ps->make($v,$in,$from,$deep+1);
+                                $val[$k] = $v;
+                            }
+                        }else
+                        {
+                            $this->parseWiths($val);
+                            $ps->make($val,$in,$from,$deep+1);
+                        }
                     }
                     $data[$name] = $val;
                 }
@@ -100,11 +126,18 @@ class ParseData
                 ]);
             }
         }
-        if(isset($data['originData']))
+        if($encode)
         {
-            unset($data['originData']);
+            $data = $this->filterNotExistColumns($data,$this->model_class);
+        }else
+        {
+            if(isset($data['originData']))
+            {
+                unset($data['originData']);
+            }
         }
-        return $unsetNames;
+        
+        return;
     }
 
     public function checkCategoryField($name,$default = '')
@@ -136,14 +169,169 @@ class ParseData
                     $array_val = is_numeric($rval)?[$rval]:(is_array($rval)?$rval:json_decode($rval,true));
                 }
             }
-            
         }
-        
         
         return [
             'search_val'=>$orval?:$rval,//处理过后搜索值
             'last_val'=>$lval,//分类的id值 数字类型
             'array_val'=>$array_val
         ];
+    }
+
+    /**
+     * 检测数据表中不存在的字段并删除
+     *
+     * @param [type] $data 数据
+     * @param [type] $class 模型class
+     * @return void
+     */
+    public function filterNotExistColumns($data,$class)
+    {
+        $model = new $class;
+        foreach($data as $key=>$val)
+        {
+            if(!Schema::hasColumn($model->getTable(),$key))
+            {
+                unset($data[$key]);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * 全局筛选数据条件
+     *
+     * @param [type] $m
+     * @param boolean $origin_model
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function globalDataSearch($m,$origin_model = false)
+    {
+        if(!$origin_model)
+        {
+            return $m;
+        }
+        if(property_exists($origin_model,'admin_data_search'))
+        {
+            $m = $this->adminService->dataSearch($m,$origin_model);
+        }
+        return $m;
+    }
+
+    public function parseWiths(&$data)
+    {
+        $parse_columns = $this->getParseColumns();
+
+        $table_menu = [];
+
+        $action_type = $this->getParam('action_type','list');//list add edit
+
+        foreach ($parse_columns as $with) {
+            if(isset($with['with']))
+            {
+                $name = $with['name'] . 's';
+                if(isset($with['class']))
+                {
+                    $_m = new $with['class'];
+                    $_m = $this->globalDataSearch($_m,$_m);
+                    $no_category = Arr::get($with,'no_category',false);//不是分类模型
+                    if($with['type'] == 'select_columns')
+                    {
+                        //这里只获取一层数据因为一般的模型都没有继承category模型 没有format方法
+                        if($with['columns'])
+                        {
+                            $_m = $_m->select($with['columns']);
+                        }
+                        $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
+                    }else
+                    {
+                        if($no_category)
+                        {
+                            if(isset($with['columns']))
+                            {
+                                $_m = $_m->select($with['columns']);
+                            }
+                            if(isset($with['where']))
+                            {
+                                //$this_data = $this->setThis();
+                                $this_data = [];
+                                $with_where = [];
+                                foreach($with['where'] as $ww)
+                                {
+                                    if(in_array($ww[1],['in','between']))
+                                    {
+                                        $_m = HelperService::searchWhereBetweenIn($_m,[$ww[0]],$ww[2],$ww[1] == 'in'?'whereIn':'whereBetween');
+                                    }else
+                                    {
+                                        if(strpos($ww[2],'this.') !== false)
+                                        {
+                                            $data_key = str_replace('this.','',$ww[2]);
+                                            if(isset($this_data[$data_key]))
+                                            {
+                                                $ww[2] = $this_data[$data_key];
+                                            }
+                                        }
+                                        $with_where[] = $ww;
+                                    }
+                                    
+                                }
+                                $_m = $_m->where($with_where);
+                            }
+                            $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
+                        }else
+                        {
+                            if(isset($with['post_all']) && $with['post_all'] && in_array($action_type,['edit','add']))
+                            {
+                                //设置post_all 时 不再读取cid筛选数据
+                                $cid = 0;
+                            }else
+                            {
+                                //检测是否有cid字段的参数传入
+                                $check_category_field = $this->checkCategoryField($with['name'],$with['cid']??0);
+                                $cid = $check_category_field['last_val'];
+                            }
+                            
+                            if(isset($with['fields']))
+                            {
+                                $data[$name] = $_m->formatHasTop($cid,$with['fields']);
+                            }else
+                            {
+                                $data[$name] = $_m->formatHasTop($cid);
+                            }
+                        }
+                    }
+                }elseif(isset($with['data']))
+                {
+                    $data[$name] = $with['data'];
+                }
+            }
+            
+            //检测是否有table_menu设置
+            if(isset($with['table_menu']) && !isset($data['table_menu']))
+            {
+                //已经默认 在select 中 columns 加入了label和value字段 不再处理数据
+                //$table_menu[$with['name']] = $with['data']??$data[$name];
+                //这里处理下数据 之后将移除
+                $table_menu_data = $with['data']??$data[$name];
+                $table_menu[$with['name']] = collect($table_menu_data)->map(function($v){
+                    if(isset($v['id']))
+                    {
+                        $v['value'] = $v['id'];
+                    }
+                    if(isset($v['title']))
+                    {
+                        $v['label'] = $v['title'];
+                    }
+                    return $v;
+                });
+            }
+        }
+
+        if(!empty($table_menu))
+        {
+            $data['table_menu'] = $table_menu;
+        }
+
+        return;
     }
 }

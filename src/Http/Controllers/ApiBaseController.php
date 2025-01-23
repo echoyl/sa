@@ -2,10 +2,9 @@
 
 namespace Echoyl\Sa\Http\Controllers;
 
-use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
-use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Helpers\ApiResponse;
 use Echoyl\Sa\Helpers\VerifyRequestInput;
+use Echoyl\Sa\Services\HelperService;
 
 /**
  * @property \Echoyl\Sa\Services\AdminAppService                $service
@@ -20,10 +19,10 @@ class ApiBaseController extends Controller
     {
         if($this->is_admin)
         {
-            $this->service = app()->make(SaAdminAppServiceInterface::class);
+            $this->service = HelperService::getAdminService();
         }else
         {
-            $this->service = app()->make(SaServiceInterface::class);
+            $this->service = HelperService::getAppService();
         }
     }
 }

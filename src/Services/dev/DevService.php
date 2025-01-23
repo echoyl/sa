@@ -617,7 +617,8 @@ class DevService
                         'name'=>Utils::uncamelize($val['name']),
                         'type'=>'models',
                         'class'=>'@php'.$f_model_name.'::class@endphp',
-                        'foreign_key'=>$val['foreign_key']
+                        'foreign_key'=>$val['foreign_key'],
+                        'setting'=>isset($val['setting']) && $val['setting']?json_decode($val['setting'],true):[]
                     ];
                 }
                 
@@ -653,7 +654,8 @@ class DevService
                             'name'=>Utils::uncamelize($val['name']),
                             'type'=>'model',
                             'class'=>'@php'.$f_model_name.'::class@endphp',
-                            'foreign_key'=>$val['foreign_key']
+                            'foreign_key'=>$val['foreign_key'],
+                            'setting'=>isset($val['setting']) && $val['setting']?json_decode($val['setting'],true):[]
                         ];
     
                     }

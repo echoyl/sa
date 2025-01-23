@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\crud\CrudService;
+use Echoyl\Sa\Services\dev\crud\ParseData;
 use Echoyl\Sa\Services\dev\crud\relation\Relation;
 use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
@@ -70,44 +71,6 @@ class CrudController extends ApiBaseController
     public $parse_columns = [];
     public $withs = [];
 
-    public function checkCategoryField($name,$default = '')
-    {
-        $field = collect($this->category_fields)->first(function($q) use($name){
-            return $q['field_name'] == $name;
-        });
-        $orval = request($name);//原始请求值
-        $rval = $lval = $array_val = $default;
-
-        if($field)
-        {
-            $rval = request($field['request_name'],$default);//预设请求值
-            if($rval)
-            {
-                if(is_array($rval))
-                {
-                    $len = count($rval);
-                    $lval = $rval[$len - 1];
-                }else
-                {
-                    $lval = $rval;
-                }
-                if(!$orval)
-                {
-                    //未传数据 自动读取映射字段
-                    $array_val = is_numeric($rval)?[$rval]:(is_array($rval)?$rval:json_decode($rval,true));
-                }
-            }
-            
-        }
-        
-        
-        return [
-            'search_val'=>$orval?:$rval,//处理过后搜索值
-            'last_val'=>$lval,//分类的id值 数字类型
-            'array_val'=>$array_val
-        ];
-    }
-
     public function defaultSearch($m)
     {
         $origin_model = $this->getModel();
@@ -126,6 +89,8 @@ class CrudController extends ApiBaseController
 
         $parse_columns = $this->getParseColumns();
 
+        $ps = new ParseData($this->getModelClass(),['category_fields'=>$this->category_fields]);
+
         foreach ($parse_columns as $col) {
 
             $cs = new CrudService([
@@ -136,7 +101,8 @@ class CrudController extends ApiBaseController
             $type = $col['type'];
             $search_val = request($name, '');
 
-            $check_search_val = $this->checkCategoryField($name);
+            $check_search_val = $ps->checkCategoryField($name);
+            
             $search_val = $check_search_val['search_val'];
 
             if(isset($col['table_menu']) && $col['table_menu'])
@@ -749,7 +715,7 @@ class CrudController extends ApiBaseController
             {
                 return $fail;
             }
-            $model_class = $this->model_class?$this->model_class:get_class($this->model);
+            $newModel = $this->getModel();
             //d($data);
             if (!empty($id)) {
                 $data['originData'] = $item;
@@ -759,7 +725,7 @@ class CrudController extends ApiBaseController
                 {
                     return $this->fail([1,$check_uniue_result]);
                 }
-                $model_class::where(['id' => $id])->update($data);
+                $newModel->where(['id' => $id])->update($data);
             } else {
                 //插入数据
                 $data['created_at'] = $data['created_at']??now();
@@ -774,7 +740,7 @@ class CrudController extends ApiBaseController
                     $data = $this->model->getSysAdminIdData($data);
                 }
                 
-                $id = (new $model_class)->insertGetId($data);
+                $id = $newModel->insertGetId($data);
             }
             $ret = null;
 
@@ -782,7 +748,7 @@ class CrudController extends ApiBaseController
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
 
             //操作完数据后 读取可操作关联模型的数据处理 base为已经处理过不包含设定不传字段的数据
-            (new Relation($model_class,$new_data))->afterPost($base);
+            (new Relation($this->getModelClass(),$new_data))->afterPost($base);
 
             if (method_exists($this, 'afterPost')) {
                 $ret = $this->afterPost($id,$new_data); //数据更新或插入后的 补充操作
@@ -874,133 +840,11 @@ class CrudController extends ApiBaseController
         return ['code' => 0, 'msg' => '复制成功'];
     }
 
-    public function parseWiths(&$data,$parse_columns = [])
+    public function parseWiths(&$data)
     {
-        $ret = [];
-        foreach ($this->withs as $with) {
-            $name = $with['name'] . 's';
-            if(isset($with['class']))
-            {
-                $check_category_field = $this->checkCategoryField($with['name'],$with['cid']??0);
-                $data[$name] = (new $with['class'])->formatHasTop($check_category_field['last_val']);
-            }elseif(isset($with['data']))
-            {
-                $data[$name] = $with['data'];
-            }
-            $ret[] = $with['name'];
-        }
-
-        $parse_columns = $this->getParseColumns($parse_columns);
-
-        $table_menu = [];
-
-        foreach ($parse_columns as $with) {
-            if(isset($with['with']))
-            {
-                $name = $with['name'] . 's';
-                if(isset($with['class']))
-                {
-                    $_m = new $with['class'];
-                    $_m = $this->globalDataSearch($_m,$_m);
-                    $no_category = Arr::get($with,'no_category',false);//不是分类模型
-                    if($with['type'] == 'select_columns')
-                    {
-                        //这里只获取一层数据因为一般的模型都没有继承category模型 没有format方法
-                        if($with['columns'])
-                        {
-                            $_m = $_m->select($with['columns']);
-                        }
-                        $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
-                    }else
-                    {
-                        if($no_category)
-                        {
-                            if(isset($with['columns']))
-                            {
-                                $_m = $_m->select($with['columns']);
-                            }
-                            if(isset($with['where']))
-                            {
-                                $this_data = $this->setThis();
-                                $with_where = [];
-                                foreach($with['where'] as $ww)
-                                {
-                                    if(in_array($ww[1],['in','between']))
-                                    {
-                                        $_m = HelperService::searchWhereBetweenIn($_m,[$ww[0]],$ww[2],$ww[1] == 'in'?'whereIn':'whereBetween');
-                                    }else
-                                    {
-                                        if(strpos($ww[2],'this.') !== false)
-                                        {
-                                            $data_key = str_replace('this.','',$ww[2]);
-                                            if(isset($this_data[$data_key]))
-                                            {
-                                                $ww[2] = $this_data[$data_key];
-                                            }
-                                        }
-                                        $with_where[] = $ww;
-                                    }
-                                    
-                                }
-                                $_m = $_m->where($with_where);
-                            }
-                            $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
-                        }else
-                        {
-                            if(isset($with['post_all']) && $with['post_all'] && in_array($this->action_type,['edit','add']))
-                            {
-                                //设置post_all 时 不再读取cid筛选数据
-                                $cid = 0;
-                            }else
-                            {
-                                //检测是否有cid字段的参数传入
-                                $check_category_field = $this->checkCategoryField($with['name'],$with['cid']??0);
-                                $cid = $check_category_field['last_val'];
-                            }
-                            
-                            if(isset($with['fields']))
-                            {
-                                $data[$name] = $_m->formatHasTop($cid,$with['fields']);
-                            }else
-                            {
-                                $data[$name] = $_m->formatHasTop($cid);
-                            }
-                        }
-                    }
-                }elseif(isset($with['data']))
-                {
-                    $data[$name] = $with['data'];
-                }
-            }
-            
-            $ret[] = $with['name'];
-            //检测是否有table_menu设置
-            if(isset($with['table_menu']) && !isset($data['table_menu']))
-            {
-                //已经默认 在select 中 columns 加入了label和value字段 不再处理数据
-                //$table_menu[$with['name']] = $with['data']??$data[$name];
-                //这里处理下数据 之后将移除
-                $table_menu_data = $with['data']??$data[$name];
-                $table_menu[$with['name']] = collect($table_menu_data)->map(function($v){
-                    if(isset($v['id']))
-                    {
-                        $v['value'] = $v['id'];
-                    }
-                    if(isset($v['title']))
-                    {
-                        $v['label'] = $v['title'];
-                    }
-                    return $v;
-                });
-            }
-        }
-
-        if(!empty($table_menu))
-        {
-            $data['table_menu'] = $table_menu;
-        }
-
-        return $ret;
+        $ps = new ParseData($this->getModelClass(),['action_type'=>$this->action_type]);
+        $ps->parseWiths($data);
+        return;
     }
 
     public function getParseColumns($parse_columns = [])
@@ -1021,95 +865,12 @@ class CrudController extends ApiBaseController
 
     public function parseData(&$data, $in = 'encode', $from = 'detail',$parse_columns = [],$deep = 1)
     {
-        $unsetNames = [];
-
-        $parse_columns = $this->getParseColumns($parse_columns);
-
-        if(!is_array($data))
-        {
-            $data = $data->toArray();
-        }
-
-        foreach ($parse_columns as $col) {
-            $name = $col['name'];
-            $type = $col['type'];
-            $encode = $in == 'encode'?true:false;
-
-            $isset = array_key_exists($name,$data) ? true : false;
-            if (!$isset && $from == 'update') {
-                //更新数据时 不写入默认值
-                //d($this->parse_columns,$this->can_be_null_columns);
-                if(!in_array($name,$this->can_be_null_columns))
-                {
-                    continue;
-                }
-            }
-            $col['default'] = $col['default']??"";
-
-            $val = $isset ? $data[$name] : $col['default'];
-            if(!$isset)
-            {
-                $check_category_field = $this->checkCategoryField($name,$col['default']);
-                //$val = $check_category_field['array_val'];
-                if($check_category_field['array_val'])
-                {
-                    $data[$name] = $check_category_field['array_val'];
-                    $val = $check_category_field['array_val'];
-                }
-            }
-            if($type == 'model' || $type == 'models')
-            {
-                if($encode)
-                {
-                    //提交数据时 不需要处理 将数据删除
-                    $val = '__unset';
-                    if($isset)
-                    {
-                        unset($data[$name]);
-                    }
-                }else
-                {
-                    $cls = new $col['class'];
-                    $cls_p_c = $cls->getParseColumns();
-                    if(!empty($cls_p_c) && $deep <= 3 && $isset && $val)
-                    {
-                        //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
-                        //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
-                        if($type == 'models')
-                        {
-                            foreach($val as $k=>$v)
-                            {
-                                //1对多不获取withs的内容了
-                                $this->parseData($v,$in,$from,$cls_p_c,$deep+1);
-                                $val[$k] = $v;
-                            }
-                        }else
-                        {
-                            $this->parseWiths($val,$cls_p_c);
-                            $this->parseData($val,$in,$from,$cls_p_c,$deep+1);
-                        }
-                    }
-                    $data[$name] = $val;
-                }
-            }else
-            {
-                $config = [
-                    'data'=>$data,'col'=>$col,
-                ];
-                $cs = new CrudService($config);
-                $data = $cs->make($type,[
-                    'encode'=>$encode,
-                    'isset'=>$isset,
-                    'from'=>$from,
-                    'deep'=>$deep
-                ]);
-            }
-        }
-        if(isset($data['originData']))
-        {
-            unset($data['originData']);
-        }
-        return $unsetNames;
+        $ps = new ParseData($this->getModelClass(),[
+            'action_type'=>$this->action_type,
+            'can_be_null_columns'=>$this->can_be_null_columns
+        ]);
+        $ps->make($data,$in,$from,$deep);
+        return;
     }
 
     public function setThis()
@@ -1210,6 +971,23 @@ class CrudController extends ApiBaseController
         }else
         {
             return $this->model;
+        }
+    }
+
+    /**
+     * 获取模型类 兼容之前未设置model_class的方法
+     *
+     * @return Model
+     */
+    public function getModelClass()
+    {
+        if($this->model_class)
+        {
+            return $this->model_class;
+        }else
+        {
+            $class = get_class($this->model);
+            return $class;
         }
     }
     /**

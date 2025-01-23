@@ -537,7 +537,7 @@ class TableColumn
         //搜索选项类型在table中不需要了
         //如果是search的话开启，只是显示的话关闭
         $search = Arr::get($this->config,'can_search');
-        if(!$search)
+        if(!$search && $this->form_type == 'search_select')
         {
             //unset($this->data['valueType']);
         }else{

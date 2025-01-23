@@ -2,7 +2,6 @@
 namespace Echoyl\Sa\Http\Controllers\admin\dev;
 
 use Echoyl\Sa\Models\dev\Menu;
-use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Services\AdminService;
@@ -34,29 +33,6 @@ class MenuController extends CrudController
         {
             $this->default_post['parent_id'] = intval($post_parent_id);
         }
-        $ds = new DevService;
-        $this->parse_columns = [
-            ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
-            ['name' => 'admin_model', 'type' => 'model', 'default' => '','class'=>Model::class],
-            ['name' => 'admin_model_id', 'type' => 'select', 'default' => 0,'with'=>true,'data'=>$ds->getModelsTree()],
-            ["name" => "type", "type" => "select", "default" => DevService::appname(), "data" => Utils::packageTypes(), "with" => true],
-            ["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
-                ["label" => "启用","value" => 1],
-                ["label" => "禁用","value" => 0],
-            ],"table_menu" => true],
-            ['name'=>'desc','type'=>'json','default'=>''],
-            ['name'=>'perms','type'=>'json','default'=>''],
-            ['name'=>'icon','type'=>'select','default'=>''],
-            ['name'=>'status','type'=>'switch','default'=>1,"with" => true,"data" => [
-                ["label" => "显示","value" => 1],
-                ["label" => "隐藏","value" => 0],
-            ]],
-            ['name'=>'form_config','type'=>'json','default'=>''],
-            ['name'=>'other_config','type'=>'json','default'=>''],
-            ['name'=>'table_config','type'=>'json','default'=>''],
-            ['name'=>'setting','type'=>'json','default'=>''],
-            ['name'=>'parent_id','type'=>'select','default'=>0],       
-        ];
 
         $this->can_be_null_columns = ['title','admin_model_id','icon','category_id','other_config'];
 
