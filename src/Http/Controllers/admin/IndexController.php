@@ -63,7 +63,9 @@ class IndexController extends ApiBaseController
 
             }
             AdminService::updateUserInfo($uinfo['id'],$update);
-            return $this->success(['pwd' => $pwd,'logout'=>$pwd],[0,'修改成功' . $msg]);
+            //修改信息后需要返回当前用户信息，form表单需要重置
+            HelperService::deImages($update,['avatar']);
+            return $this->success(array_merge(['pwd' => $pwd,'logout'=>$pwd],$update),[0,'修改成功' . $msg]);
 
         }
         $uinfo = AdminService::user();

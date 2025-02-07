@@ -29,13 +29,12 @@ class Config extends BaseField
     public function encode($options = [])
     {
         $val = $options['val'];
-        if($val)
+        if($val && $val != '{}')
         {
             $origin_val = $options['origin_val'];
             //$dev_menu = request('dev_menu');
     
             $dev_menu = $this->getItemConfig();
-            
             $val = Utils::parseImageInPage($val,$dev_menu,$origin_val);
 
             $val = json_encode($val);
