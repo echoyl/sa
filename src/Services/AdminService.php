@@ -393,10 +393,10 @@ class AdminService
                 $a = 'add';
             }
         }elseif($a == 'show') {
-            //检测是 编辑还是 新增
-            if (!$id) {
-                $a = 'add';
-            }
+            //检测是 编辑还是 新增 0.4版本就加了这个，现在去掉，现在点击新建按钮也能展开表单，不提示无权限
+            // if (!$id) {
+            //     $a = 'add';
+            // }
         }
         $now_routers[] = $a;
 
