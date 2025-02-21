@@ -218,6 +218,24 @@ class WechatService
         }
     }
 
+    public static function getOffiaccountTemplate($wechat_offiaccount_id)
+    {
+        try {
+            $app = self::getOffiaccountApp($wechat_offiaccount_id);
+        } catch (Exception $e) {
+            return ['code' => 1, 'msg' => $e->getMessage()];
+        }
+
+        $api = $app->getClient();
+        try {
+            //Log::channel('daily')->info('menus:',['data'=>['button'=>$content]]);
+            $res = $api->get('/cgi-bin/template/get_all_private_template');
+        } catch (Exception $e) {
+            return ['code' => 1, 'msg' => $e->getMessage()];
+        }
+        return ['code'=>0,'data'=>$res->toArray()];
+    }
+
     public static function getOffiaccount($account_id)
     {
         if ($account_id) {
@@ -548,7 +566,8 @@ class WechatService
         $ret = $response->toArray();
 
         Log::channel('daily')->info('wechat template_message:', $ret);
-        return;
+        
+        return $ret;
     }
     /**
      * 发送多条模板消息
@@ -559,10 +578,11 @@ class WechatService
      */
     public static function sendMessages($data, $app)
     {
+        $ret = [];
         foreach ($data as $val) {
-            self::sendMessage($val, $app);
+            $ret[] = self::sendMessage($val, $app);
         }
-        return;
+        return $ret;
     }
 
     public static function payRefund($pay_log_id, $tran_amt = 0, $app)

@@ -5,6 +5,7 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\DevService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema as FacadesSchema;
 
@@ -427,5 +428,67 @@ class Schema
     public function allModel($flush = false)
     {
         return (new DevService)->allModel($flush);
+    }
+
+    /**
+     * Get all columns of a given table with caching.
+     *
+     * @param string $table
+     * @return array
+     */
+    public static function getTableColumns($table)
+    {
+        $table = DB::getTablePrefix().$table;
+        $cacheKey = "table_columns_{$table}";
+
+        // 尝试从缓存中获取结果
+        return Cache::remember($cacheKey, 3600, function () use ($table) {
+            $database = DB::connection()->getDatabaseName();
+            $query = "SELECT COLUMN_NAME 
+                      FROM INFORMATION_SCHEMA.COLUMNS 
+                      WHERE TABLE_SCHEMA = ? 
+                      AND TABLE_NAME = ?";
+            $result = DB::select($query, [$database, $table]);
+
+            return array_map(function ($column) {
+                return $column->COLUMN_NAME;
+            }, $result);
+        });
+    }
+
+    /**
+     * Check if a column exists in a given table.
+     * 因为服务器mysql 版本低于5.7 导致不能使用INFORMATION_SCHEMA.COLUMNS 中的GENERATION_EXPRESSION字段 重写一个方法
+     * @param string $table
+     * @param string $column
+     * @return bool
+     */
+    public static function hasColumn($table, $column)
+    {
+        if(env('DB_CONNECTION') == 'mysql' && self::getMysqlVersion() < '5.7')
+        {
+            //只有当mysql版本低于5.7时才会使用这个方法
+            $columns = self::getTableColumns($table);
+            return in_array($column, $columns);
+        }else
+        {
+            return FacadesSchema::hasColumn($table, $column);
+        }
+    }
+
+    /**
+     * 获取当前 MySQL 版本
+     *
+     * @return string
+     */
+    public static function getMysqlVersion()
+    {
+        static $version;
+        if(!$version)
+        {
+            $result = DB::select('SELECT VERSION() AS version');
+            $version = $result[0]->version;
+        }
+        return $version;
     }
 }

@@ -10,6 +10,15 @@ class UserController extends CrudController
 	var $search_config = [
 		["name" => "appid","columns" => ["appid"],"where_type" => "="],
 		["name" => "created_at","columns" => ["last_used_at"],"where_type" => "whereBetween"],
+		[
+			'name' => 'keyword',
+			'columns' => [
+				'nickname',
+				'openid',
+				'mobile',
+			],
+			'where_type' => 'like',
+		],
 	];
 
     public function __construct()

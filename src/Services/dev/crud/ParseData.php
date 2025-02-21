@@ -1,9 +1,9 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Schema;
 
 class ParseData
 {
@@ -233,6 +233,8 @@ class ParseData
                 if(isset($with['class']))
                 {
                     $_m = new $with['class'];
+                    $table_name = (new $with['class'])->getTable();
+                    $has_displayorder_columns = Schema::hasColumn($table_name,'displayorder');
                     $_m = $this->globalDataSearch($_m,$_m);
                     $no_category = Arr::get($with,'no_category',false);//不是分类模型
                     if($with['type'] == 'select_columns')
@@ -242,7 +244,11 @@ class ParseData
                         {
                             $_m = $_m->select($with['columns']);
                         }
-                        $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
+                        if($has_displayorder_columns)
+                        {
+                            $data[$name] = $_m->orderBy('displayorder','desc');
+                        }
+                        $data[$name] = $_m->get()->toArray();
                     }else
                     {
                         if($no_category)
@@ -277,7 +283,11 @@ class ParseData
                                 }
                                 $_m = $_m->where($with_where);
                             }
-                            $data[$name] = $_m->orderBy('displayorder','desc')->get()->toArray();
+                            if($has_displayorder_columns)
+                            {
+                                $data[$name] = $_m->orderBy('displayorder','desc');
+                            }
+                            $data[$name] = $_m->get()->toArray();
                         }else
                         {
                             if(isset($with['post_all']) && $with['post_all'] && in_array($action_type,['edit','add']))

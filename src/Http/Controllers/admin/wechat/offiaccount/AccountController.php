@@ -18,7 +18,7 @@ class AccountController extends CrudController
 		$this->can_be_null_columns = ["subscribe_reply","auto_reply"];
 		$this->model = new Account();
 		//customer construct start
-		
+		$this->displayorder = [['id','desc']];
 		//customer construct end
 	}
 	//customer code start

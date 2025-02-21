@@ -64,6 +64,19 @@ trait ApiResponse
         return $this->jsonResponse('fail', $codeResponse, $data, $error);
     }
 
+    public function notification($notification,$data = null)
+    {
+        [$code,] = ResponseEnum::HTTP_OK;
+        return response()->json([
+            'status'  => 'success',
+            'code'    => $code,
+            'notification' => is_array($notification)?json_encode($notification):$notification,
+            'data'    => $data ?? null,
+            'error'  => null,
+            'success'=>true
+        ]);
+    }
+
     /**
      * json响应
      * @param $status
