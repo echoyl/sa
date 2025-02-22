@@ -337,13 +337,16 @@ class Utils
         $encode = $type == 'encode'?true:false;
         $img_fields = Utils::getImageFieldFromMenu($dev_menu);
         $img_fields = array_merge($img_fields,$deep_img_fields);
+        if($originData && is_string($originData))
+        {
+            $originData = json_decode($originData,true);
+        }
         foreach($img_fields as $field)
         {
             [$imgf,$vtype,$deep_menu] = [$field[0],$field[1],$field[2]??[]];
             if($vtype == 'deep')
             {
                 //如果是formlist 类型需要深层次去检索
-                //d($deep_menu);
                 $deep_data = self::parseImageInPage(Arr::get($post_data,$imgf),$deep_menu,Arr::get($originData,$imgf),$type,[],true);
                 Arr::set($post_data,$imgf, $deep_data);
             }else
@@ -352,6 +355,7 @@ class Utils
                 {
                     if($post_data)
                     {
+                        $post_data = is_string($post_data)?json_decode($post_data,true):$post_data;
                         foreach($post_data as $key=>$pd)
                         {
                             $post_data[$key] = self::parseImgFields($imgf,$pd,$field,Arr::get($originData,$key),$encode,$vtype);

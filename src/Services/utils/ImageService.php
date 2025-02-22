@@ -14,15 +14,18 @@ use Intervention\Image\ImageManager;
 class ImageService
 {
     var $manager;
+    var $is_old = false;
 
-    public function __construct($manager)
+    public function __construct($manager,$is_old = false)
     {
         $this->manager = $manager;
+        $this->is_old = $is_old;
     }
 
     public static function isOld()
     {
-        return version_compare(App::version(),'11') < 0;
+        return class_exists('\Intervention\Image\Facades\Image');
+        //return version_compare(App::version(),'11') < 0;
     }
 
     public static function read($path):self
@@ -30,17 +33,19 @@ class ImageService
         if(self::isOld())
         {
             $manager = Image::make($path);
+            $is_old = true;
         }else
         {
             $manager = new ImageManager(new Driver());
             $manager = $manager->read($path);
+            $is_old = false;
         }
-        return new self($manager); 
+        return new self($manager,$is_old); 
     }
 
     public function height()
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             return $this->manager->getHeight();
         }else
@@ -52,7 +57,7 @@ class ImageService
 
     public function width()
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             return $this->manager->getWidth();
         }else
@@ -63,7 +68,7 @@ class ImageService
 
     public function scale($width,$height)
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             $this->manager->resize($width, $height, function ($constraint) {$constraint->aspectRatio();});
         }else
@@ -81,7 +86,7 @@ class ImageService
 
     public function place(ImageService $place,$position,$offset_x, $offset_y,$opacity = 100)
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             $this->manager->insert($place->manager, $position,$offset_x, $offset_y);
         }else
@@ -93,7 +98,7 @@ class ImageService
     
     public function align($position, $offset_x, $offset_y)
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             $size = $this->manager->getSize()->align($position, $offset_x, $offset_y);
             return [$size->pivot->x,$size->pivot->y];
@@ -106,7 +111,7 @@ class ImageService
 
     public function text($text,$x,$y,$c)
     {
-        if(self::isOld())
+        if($this->is_old)
         {
             $this->manager->text($text,$x,$y,$c);
         }else

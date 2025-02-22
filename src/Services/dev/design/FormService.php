@@ -468,7 +468,8 @@ class FormService extends BaseService
                     {
                         foreach($group['columns'] as $ck => $column)
                         {
-                            if($column[$key_name] == $uid)
+                            $_uid = Arr::get($column,$key_name);
+                            if($_uid == $uid)
                             {
                                 $index = [$tk,'config',$gk,'columns',$ck];
                                 $index_data = $column;

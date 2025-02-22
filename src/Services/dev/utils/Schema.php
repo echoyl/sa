@@ -351,7 +351,7 @@ class Schema
             //$this->line('创建数据表:'.$table_name.'成功');
         }else
         {
-            $table_name = 'la_'.$table_name;
+            $table_name = DB::getTablePrefix().$table_name;
             $dist_f = DB::getPdo()->query('desc '.$table_name);
             
             $dist_field = [];
@@ -421,6 +421,9 @@ class Schema
             ]);
             DB::statement($sqls);
             //$this->line('数据表:'.$table_name.'已存在');
+            //清除表结构缓存
+            $cacheKey = "table_columns_{$table_name}";
+            Cache::forget($cacheKey);
         }
         return;
     }
