@@ -45,16 +45,17 @@ trait Category
                 }
             }
         }
+		$m = $this->getModel();
 		if(empty($displayorder))
 		{
 			$displayorder[] = ['displayorder','desc'];
 		}
 		if(!empty($this->select_columns))
 		{
-			$this->model = $this->model->select($this->select_columns);
+			$m = $m->select($this->select_columns);
 		}
 
-		$m = $this->defaultSearch($this->model);
+		$m = $this->defaultSearch($m);
 
 		$data = HelperService::getChildFromData($m->get()->toArray(),function($item){
             $this->parseData($item,'decode','list');
