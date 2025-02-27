@@ -430,7 +430,7 @@ class HelperService
 
                         if($media)
                         {
-                            $data[$key]['url'] = $query?implode('?',[$media,$query]):$media;
+                            $data[$key]['url'] = $query?implode(strpos($media,'?') !== false?'&':'?',[$media,$query]):$media;
                         }
                     }
                     return $data;
