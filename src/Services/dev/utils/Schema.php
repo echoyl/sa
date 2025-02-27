@@ -175,7 +175,13 @@ class Schema
             case 'vachar':
             case 'varchar':
                 $length = $length?:255;
-                $field_sql = "`{$name}`  varchar({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
+                if($default_value == 'null')
+                {
+                    $field_sql = "`{$name}`  varchar({$length}) DEFAULT NULL COMMENT '{$comment}'";
+                }else
+                {
+                    $field_sql = "`{$name}`  varchar({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
+                }
             break;
             case 'date':
                 $field_sql = "`{$name}`  date DEFAULT NULL COMMENT '{$comment}'";
@@ -374,6 +380,10 @@ class Schema
             {
                 $field_name = $column['name'];
                 $sql = $this->schemaColumnSql($column);
+                if(!$sql)
+                {
+                    continue;
+                }
                 if(isset($dist_field[$field_name]))
                 {
                     //已存在在属性对比是否需要更新

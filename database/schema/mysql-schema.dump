@@ -338,8 +338,10 @@ CREATE TABLE `la_web_menu` (
   `titlepic` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '封面图片',
   `category_show_bottom` int NOT NULL DEFAULT '0' COMMENT '子分类底部显示',
   `category_show_top` int NOT NULL DEFAULT '0' COMMENT '子分类头部显示',
+  `category_default_first` int NOT NULL DEFAULT '1' COMMENT '默认首个分类',
+  `title_zh-TW` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '名称-繁體中文',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=MyISAM AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
+) ENGINE=MyISAM AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of la_web_menu

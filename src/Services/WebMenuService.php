@@ -351,6 +351,15 @@ class WebMenuService
         return $data[$key];
     }
 
+    public static function checkCategoryDefaultFirst($cate)
+    {
+        if(isset($cate['category_default_first']) && !$cate['category_default_first'])
+        {
+            return false;
+        }
+        return true;
+    }
+
     public static function selected($list, $mid, $top_selected = false)
     {
         $selected = false;
@@ -372,7 +381,7 @@ class WebMenuService
                 //只有父级菜选中后 分类菜单才会选中
                 if($top_selected)
                 {
-                    if ($cid == $val['cid'] || ($key == 0 && $cid == -1)) {
+                    if ($cid == $val['cid'] || ($key == 0 && $cid == -1 && self::checkCategoryDefaultFirst($val))) {
                         $val['selected'] = 1;
                         $selected = true;
                     }
@@ -624,6 +633,7 @@ class WebMenuService
             'top' => $menu['category_show_top'],
             'bottom' => $menu['category_show_bottom'],
             'blank' => 0,
+            'category_default_first' => $menu['category_default_first'],
         ]);
     }
 
@@ -645,8 +655,7 @@ class WebMenuService
             }
 
             $new_cate = self::categoryToMenuData($cate, $topMenu);
-
-            if ($cid == $cate['id'] || ($cid === 0 && $key == 0)) {
+            if ($cid == $cate['id'] || ($cid === 0 && $key == 0  && self::checkCategoryDefaultFirst($cate))) {
                 $new_cate['selected'] = 1;
                 $has = $new_cate;
             }
@@ -674,10 +683,15 @@ class WebMenuService
         $seo = $ss->getWeb();
         //计算seo 的 title description keyword之类的
         $menu = $this->getMenu();
+        //预设值防止未设置值报错
+        $seo['seotitle'] = $seo['seotitle'] ?? $seo['name'];
+        $seo['seokeywords'] = $seo['seokeywords'] ?? $seo['name'];
+        $seo['seodescription'] = $seo['seodescription'] ?? $seo['name'];
+        
         //d(caInfo('controller'));
         if (!empty($menu) && $seo) {
             $seo['seotitle'] = $menu['title'] . ',' . $seo['seotitle'];
-            $seo['seokeywords'] = $menu['title'] . ',' . $seo['seokeywords'];
+            $seo['seokeywords'] = $menu['title'] . ',' . $seo['seokeywords']??'';
 
             if ($detail) {
                 //如果有数据 则查看这个是属于哪个类目的

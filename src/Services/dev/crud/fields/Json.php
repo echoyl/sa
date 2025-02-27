@@ -24,8 +24,13 @@ class Json extends BaseField
         }
 
         $origin_val = $options['origin_val'];
-
+        
         $val = $this->diffVal($val,$origin_val,true);
+
+        if($val && !is_string($val))
+        {
+            $val = json_encode($val);
+        }
 
         return $this->getData($val);
     }
@@ -55,7 +60,7 @@ class Json extends BaseField
     /**
      * 检测字段配置 将其中的图片字段数据进行处理
      *
-     * @return void
+     * @return string | array
      */
     public function diffVal($post_data,$origin_val,$encode)
     {
@@ -72,7 +77,7 @@ class Json extends BaseField
         
         if(!$desc)
         {
-            return [];
+            return $post_data;
         }
 
         $desc = json_decode($desc,true);

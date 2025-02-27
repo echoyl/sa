@@ -57,6 +57,11 @@ class Menu extends SaCategory
 			        'type' => 'switch',
 			        'default' => 0,
 			    ],
+				[
+			        'name' => 'category_default_first',
+			        'type' => 'switch',
+			        'default' => 1,
+			    ],
 			    [
 			        'name' => 'category_id',
 			        'type' => 'cascader',

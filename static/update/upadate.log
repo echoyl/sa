@@ -133,3 +133,6 @@ CREATE TABLE `la_wechat_offiaccount_templatemessage` (
   `app_path` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '小程序路径',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+2025-02-27
+ALTER TABLE `la_web_menu`
+ ADD COLUMN `category_default_first`  int(11) NOT NULL DEFAULT 1 COMMENT '默认首个分类';
