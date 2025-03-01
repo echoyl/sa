@@ -302,7 +302,7 @@ class WebMenuService
      * 获取所有菜单信息
      * 这次只负责简单的菜单 不再读取分类中的类表之类的了
      * @param [type] $has_index 是否包含首页
-     * @return void
+     * @return array
      */
     public function getAll($index_name = '')
     {
@@ -313,7 +313,11 @@ class WebMenuService
             return $data[$key];
         }
         $menu = $this->getMenu(true);
-        $selected = $menu ? $menu['id'] : 0;
+
+        $uri = str_replace(env('APP_PREFIX', ''), '', request()->route()->uri);
+        $selected = $menu ? $menu['id'] : ($uri == '/'?0:-999);
+        
+
         $list = self::format(0, self::all());
 
         if ($index_name) {
