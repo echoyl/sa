@@ -38,7 +38,7 @@ class Pca extends BaseField
         $data = $this->config['data'];
         $need_set = true;
 
-        if($isset)
+        if($isset && $val != '__unset')
         {
             $keys = $this->keys;
             foreach($keys as $k=>$v)
@@ -60,7 +60,10 @@ class Pca extends BaseField
         }
         if($val === '__unset')
         {
-            unset($data[$name]);
+            if(isset($data[$name]))
+            {
+                unset($data[$name]);
+            }
         }else
         {
             if($need_set)
