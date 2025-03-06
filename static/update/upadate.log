@@ -135,4 +135,6 @@ CREATE TABLE `la_wechat_offiaccount_templatemessage` (
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 2025-02-27
 ALTER TABLE `la_web_menu`
- ADD COLUMN `category_default_first`  int(11) NOT NULL DEFAULT 1 COMMENT '默认首个分类';
+ ADD COLUMN `category_default_first`  int(11) NOT NULL DEFAULT 1 COMMENT '默认首个分类',
+ ADD COLUMN `category_show_bottom`  int(11) NOT NULL DEFAULT 0 COMMENT '默认首个分类',
+ ADD COLUMN `category_show_top`  int(11) NOT NULL DEFAULT 0 COMMENT '默认首个分类';

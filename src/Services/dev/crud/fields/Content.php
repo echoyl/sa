@@ -55,21 +55,30 @@ class Content extends BaseField
      */
     public function getMatch($content)
     {
+        $patterns = [];
         if($this->type == 'mdEditor')
         {
-            $pattern = '/\((.*)\)/i';
+            $patterns[] = '/\((.*)\)/i';
         }else
         {
-            $pattern = '/<img[^>]*src=[\'"]([^\'"]+)[\'"]/i';
+            $patterns[] = '/<img[^>]*src=[\'"]([^\'"]+)[\'"]/i';
+            //增加检测a标签的href 富文本编辑器现在支持传入文件
+            $patterns[] = '/<a[^>]*href=[\'"]([^\'"]+)[\'"]/i';
         }
 
-        preg_match_all($pattern, $content, $matches);
+        $_matches = [];
+
+        foreach($patterns as $pattern)
+        {
+            preg_match_all($pattern, $content, $matches);
+            $_matches = array_merge($_matches,$matches[1]);
+        }
 
         $mt = [];
 
         $prefix = rtrim(env('APP_URL'),'/').'/storage/';
 
-        foreach($matches[1] as $src)
+        foreach($_matches as $src)
         {
             if(strpos($src,$prefix) !== false)
             {

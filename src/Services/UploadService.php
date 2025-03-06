@@ -89,6 +89,7 @@ class UploadService
 
         $ext = strtolower($file->getClientOriginalExtension());
 
+        
 
         if (in_array($ext, ['zip', 'bin'])) {
             $ext = $this->getUnknowName($file);
@@ -104,7 +105,20 @@ class UploadService
 
         $folder_name = $file_type . '/' . date("Ym");
 
-        $path = $file->store($upload_tmp_enable && $this->tmp_enable?'tmp/'.$folder_name:$folder_name);
+        if($upload_tmp_enable && $this->tmp_enable)
+        {
+            $folder_name = 'tmp/'.$folder_name;
+        }
+
+        if (in_array($ext, ['chm','apk','wgt','docx'])) {
+            //这里未知的文件后缀都会转成zip格式
+            $unique_filename = uniqid() . '.' . $ext;
+            $path = $file->storeAs($folder_name,$unique_filename);
+        }else
+        {
+            $path = $file->store($folder_name);
+        }
+
         //附件图片不再压缩
         if (!$type && $is_image) {
             $new_path = storage_path('app/public/' . $path);
@@ -153,19 +167,6 @@ class UploadService
         } else {
             $thumb_url = '';
             $height = $width = 200;
-			if (in_array($ext, ['chm','apk','wgt'])) {
-                //这里未知的文件后缀都会转成zip格式
-				$new_path = storage_path('app/public/' . $path);
-
-				$path_parts = pathinfo($new_path);
-
-				[$_filename,$oext] = explode('.',$path_parts['basename']);
-
-				$thumb_url = $folder_name . '/' . implode('.',[$_filename,$ext]);
-				$path = $thumb_url;
-
-				rename($new_path,storage_path('app/public/' . $thumb_url));
-			}
         }
         $attachment_id = 0;
         if ($insert_db) {
