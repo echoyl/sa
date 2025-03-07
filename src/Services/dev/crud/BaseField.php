@@ -137,7 +137,7 @@ class BaseField implements CrudInterface
         $class = Arr::get($this->col,'class');
         if($class)
         {
-            $val = collect($val)->map(fn ($v)=>intval($v))->toArray();
+            $val = collect($val)->map(fn ($v)=> is_numeric($v)? intval($v):$v)->toArray();
         }
         return $val;
     }
