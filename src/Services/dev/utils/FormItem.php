@@ -256,7 +256,7 @@ class FormItem
 
         if($fieldProps && !is_string($fieldProps))
         {
-            $this->data['fieldProps'] = array_merge($this->data['fieldProps'],$fieldProps);//设置内容应该可以覆盖生成内容
+            $this->data['fieldProps'] = array_merge_recursive($this->data['fieldProps'],$fieldProps);//设置内容应该可以覆盖生成内容
         }
 
         if($if)
