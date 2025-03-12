@@ -231,8 +231,6 @@ class Vtiful
 
         $this->data_length = count($data);
 
-        $data_row_number = $this->has_top ? 2 : 1;
-
         $data_style = Arr::get($this->config,'data');
 
         $row_height = Arr::get($data_style,'height');
@@ -245,6 +243,8 @@ class Vtiful
         }
 
         $this->top()->head();
+
+        $data_row_number = $this->has_top ? 2 : 1;
 
         if($row_height)
         {
