@@ -38,6 +38,10 @@ class ParseData
 
     public function make(&$data, $in = 'encode', $from = 'detail',$deep = 1)
     {
+        //$max_deep = $from == 'list'?1:3;
+
+        $max_deep = 3;
+
         $parse_columns = $this->getParseColumns();
 
         $can_be_null_columns = $this->getParam('can_be_null_columns');//这个属性 后面需要设置在model中
@@ -89,8 +93,9 @@ class ParseData
                 }else
                 {
                     $cls = new $col['class'];
-                    if($deep <= 3 && $isset && $val)
+                    if($deep <= $max_deep && $isset && $val)
                     {
+                        //d($name,$val,$max_deep);
                         //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                         //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
                         //20240930 更深一层的 parseWiths 暂时取消掉
@@ -106,7 +111,7 @@ class ParseData
                             }
                         }else
                         {
-                            $this->parseWiths($val);
+                            $ps->parseWiths($val);
                             $ps->make($val,$in,$from,$deep+1);
                         }
                     }
