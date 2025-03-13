@@ -814,6 +814,10 @@ class DevService
                                 {
                                     $v['id'] = intval($v['id']);
                                 }
+                                if(isset($v['value']) && is_numeric($v['value']))
+                                {
+                                    $v['value'] = intval($v['value']);
+                                }
                                 return $v;
                             })->toArray();
                             //d($d['data']);
