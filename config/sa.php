@@ -2,8 +2,8 @@
 
 use Echoyl\Sa\Models\perm\User;
 use Echoyl\Sa\Models\User as ModelsUser;
-use Echoyl\Sa\Services\AdminAppService;
-use Echoyl\Sa\Services\AppApiService;
+use App\Services\deadmin\AdminAppService;
+use App\Services\deadmin\AppApiService;
 
 return [
     'service'=>AppApiService::class,
