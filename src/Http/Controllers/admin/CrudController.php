@@ -867,7 +867,8 @@ class CrudController extends ApiBaseController
     {
         $ps = new ParseData($this->getModelClass(),[
             'action_type'=>$this->action_type,
-            'can_be_null_columns'=>$this->can_be_null_columns
+            'can_be_null_columns'=>$this->can_be_null_columns,
+            'category_fields'=>$this->category_fields
         ]);
         $ps->make($data,$in,$from,$deep);
         return;
