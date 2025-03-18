@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
+use Echoyl\Sa\Models\Pca as ModelsPca;
 use Echoyl\Sa\Services\dev\crud\BaseField;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
@@ -91,9 +92,8 @@ class Pca extends BaseField
                 $val[] = $data[$v];
             }
         }
-        $name = $this->col['name'];
-        $data[$name] = $val;
-        return $data;
+        $this->name = $this->col['name'];
+        return $this->getData($val,$isset);
     }
 
     public function search($m,$options = [])
@@ -118,5 +118,37 @@ class Pca extends BaseField
         }
 
         return $m;
+    }
+
+    /**
+     * 自动解析数据中的省市区
+     *
+     * @param string $split
+     * @return void
+     */
+    public function decodeStr($split = ' / ')
+    {
+        $all = self::allPluckData();
+        $data = $this->config['data'];
+        $strs = [];
+        foreach($this->keys as $key)
+        {
+            if(!isset($data[$key]))
+            {
+                continue;
+            }
+            if(isset($all[$data[$key]]))
+            {
+                $strs[] = $all[$data[$key]];
+            }
+        }
+        return implode($split,$strs);
+    }
+
+    public static function allPluckData()
+    {
+        static $data = [];
+        $data = ModelsPca::pluck('name','code');
+        return $data;
     }
 }

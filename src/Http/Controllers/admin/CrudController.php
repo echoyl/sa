@@ -915,23 +915,31 @@ class CrudController extends ApiBaseController
 
         $setting = json_decode($model['setting'],true);
 
-        $export_config = Arr::get($setting,'export');
+        $default_config = ['label'=>'default','value'=>'default'];
 
-        if(!$export_config)
-        {
-            return $this->fail([1,'export setting error']);
-        }
+        $export_config = Arr::get($setting,'export',[$default_config]);
 
         if($index)
         {
             $config = collect($export_config)->first(function($item) use($index){
                 return $item['value'] == $index;
             });
+            if(!$config)
+            {
+                $config = $default_config;
+            }
         }else
         {
             $config = $export_config[0];
         }
+
+        if(!$config)
+        {
+            return $this->fail([1,'export config error']);
+        }
+
         //$ds->modelColumn2Export($model);
+        $config['config']['dev_menu'] = request('dev_menu');//如果未设置表头，直接读取列表的表头进行导出
         
 		$es = new ExcelService($config['config'],$search);
 

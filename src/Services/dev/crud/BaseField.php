@@ -15,7 +15,7 @@ class BaseField implements CrudInterface
     {
         $this->config = $config;
 
-        $this->col = $this->config['col'];
+        $this->col = $this->config['col']??['name'=>''];
 
         $this->name = $this->col['name'];
 

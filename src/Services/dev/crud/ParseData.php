@@ -74,7 +74,7 @@ class ParseData
             {
                 $check_category_field = $this->checkCategoryField($name,$col['default']);
                 //$val = $check_category_field['array_val'];
-                if($check_category_field['array_val'])
+                if($check_category_field['array_val'] && $check_category_field['array_val'] != '__unset')
                 {
                     $data[$name] = $check_category_field['array_val'];
                     $val = $check_category_field['array_val'];
@@ -92,9 +92,9 @@ class ParseData
                     }
                 }else
                 {
-                    $cls = new $col['class'];
                     if($deep <= $max_deep && $isset && $val)
                     {
+                        $cls = new $col['class'];
                         //d($name,$val,$max_deep);
                         //model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                         //思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
@@ -114,8 +114,8 @@ class ParseData
                             $ps->parseWiths($val);
                             $ps->make($val,$in,$from,$deep+1);
                         }
+                        $data[$name] = $val;
                     }
-                    $data[$name] = $val;
                 }
             }else
             {

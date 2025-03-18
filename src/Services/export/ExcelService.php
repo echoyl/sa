@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\export;
 
+use Echoyl\Sa\Services\dev\crud\fields\Pca;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
@@ -32,6 +33,7 @@ class ExcelService
     {
         $config['filename'] = date("YmdHis").'.xlsx';
         $this->config = $config;
+        $this->tableConfigToColumns();
         foreach($search as $key=>$val)
         {
             $_search = [];
@@ -57,6 +59,55 @@ class ExcelService
                 $this->search[$key] = $_search;
             }
         }
+    }
+
+    public function tableConfigToColumns()
+    {
+        $columns = Arr::get($this->config,'head.columns');
+        if($columns)
+        {
+            //已设置columns
+            return;
+        }
+        $desc = HelperService::json_validate(Arr::get($this->config,'dev_menu.desc'));
+        if(!$desc)
+        {
+            return;
+        }
+
+        $table_config = Arr::get($desc,'tableColumns',[]);
+
+        
+
+        $columns = collect($table_config)->filter(function($val){
+            $valtype = Arr::get($val,'valueType');
+            if(in_array($valtype,['option']))
+            {
+                return false;
+            }
+            $hide_in_table = Arr::get($val,'hideInTable');
+            if($hide_in_table)
+            {
+                return false;
+            }
+            return isset($val['dataIndex']);
+        })->map(function($val){
+            //检测hasone类型中如果dataindex是 xxx_id类型则转换
+            if(is_string($val['dataIndex']) && strpos($val['dataIndex'],'_id') !== false)
+            {
+                $data_name = str_replace('_id','',$val['dataIndex']);
+                //获取lable名称
+                $label_name = Arr::get($val,'fieldProps.fieldNames.label','title');
+                $val['dataIndex'] = [$data_name,$label_name];
+            }
+            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>Arr::get($val,'valueType')];
+        })->values();
+
+        //d($columns);
+
+        Arr::set($this->config,'head.columns',$columns);
+
+        return;
     }
 
     
@@ -136,6 +187,13 @@ class ExcelService
                             break;
                         case 'index':
                             $_val = ++$datakey;
+                            break;
+                        case 'pca':
+                            $config = [
+                                'data'=>$val
+                            ];
+                            $cs = new Pca($config);
+                            $_val = $cs->decodeStr();
                             break;
                     }
                 }

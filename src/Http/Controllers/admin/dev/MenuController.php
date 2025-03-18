@@ -439,6 +439,11 @@ class MenuController extends CrudController
         if(!empty($pre_update))
         {
             $this->model->where(['id'=>$item['id']])->update($pre_update);
+            //更新菜单后需要清除路由缓存，不然点击导出会报错
+            if(isset($pre_update['perms']))
+            {
+                $this->clearCache();
+            }
         }
         
         $tableColumns = $json;
