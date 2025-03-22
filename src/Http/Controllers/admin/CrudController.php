@@ -22,6 +22,9 @@ use Illuminate\Support\Arr;
  * @method mixed listData(&$list) 列表数据格式化
  * @method mixed setThis() 设置一个值 在select 获取数据的时候可以当做filter条件使用
  * @method mixed exportFormatData($val) 导出数据格式化数据方法
+ * @method mixed beforeDestroy($m)  删除数据前的检测数据
+ * @method mixed afterDestroy($item)  删除数据后置操作
+ * @method mixed setBase($base)  post数据后操作中可以自定义设置base数据的方法
  * @property \App\Services\AdminAppService $service
  * @property \Illuminate\Database\Eloquent\Model $model
  */
@@ -748,6 +751,7 @@ class CrudController extends ApiBaseController
             $new_data = $this->model->where(['id' => $id])->with($this->with_column)->first()->toArray();
 
             //操作完数据后 读取可操作关联模型的数据处理 base为已经处理过不包含设定不传字段的数据
+            $base = $this->setBase($base);
             (new Relation($this->getModelClass(),$new_data))->afterPost($base);
 
             if (method_exists($this, 'afterPost')) {
@@ -810,11 +814,13 @@ class CrudController extends ApiBaseController
                 {
                     return $fail;
                 }
+                $val_arr = $val->toArray();
                 $pval = [
-                    'originData'=>$val->toArray()
+                    'originData'=>$val_arr,
                 ];
                 $this->parseData($pval, 'encode','delete');
                 $val->delete();
+                $this->afterDestroy($val_arr);
             }
             return $this->success(null,[0,'成功删除 '.$item_count.' 条记录']);
         }
@@ -824,6 +830,16 @@ class CrudController extends ApiBaseController
     public function beforeDestroy($m)
     {
         return $m;
+    }
+
+    public function afterDestroy($item)
+    {
+        return;
+    }
+
+    public function setBase($base)
+    {
+        return $base;
     }
 
     public function copyOne()
@@ -908,12 +924,7 @@ class CrudController extends ApiBaseController
 
         $index = request('export_index',0);
 
-        if(!$model['setting'])
-        {
-            return $this->fail([1,'setting error']);
-        }
-
-        $setting = json_decode($model['setting'],true);
+        $setting = $model['setting']?json_decode($model['setting'],true):[];
 
         $default_config = ['label'=>'default','value'=>'default'];
 
