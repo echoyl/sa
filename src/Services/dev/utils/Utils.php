@@ -6,6 +6,7 @@ use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\DevService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class Utils
 {
@@ -108,48 +109,68 @@ class Utils
         });
     }
 
-    public static function toTree($fields)
+    public static function _toTree($field,$prev = [],$id = 0)
     {
-        $data = ['columns'=>[],'models'=>[]];
-        foreach($fields as $field)
+        static $datas = [];
+        $data = Arr::get($datas,$id,['columns'=>[],'models'=>[]]);
+        $pre_key = [];
+        foreach($prev as $p)
         {
-            //检测字段是数字，外联模型，字段名称
-            $length = count($field);
-            if($length == 1)
+            $pre_key = array_merge($pre_key,['models',$p]);
+        }
+
+        $columns_key = implode('.',array_merge($pre_key,['columns']));
+        $models_key = implode('.',array_merge($pre_key,['models']));
+        //检测字段是数字，外联模型，字段名称
+        $length = count($field);
+        if($length == 1)
+        {
+            //当前模型字段
+            $d = Arr::get($data,$columns_key);
+            $d[] = $field[0];
+            Arr::set($data,$columns_key,$d);
+        }elseif($length >= 2)
+        {
+            $d = Arr::get($data,$models_key);
+            $first_field = $field[0];
+            if(!isset($d[$field[0]]))
             {
-                //当前模型字段
-                $data['columns'][] = $field[0];
-            }elseif($length == 2)
+                $d[$first_field] = ['columns'=>[],'models'=>[]];
+            }
+            if($length > 2)
             {
-                if(!isset($data['models'][$field[0]]))
-                {
-                    $data['models'][$field[0]] = ['columns'=>[],'models'=>[]];
-                }
+                //超过2个字段，继续递归
+                array_shift($field);
+                Arr::set($data,$models_key,$d);
+                Arr::set($datas,$id,$data);
+                self::_toTree($field,array_merge($prev,[$first_field]),$id);
+                $data = Arr::get($datas,$id);
+            }else
+            {
                 if($field[1])
                 {
-                    $data['models'][$field[0]]['columns'][] = $field[1];
+                    $d[$field[0]]['columns'][] = $field[1];
                 }
-            }elseif($length > 2)
-            {
-                $first_field = array_shift($field);
-                if(!isset($data['models'][$first_field]))
-                {
-                    $data['models'][$first_field] = ['columns'=>[],'models'=>[]];
-                }
-                $deep = self::toTree([$field]);
-                if(!isset($data['models'][$first_field]['models'][$field[0]]))
-                {
-                    $data['models'][$first_field]['models'][$field[0]] = ['columns'=>[],'models'=>[]];
-                }
-                $data['models'][$first_field]['models'][$field[0]]['columns'] = array_merge($data['models'][$first_field]['models'][$field[0]]['columns'],$deep['models'][$field[0]]['columns']);
-                //$data['models'][$first_field]['models'][$field[0]]['models'] = array_merge($data['models'][$first_field]['models'][$field[0]]['models'],$deep['models']);
+                Arr::set($data,$models_key,$d);
             }
         }
+        $datas[$id] = $data;
         //Log::channel('daily')->info('toTree:',$data);
+        return $datas[$id];
+    }
+
+    public static function toTree($fields,$id)
+    {
+        $data = [];
+        foreach($fields as $field)
+        {
+            $data = self::_toTree($field,[],$id);
+        }
         return $data;
     }
+
     /**
-     * Undocumented function
+     * 递归生成with关联
      *
      * @param [type] $trees 处理过的选择字段模型名称数据
      * @param integer $indent 格式化代码的缩进数量
@@ -159,90 +180,92 @@ class Utils
      */
     public static function withTree($trees,$indent = 0,$pmodel_id = 0,$i = 0)
     {
-        //d($trees);
         if(empty($trees))
         {
-            return '';
+            return ['',false];
         }
         $data = [];
         $replace = [];
         $search = [];
         $j = 0;
+        $has_columns = false;
+        
         foreach($trees as $name=>$tree)
         {
-            
+            $columns = Arr::get($tree,'columns');
+            $models = Arr::get($tree,'models');
 
             if(is_numeric($name))
             {
                 //现在数字name 为 relation的id了
                 $relation = (new Relation())->where(['id'=>$name])->first();
-                //$model = (new Model())->where(['id'=>$name])->first();
-                
             }else
             {
                 $relation = (new Relation())->where(['model_id'=>$pmodel_id,'name'=>$name])->first();
             }
             if(!$relation)
             {
-                return '';
+                return ['',false];
             }
             $name = $relation['name'];
 
-            //
+            $just_columns = [];
 
-            //$name = $relation?$relation['name']:$name;
-            // if($i == 1)
-            // {
-            //     d($name,$pmodel_id,$relation);
-            // }
-
-            if(isset($tree['models']) && !empty($tree['models']))
+            if(!empty($models))
             {
+                [$_replace,$only_columns] = self::withTree($models,$indent + 1,$relation['foreign_model_id'],$i+1);
+                if($only_columns && empty($columns))
+                {
+                    //如果全部是columns 则不处理
+                    $just_columns = $only_columns;
+                }else
+                {
+                    $replace[] = $_replace;
+                    $sear = 'sear_'.$j;
+                    $search[] = $sear;
+                    $inner_with = '->with('.$sear.')';
+                    $j++;
+                }
                 
-                $replace[] = self::withTree($tree['models'],$indent + 1,$relation['foreign_model_id'],$i+1);
-                $sear = 'sear_'.$j;
-                $search[] = $sear;
-                $inner_with = '->with('.$sear.')';
                 // d($inner_with);
             }else
             {
                 $inner_with = '';
             }
             //读取关系数据
-            
-            
-            $filter_where = '';
+        
             //筛选条件转移至 model 中
-            // if($relation && $relation['filter'])
-            // {
-            //     $filter = json_decode($relation['filter'],true);
-            //     $filter_where = '->where('.json_encode($filter).')';
-            // }
-            if(isset($tree['columns']) && !empty($tree['columns']))
+            if(!empty($columns))
             {
-                $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($tree['columns']).')'.$filter_where.$inner_with.';}@endphp';
+                $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.'->select('.json_encode($columns).')'.$inner_with.';}@endphp';
+                $has_columns = true;
             }else
             {
-                if($inner_with)
+                if(!empty($just_columns))
                 {
-                    $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$filter_where.$inner_with.';}@endphp';
+                    foreach($just_columns as $jc)
+                    {
+                        $data[] = implode('.',[$name,$jc]);
+                    }
                 }else
                 {
-                    if($filter_where)
+                    if($inner_with)
                     {
-                        //有过滤条件
-                        $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$filter_where.';}@endphp';
+                        $data[$name] = '@phpfunction($q'.$i.'){$q'.$i.$inner_with.';}@endphp';
+                        $has_columns = true;
                     }else
                     {
                         $data[] = $name;
                     }
                 }
             }
-            $j++;
+            
         }
         $ret = Dev::export($data,$indent);
         $ret = str_replace($search,$replace,$ret);
-        return $ret;
+        $return = [$ret,$has_columns?false:$data];
+        //Log::channel('daily')->info('toTree:',$return);
+        return $return;
         
     }
 

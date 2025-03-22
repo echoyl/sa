@@ -29,6 +29,12 @@ class DevService
         return env('APP_NAME','');
     }
 
+    /**
+     * 创建数据表
+     *
+     * @param [type] $data 模型数据
+     * @return string 不带前缀的表名
+     */
     public function createModelSchema($data)
     {
         return (new UtilsSchema)->createModelSchema($data);
@@ -636,8 +642,8 @@ class DevService
                                 return explode('-',$v);
                             })->sort(function($a,$b){
                                 return count($a) < count($b);
-                            })->toArray();
-                            $with_tree = Utils::toTree($fields);
+                            })->values()->toArray();
+                            $with_tree = Utils::toTree($fields,$val['name']);
                         }else
                         {
                             $with_tree = [];
@@ -673,9 +679,7 @@ class DevService
                     ];
                 }
             }
-            //d($with_trees,$model_id);
-            $with_columns = Utils::withTree($with_trees,2,$model_id);
-            //d($with_columns);
+            [$with_columns] = Utils::withTree($with_trees,2,$model_id);
         }
 
         if(!empty($with_columns))
