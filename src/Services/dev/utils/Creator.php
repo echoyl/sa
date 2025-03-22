@@ -7,14 +7,15 @@ use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\creator\Goods;
+use Echoyl\Sa\Services\dev\utils\creator\Order;
 use Echoyl\Sa\Services\dev\utils\creator\Perm;
 use Echoyl\Sa\Services\dev\utils\creator\Posts;
 use Echoyl\Sa\Services\dev\utils\creator\Shop;
+use Echoyl\Sa\Services\dev\utils\creator\User;
 use Illuminate\Support\Arr;
 
 class Creator
 {
-
     /**
      * 根据类型生成
      *
@@ -23,42 +24,24 @@ class Creator
      */
     public function create(?string $type = '')
     {
-        if(method_exists($this,$type))
+        $types = [
+            'posts'=>Posts::class,
+            'perm'=>Perm::class,
+            'shop'=>Shop::class,
+            'goods'=>Goods::class,
+            'user'=>User::class,
+            'order'=>Order::class
+        ];
+        $class = Arr::get($types,$type);
+        if($class)
         {
-            $this->$type();
+            $c = new $class; 
+            $c->make();
             return [0,'success'];
         }else
         {
             return [1,'developing']; 
         }
-    }
-
-    public function posts()
-    {
-        $c = new Posts;
-        $c->make();
-        return;
-    }  
-
-    public function perm()
-    {
-        $c = new Perm;
-        $c->make();
-        return;
-    }
-
-    public function shop()
-    {
-        $c = new Shop;
-        $c->make();
-        return;
-    }
-
-    public function goods()
-    {
-        $c = new Goods;
-        $c->make();
-        return;
     }
 
     public function getConfig($data,$search,$relpace)
@@ -266,7 +249,15 @@ class Creator
 
     }
 
-    public function addRelation($model_id,$relation_model,$relation)
+    /**
+     * 创建关联
+     *
+     * @param [type] $model_id 当前模型id
+     * @param [type] $relation_model 关联模型数据
+     * @param [type] $relation 关联数据
+     * @return int
+     */
+    public function addRelation($model_id,$relation_model,$relation = [])
     {
         $relation = array_merge([
             'model_id'=>$model_id,
