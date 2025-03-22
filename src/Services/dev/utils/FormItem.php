@@ -583,7 +583,7 @@ class FormItem
             ];
         }
 
-        if($this->relation || !empty($json))
+        if(($this->relation || !empty($json)) && $this->schema)
         {
             $d['fieldProps']['requestDataName'] = $this->schema['name'].'s';
         }

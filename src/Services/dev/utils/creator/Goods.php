@@ -99,7 +99,8 @@ class Goods extends Creator
             'local_key'=>'id',
             'foreign_key'=>'goods_id',
             'type'=>'many',
-            'select_columns'=>implode(',',$_fields)
+            'select_columns'=>implode(',',$_fields),
+            'filter'=>'[["parent_id","=",0]]'
         ]);
 
         $ds->createModelSchema($model);
@@ -203,7 +204,7 @@ public function postData(&$item)
         if(!$this->is_post)
         {
             $s = new GoodsService(new Goods(),new Items(),new Guige());
-            $item['guiges'] = $s->parseGuige($item);
+            $item['guiges'] = $s->parseGuige($item,true);
         }
         return;
     }

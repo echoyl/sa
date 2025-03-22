@@ -337,11 +337,17 @@ class Schema
 
     }
 
+    /**
+     * 创建数据表
+     *
+     * @param [type] $model dev_model表数据
+     * @return string 当前表名不带前缀
+     */
     public function createModelSchema($model)
     {
         $all = $this->allModel(true);
 
-        $table_name = implode('_', array_reverse(DevService::getPath($model, $all)));
+        $no_preifx_table_name = implode('_', array_reverse(DevService::getPath($model, $all)));
 
         $columns = [];
         if ($model['columns']) {
@@ -350,14 +356,14 @@ class Schema
         $setting = $model['setting']?json_decode($model['setting'],true):[];
         //Schema::dropIfExists($table_name);
         
-        if(!FacadesSchema::hasTable($table_name))
+        if(!FacadesSchema::hasTable($no_preifx_table_name))
         {
-            $table_sql = $this->createSchemaSql($table_name,$columns,$setting);
+            $table_sql = $this->createSchemaSql($no_preifx_table_name,$columns,$setting);
             DB::statement(implode('',$table_sql));
             //$this->line('创建数据表:'.$table_name.'成功');
         }else
         {
-            $table_name = DB::getTablePrefix().$table_name;
+            $table_name = DB::getTablePrefix().$no_preifx_table_name;
             $dist_f = DB::getPdo()->query('desc '.$table_name);
             
             $dist_field = [];
@@ -435,7 +441,7 @@ class Schema
             $cacheKey = "table_columns_{$table_name}";
             Cache::forget($cacheKey);
         }
-        return;
+        return $no_preifx_table_name;
     }
 
     public function allModel($flush = false)
