@@ -27,6 +27,7 @@ class Utils
         'pca'=>'pca',
         'tmapInput'=>'tmapInput',
         'bmapInput'=>'bmapInput',
+        'mapInput'=>'mapInput',
         'tinyEditor'=>'tinyEditor',
         'price'=>'digit',
         'digit'=>'digit',

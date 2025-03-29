@@ -12,7 +12,7 @@ class Shop extends Creator
     public function __construct()
     {
         $this->schema = [
-            'shop'=>'[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"vachar"},{"title":"图片","name":"titlepic","type":"vachar","form_type":"image","setting":{"image_count":1}},{"title":"描述","name":"desc","type":"vachar","form_type":"textarea","empty":[1]},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"setting":{"open":"启用","close":"禁用"},"table_menu":true},{"title":"联系人","name":"username","type":"varchar","empty":[]},{"title":"联系电话","name":"mobile","type":"varchar"},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"位置经度","name":"lng","type":"varchar"},{"title":"位置纬度","name":"lat","type":"varchar","form_type":"tmapInput"},{"title":"省","name":"province","type":"varchar","form_type":"pca","setting":{"pca_level":"3"}},{"name":"city","title":"市","type":"varchar"},{"name":"area","title":"区","type":"varchar"},{"title":"位置地址","name":"address","type":"varchar"}]',
+            'shop'=>'[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"vachar"},{"title":"图片","name":"titlepic","type":"vachar","form_type":"image","setting":{"image_count":1}},{"title":"描述","name":"desc","type":"vachar","form_type":"textarea","empty":[1]},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"setting":{"open":"启用","close":"禁用"},"table_menu":true},{"title":"联系人","name":"username","type":"varchar","empty":[]},{"title":"联系电话","name":"mobile","type":"varchar"},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"位置经度","name":"lng","type":"varchar"},{"title":"位置纬度","name":"lat","type":"varchar","form_type":"mapInput"},{"title":"省","name":"province","type":"varchar","form_type":"pca","setting":{"pca_level":"3"}},{"name":"city","title":"市","type":"varchar"},{"name":"area","title":"区","type":"varchar"},{"title":"位置地址","name":"address","type":"varchar"}]',
         ];
 
         $this->confJson = [
@@ -64,15 +64,18 @@ class Shop extends Creator
         //先创建模型 模型默认放到文件夹下
 
         //2.1 先创建posts父级
-        $model_parent = [
-            'title'=>$title,
-            'name'=>$name,
-            'admin_type'=>$appname,
-            'type'=>0,//文件夹
-            'leixing'=>'normal',
-            'parent_id'=>$model_to_id
-        ];
-        $model_to_id = $this->checkHas($model_parent);
+        if(!$model_to_id)
+        {
+            $model_parent = [
+                'title'=>$title,
+                'name'=>$name,
+                'admin_type'=>$appname,
+                'type'=>0,//文件夹
+                'leixing'=>'normal',
+                'parent_id'=>$model_to_id
+            ];
+            $model_to_id = $this->checkHas($model_parent);
+        }
 
         //1.列表
         $model = new Model();
@@ -104,9 +107,18 @@ class Shop extends Creator
             'title'=>'区','name'=>'areaData','local_key'=>'area','foreign_key'=>'code'
         ]);
         //更新字段
-        $model->where(['id'=>$model_id])->update([
-            'columns'=>$this->addColumns($this->schema['shop'],$category['columns']),
-        ]);
+        if($category)
+        {
+            $model->where(['id'=>$model_id])->update([
+                'columns'=>$this->addColumns($this->schema['shop'],$category['columns']),
+            ]);
+        }else
+        {
+            $model->where(['id'=>$model_id])->update([
+                'columns'=>$this->schema['shop'],
+            ]);
+        }
+        
 
         $model = $model->where(['id'=>$model_id])->first();
         
@@ -127,7 +139,11 @@ class Shop extends Creator
         $form_config = json_decode($this->confJson['shop']['form_config'],true);
         $tabs = json_encode($form_config['tabs'][0]);
         //d($tabs);
-        $tabs = $this->addColumns($tabs,$category['menu_form_columns'],'config');
+        if($category)
+        {
+            $tabs = $this->addColumns($tabs,$category['menu_form_columns'],'config');
+        }
+        
         $form_config = json_encode(['tabs'=>[json_decode($tabs,true)]]);
 
         $menu = array_merge([
@@ -141,7 +157,7 @@ class Shop extends Creator
             'open_type'=>'drawer',
             'admin_model_id'=>$model_id
         ],[
-            'table_config'=>$this->addColumns($this->confJson['shop']['table_config'],$category['menu_columns']),
+            'table_config'=>$category?$this->addColumns($this->confJson['shop']['table_config'],$category['menu_columns']):$this->confJson['shop']['table_config'],
             'form_config'=>$form_config
         ]);
         

@@ -50,6 +50,7 @@ class CrudService
             'password'=>Password::class,
             'tmapInput'=>Latlng::class,
             'bmapInput'=>Latlng::class,
+            'mapInput'=>Latlng::class,
             'latlng'=>Latlng::class,
             'with'=>With::class,
             'search_select'=>SearchSelect::class,

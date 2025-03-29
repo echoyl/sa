@@ -117,7 +117,7 @@ class Creator
 
     public function category($model_id,$big_menu_id,$model_to_id = 0)
     {
-        $schema = '[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"varchar"},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"父级Id","name":"parent_id","type":"int"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"状态","name":"state","type":"int","form_type":"switch","default":"1","setting":{"open":"启用","close":"禁用"},"table_menu":true}]';
+        $schema = '[{"title":"id","name":"id","type":"int"},{"title":"名称","name":"title","type":"varchar"},{"title":"颜色","name":"color","type":"varchar","form_type": "colorPicker"},{"title":"Icon","name":"icon","type":"varchar"},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea"},{"title":"父级Id","name":"parent_id","type":"int"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"状态","name":"state","type":"int","form_type":"switch","default":"1","setting":{"open":"启用","close":"禁用"},"table_menu":true}]';
         
         $confJson = [
             'form_config'=>'{"tabs":[{"tab":{"title":"基础信息"},"config":[{"id":"notvg3ox047","columns":[{"key":["title"],"required":true},{"key":["displayorder"]}]},{"id":"s6hsnxta2yc","columns":[{"key":["desc"]}]},{"id":"ovjiqj6t6oh","columns":[{"key":["state"]}]}]}]}',
@@ -134,6 +134,11 @@ class Creator
         //先创建模型
 
         $category_level = Arr::get($base,'category_level',1);
+        if(!$category_level)
+        {
+            //如果未设置分类层级 那么不创建关联分类
+            return false;
+        }
         $category_type = Arr::get($base,'category_type','single');
 
         $type = '';

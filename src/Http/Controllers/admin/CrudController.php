@@ -703,14 +703,12 @@ class CrudController extends ApiBaseController
                             }
                         }
                     }
-
-                    if (method_exists($this, 'beforePost')) {
-                        $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
-                        if ($ret) {
-                            return $ret;
-                        }
-                    }
-
+            }
+            if (method_exists($this, 'beforePost')) {
+                $ret = $this->beforePost($data, $id,$item); //操作前处理数据 如果返回数据表示 数据错误 返回错误信息
+                if ($ret) {
+                    return $ret;
+                }
             }
             //全局数据提交检测
             $fail = $this->globalPostCheck($data,$item);

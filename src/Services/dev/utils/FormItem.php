@@ -245,7 +245,7 @@ class FormItem
         {
             //默认给每个表单设置 placeholder
 
-            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','switch','debounceSelect','searchSelect']))
+            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','mapInput','switch','debounceSelect','searchSelect']))
             {
                 $this->data['fieldProps']['placeholder'] = $this->placeholder().$d['title'];
             }else
