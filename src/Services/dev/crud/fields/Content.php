@@ -64,6 +64,8 @@ class Content extends BaseField
             $patterns[] = '/<img[^>]*src=[\'"]([^\'"]+)[\'"]/i';
             //增加检测a标签的href 富文本编辑器现在支持传入文件
             $patterns[] = '/<a[^>]*href=[\'"]([^\'"]+)[\'"]/i';
+            //增加source标签 的src
+            $patterns[] = '/<source[^>]*src=[\'"]([^\'"]+)[\'"]/i';
         }
 
         $_matches = [];
