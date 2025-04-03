@@ -211,10 +211,10 @@ class Schema
                     {
                         $default_value = $enums[0];
                     }
-                    $field_sql = "`{$name}` enum('".implode("','",$enums)."') NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}' FIRST";
+                    $field_sql = "`{$name}` enum('".implode("','",$enums)."') NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
                 }else
                 {
-                    $field_sql = "`{$name}` enum NULL DEFAULT NULL COMMENT '{$comment}' FIRST";
+                    $field_sql = "`{$name}` enum NULL DEFAULT NULL COMMENT '{$comment}'";
                 }
             break;
         }

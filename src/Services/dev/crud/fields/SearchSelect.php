@@ -25,10 +25,12 @@ class SearchSelect extends BaseField
             if(isset($val[$id_name]))
             {
                 $val = $val[$id_name];
+                
             }elseif(isset($val['value']))
             {
                 $val = $val['value'];
             }
+            
         }
         $data[$name] = $val;
 
@@ -52,8 +54,12 @@ class SearchSelect extends BaseField
                 $d = $data[$col['data_name']];
                 if($d)
                 {
-                    $label = $d[$col['label']]??($d['title']??'');
-                    $val = array_merge($d,['label'=>$label,'value'=>$d[$id_name]??'',$id_name=>$d[$id_name]??'']);
+                    //$label = $d[$col['label']]??($d['title']??'');
+                    $val = array_merge($d,[
+                        //'label'=>$label,
+                        'value'=>$d[$id_name]??'',
+                        $id_name=>$d[$id_name]??''
+                    ]);
                 }
             }
         }

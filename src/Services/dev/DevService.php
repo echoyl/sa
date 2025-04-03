@@ -873,7 +873,7 @@ class DevService
                     }
 
                 }
-                if(($form_type == 'search_select' || $form_type == 'searchSelect') && isset($all_relations[$name]))
+                if(($form_type == 'search_select' || $form_type == 'searchSelect' || $form_type == 'searchSelects') && isset($all_relations[$name]))
                 {
                     $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
                     if($label)
@@ -883,6 +883,10 @@ class DevService
                     if($value)
                     {
                         $d['value'] = $value;
+                    }
+                    if($form_type == 'searchSelects')
+                    {
+                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
                     }
                 }
                 if($form_type == 'cascaders' || $form_type == 'cascader')

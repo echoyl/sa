@@ -245,7 +245,7 @@ class FormItem
         {
             //默认给每个表单设置 placeholder
 
-            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','mapInput','switch','debounceSelect','searchSelect']))
+            if(in_array($form_type,['select','cascader','tmapInput','bmapInput','mapInput','switch','debounceSelect','searchSelect','searchSelects']))
             {
                 $this->data['fieldProps']['placeholder'] = $this->placeholder().$d['title'];
             }else
@@ -640,6 +640,10 @@ class FormItem
     {
         return $this->debounceSelect();
     }
+    public function searchSelects()
+    {
+        return $this->debounceSelect();
+    }
 
     public function debounceSelect()
     {
@@ -673,6 +677,11 @@ class FormItem
             {
                 $d['fieldProps'] = array_merge($d['fieldProps'],['fieldNames'=>['label'=>$label,'value'=>$value]]);
             }
+            if($this->form_type == 'searchSelects')
+            {
+                //多选还是需要开启多选模式
+                $d['fieldProps']['mode'] = 'multiple';
+            }
         }
         $this->data = $d;
         return;
@@ -682,10 +691,17 @@ class FormItem
     {
         $setting = $this->schema['setting']??[];
         $fieldProps = [];
-        if(isset($setting['image_count']))
+        $image_count = Arr::get($setting,'image_count',0);
+        $image_crop = Arr::get($setting,'image_crop',false);
+        if($image_count)
         {
             $fieldProps['max'] = intval($setting['image_count']);
         }
+        if($image_crop)
+        {
+            $fieldProps['crop'] = true;
+        }
+        
         if($this->form_type == 'file')
         {
             $fieldProps['type'] = 'file';

@@ -17,6 +17,7 @@ use Echoyl\Sa\Services\dev\crud\fields\Pca;
 use Echoyl\Sa\Services\dev\crud\fields\Price;
 use Echoyl\Sa\Services\dev\crud\fields\Radio;
 use Echoyl\Sa\Services\dev\crud\fields\SearchSelect;
+use Echoyl\Sa\Services\dev\crud\fields\SearchSelects;
 use Echoyl\Sa\Services\dev\crud\fields\Select;
 use Echoyl\Sa\Services\dev\crud\fields\SelectColumns;
 use Echoyl\Sa\Services\dev\crud\fields\Selects;
@@ -55,6 +56,7 @@ class CrudService
             'with'=>With::class,
             'search_select'=>SearchSelect::class,
             'searchSelect'=>SearchSelect::class,
+            'searchSelects'=>SearchSelects::class,
             'link'=>Link::class,
             'date'=>Date::class,
             'datetime'=>Date::class,

@@ -16,6 +16,7 @@ class Utils
         'selects'=>'select',
         'search_select'=>'debounceSelect',//只使用cascader 但是兼容之前的select
         'searchSelect'=>'searchSelect',//只使用select
+        'searchSelects'=>'searchSelect',//搜索select多选
         'textarea'=>'textarea',
         'image'=>'uploader',
         'file'=>'uploader',
