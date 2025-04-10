@@ -609,21 +609,25 @@ class TableColumn
         {
             $this->data['valueType'] = 'customerColumn';
             $this->data['readonly'] = true;
-            $this->data['fieldProps'] = [
-                'items'=>[
-                    [
-                        "domtype"=>"text",
-                        "action"=> "dropdown",
-                        "request"=> [
-                          "url"=> '{{url}}',
-                          "modelName"=> "state",
-                          "fieldNames"=> "value,label",
-                          "data"=> [
-                            "actype"=> "state"
-                          ]
-                        ]
-                    ]
+            $disabled = Arr::get($this->props,'fieldProps.disabled',false);
+            $item = [
+                "domtype"=>"text",
+                "action"=> "dropdown",
+                "request"=> [
+                  "url"=> '{{url}}',
+                  "modelName"=> "state",
+                  "fieldNames"=> "value,label",
+                  "data"=> [
+                    "actype"=> "state"
+                  ],
                 ]
+            ];
+            if($disabled)
+            {
+                $item['request']['disabled'] = true;
+            }
+            $this->data['fieldProps'] = [
+                'items'=>[$item]
             ];
 
         }else
