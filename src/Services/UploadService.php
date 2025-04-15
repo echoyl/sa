@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Attachment;
+use Echoyl\Sa\Services\utils\image\RoundCornerModifier;
 use Echoyl\Sa\Services\utils\WaterMarkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -367,6 +368,14 @@ class UploadService
             $font->size(14);
             $font->align('left');
         })->save($newPath);
+
+        $avatar_file = '';
+
+        if($avatar_file)
+        {
+            //插入一个圆形头像示例
+            $img = $img->place(Image::read($avatar_file)->scale(45, 45)->modify(new RoundCornerModifier(45)), 'top-left', 20, 23);
+        }
 
         return $filename;
     }

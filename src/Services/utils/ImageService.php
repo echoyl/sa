@@ -126,5 +126,9 @@ class ImageService
         return $this->manager->save($path);
     }
 
-
+    public function modify($p)
+    {
+        $this->manager->modify($p);
+        return $this;
+    }
 }
