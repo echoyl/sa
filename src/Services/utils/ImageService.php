@@ -78,6 +78,12 @@ class ImageService
         return $this;
     }
 
+    public function resize($width,$height)
+    {
+        $this->manager->resize($width,$height);
+        return $this;
+    }
+
     public function rotate($angle)
     {
         $this->manager->rotate($angle);

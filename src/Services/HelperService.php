@@ -191,6 +191,25 @@ class HelperService
             'count'=>$count,'list'=>$data
         ]];
     }
+
+    public static function map($model,$callback,$order_by = [],$where = [])
+    {
+        $page = webapi_request('page',1);
+        $page_size = webapi_request('page_size',10);
+
+        $m = $model->where($where);
+
+        $count = $m->count();
+        foreach($order_by as $order)
+        {
+            $m = $m->orderBy($order[0],$order[1]);
+        }
+        $data = $m->offset(($page-1)*$page_size)->limit($page_size)->get()->map(fn($item) => $callback($item))->toArray();
+
+        return ['code'=>0,'msg'=>'','data'=>[
+            'count'=>$count,'list'=>$data
+        ]];
+    }
 	
 	public static function withs($model,$ids,$title = '')
     {

@@ -449,6 +449,18 @@ class Schema
         return (new DevService)->allModel($flush);
     }
 
+    public function clearTableColumnsCache($model)
+    {
+        $all = $this->allModel(true);
+
+        $no_preifx_table_name = implode('_', array_reverse(DevService::getPath($model, $all)));
+        $table_name = DB::getTablePrefix().$no_preifx_table_name;
+        //清除表结构缓存
+        $cacheKey = "table_columns_{$table_name}";
+        Cache::forget($cacheKey);
+        return;
+    }
+
     /**
      * Get all columns of a given table with caching.
      *

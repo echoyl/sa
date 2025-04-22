@@ -193,6 +193,8 @@ class Dump
                 $model['parent_id'] = $to_model_id ? : $model['parent_id'];
                 Model::updateOrInsert(['id' => $model['id']], $model);
                 $model_count++;
+                //清除模型字段缓存
+                (new Schema)->clearTableColumnsCache($model);
             }
             $relations = $val['relations'] ?? false;
             if ($relations) {
