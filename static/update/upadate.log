@@ -138,3 +138,8 @@ ALTER TABLE `la_web_menu`
  ADD COLUMN `category_default_first`  int(11) NOT NULL DEFAULT 1 COMMENT '默认首个分类',
  ADD COLUMN `category_show_bottom`  int(11) NOT NULL DEFAULT 0 COMMENT '默认首个分类',
  ADD COLUMN `category_show_top`  int(11) NOT NULL DEFAULT 0 COMMENT '默认首个分类';
+
+2025-04-24
+ ALTER TABLE `la_wechat_pay`
+ ADD COLUMN `apikey_v3`  varchar(255) NOT NULL DEFAULT '' COMMENT '商户秘钥v3',
+ ADD COLUMN `displayorder`  int(11) NOT NULL DEFAULT 0 COMMENT '排序值';
