@@ -22,7 +22,7 @@ class Checkbox extends BaseField
         {
             //未设置，但是有默认值也需要处理下
             $val = is_string($val)?explode(',',$val):(is_numeric($val)?[$val]:$val);
-            $val = $this->valToInt($val);
+            $val = $this->valToInt($val,true);
         }else
         {
             $val = '__unset';
