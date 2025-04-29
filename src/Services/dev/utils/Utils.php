@@ -45,6 +45,28 @@ class Utils
         'config'=>'jsonForm'
     ];
 
+    public static $setting_dev_menu = [
+        'desc' => [
+            'tabs' => [
+                [
+                    'formColumns' => [
+                        [
+                            'columns' => [
+                                ['dataIndex' => 'logo', 'valueType' => 'uploader'],
+                                ['dataIndex' => 'loginBgImage', 'valueType' => 'uploader'],
+                                ['dataIndex' => ['floatButton', 'items'], 'valueType' => 'formList', 'columns' => [
+                                    ['columns' => [
+                                        ['dataIndex' => 'img', 'valueType' => 'uploader']
+                                    ]]
+                                ]]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ];
+
     public static $title_arr = [
         'created_at'=>'创建时间',
         'updated_at'=>'最后更新时间',
@@ -372,6 +394,10 @@ class Utils
             if($vtype == 'deep')
             {
                 //如果是formlist 类型需要深层次去检索
+                if(is_array($imgf))
+                {
+                    $imgf = implode('.',$imgf);
+                }
                 $deep_data = self::parseImageInPage(Arr::get($post_data,$imgf),$deep_menu,Arr::get($originData,$imgf),$type,[],true);
                 Arr::set($post_data,$imgf, $deep_data);
             }else

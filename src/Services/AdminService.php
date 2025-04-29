@@ -121,7 +121,9 @@ class AdminService
         $ds->allMenu(true);
         $ds->allModel(true);
         $ss = new SetsService();
-        $setting = $ss->getSet('setting');
+        request()->offsetSet('dev_menu', Utils::$setting_dev_menu);
+        $data = $ss->post('setting',[],'GET');
+        $setting = Arr::get($data,'data');
 
         if(isset($setting['theme']))
         {
@@ -130,13 +132,13 @@ class AdminService
             $setting = array_merge($theme,$setting);
         }
 
-        HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
+        //HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
         $setting['title'] = Arr::get($setting,'title','DeAdmin');
         $setting['tech'] = Arr::get($setting,'tech','DeAdmin 技术支持');
         $setting['subtitle'] = Arr::get($setting,'subtitle','后台管理系统');
         $setting['baseurl'] = Arr::get($setting,'baseurl','/antadmin/');
-        $setting['logo'] = $setting['logo']['url']?:false;
-        $setting['loginBgImage'] = $setting['loginBgImage']['url']?:false;
+        $setting['logo'] = Arr::get($setting,'logo.0.url');
+        $setting['loginBgImage'] = Arr::get($setting,'loginBgImage.0.url');
         $setting['loginBgCardColor'] = Arr::get($setting,'loginBgCardColor','none');
         $setting['loginTypeDefault'] = Arr::get($setting,'loginTypeDefault','password');
         $setting['fileImagePrefix'] = HelperService::getFileImagePrefix();//图片文件路径前缀，是前端支持字符串显示图片
@@ -157,7 +159,7 @@ class AdminService
 
         $setting['loginType'] = $login_type;
 
-        $setting['favicons'] = [$setting['favicons']['url']];
+        //$setting['favicons'] = [$setting['favicons']['url']];
         $dev = Arr::get($setting,'dev',true);
         $is_super = AdminService::isSuper($user);
         $is_dev = AdminService::isDevUser($user);

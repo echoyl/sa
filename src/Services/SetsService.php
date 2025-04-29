@@ -79,7 +79,7 @@ class SetsService
         return implode('_',[$this->cache_prefix,$key]);
     }
 
-    public function post($key,$deep_img_fields = [])
+    public function post($key,$deep_img_fields = [],$method = 'POST')
     {
         $app_name = $this->appName();
         //编辑模式不再读取缓存
@@ -93,7 +93,7 @@ class SetsService
         }
         $dev_menu = request('dev_menu');
 
-		if(request()->isMethod('post'))
+		if(request()->isMethod('post') && $method == 'POST')
 		{
 			$post_data = filterEmpty(request('base'));
 
