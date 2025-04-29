@@ -47,8 +47,8 @@ class ExcelService
                 {
                     continue;
                 }
-                $value = Arr::get($v,'value');
-                $label = Arr::get($v,'label');
+                $value = Arr::get($v,'value',Arr::get($v,'id'));
+                $label = Arr::get($v,'label',Arr::get($v,'title'));
                 if($value !== null)
                 {
                     $_search[$value] = $label;
@@ -162,9 +162,19 @@ class ExcelService
 
                 //读取search数据
                 $names = (is_array($index)?implode('.',$index):$index).'s';
-                if(isset($this->search[$names]) && isset($this->search[$names][$_val]))
+                if(isset($this->search[$names]))
                 {
-                    $_val = $this->search[$names][$_val];
+                    //修改为解析以逗号为分隔字符串信息
+                    $_vals = explode(',',$_val);
+                    $_val_arr = [];
+                    foreach($_vals as $_vals_val)
+                    {
+                        if(isset($this->search[$names][$_vals_val]))
+                        {
+                            $_val_arr[] = $this->search[$names][$_vals_val];
+                        }
+                    }
+                    $_val = implode(',',$_val_arr);
                 }
 
                 if ($type) {
