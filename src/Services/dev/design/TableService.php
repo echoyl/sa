@@ -26,18 +26,20 @@ class TableService extends BaseService
         {
             //table 快速设置列字段展示
             $checked = $base['checked'];
-            $key = $base['key'];
             unset($base['checked']);
             if($checked)
             {
                 //勾选 新增
                 $action_type = 'add';
+                $active = 0;
             }else
             {
                 //取消勾选 删除
+                $key = $base['key'];
                 $action_type = 'delete';
+                [$active,$old_value] = $this->getColumnIndex($columns,$key,'key');
             }
-            [$active,$old_value] = $this->getColumnIndex($columns,$key,'key');
+            
         }else
         {
             [$active,$old_value] = $this->getColumnIndex($columns,$uid);
@@ -118,6 +120,7 @@ class TableService extends BaseService
     public function copyToMenu($base,$col)
     {
         $to_id = Arr::get($base,'props.toMenuId');
+        $type = Arr::get($base,'props.type','updateOrInsert');//updateOrInsert ,insert
         if(!$to_id)
         {
             return 0;
@@ -125,16 +128,34 @@ class TableService extends BaseService
         $new_table_service = new TableService($to_id);
         //如果之前复制过，后检测为跟新同步列，而不再插入数据
         [$active,$old_value] = $new_table_service->getColumnIndex([],$col['uid']);
-        if($active)
+        if($active !== false && $type == 'updateOrInsert')
         {
             $new_table_service->edit($col,'edit');
         }else
         {
             $col['copy'] = true;
-            $new_table_service->edit($col,'add');
+            $col['checked'] = true;
+            if($type == 'insert')
+            {
+                //如果强制新增 重新生成一个uid
+                $col = $this->renewUid($col);
+            }
+            $new_table_service->edit($col,'setColumns');
         }
         
         return $to_id;
+    }
+
+    /**
+     * 表格的列都是一级的，所以直接生成即可
+     *
+     * @param [type] $col
+     * @return void
+     */
+    public function renewUid($col)
+    {
+        $col['uid'] = HelperService::uuid();
+        return $col;
     }
 
     public function sort($columns)
