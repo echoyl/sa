@@ -90,7 +90,7 @@ class ExcelService
             {
                 return false;
             }
-            return isset($val['dataIndex']);
+            return isset($val['dataIndex']) && $val['dataIndex'];
         })->map(function($val){
             //检测hasone类型中如果dataindex是 xxx_id类型则转换
             if(is_string($val['dataIndex']) && strpos($val['dataIndex'],'_id') !== false)
