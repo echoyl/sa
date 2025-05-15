@@ -414,8 +414,9 @@ class TableColumn
                     if($menu)
                     {
                         $foreign_menu = $menu;
-                        $path = array_reverse(Utils::getPath($foreign_menu,$this->menus,'path'));
-                        $fieldProps['path'] = implode('/',$path);
+                        //前端已经支持了直接使用menu_id读取配置，这里不需要再计算path了
+                        //$path = array_reverse(Utils::getPath($foreign_menu,$this->menus,'path'));
+                        //$fieldProps['path'] = implode('/',$path);
                     }
                 }
 
@@ -436,7 +437,10 @@ class TableColumn
                     $fieldProps['name'] = $relation['title'];
                     
                 }
-                $item['fieldProps'] = $fieldProps;
+                if(!empty($fieldProps))
+                {
+                    $item['fieldProps'] = $fieldProps;
+                }
                 $items[$key] = $item;
             }
             if($action == 'confirmForm')

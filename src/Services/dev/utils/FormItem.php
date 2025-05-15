@@ -492,10 +492,15 @@ class FormItem
         {
             $path = array_reverse(Utils::getPath($page_menu,$this->menus,'path'));
             $fieldProps['path'] = implode('/',$path);
-            $fieldProps['foreign_key'] = $relation['foreign_key'];
-            $fieldProps['local_key'] = $relation['local_key'];
-            $fieldProps['name'] = $d['title'];
-            unset($d['title']);
+            if($relation)
+            {
+                //当无relation是会报错
+                $fieldProps['foreign_key'] = $relation['foreign_key'];
+                $fieldProps['local_key'] = $relation['local_key'];
+            }
+            //表格的title 使用菜单名称
+            $fieldProps['name'] = $page_menu['title'];
+            //unset($d['title']);
         }
 
         
