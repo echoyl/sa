@@ -535,25 +535,33 @@ class FormItem
         {
             $d['fieldProps'] = [];
             $fieldProps = $this->props['fieldProps']??[];
-            $set_url = $fieldProps['url']??'';
-            //如果没有自定义url 才自动查找菜单路径
-            if($relation && $relation['foreign_model'])
+            $page = [];
+            $props_page = Arr::get($this->props,'page');//选择关联菜单后不在去检测关联
+            if($props_page)
             {
-                //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
-                $d['fieldProps']['relationname'] = $relation['name'];
-                $page = $fieldProps['page']??[];
-                if($relation['foreign_model']['menu'] && !$set_url)
+                $page['id'] = $props_page;//只指定id，不会覆盖自定义配置columns等
+            }else
+            {
+                $set_url = $fieldProps['url']??'';
+                //如果没有自定义url 才自动查找菜单路径
+                if($relation && $relation['foreign_model'])
                 {
-                    //如果关联模型 也关联了菜单 直接使用第一个匹配的这个菜单的url地址
-                    $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
-                    $page['path'] = implode('/',$path);
+                    //需要找到该关联所关联到哪个菜单下面 读取出后台路由地址
+                    $d['fieldProps']['relationname'] = $relation['name'];
+                    
+                    if($relation['foreign_model']['menu'] && !$set_url)
+                    {
+                        //如果关联模型 也关联了菜单 直接使用第一个匹配的这个菜单的url地址
+                        $path = array_reverse(Utils::getPath($relation['foreign_model']['menu'],$this->menus,'path'));
+                        $page['path'] = implode('/',$path);
+                    }
+                    
+                    //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
                 }
-                if(!empty($page))
-                {
-                    $d['fieldProps']['page'] = $page;
-                }
-                //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
-                
+            }
+            if(!empty($page))
+            {
+                $d['fieldProps']['page'] = $page;
             }
         }
         $this->data = $d;

@@ -100,6 +100,7 @@ class MenuService
     public function get($id = 0,$auth_ids = false)
     {
         $data = $this->getMenuData($id,$auth_ids);
+        //只解析了最外层菜单的自动跳转，第二级菜单没法跳转 - 待解决
         return $this->bigFirstMenu($data);
     }
 
