@@ -37,6 +37,7 @@ class Utils
         'checkbox'=>'select',
         'aliyunVideo'=>'aliyunVideo',
         'modalSelect'=>'modalSelect',
+        'modalSelects'=>'modalSelect',
         'saTransfer'=>'saTransfer',
         'html'=>'html',
         'tmapShow'=>'tmapShow',

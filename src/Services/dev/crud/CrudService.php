@@ -11,6 +11,7 @@ use Echoyl\Sa\Services\dev\crud\fields\Json;
 use Echoyl\Sa\Services\dev\crud\fields\Latlng;
 use Echoyl\Sa\Services\dev\crud\fields\Link;
 use Echoyl\Sa\Services\dev\crud\fields\ModalSelect;
+use Echoyl\Sa\Services\dev\crud\fields\ModalSelects;
 use Echoyl\Sa\Services\dev\crud\fields\Model;
 use Echoyl\Sa\Services\dev\crud\fields\Password;
 use Echoyl\Sa\Services\dev\crud\fields\Pca;
@@ -64,6 +65,7 @@ class CrudService
             'select_columns'=>SelectColumns::class,
             'config'=>Config::class,
             'modalSelect'=>ModalSelect::class,
+            'modalSelects'=>ModalSelects::class,
             'state'=>State::class,
             'switch'=>Switchstate::class,
             'selects'=>Selects::class,

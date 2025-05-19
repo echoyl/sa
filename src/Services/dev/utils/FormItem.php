@@ -517,6 +517,10 @@ class FormItem
         return;
     }
 
+    public function modalSelects()
+    {
+        return $this->modalSelect();
+    }
     /**
      * 弹出层table选择器
      * 多选数据结构必须是1对多
@@ -558,6 +562,12 @@ class FormItem
                     
                     //如果没有绑定菜单，直接在配置页面中手动设置 url 地址
                 }
+            }
+            if($this->form_type == 'modalSelects')
+            {
+                $d['fieldProps']['multiple'] = true;
+                $d['fieldProps']['max'] = 9;
+                $d['fieldProps']['size'] = 'small';
             }
             if(!empty($page))
             {

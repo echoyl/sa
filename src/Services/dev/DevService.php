@@ -786,11 +786,23 @@ class DevService
                     }
                 }
 
+                //需要设置class的字段类型
+                $need_set_class_form_types = ['select','selects','radioButton','checkbox','searchSelects','cascaders','cascader','modalSelects'];
+                if(in_array($form_type,$need_set_class_form_types) && isset($all_models[$name]))
+                {
+                    $d['class'] = "@php".$all_models[$name]."::class@endphp";
+                }
+                //需要设置data_name的字段类型
+                $need_set_data_name_form_types = ['search_select','searchSelects','searchSelect','modalSelects'];
+                if(in_array($form_type,$need_set_data_name_form_types) && isset($all_relations[$name]))
+                {
+                    $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
+                }
+
                 if(in_array($form_type,['select','selects','radioButton','checkbox']))
                 {
                     if(isset($all_models[$name]))
                     {
-                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
                         //如果是select 且设置了tabel menu，那么form_data设置的label 和value 
                         //新增数据筛选配置
                         //$filter = $clo
@@ -875,7 +887,6 @@ class DevService
                 }
                 if(($form_type == 'search_select' || $form_type == 'searchSelect' || $form_type == 'searchSelects') && isset($all_relations[$name]))
                 {
-                    $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
                     if($label)
                     {
                         $d['label'] = $label;
@@ -884,16 +895,11 @@ class DevService
                     {
                         $d['value'] = $value;
                     }
-                    if($form_type == 'searchSelects')
-                    {
-                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
-                    }
                 }
                 if($form_type == 'cascaders' || $form_type == 'cascader')
                 {
                     if(isset($all_models[$name]))
                     {
-                        $d['class'] = "@php".$all_models[$name]."::class@endphp";
                         $d['with'] = true;
                     }
                     
@@ -910,7 +916,7 @@ class DevService
                     $d['topCode'] = Arr::get($setting,'pca_topCode','');
                 }
                 //modalSelect
-                if($form_type == 'modalSelect')
+                if($form_type == 'modalSelect' || $form_type == 'modalSelects')
                 {
                     if($relation)
                     {
