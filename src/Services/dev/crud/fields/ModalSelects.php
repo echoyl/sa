@@ -53,7 +53,7 @@ class ModalSelects extends BaseField
             $val = null;
             $ids = explode(',',$vals);
             $classins = new $class;
-            $datas = $classins->whereIn($id_name,$ids)->get()->toArray();
+            $datas = $classins->whereIn($id_name,$ids)->orderByRaw('FIELD('.$id_name.', ' . $vals . ')')->get()->toArray();
             foreach($datas as $d)
             {
                 //再次处理数据
