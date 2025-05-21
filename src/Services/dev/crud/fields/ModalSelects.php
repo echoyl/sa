@@ -14,9 +14,8 @@ class ModalSelects extends BaseField
         $col = $this->config['col'];
         $isset = $options['isset'];
         $id_name = $col['value']??'id';
-        if($isset && $val && is_array($val))
+        if($isset && is_array($val))
         {
-            //如果传输的数据是数组 这里暂时数据库中只存储逗号拼接的id值  如果之后需要关联模型处理再说
             $_v = [];
             foreach($val as $v)
             {
