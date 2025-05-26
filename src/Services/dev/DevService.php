@@ -439,6 +439,8 @@ class DevService
         $just_model_file = Arr::get($setting,'justModelFile');
         $just_controller_file = Arr::get($setting,'justControllerFile');
 
+        $open_drag_sort = Arr::get($setting,'openDragSort');//是否开启拖拽排序
+
         if($just_model_file)
         {
             return;
@@ -451,6 +453,15 @@ class DevService
         $name = ucfirst(array_pop($names));
 
         $namespace = '';
+        $use = '';
+        $use_traits = $namespace_data = [];
+        $traits = [
+            'category'=>['TraitsCategory','use Echoyl\Sa\Traits\Category as TraitsCategory;'],
+            'dragsort'=>['DragSort','use Echoyl\Sa\Traits\DragSort;'],
+        ];
+        
+        
+        
         if(!empty($names))
         {
             $namespace = '\\'.implode('\\',$names);
@@ -463,10 +474,14 @@ class DevService
         if($data['leixing'] == 'category')
         {
             $tpl_name = 'controller2';
+            $namespace_data[] = $traits['category'][1];
+            $use_traits[] = $traits['category'][0];
         }elseif($just_controller_file)
         {
             $tpl_name = 'justController';
         }
+        
+        
         $content = file_get_contents(implode('/',[$this->tpl_path,$tpl_name.'.txt']));
 
         //读取控制器主模型的关联信息
@@ -476,7 +491,16 @@ class DevService
         //HelperService::format_var_export($parse_columns,3);
 
         //生成基础配置 with_column，search_config，with_sum,with_count
-        $use_namespace = $parse_columns = [];
+        //$use_namespace = $parse_columns = [];
+        if($open_drag_sort)
+        {
+            $use_traits[] = $traits['dragsort'][0];
+            $namespace_data[] = $traits['dragsort'][1];
+        }
+        if(!empty($use_traits))
+        {
+            $use = "use ".implode(',',$use_traits).';';
+        }
         
         //检测文件是否已经存在 存在的话将自定义代码带入
         [$customer_code,$customer_construct,$customer_namespace,$customer_property] = $this->customerCode($model_file_path,$customer_init);
@@ -486,7 +510,8 @@ class DevService
             '/\$modelname\$/'=>$name,
             '/\$name\$/'=>$name,
             '/\$crud_config\$/'=>implode("\r\t\t",$crud_config),
-            '/\$use_namesapce\$/'=>implode("\r",$use_namespace),
+            //'/\$use_namesapce\$[\r\n\t]+/'=>implode("\r",$namespace_data),
+            //'/\$use_traits\$[\r\n\t]+/'=> $use,
             //'/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/'=>$customer_code,
             '/\$customer_construct\$/'=>$customer_construct,
@@ -496,6 +521,20 @@ class DevService
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
+        if($use)
+        {
+            $replace_arr['/\$use_traits\$/'] = $use;
+        }else
+        {
+            $replace_arr['/\$use_traits\$[\r\n\t]+/'] = $use;
+        }
+        if(!empty($namespace_data))
+        {
+            $replace_arr['/\$use_namesapce\$/'] = implode("\r",$namespace_data);
+        }else
+        {
+            $replace_arr['/\$use_namesapce\$[\r\n\t]+/'] = '';
+        }
 
         $search = $replace = [];
         
@@ -619,13 +658,18 @@ class DevService
                             $with_sum[] = [$val['name'],$with_sum_name];
                         }
                     }
-                    $parse_columns[] = [
+                    $parse_column = [
                         'name'=>Utils::uncamelize($val['name']),
                         'type'=>'models',
                         'class'=>'@php'.$f_model_name.'::class@endphp',
                         'foreign_key'=>$val['foreign_key'],
-                        'setting'=>isset($val['setting']) && $val['setting']?json_decode($val['setting'],true):[]
+                        //'setting'=>isset($val['setting']) && $val['setting']?json_decode($val['setting'],true):[]
                     ];
+                    if(isset($val['setting']) && $val['setting'])
+                    {
+                        $parse_column['setting'] = json_decode($val['setting'],true);
+                    }
+                    $parse_columns[] = $parse_column;
                 }
                 
 
@@ -656,14 +700,17 @@ class DevService
                     {
                         //1对1时候 还需要关联对接 转换关联数据
                         //name需要驼峰转下划线
-                        $parse_columns[] = [
+                        $parse_column = [
                             'name'=>Utils::uncamelize($val['name']),
                             'type'=>'model',
                             'class'=>'@php'.$f_model_name.'::class@endphp',
                             'foreign_key'=>$val['foreign_key'],
-                            'setting'=>isset($val['setting']) && $val['setting']?json_decode($val['setting'],true):[]
                         ];
-    
+                        if(isset($val['setting']) && $val['setting'])
+                        {
+                            $parse_column['setting'] = json_decode($val['setting'],true);
+                        }
+                        $parse_columns[] = $parse_column;
                     }
                 }
 

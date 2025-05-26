@@ -686,6 +686,13 @@ class CrudController extends ApiBaseController
                     $this->model->where('id',$id)->update($data);
                     return $this->success();
                     break;
+                case 'dragSort':
+                    if (method_exists($this, 'dragSort')) {
+                        return $this->dragSort();
+                    }else
+                    {
+                        return $this->failMsg('请先在模型中开启拖拽排序功能');
+                    }
                 default:
                     //设置不需要提交字段
                     if (!empty($this->dont_post_columns)) {

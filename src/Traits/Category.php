@@ -21,6 +21,10 @@ trait Category
 				$data['parent_id'] = is_array($cid)?array_pop($cid):$cid;
 			}
 		}
+		if (method_exists($this, 'getMaxDisplayorder')) {
+			//如果使用了dragSort 后每次添加数据读取最大的displayorder + 1
+			$data['displayorder'] = $this->getMaxDisplayorder();
+		}
 	}
 
     public function index()

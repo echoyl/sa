@@ -58,7 +58,7 @@ class TableColumn
         //fixed
         $fixed = $props['fixed']??'';
         $value_type = '';
-        if(in_array($key,['option','coption','created_at_s','displayorder']))
+        if(in_array($key,['option','coption','dragsort','created_at_s','displayorder']))
         {
             $value_type = $key;
             // $this->data = [

@@ -3,13 +3,13 @@ namespace App\Http\Controllers\admin$namespace$;
 use App\Http\Controllers\admin\BaseController;
 use App\Models$namespace$\$modelname$;
 $use_namesapce$
-
 //customer namespace start
 $customer_namespace$
 //customer namespace end
 
 class $name$Controller extends BaseController
 {
+	$use_traits$
 	//customer property start
 	$customer_property$
 	//customer property end
