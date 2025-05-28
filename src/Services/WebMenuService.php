@@ -637,7 +637,7 @@ class WebMenuService
             'top' => $menu['category_show_top'],
             'bottom' => $menu['category_show_bottom'],
             'blank' => 0,
-            'category_default_first' => $menu['category_default_first'],
+            'category_default_first' => $menu['category_default_first']??false,
         ]);
     }
 
