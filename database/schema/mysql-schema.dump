@@ -183,26 +183,27 @@ CREATE TABLE `la_dev_model_relation`  (
   `with_default` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联的默认返回数据withDefault',
   `filter` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联模型数据筛选条件',
   `order_by` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '关联数据排序方式',
+  `setting` text COLLATE utf8mb4_general_ci COMMENT '其它设置放在这里，之后不再新增字段',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 10000 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of la_dev_model_relation
 -- ----------------------------
-INSERT INTO `la_dev_model_relation` VALUES (80, 43, '角色', 'role', 'one', 61, 'title', 'roleid', '2023-05-04 15:37:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (81, 62, '操作用户', 'user', 'one', 43, 'id', 'user_id', '2023-05-05 10:36:23', '2024-09-19 15:08:36', 0, '', '', 0, '', 1, 'id,username,roleid', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (82, 7, '小程序账号', 'app', 'one', 63, 'appid', 'appid', '2023-05-05 15:36:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (83, 65, '公众号账号', 'app', 'one', 66, 'appid', 'appid', '2023-05-06 10:09:53', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (110, 96, '流程', 'nodes', 'many', 97, 'workflow_id', 'id', '2023-05-24 16:53:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (111, 97, '上一个流程', 'upstream', 'one', 97, 'id', 'upstream_id', '2023-05-24 17:05:02', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (112, 97, '下一个流程', 'downstream', 'one', 97, 'id', 'downstream_id', '2023-05-24 17:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (116, 100, '流程节点', 'node', 'one', 97, 'id', 'node_id', '2023-05-26 15:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (257, 66, '自定义菜单', 'menus', 'many', 271, 'wechat_offiaccount_id', 'id', '2023-08-21 19:33:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (326, 7, '登录绑定', 'bind', 'one', 353, 'openid', 'openid', '2023-09-14 17:01:48', NULL, 0, '', '', 0, '', 1, '', 0, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (332, 356, '退款记录', 'refunds', 'many', 357, 'log_id', 'id', '2023-09-15 18:25:24', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (333, 380, '微信用户', 'user', 'one', 65, 'openid', 'openid', '2024-03-30 17:20:36', '2024-03-30 17:35:00', 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (334, 404, '语言', 'category', 'one', 403, 'id', 'category_id', '2024-05-27 11:22:52', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '');
-INSERT INTO `la_dev_model_relation` VALUES (335, 353, '微信用户', 'user', 'one', 7, 'openid', 'openid', '2024-11-23 14:26:09', '2024-11-23 14:26:09', 0, '', '', 0, '', 0, '', NULL, '', '', '', '');
+INSERT INTO `la_dev_model_relation` VALUES (80, 43, '角色', 'role', 'one', 61, 'title', 'roleid', '2023-05-04 15:37:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (81, 62, '操作用户', 'user', 'one', 43, 'id', 'user_id', '2023-05-05 10:36:23', '2024-09-19 15:08:36', 0, '', '', 0, '', 1, 'id,username,roleid', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (82, 7, '小程序账号', 'app', 'one', 63, 'appid', 'appid', '2023-05-05 15:36:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (83, 65, '公众号账号', 'app', 'one', 66, 'appid', 'appid', '2023-05-06 10:09:53', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (110, 96, '流程', 'nodes', 'many', 97, 'workflow_id', 'id', '2023-05-24 16:53:01', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (111, 97, '上一个流程', 'upstream', 'one', 97, 'id', 'upstream_id', '2023-05-24 17:05:02', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (112, 97, '下一个流程', 'downstream', 'one', 97, 'id', 'downstream_id', '2023-05-24 17:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (116, 100, '流程节点', 'node', 'one', 97, 'id', 'node_id', '2023-05-26 15:05:38', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (257, 66, '自定义菜单', 'menus', 'many', 271, 'wechat_offiaccount_id', 'id', '2023-08-21 19:33:00', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (326, 7, '登录绑定', 'bind', 'one', 353, 'openid', 'openid', '2023-09-14 17:01:48', NULL, 0, '', '', 0, '', 1, '', 0, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (332, 356, '退款记录', 'refunds', 'many', 357, 'log_id', 'id', '2023-09-15 18:25:24', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (333, 380, '微信用户', 'user', 'one', 65, 'openid', 'openid', '2024-03-30 17:20:36', '2024-03-30 17:35:00', 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (334, 404, '语言', 'category', 'one', 403, 'id', 'category_id', '2024-05-27 11:22:52', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
+INSERT INTO `la_dev_model_relation` VALUES (335, 353, '微信用户', 'user', 'one', 7, 'openid', 'openid', '2024-11-23 14:26:09', '2024-11-23 14:26:09', 0, '', '', 0, '', 0, '', NULL, '', '', '', '', NULL);
 INSERT INTO `la_dev_model_relation` VALUES (338, 406, '消息模板', 'template', 'one', 405, 'template_id', 'template_id', '2025-02-18 09:48:14', '2025-02-18 09:55:51', 0, '', '', 0, '', 1, '', NULL, 'content,example,keys,template_id,title', '', '', '', NULL);
 INSERT INTO `la_dev_model_relation` VALUES (336, 406, '关联小程序', 'app', 'one', 63, 'appid', 'app_id', '2025-02-18 14:33:21', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
 INSERT INTO `la_dev_model_relation` VALUES (337, 405, '公众号', 'account', 'one', 66, 'appid', 'appid', '2025-02-17 15:31:14', NULL, 0, '', '', 0, '', 1, '', NULL, '', '', '', '', NULL);
