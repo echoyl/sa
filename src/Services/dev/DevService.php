@@ -171,7 +171,7 @@ class DevService
 
             //$foreign_model_name = ucfirst(array_pop($foreign_model_names));
 
-            $foreign_model_name = ucfirst($foreign_model['name']);
+            $foreign_model_name = Arr::get($useModelArr,$foreign_model['id'],ucfirst($foreign_model['name']));
 
             if($model['parent_id'] != $foreign_model['parent_id'])
             {
@@ -340,6 +340,14 @@ class DevService
             $parse_columns = '';
         }
 
+        //添加唯一字段检测
+        $crud_config = [];
+        if($data['unique_fields'])
+        {
+            $_unique_fields = json_decode($data['unique_fields'],true);
+            $crud_config[] = 'public $uniqueFields = '.(Dev::export($_unique_fields,1)).';';
+        }
+
         //检测文件是否已经存在 存在的话将自定义代码带入
         [$customer_code,$customer_construct,$customer_namespace] = $this->customerCode($model_file_path);
 
@@ -372,6 +380,14 @@ class DevService
         }else
         {
             $replace_arr['/\s+\$sys_admin_uuid\$/'] = "\r";
+        }
+
+        if(!empty($crud_config))
+        {
+            $replace_arr['/\$crud_config\$/'] = "\r\t".implode("\r\t\t",$crud_config)."\r";
+        }else
+        {
+            $replace_arr['/\s+\$crud_config\$/'] = "\r";
         }
 
         $search = $replace = [];
@@ -747,22 +763,6 @@ class DevService
         {
             $crud_config[] = '$this->with_count = '.(json_encode($with_count)).';';
         }
-
-        //添加唯一字段检测
-        if($model['unique_fields'])
-        {
-            $_unique_fields = json_decode($model['unique_fields'],true);
-            // $unique_fields = [];
-            // foreach($_unique_fields as $uf)
-            // {
-            //     $unique_fields[] = $uf['columns'];
-            // }
-            // $crud_config[] = '$this->uniqueFields = '.(json_encode($unique_fields)).';';
-            $crud_config[] = '$this->uniqueFields = '.(Dev::export($_unique_fields,2)).';';
-        }
-
-
-        
 
         //生成parse_columns 数组
         if($model['columns'])

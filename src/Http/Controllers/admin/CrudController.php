@@ -9,6 +9,7 @@ use Echoyl\Sa\Services\dev\crud\ParseData;
 use Echoyl\Sa\Services\dev\crud\relation\Relation;
 use Echoyl\Sa\Services\export\ExcelService;
 use Echoyl\Sa\Services\HelperService;
+use Echoyl\Sa\Traits\CheckUnique;
 use Illuminate\Support\Arr;
 
 /**
@@ -30,6 +31,7 @@ use Illuminate\Support\Arr;
  */
 class CrudController extends ApiBaseController
 {
+    use CheckUnique;
     public $model;
     public $model_class;
     public $with_column = [];
@@ -41,7 +43,7 @@ class CrudController extends ApiBaseController
     public $can_be_null_columns = []; //可以设置为空的字段
     public $with_count = [];//计算总数量
     public $select_columns = [];
-    public $uniqueFields = [];//检测唯一字段
+    public $uniqueFields = [];//检测唯一字段 属性已转移至模型中
 
     public $model_id = 0;//系统所选的模型id值
 
@@ -511,79 +513,6 @@ class CrudController extends ApiBaseController
         return $this->post();
     }
 
-    public function checkUnique($data,$id = 0)
-    {
-        if(empty($this->uniqueFields))
-        {
-            return;
-        }
-        $key = '';
-        //$message = '';
-        $is_has = false;
-        foreach($this->uniqueFields as $field)
-        {
-            
-            $where = [];
-            if(is_array($field))
-            {
-                //增加了提示语 检测格式 如果有 columns和message
-                $keys = [];
-                foreach($field as $k=>$v)
-                {
-                    if(is_numeric($k))
-                    {
-                        $keys[] = $v;
-                    }else
-                    {
-                        if($k == 'columns')
-                        {
-                            $keys = $v;
-                        }
-                        if($k == 'message')
-                        {
-                            $key = $v;
-                        }
-                    }
-                }
-                $key = $key?$key:implode('-',$keys).'数据已存在';
-                foreach($keys as $f)
-                {
-                    if(!isset($data[$f]) || !$data[$f])
-                    {
-                        //未设置该值或无该值时不进行检测
-                        continue;
-                    }
-                    $where[$f] = $data[$f];
-                }
-            }else
-            {
-                if(!isset($data[$field]) || !$data[$field])
-                {
-                    continue;
-                }
-                $where[$field] = $data[$field];
-                $key = $field;
-            }
-            if(empty($where))
-            {
-                continue;
-            }
-
-            $has = $this->model->where($where);
-			if($id)
-			{
-				$has = $has->where([['id','!=',$id]]);
-			}
-            if($has->first())
-			{
-                $is_has = true;
-				break; 
-			}
-        }
-
-        return $is_has?$key:'';
-    }
-
     public function post()
     {
         if (request()->isMethod('post'))
@@ -732,7 +661,7 @@ class CrudController extends ApiBaseController
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
                 {
-                    return $this->fail([1,$check_uniue_result]);
+                    return $this->failMsg($check_uniue_result);
                 }
                 $newModel->where(['id' => $id])->update($data);
             } else {
@@ -742,7 +671,7 @@ class CrudController extends ApiBaseController
                 $check_uniue_result = $this->checkUnique($data,$id);
                 if($check_uniue_result)
                 {
-                    return $this->fail([1,$check_uniue_result]);
+                    return $this->failMsg($check_uniue_result);
                 }
                 if($this->model->with_system_admin_id)
                 {

@@ -20,7 +20,7 @@
      * @var array
      */
     public $locale_columns = $locale_columns$;
-
+    $crud_config$
     $parse_columns$
 
     //relationship start

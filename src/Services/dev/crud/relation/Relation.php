@@ -2,10 +2,12 @@
 namespace Echoyl\Sa\Services\dev\crud\relation;
 
 use Echoyl\Sa\Services\dev\crud\ParseData;
+use Echoyl\Sa\Traits\CheckUnique;
 use Illuminate\Support\Arr;
 
 class Relation
 {
+    use CheckUnique;
     var $model_class;//当前模型class
     var $data;//当前模型主数据
     public function __construct($class,$data)
@@ -70,16 +72,28 @@ class Relation
             $id = Arr::get($data,'id',0);
 
             (new ParseData($class))->make($data,'encode',$id?'update':'insert');
+            $data[$foreign_key] = $data_id;
+            $check_unique_result = $this->checkUnique($data,$id,$class);
+            if($check_unique_result)
+            {
+                //数据已存在忽略
+                if($id)
+                {
+                    $ids[] = $id;
+                }
+                continue;
+            }
 
 			if($id)
 			{
 				//更新
+                unset($data[$foreign_key]);
 				$class::where(['id'=>$id])->update($data);
 				$ids[] = $id;
 			}else
 			{
 				//插入
-				$data[$foreign_key] = $data_id;
+				//$data[$foreign_key] = $data_id;
                 $ids[] = (new $class)->insertGetId($data);
 			}
 		}
@@ -132,6 +146,13 @@ class Relation
 
         $data = array_merge($data,$ext_data);
 
+        $check_unique_result = $this->checkUnique($data,$item?$item['id']:0,$class);
+        if($check_unique_result)
+        {
+            //数据已存在忽略
+            return;
+        }
+
         if($from == 'update')
         {
             $model->where($where)->update($data);
@@ -146,5 +167,10 @@ class Relation
             }
         }
         return;
+    }
+
+    public function getModel()
+    {
+        return new $this->model_class;
     }
 }
