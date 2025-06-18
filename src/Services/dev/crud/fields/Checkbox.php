@@ -9,7 +9,7 @@ class Checkbox extends BaseField
     public function encode($options = [])
     {
         $val = $options['val'];
-        $val = $val?implode(',',$val):'';
+        $val = $val && is_array($val)?implode(',',$val):'';
         return $this->getData($val);
     }
 
