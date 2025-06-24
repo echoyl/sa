@@ -8,6 +8,7 @@ use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
 use Echoyl\Sa\Services\web\UrlService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
@@ -124,6 +125,7 @@ class WebMenuService
                 if ($child) {
                     //self::createRoute($child,$alias);
                     Route::redirect($alias, implode('/', array_reverse(self::getParentAlias($child, $menus))));
+                    //Log::channel('daily')->info('createRoute menu:',['name'=>$alias,'to'=>array_reverse(self::getParentAlias($child, $menus)),]);
                 }
                 break;
             case 'post':
@@ -133,14 +135,19 @@ class WebMenuService
                     Route::get($alias . '/{id}.html', self::$modules_routes[$val['module']]['detail']);
                     Route::get($alias . '/{cid}/{id}.html', self::$modules_routes[$val['module']]['detail'])->where('cid', '[0-9]+');
                     Route::get($alias . '/{cid?}', self::$modules_routes[$val['module']]['list'])->where('cid', '[0-9]+');
+                    //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{id}.html','to'=>self::$modules_routes[$val['module']]['detail'],]);
+                    //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{cid}/{id}.html','to'=>self::$modules_routes[$val['module']]['detail'],]);
+                    //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{cid?}','to'=>self::$modules_routes[$val['module']]['list'],]);
                 } else {
                     //单篇文章模块
                     Route::get($alias, self::$modules_routes[$val['module']]['detail']);
+                    //Log::channel('daily')->info('createRoute post:',['name'=>$alias,'to'=>self::$modules_routes[$val['module']]['detail'],]);
                 }
                 break;
             case 'page':
                 //单页类型
                 Route::get($alias, 'MenuController@index');
+                //Log::channel('daily')->info('createRoute page:',['name'=>$alias,'to'=>"MenuController@index",]);
                 break;
             default:
                 //其它模块不生成路由

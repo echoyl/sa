@@ -17,6 +17,11 @@ class Config extends BaseField
         {
             $dev_menu = $this->getItemConfig();
             $val = is_string($val)?json_decode($val,true):$val;
+            //兼容之前的数据格式
+            if(isset($val['value']))
+            {
+                $val = $val['value'];
+            }
             $val = Utils::parseImageInPage($val,$dev_menu,false,'decode');
         }else
         {

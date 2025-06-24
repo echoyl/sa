@@ -31,7 +31,7 @@ class TableService extends BaseService
             {
                 //勾选 新增
                 $action_type = 'add';
-                $active = 0;
+                $active = false;//最后插入
             }else
             {
                 //取消勾选 删除

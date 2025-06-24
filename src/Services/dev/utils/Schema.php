@@ -518,7 +518,7 @@ class Schema
         if(!$version)
         {
             $result = DB::select('SELECT VERSION() AS version');
-            $version = $result[0]->version;
+            $version = Arr::get($result,'0.version');
         }
         return $version;
     }

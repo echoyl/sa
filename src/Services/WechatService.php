@@ -2,9 +2,7 @@
 
 namespace Echoyl\Sa\Services;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use EasyWeChat\Factory;
 use EasyWeChat\MiniApp\Application;
 use EasyWeChat\OfficialAccount\Application as OfficialAccountApplication;
 use EasyWeChat\Pay\Application as PayApplication;
@@ -164,7 +162,12 @@ class WechatService
     {
         if(is_array($scene))
         {
-            $scene = http_build_query($scene);
+            $s = [];
+            foreach($scene as $k=>$v)
+            {
+                $s[] = implode('=',[$k,$v]);
+            }
+            $scene = implode('&',$s);
         }
         $post = ['scene'=>$scene];
 
@@ -175,6 +178,12 @@ class WechatService
 
         try {
             $response = $app->getClient()->postJson('/wxa/getwxacodeunlimit', $post);
+            $content = $response->getContent();
+            $json_ret = HelperService::json_validate($content);
+            if($json_ret)
+            {
+                return [1,'生成二维码失败:'.($json_ret['errmsg']??'未知').' '.$post['scene']];
+            }
             if($path)
             {
                 $response->saveAs($path);

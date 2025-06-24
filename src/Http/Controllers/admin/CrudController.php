@@ -192,7 +192,7 @@ class CrudController extends ApiBaseController
                     if (is_numeric($search_val)) {
                         $category_id = [$search_val];
                     } else {
-                        $category_id = json_decode($search_val, true);
+                        $category_id = is_string($search_val)?json_decode($search_val, true):$search_val;
                     }
 
                     if (isset($col['class']) && is_array($category_id)) {
@@ -793,7 +793,7 @@ class CrudController extends ApiBaseController
 
     public function parseWiths(&$data)
     {
-        $ps = new ParseData($this->getModelClass(),['action_type'=>$this->action_type]);
+        $ps = new ParseData($this->getModelClass(),['action_type'=>$this->action_type,'category_fields'=>$this->category_fields]);
         $ps->parseWiths($data);
         return;
     }
