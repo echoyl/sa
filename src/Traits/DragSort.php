@@ -1,19 +1,37 @@
 <?php
-
-
 namespace Echoyl\Sa\Traits;
 
 use Illuminate\Support\Arr;
 
 trait DragSort
 {
-
-    public function getMaxDisplayorder($field = 'displayorder')
+	/**
+	 * 获取表中最大排序值
+	 *
+	 * @param string $field 排序字段
+	 * @param [type] $getModel 检索获取最大排序值的函数
+	 * @return void
+	 */
+    public function getMaxDisplayorder($field = 'displayorder',$getModel = null)
 	{
 		if (!property_exists($this, 'model_class')) {
             return 0;
         }
-		return $this->model_class::max($field) + 1;
+		$model = $this->getModel();
+		$model = $getModel?$getModel($model):$model;
+		return $model->max($field) + 1;
+	}
+
+	/**
+	 * 获取排序操作的实例化对象，自定义检索数据
+	 *
+	 * @param [type] $model 实例化后的模型对象
+	 * @param [type] $active_data 当前drag的数据
+	 * @return any
+	 */
+	public function getDragModel($model,$active_data = null)
+	{
+		return $model;
 	}
 
 	public function dragSort()
@@ -40,8 +58,10 @@ trait DragSort
 			]	
 		];
 		$type = $active_displayorder > $over_displayorder?'increment':'decrement';
+
 		$between_sort = $type == 'decrement' ? [$active_displayorder, $over_displayorder] : [$over_displayorder, $active_displayorder];
 		//d($type,$between_sort);
+		$model = $this->getDragModel($model,$active_data);
 		//读取active和over之间的所有数据
 		$between = $model->whereBetween('displayorder',$between_sort)->get();
 		foreach($between as $v)

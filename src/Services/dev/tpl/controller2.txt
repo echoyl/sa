@@ -20,11 +20,14 @@ class $name$Controller extends BaseController
 		$crud_config$
 		$this->model = new $modelname$();
 		$this->model_class = $modelname$::class;
-		$post_parent_id = request('parent_id', 0);
+		$post_parent_id = request('parent_id', $this->cid);
         $this->default_post = [
-            'parent_id' => $post_parent_id ?: $this->cid,
+            'parent_id' => $post_parent_id,
             'displayorder' => 0,
         ];
+		//customer construct start
+		$customer_construct$
+		//customer construct end
 	}
 
 	//customer code start

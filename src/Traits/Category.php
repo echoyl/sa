@@ -21,10 +21,15 @@ trait Category
 				$data['parent_id'] = is_array($cid)?array_pop($cid):$cid;
 			}
 		}
-		if (method_exists($this, 'getMaxDisplayorder')) {
+		if (method_exists($this, 'getMaxDisplayorder') && $this->action_type == 'add') {
 			//如果使用了dragSort 后每次添加数据读取最大的displayorder + 1
 			$data['displayorder'] = $this->getMaxDisplayorder();
 		}
+	}
+
+	public function getListMaxLevel()
+	{
+		return property_exists($this, 'list_max_level') ? $this->list_max_level : 0;
 	}
 
     public function index()
@@ -64,7 +69,7 @@ trait Category
 		$data = HelperService::getChildFromData($m->get()->toArray(),function($item){
             $this->parseData($item,'decode','list');
             return $item;
-        },$displayorder,$this->cid);
+        },$displayorder,$this->cid,'parent_id',$this->getListMaxLevel());
 
 		return $this->list($data,count($data),$search);
 	}
