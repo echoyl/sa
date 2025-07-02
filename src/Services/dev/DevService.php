@@ -873,7 +873,7 @@ class DevService
                                 $json_data = $setting['json'];
                             }
                             $d['data'] = collect($json_data)->map(function($v){
-                                if(is_numeric($v['id']))
+                                if(isset($v['id']) && is_numeric($v['id']))
                                 {
                                     $v['id'] = intval($v['id']);
                                 }

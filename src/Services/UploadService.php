@@ -130,31 +130,37 @@ class UploadService
             $width = $image->width();
 
             //获取参数是否压缩原图
+            $max_size = config('sa.admin_upload_max_wh',0);//默认不开启压缩
             if($toSize)
             {
                 if(is_numeric($toSize))
                 {
-                    if($toSize < $height || $toSize < $width)
+                    if($toSize <= $max_size)
                     {
-                        $image->scale($toSize, $toSize)->save($new_path);
+                        //设置max_size 为0时不压缩
+                        if($toSize < $height || $toSize < $width)
+                        {
+                            $image->scale($toSize, $toSize)->save($new_path);
+                        }
                     }
-                    
                 }elseif(is_array($toSize) && isset($toSize[1]))
                 {
-                    if($toSize[1] < $height || $toSize[0] < $width)
+                    if($toSize[1] <= $max_size && $toSize[0] <= $max_size)
                     {
-                        $image->scale($toSize[0], $toSize[1])->save($new_path);
+                        if($toSize[1] < $height || $toSize[0] < $width)
+                        {
+                            $image->scale($toSize[0], $toSize[1])->save($new_path);
+                        }
                     }
-                    
                 }
-                
             }else
             {
-                //没有size 那么默认图片最大为1200
-                $max_size = config('sa.admin_upload_max_wh',1000);
-                if($height > $max_size || $width > $max_size)
+                if($max_size > 0)
                 {
-                    $image->scale($max_size, $max_size)->save($new_path);
+                    if($height > $max_size || $width > $max_size)
+                    {
+                        $image->scale($max_size, $max_size)->save($new_path);
+                    }
                 }
             }
 

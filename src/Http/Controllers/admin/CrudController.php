@@ -409,8 +409,6 @@ class CrudController extends ApiBaseController
 
     public function index()
     {
-        $psize = request('pageSize', $this->page_size);
-        $page = request('current', 1);
         $this->action_type = 'list';
         $search = [];
 
@@ -470,6 +468,10 @@ class CrudController extends ApiBaseController
                 //清除前端传来的select列
             }
         }
+
+        $psize = request('pageSize', $this->page_size);
+        $page = request('current', 1);
+
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)
             ->get()->toArray();
