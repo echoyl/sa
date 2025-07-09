@@ -3,9 +3,7 @@ namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\model\Relation;
-use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
-use stdClass;
 
 class TableColumn
 {
@@ -521,7 +519,7 @@ class TableColumn
             }
             if($this->form_type == 'radioButton')
             {
-                $d['valueType'] = 'radioButton';
+                //$d['valueType'] = 'radioButton';//去除radioButton的设置 在列表中渲染时会报js错误
                 //$d['fieldProps']['buttonStyle'] = 'solid';
             }
         }
