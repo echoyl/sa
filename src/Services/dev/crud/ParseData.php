@@ -5,6 +5,9 @@ use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
+/**
+ * @property \Echoyl\Sa\Services\AdminAppService                $adminService
+ */
 class ParseData
 {
     var $model_class;//当前模型class
@@ -231,6 +234,8 @@ class ParseData
 
         $action_type = $this->getParam('action_type','list');//list add edit
 
+        $set_this = $this->getParam('set_this');
+
         foreach ($parse_columns as $with) {
             if(isset($with['with']))
             {
@@ -262,31 +267,45 @@ class ParseData
                             {
                                 $_m = $_m->select($with['columns']);
                             }
+                            $filter_empty = false;
                             if(isset($with['where']))
                             {
-                                //$this_data = $this->setThis();
-                                $this_data = [];
                                 $with_where = [];
                                 foreach($with['where'] as $ww)
                                 {
+                                    $use_this = strpos($ww[2],'this.') !== false;//this. 从控制器setThis函数返回的数据中读取条件
+                                    $use_item = strpos($ww[2],'item.') !== false;//item.代表从当前数据读取条件
+                                    $data_key = str_replace(['this.','item.'],'',$ww[2]);
+
+                                    $filter_val = $ww[2];
+                                    $filter_data = $use_this ? $set_this : ( $use_item ? $data : false );
+
+                                    if($filter_data !== false)
+                                    {
+                                        $filter_val = $filter_data[$data_key] ?? false;
+                                        if($filter_val === false)
+                                        {
+                                            //如果设置了读取数据中的条件，但数据没有这个字段，则不返回数据了
+                                            $filter_empty = true;
+                                            break;
+                                        }
+                                    }
+
                                     if(in_array($ww[1],['in','between']))
                                     {
-                                        $_m = HelperService::searchWhereBetweenIn($_m,[$ww[0]],$ww[2],$ww[1] == 'in'?'whereIn':'whereBetween');
+                                        $_m = HelperService::searchWhereBetweenIn($_m,[$ww[0]],$filter_val,$ww[1] == 'in'?'whereIn':'whereBetween');
                                     }else
                                     {
-                                        if(strpos($ww[2],'this.') !== false)
-                                        {
-                                            $data_key = str_replace('this.','',$ww[2]);
-                                            if(isset($this_data[$data_key]))
-                                            {
-                                                $ww[2] = $this_data[$data_key];
-                                            }
-                                        }
-                                        $with_where[] = $ww;
+                                        $with_where[] = [$ww[0],$ww[1],$filter_val];
                                     }
                                     
                                 }
                                 $_m = $_m->where($with_where);
+                            }
+                            if($filter_empty)
+                            {
+                                $data[$name] = [];
+                                continue;
                             }
                             if($has_displayorder_columns)
                             {
