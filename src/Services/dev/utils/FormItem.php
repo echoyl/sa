@@ -656,6 +656,11 @@ class FormItem
             //unset($d['valueType']);
             //$d['dataIndex'] = [$relation['name'],$label];
         }
+        $default = $this->schema['default']??'';
+        if($default)
+        {
+            $d['fieldProps']['defaultValue'] = $default;
+        }
         $this->data = $d;
     }
 
