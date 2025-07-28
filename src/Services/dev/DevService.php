@@ -829,7 +829,9 @@ class DevService
                         $_columns = explode(',',$relation['in_page_select_columns']);
                     }elseif($relation['select_columns'])
                     {
-                        $_columns = explode(',',$relation['select_columns']);
+                        //关联的字段 呈现 name- 格式,需要过滤掉这种格式
+                        $_select_columns = collect(explode(',',$relation['select_columns']))->filter(fn ($v) => strpos($v,'-') === false)->values()->toArray();
+                        $_columns = array_values(array_unique(array_merge($_columns,$_select_columns)));
                     }
                 }
 
@@ -859,7 +861,7 @@ class DevService
                             $_columns = array_merge($_columns,["{$label} as label","{$value} as value"]);
                         }
                         $d['no_category'] = true;
-                        $d['columns'] = $_columns;
+                        $d['columns'] = array_values($_columns);
                     }else
                     {
                         if(isset($setting['json']) && $setting['json'])
