@@ -205,6 +205,10 @@ class ExcelService
                             $cs = new Pca($config);
                             $_val = $cs->decodeStr();
                             break;
+                        case 'uploader':
+                            //如果是上传类型 导出数据不使用该值
+                            $_val = '';
+                            break;
                     }
                 }
                 if ($add_t) {
