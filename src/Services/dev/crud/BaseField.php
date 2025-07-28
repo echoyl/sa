@@ -40,8 +40,12 @@ class BaseField implements CrudInterface
     {
         $from = $options['from'];
         $isset = $options['isset'];
+        $type = $options['type'];
 
-        if($from == 'update' && !$isset)
+        //select类型的话 未set 也是需要更新的，因为如果已经设置了can_be_null_columns表示该字段可以为空，所以需要更新为空
+        $unset_types = ['select'];
+
+        if($from == 'update' && !$isset && !in_array($type,$unset_types))
         {
             //更新时 如果未传参数 则不更新
             $val = '__unset';
