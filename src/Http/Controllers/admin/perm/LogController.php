@@ -20,7 +20,7 @@ class LogController extends CrudController
 	{
 		parent::__construct();
 		$this->with_column = [
-		    'user' => function($q0){$q0->select(["id","username","roleid"]);},
+		    'user' => function($q0){$q0->select(["id","username"]);},
 		];
 		$this->search_config = [
 		    [

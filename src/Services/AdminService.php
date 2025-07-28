@@ -229,12 +229,13 @@ class AdminService
         $avatar = $user['avatar']['url']?:($setting['logo']['url']?:'');
 
 		$as = new MenuService;
-        $rolename = $user['role']?$user['role']['title']:'超级管理员';
+        $rolename = Arr::get($user,'role.title','超级管理员');
         $info = [
             'id' => $user['id'],
             'username' => $user['username'],
             'realname'=>$user['realname'],
-            'roleid' => $user['roleid'],
+            'roleid' => $user['roleid']??0,
+            'role_id' => $user['role_id']??0,
             'rolename'=>$rolename,
             'name' => $user['username'],
             'avatar' => $avatar,
@@ -299,7 +300,7 @@ class AdminService
             //id为1是超级管理员
             //读取用户权限信息 实时读取
             $permUser = self::getUserModel();
-            $perms = $permUser->where(['id' => $user['id']])->select(['perms2', 'roleid'])->with(['role' => function ($q) {
+            $perms = $permUser->where(['id' => $user['id']])->with(['role' => function ($q) {
                 $q->select(['id', 'perms2']);
             }])->first()->toArray();
             $as = new MenuService;
@@ -472,7 +473,7 @@ class AdminService
 
             $data = [
                 'user_id' => $admin['id'],
-                'url' => implode(':',[$method,request()->fullUrl()]),
+                'url' => implode(':',[$method,str_replace(env('APP_URL', ''),'',request()->fullUrl())]),
                 'request' => json_encode($log_data),
                 'ip' => request()->ip(),
                 'created_at' => now(),
