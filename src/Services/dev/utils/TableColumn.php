@@ -474,7 +474,7 @@ class TableColumn
         //$table_menu = $this->schema['table_menu']??'';
         $d['fieldProps'] = [];
 
-        if(in_array($this->form_type,['select','radioButton','checkbox']))
+        if(in_array($this->form_type,['select','selects','radioButton','checkbox']))
         {
             if($this->schema)
             {

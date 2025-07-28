@@ -70,7 +70,7 @@ class Schema
                 }
             }
             //如果类型是 cascader cascaders需要自动注入_ + 字段名称 的字段
-            if(in_array($form_type,['cascader','cascader']))
+            if(in_array($form_type,['cascader','cascaders']))
             {
                 $ret_columns[] = ['name'=>'_'.$name,'type'=>'varchar','desc'=>$title,'length'=>1000];
             }
