@@ -199,9 +199,17 @@ class ExcelService
                             $_val = ++$datakey;
                             break;
                         case 'pca':
-                            $config = [
-                                'data'=>$val
-                            ];
+                            //多层数据的解析 获取去除最后一个元素的数组
+                            if(is_array($index) && count($index) > 1)
+                            {
+                                array_pop($index);
+                                $config = ['data'=>HelperService::getFromObject($val, $index)];
+                            }else
+                            {
+                                $config = [
+                                    'data'=>$val
+                                ];
+                            }
                             $cs = new Pca($config);
                             $_val = $cs->decodeStr();
                             break;
@@ -252,5 +260,16 @@ class ExcelService
         $data = $v->getSheetData($file);
 
         return $data;
+    }
+
+    /**
+     * 统一使用 当前service 调用 Excel中的方法
+     * 
+     * @param string $cellCoordinates
+     * @return void
+     */
+    public static function columnIndexFromString(string $cellCoordinates)
+    {
+        return Excel::columnIndexFromString($cellCoordinates);
     }
 }

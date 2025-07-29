@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Pca;
+use Illuminate\Support\Arr;
 
 class CasService
 {
@@ -37,5 +38,23 @@ class CasService
         }
         
         return $provinces;
+    }
+
+    /**
+     * 获取全部的pca数据信息 减少数据库请求
+     *
+     * @param string $key
+     * @return void
+     */
+    public static function pcaData($key = 'code')
+    {
+        static $data = [];
+        $ret = Arr::get($data,$key);
+        if($ret)
+        {
+            return $ret;
+        }
+        $data[$key] = Pca::get()->keyBy($key)->toArray();
+        return $data[$key];
     }
 }
