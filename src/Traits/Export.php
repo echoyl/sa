@@ -115,4 +115,31 @@ trait Export
 		return $this->success($ret);
     }
 
+    // /**
+    //  * 导入方法示例 通过ExcelService读取数据后 自行处理导入逻辑
+    //  *
+    //  * @return void
+    //  */
+    // public function import()
+	// {
+	// 	set_time_limit(0);
+
+    //     $insert_count = $update_count = $fail_count = 0;
+	// 	$inserts = [];
+    //     $fail = [];
+
+	// 	$file = request()->file('file');
+	// 	$data = ExcelService::getData($file);
+    //     foreach($data as $key=>$val)
+    //     {
+    //         if($key  < 1)
+	// 		{
+    //             //第一行是表头跳过
+	// 			continue;
+	// 		}
+    //         //处理数据逻辑
+    //     }
+    //     return $this->successMsg(implode(' ',['变更数据:',$insert_count,'失败条数:',$fail_count]),$fail);
+    // }
+
 }
