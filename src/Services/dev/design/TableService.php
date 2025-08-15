@@ -180,6 +180,22 @@ class TableService extends BaseService
         return true;
     }
 
+    public function setWidth($uid,$width)
+    {
+        $config = $this->config;
+        $name = $this->name;
+        $columns = $config?:[];
+        [$active,$data] = $this->getColumnIndex($columns,$uid);
+        if($active === false)
+        {
+            return false;
+        }
+        $data['props']['width'] = $width;
+        $columns[$active] = $data;
+        $this->model->where(['id'=>$this->id])->update([$name=>json_encode($columns)]);
+        return true;
+    }
+
      /**
      * 获取tabs中字段的索引及数据信息
      * form字段的结构为 tab - group - col 3维

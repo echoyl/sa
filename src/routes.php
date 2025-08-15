@@ -61,6 +61,9 @@ Route::group(['namespace'=>'\Echoyl\Sa\Http\Controllers\admin','prefix' => env('
                         Route::post('menu/editTableColumn', 'MenuController@editTableColumn');
                         //table 删除列
                         Route::post('menu/deleteTableColumn', 'MenuController@deleteTableColumn');
+                        //table 快速设置列宽
+                        Route::post('menu/setTableColumnWidth', 'MenuController@setTableColumnWidth');
+
                         //form 排序
                         Route::post('menu/sortFormColumns', 'MenuController@sortFormColumns');
                         //form 编辑或新增单个列

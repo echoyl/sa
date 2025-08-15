@@ -1231,8 +1231,10 @@ class DevService
         $models = $this->allModel();
         $tableColumn = new TableColumn($col,$model,$menus,$models);
         $data = $tableColumn->data;
-        if(!isset($data['width']) && isset($setting['table']) && isset($setting['table']['scroll'])  && isset($setting['table']['scroll']['x']))
+        $x = Arr::get($setting,'table.scroll.x');
+        if(!isset($data['width']) && $x)
         {
+            //设置了横向滚动的情况下 如果没有设置width 则默认100
             $data['width'] = 100;
         }
         return $data;

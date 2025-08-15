@@ -763,8 +763,29 @@ class MenuController extends CrudController
         if($ts->sort($columns))
         {
             //需要排序后再执行
-            $this->formConfig($id);
+            //这里改变表格的排序 为什么要执行form的配置呢？先注释掉
+            //$this->formConfig($id);
         }
+
+        $this->tableConfig($id);
+
+        return $this->devEditRet($id);
+    }
+
+    /**
+     * 快速变更表格的列宽
+     *
+     * @return void
+     */
+    public function setTableColumnWidth()
+    {
+        $id = request('id');
+        $uid = request('uid');
+        $width = request('width');
+
+        $ts = new TableService($id);
+
+        $ts->setWidth($uid,$width);
 
         $this->tableConfig($id);
 
