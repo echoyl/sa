@@ -20,18 +20,26 @@ class User extends BaseAuth
         if(empty($data))
         {
             $data = [
-			["name" => "app","type" => "model","class" => Account::class],
-			["name" => "gender","type" => "select","default" => 0,"data" => [
-			["label" => "未知","value" => 0],
-			["label" => "男","value" => 1],
-			["label" => "女","value" => 2],
-		],"with" => true],
-			["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
-			["label" => "禁用","value" => 0],
-			["label" => "启用","value" => 1],
-		],"table_menu" => true],
-			["name" => "appid","type" => "select","default" => 0,"data" => (new Account())->get()->toArray(),"with" => true],
-		];
+                ["name" => "app","type" => "model","class" => Account::class],
+                ["name" => "gender","type" => "select","default" => 0,
+                    "data" => [
+                        ["label" => "未知","value" => 0],
+                        ["label" => "男","value" => 1],
+                        ["label" => "女","value" => 2],
+                    ],
+                    "with" => true
+                ],
+                ["name" => "state","type" => "switch","default" => 1,"with" => true,"data" => [
+                    ["label" => "禁用","value" => 0],
+                    ["label" => "启用","value" => 1],
+                ],"table_menu" => true],
+                ["name" => "appid","type" => "select","default" => 0,"data" => (new Account())->get()->toArray(),"with" => true],
+                [
+			        'name' => 'avatar',
+			        'type' => 'image',
+			        'default' => '',
+			    ],
+            ];
         }
         return $data;
     }
