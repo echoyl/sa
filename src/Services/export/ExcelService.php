@@ -36,29 +36,96 @@ class ExcelService
         $this->tableConfigToColumns();
         foreach($search as $key=>$val)
         {
-            $_search = [];
+            //$_search = [];
             if(!is_array($val))
             {
                 continue;
             }
-            foreach($val as $k=>$v)
-            {
-                if(!is_numeric($k))
-                {
-                    continue;
-                }
-                $value = Arr::get($v,'value',Arr::get($v,'id'));
-                $label = Arr::get($v,'label',Arr::get($v,'title'));
-                if($value !== null)
-                {
-                    $_search[$value] = $label;
-                }
-            }
+            $_search = $this->setDeepData($val);
+            // foreach($val as $k=>$v)
+            // {
+            //     if(!is_numeric($k))
+            //     {
+            //         continue;
+            //     }
+            //     $value = Arr::get($v,'value',Arr::get($v,'id'));
+            //     $label = Arr::get($v,'label',Arr::get($v,'title'));
+            //     if($value !== null)
+            //     {
+            //         $_search[$value] = $label;
+            //     }
+            // }
             if(!empty($_search))
             {
                 $this->search[$key] = $_search;
             }
         }
+    }
+
+    /**
+     * 格式化search数据格式
+     *
+     * @param [type] $datas
+     * @param string $prefix_label 前缀标签 用于多级数据的拼接
+     * @return void
+     */
+    public function setDeepData($datas,$prefix_label = '')
+    {
+        $_search = [];
+        foreach($datas as $k=>$v)
+        {
+            if(!is_numeric($k))
+            {
+                continue;
+            }
+            $children = Arr::get($v,'children');
+            $value = Arr::get($v,'value',Arr::get($v,'id'));
+            $label = Arr::get($v,'label',Arr::get($v,'title'));
+            
+            $label = $prefix_label?implode(' - ',[$prefix_label,$label]):$label;
+
+            if($value !== null)
+            {
+                if($children)
+                {
+                    $_search[$value] = [
+                        'children'=>$this->setDeepData($children,$label),
+                        'label'=>$label,
+                    ];
+                }else
+                {
+                    $_search[$value] = $label;
+                }
+            }
+        }
+        return $_search;
+    }
+
+    /**
+     * 根据index获取数据，如果没有index则检测是否存在children字段信息
+     *
+     * @param [type] $datas
+     * @param [type] $index
+     * @return void
+     */
+    public function getDeepData($datas,$index,$children = 'children')
+    {
+        //d($datas,$index);
+        if(isset($datas[$index]))
+        {
+            return $datas[$index];
+        }else
+        {
+            foreach($datas as $data)
+            {
+                if(isset($data[$children]))
+                {
+                    return $this->getDeepData($data[$children],$index,$children);
+                }
+            }
+            
+        }
+        return false;
     }
 
     public function tableConfigToColumns()
@@ -77,8 +144,6 @@ class ExcelService
 
         $table_config = Arr::get($desc,'tableColumns',[]);
 
-        
-
         $columns = collect($table_config)->filter(function($val){
             $valtype = Arr::get($val,'valueType');
             if(in_array($valtype,['option']))
@@ -93,14 +158,16 @@ class ExcelService
             return isset($val['dataIndex']) && $val['dataIndex'];
         })->map(function($val){
             //检测hasone类型中如果dataindex是 xxx_id类型则转换
-            if(is_string($val['dataIndex']) && strpos($val['dataIndex'],'_id') !== false)
+            $dont_set_types = ['cascader'];//如果是cascader类型的不进行转换
+            $valueType = Arr::get($val,'valueType');
+            if(is_string($val['dataIndex']) && strpos($val['dataIndex'],'_id') !== false && !in_array($valueType,$dont_set_types))
             {
                 $data_name = str_replace('_id','',$val['dataIndex']);
                 //获取lable名称
                 $label_name = Arr::get($val,'fieldProps.fieldNames.label','title');
                 $val['dataIndex'] = [$data_name,$label_name];
             }
-            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>Arr::get($val,'valueType')];
+            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>$valueType];
         })->values();
 
         //d($columns);
@@ -120,12 +187,14 @@ class ExcelService
         return $v->export($data,$this->merges);
     }
 
+    
+
     public function parseData($data,$formatData)
     {
         $head = Arr::get($this->config,'head');
 
         $columns = Arr::get($head,'columns',[]);
-
+        //d($columns);
         $_data = [];
         $merges = [];
         $last_val_arr = [];
@@ -167,11 +236,13 @@ class ExcelService
                     //修改为解析以逗号为分隔字符串信息
                     $_vals = explode(',',$_val);
                     $_val_arr = [];
+                    //d($names,$this->search);
                     foreach($_vals as $_vals_val)
                     {
-                        if(isset($this->search[$names][$_vals_val]))
+                        $deep_val = $this->getDeepData($this->search[$names],$_vals_val);
+                        if($deep_val !== false)
                         {
-                            $_val_arr[] = $this->search[$names][$_vals_val];
+                            $_val_arr[] = $deep_val;
                         }
                     }
                     $_val = implode(',',$_val_arr);
