@@ -249,6 +249,24 @@ class HelperService
         Arr::forget($data,'originData');
         return self::parseImages($data, $keys);
     }
+
+    /**
+     * 字符串转数组，如果是数组则原值返回
+     *
+     * @param array | string $key
+     * @return array | string
+     */
+    public static function str2Arr($key = [])
+    {
+        if(is_string($key))
+        {
+            return [$key];
+        }else
+        {
+            return $key;
+        }
+    }
+
     /**
      * Undocumented function
      *
@@ -259,6 +277,7 @@ class HelperService
      */
     public static function deImages(&$data, $keys = [], $fill_empty = false)
     {
+        $keys = self::str2Arr($keys);
         $data = self::parseImages($data, $keys, false);
         if ($fill_empty) {
             foreach ($keys as $key) {
@@ -272,6 +291,7 @@ class HelperService
 
     public static function deImagesArr(&$data, $keys = [])
     {
+        $keys = self::str2Arr($keys);
         $data = self::parseImages($data, $keys, false);
         foreach ($keys as $key) {
             if (!isset($data[$key]) || empty($data[$key])) {
@@ -299,6 +319,7 @@ class HelperService
      */
     public static function deImagesOne(&$data, $keys = [], $fill_empty = true,$params = [])
     {
+        $keys = self::str2Arr($keys);
         $data = self::parseImages($data, $keys, false,$params);
         if ($fill_empty) {
             foreach ($keys as $key) {

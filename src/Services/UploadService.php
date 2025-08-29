@@ -256,7 +256,7 @@ class UploadService
                 Image::read($newPath)->scale($max_size, $max_size)->save($newPath);
             }
         } else {
-            $thumb_url = '';
+            //$thumb_url = '';
         }
 
         
