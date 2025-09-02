@@ -240,7 +240,7 @@ class ExcelService
                     foreach($_vals as $_vals_val)
                     {
                         $deep_val = $this->getDeepData($this->search[$names],$_vals_val);
-                        if($deep_val !== false)
+                        if($deep_val !== false && !is_array($deep_val))
                         {
                             $_val_arr[] = $deep_val;
                         }
