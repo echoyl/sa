@@ -123,46 +123,8 @@ class UploadService
         //附件图片不再压缩
         if (!$type && $is_image) {
             $new_path = storage_path('app/public/' . $path);
-
-            $path_parts = pathinfo($new_path);
-            $image = Image::read($new_path);
-            $height = $image->height();
-            $width = $image->width();
-
-            //获取参数是否压缩原图
-            $max_size = config('sa.admin_upload_max_wh',0);//默认不开启压缩
-            if($toSize)
-            {
-                if(is_numeric($toSize))
-                {
-                    if($toSize <= $max_size)
-                    {
-                        //设置max_size 为0时不压缩
-                        if($toSize < $height || $toSize < $width)
-                        {
-                            $image->scale($toSize, $toSize)->save($new_path);
-                        }
-                    }
-                }elseif(is_array($toSize) && isset($toSize[1]))
-                {
-                    if($toSize[1] <= $max_size && $toSize[0] <= $max_size)
-                    {
-                        if($toSize[1] < $height || $toSize[0] < $width)
-                        {
-                            $image->scale($toSize[0], $toSize[1])->save($new_path);
-                        }
-                    }
-                }
-            }else
-            {
-                if($max_size > 0)
-                {
-                    if($height > $max_size || $width > $max_size)
-                    {
-                        $image->scale($max_size, $max_size)->save($new_path);
-                    }
-                }
-            }
+            
+            $this->scale($new_path,$toSize);
 
             $image = Image::read($new_path);
             $height = $image->height();
@@ -170,9 +132,7 @@ class UploadService
 
             $this->waterMark($new_path);
 
-
         } else {
-            $thumb_url = '';
             $height = $width = 200;
         }
         $attachment_id = 0;
@@ -194,6 +154,43 @@ class UploadService
         }
 
         return ['code' => 0, 'data' => $path, 'attachment_id' => $attachment_id];
+    }
+
+    /**
+     * 等比例压缩图片
+     * 压缩大小以tosize优先，如果没有传tosize参数则按配置来压缩，再没有配置则不压缩
+     *
+     * @param string $path 图片路径
+     * @param [boolean | integer | array] $toSize 压缩到的大小
+     * @param boolean $admin 是否是后台
+     * @return void
+     */
+    public function scale($path, $toSize= false,$admin = true)
+    {
+        $image = Image::read($path);
+        $height = $image->height();//获取图片的高
+        $width = $image->width();//获取图片的宽
+
+        $toSize = $toSize ? : config($admin?'sa.admin_upload_max_wh':'sa.user_upload_max_wh',0);
+        
+        if($toSize)
+        {
+            if(is_numeric($toSize))
+            {
+                $to_width = $to_height = $toSize;
+            }else
+            {
+                $to_width = Arr::get($toSize,0,0);
+                $to_height = Arr::get($toSize,1,0);
+            }
+
+            if(($to_height && $to_height < $height) || ($to_width && $to_width < $width))
+            {
+                $image->scale($to_width, $to_height)->save($path);
+            }
+        }
+
+        return;
     }
 
     public function front($formname = 'file', $ext_arr = ['jpg', 'jpeg', 'png', 'gif'], $sizelimit = 5, $thumb = false, $rewrite = false)
@@ -247,19 +244,8 @@ class UploadService
         //生成缩略图
         $thumb_url = $path;
         if ($isImage && $thumb) {
-            $max_size = config('sa.user_upload_max_wh',800);//读取压缩图片配置信息
-            $image = Image::read($newPath);
-            $height = $image->height();
-            $width = $image->width();
-            if($height > $max_size || $width > $max_size)
-            {
-                Image::read($newPath)->scale($max_size, $max_size)->save($newPath);
-            }
-        } else {
-            //$thumb_url = '';
+            $this->scale($newPath,false,false);
         }
-
-        
 
         return ['code' => 0, 'msg' => '上传成功', 'data' => ['value' => $path, 'src' => tomedia($path), 'thumb_url' => $thumb_url]];
     }
