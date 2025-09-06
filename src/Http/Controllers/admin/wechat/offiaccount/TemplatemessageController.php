@@ -7,7 +7,7 @@ use Echoyl\Sa\Models\wechat\offiaccount\Templatemessage;
 
 
 //customer namespace start
-use Echoyl\Sa\Events\WxMessageEvent;
+use App\Events\WxMessageEvent;
 use Illuminate\Support\Arr;
 //customer namespace end
 
@@ -26,7 +26,7 @@ class TemplatemessageController extends CrudController
 		$this->model = new Templatemessage();
 		$this->model_class = Templatemessage::class;
 		//customer construct start
-
+		$this->can_be_null_columns = ['app_id'];
 		//customer construct end
 	}
 
