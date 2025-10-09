@@ -1,6 +1,7 @@
 <?php
 namespace Echoyl\Sa\Services\shop;
 
+use Echoyl\Sa\Services\dev\crud\ParseData;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
@@ -47,23 +48,25 @@ class GoodsService
             $_its = [];
             foreach($item['items'] as $it)
             {
-                $_its[] = [
-                    'id'=>$it['id'],
-                    'name'=>$it['name'],
-                    'displayorder'=>$it['displayorder']??0
-                ];
+                $it['displayorder'] = $it['displayorder']??0;
+                if(isset($it['created_at']))
+                {
+                    unset($it['created_at']);
+                }
+                if(isset($it['updated_at']))
+                {
+                    unset($it['updated_at']);
+                }
+                if(isset($it['titlepic']) && $it['titlepic'])
+                {
+                    $it['titlepic'] = HelperService::uploadParse($it['titlepic'],false, ['p'=>'m']);
+                }
+                $_its[] = $it;
                 $items_id_map[$it['id']] = $it['name'];
             }
-            $_its = collect($_its)->sortBy('displayorder')->map(function($v){
-                return ['id'=>$v['id'],'name'=>$v['name']];
-            })->toArray();
-            //d($_its);
-            $items[] = [
-                'id'=>$item['id'],
-                'name'=>$item['name'],
-                'items'=>array_values($_its),
-                
-            ];
+            $_its = collect($_its)->sortBy('displayorder')->toArray();
+            $item['items'] = array_values($_its);
+            $items[] = $item;
         }
         //d($items);
 
@@ -109,6 +112,34 @@ class GoodsService
 
     }
 
+    public function item2DB($item,$more = [])
+    {
+        $itemClass = get_class($this->itemModel);
+        $itemModel = $this->itemModel;
+        $has = (new $itemClass)->where(['id'=>$item['id']])->first();
+
+        $update = array_merge($item,$more);
+        $update['originData'] = $has;
+
+        $update = filterEmpty($update);
+
+        $ps = new ParseData($itemClass);
+        $ps->make($update,'encode',$has?'update':'detail');
+
+        if(is_numeric($item['id']))
+        {
+            //如果是数字id表示已经插入数据库中
+            $item_id = $item['id'];
+            $itemModel->where(['id'=>$item['id']])->update($update);
+        }else
+        {
+            //新增数据
+            unset($update['id']);
+            $item_id = $itemModel->insertGetId($update);
+        }
+        return ['id'=>$item_id,'name'=>$item['name']];
+    }
+
     public function guige2DB($guige = '',$goods_id = 0)
     {
 		if(!$guige || !$goods_id)
@@ -134,41 +165,23 @@ class GoodsService
 
         $has_item_ids = [];
         $itemModel = $this->itemModel;
-        foreach($guige['items'] as $item)
+        foreach($guige['items'] as $key=>$item)
         {
             if(!isset($item['items']) || empty($item['items']))
             {
                 //子集为空没有属性值 跳过
                 continue;
             }
-            $item_id = 0;
-            if(is_numeric($item['id']))
-            {
-                //如果是数字id表示已经插入数据库中
-                $item_id = $item['id'];
-                $itemModel->where(['id'=>$item['id']])->update(['name'=>$item['name']]);
-            }else
-            {
-                //新增数据
-                $item_id = $itemModel->insertGetId(['name'=>$item['name'],'goods_id'=>$goods_id]);
-            }
-            $items_id_map[$item['id']] = ['id'=>$item_id,'name'=>$item['name']];
+            $id_map = $this->item2DB($item,['displayorder'=>$key,'goods_id'=>$goods_id]);
+            $items_id_map[$item['id']] = $id_map;
+            $item_id = $id_map['id'];
             $has_item_ids[] = $item_id;
 
             foreach($item['items'] as $k=>$it)
             {
-                if(is_numeric($it['id']))
-                {
-                    //如果是数字id表示已经插入数据库中
-                    $item_2_id = $it['id'];
-                    $itemModel->where(['id'=>$it['id']])->update(['name'=>$it['name'],'displayorder'=>$k]);
-                }else
-                {
-                    //新增数据
-                    $item_2_id = $itemModel->insertGetId(['name'=>$it['name'],'goods_id'=>$goods_id,'parent_id'=>$item_id,'displayorder'=>$k]);
-                }
-                $has_item_ids[] = $item_2_id;
-                $items_id_map[$it['id']] = ['id'=>$item_2_id,'name'=>$it['name']];
+                $id_map = $this->item2DB($it,['displayorder'=>$k,'goods_id'=>$goods_id,'parent_id'=>$item_id]);
+                $has_item_ids[] = $id_map['id'];
+                $items_id_map[$it['id']] = $id_map;
             }
         }
         //将之前没有的id都删除
@@ -177,6 +190,7 @@ class GoodsService
 
 		$has_guige_ids = [];
 		$guigeModel = $this->guigeModel;
+        $guigeClass = get_class($guigeModel);
 		$price = $old_price = [];
 		$sku = 0;
         //d($guige['attrs']);
@@ -184,12 +198,15 @@ class GoodsService
         {
             $name = [];
             $ids = explode(':',$val['id']);
+            unset($val['id']);
             $_ids = [];
             foreach($ids as $_id)
             {
                 $_ids[] = $items_id_map[$_id]['id'];
                 $name[] = $items_id_map[$_id]['name'];
             }
+            //排序ids查找数据
+            sort($_ids);
             $_ids = implode(':',$_ids);
 
 			$has = $guigeModel->where(['ids'=>$_ids,'goods_id'=>$goods_id])->first();
@@ -198,34 +215,16 @@ class GoodsService
                 'ids'=>$_ids,
 			];
             //字段通过设置写入
-            foreach($this->columns as $col)
-            {
-                $ctype = $col['type'];
-                $cname = $col['name'];
-                if(!isset($val[$cname]))
-                {
-                    //未设置属性不写入
-                    continue;
-                }
-                $v = '';
-                if($ctype == 'price')
-                {
-                    $v = bcmul($val[$cname]??0,100);//小数精度问题
-                }elseif($ctype == 'int')
-                {
-                    $v = $val[$cname]??0;
-                }else
-                {
-                    $v = $val[$cname]??'';
-                }
-                $update[$cname] = $v;
-            }
-            if(isset($val['titlepic']))
-            {
-                $update['titlepic'] = HelperService::uploadParse($val['titlepic']);
-            }
+            $update = array_merge($val,$update);
+        
 			$sku += $update['sku']??0;
-			$price[] = $update['price']??0;
+			
+            $update['originData'] = $has;
+
+            $ps = new ParseData($guigeClass);
+            $ps->make($update,'encode',$has?'update':'detail');
+
+            $price[] = $update['price']??0;
             if(isset($update['old_price']))
             {
                 $old_price[] = $update['old_price'];
@@ -234,7 +233,7 @@ class GoodsService
 			if($has)
 			{
 				$has_guige_ids[] = $has['id'];
-				$guigeModel->where(['id'=>$has['id']])->update($update);
+                $guigeModel->where(['id'=>$has['id']])->update($update);
 			}else
 			{
 				$update['goods_id'] = $goods_id;
