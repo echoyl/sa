@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 
 class PlatformService
 {
-
+    static $platform_key = 'platform_id';
     /**
      * @var array 可使用 0 和 当前平台的数据
      */
@@ -24,6 +24,19 @@ class PlatformService
      */
     static $deny_table_names = ['platform'];
 
+    /**
+     * @var string 平台表名
+     */
+    static $platform_table = 'platform';
+
+    //自动插入platform_id 的表
+    static $set_platform_table = [];
+
+    /**
+     * @var array 使用user_id为当前用户id字段名称的表
+     */
+    static $user_id_tabel = ['perm_log'];
+
     public static function search($m,$model)
     {
         if(AdminService::isSuper())
@@ -34,20 +47,41 @@ class PlatformService
         
         $table_name = $model->getTable();
 
-
-        if(self::isDeny($table_name))
+        if(static::isDeny($table_name))
         {
             return $m->where(['id'=>-1]);
         }
 
         $user = AdminService::user();
-        if(in_array($table_name,self::$platform_table_names))
+        $platform_key = static::$platform_key;
+        $user_platform_id = Arr::get($user,$platform_key);
+
+        //是否可以使用0 和当前平台的数据
+        $can_use_public_data = in_array($table_name,static::$no_table_names);
+
+        if(in_array($table_name,static::$platform_table_names))
         {
-            $m = $m->where('platform_id',$user['platform_id']);
+            if($can_use_public_data)
+            {
+                $m = $m->whereIn($platform_key,[$user_platform_id,0]);
+            }else
+            {
+                $m = $m->where($platform_key,$user_platform_id);
+            }
+            
+        }elseif($table_name == static::$platform_table)
+        {
+            $m = $m->where('id',$user_platform_id);
         }else
         {
-            $sys_admin_ids = self::adminIds($user['platform_id'],in_array($table_name,self::$no_table_names));
-            $m = $m->whereIn('sys_admin_id',$sys_admin_ids);
+            $sys_admin_ids = static::adminIds($user_platform_id,$can_use_public_data);
+            if(in_array($table_name,static::$user_id_tabel))
+            {
+                $m = $m->whereIn('user_id',$sys_admin_ids);
+            }else
+            {
+                $m = $m->whereIn('sys_admin_id',$sys_admin_ids);
+            }
         }
         
         return $m;
@@ -55,7 +89,7 @@ class PlatformService
 
     public static function isDeny($table)
     {
-        return in_array($table,self::$deny_table_names);
+        return in_array($table,static::$deny_table_names);
     }
 
     public static function validateData(&$data,$item,$model)
@@ -69,7 +103,7 @@ class PlatformService
 
         $table_name = $model->getTable();
 
-        if(self::isDeny($table_name))
+        if(static::isDeny($table_name))
         {
             return false;
         }
@@ -78,13 +112,21 @@ class PlatformService
 
         
         $key_name = 'sys_admin_id';
+        $platform_key = static::$platform_key;
 
-        if(in_array($table_name,self::$platform_table_names))
+        if(in_array($table_name,static::$platform_table_names))
         {
-            $key_name = 'platform_id';
+            $key_name = $platform_key;
+        }
+
+        if(in_array($table_name,static::$user_id_tabel))
+        {
+            $key_name = 'user_id';
         }
 
         $sys_admin_id = Arr::get($item,$key_name);
+
+        $user = AdminService::user();
 
         //d($sys_admin_id);
         if($id)
@@ -95,6 +137,12 @@ class PlatformService
                 unset($data[$key_name]);//不支持修改后台用户id
             }
 
+            //如果是set_platform_table中的表 需要插入平台id
+            if(in_array($table_name,static::$set_platform_table) && Arr::exists($data,$platform_key))
+            {
+                unset($data[$platform_key]);//不支持修改平台id
+            }
+
             if(!Arr::exists($item,$key_name))
             {
                 return true;
@@ -103,6 +151,11 @@ class PlatformService
         }else
         {
             //add 添加数据系统默认会插入 sys_admin_id
+            //如果是set_platform_table中的表 需要插入平台id
+            if(in_array($table_name,static::$set_platform_table))
+            {
+                $data[$platform_key] = $user[$platform_key];
+            }
             return true;
         }
 
@@ -113,7 +166,7 @@ class PlatformService
 
         $user = AdminService::user();
 
-        if($key_name == 'platform_id')
+        if($key_name == $platform_key)
         {
             return $item[$key_name] == $user[$key_name];
         }else
@@ -125,7 +178,7 @@ class PlatformService
                 return false;
             }
     
-            $sys_admin_ids = self::adminIds($sys_admin['platform_id']);
+            $sys_admin_ids = static::adminIds($sys_admin[$platform_key]);
             
             return in_array($user['id'],$sys_admin_ids);
         }
@@ -142,9 +195,64 @@ class PlatformService
             return $default_ids;
         }
         $model = AdminService::getUserModel();
-        $admin_ids = $model->where(['platform_id'=>$platform_id])->pluck('id')->toArray();
+        $admin_ids = $model->where([static::$platform_key => $platform_id])->pluck('id')->toArray();
 
         return array_merge($admin_ids,$default_ids);
+    }
+
+    /**
+     * 平台查询，独立使用
+     *
+     * @param [type] $query
+     * @param boolean $force
+     * @return void
+     */
+    public static function platformQuery($query,$force = false)
+    {
+        if(AdminService::isSuper())
+        {
+            //超级管理员不需要搜索过滤
+            return $query;
+        }
+        $user = AdminService::user();
+        $platform_key = static::$platform_key;
+        $user_platform_id = Arr::get($user,$platform_key);
+        if($user_platform_id)
+        {
+            $query = $query->where(function($q) use($user_platform_id,$force,$platform_key){
+                if($force)
+                {
+                    $q->where([$platform_key=>$user_platform_id]);
+                }else
+                {
+                    $q->where([$platform_key=>0])->orWhere([$platform_key=>$user_platform_id]);
+                }
+            });   
+        }
+        return $query;
+    }
+
+    /**
+     * 数据通过user关联查询用户的平台id
+     *
+     * @param [type] $query
+     * @param boolean $force
+     * @return void
+     */
+    public static function userQuery($query,$force = false)
+    {
+        if(AdminService::isSuper())
+        {
+            //超级管理员不需要搜索过滤
+            return $query;
+        }
+
+        $query = $query->whereHas('user',function($q) use($force){
+            $q = static::platformQuery($q,$force);
+        });
+
+        return $query;
+
     }
 
 
