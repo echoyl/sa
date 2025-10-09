@@ -100,15 +100,30 @@ class LocaleService
         return $ret;
     }
 
+    public static function getClassLocaleColumns($class)
+    {
+        static $columns = [];
+        if(empty($columns))
+        {
+            $model = new $class;
+            $columns =  $model->locale_columns;
+        }
+        return $columns;
+    }
+
+    /**
+     * 获取单个数据的某个语言的信息
+     *
+     * @param [type] $class
+     * @param [type] $data
+     * @param [type] $locale
+     * @return void
+     */
     public static function getData($class,$data,$locale)
     {
-        $model = new $class;
-        if(!$model->locale_columns)
-        {
-            return $data;
-        }
+        $locale_columns = static::getClassLocaleColumns($class);
 
-        foreach($model->locale_columns as $column)
+        foreach($locale_columns as $column)
         {
             $name = implode('_',[$column,$locale]);
             if(isset($data[$name]) && $data[$name])
@@ -117,8 +132,24 @@ class LocaleService
                 $data[$column] = $data[$name];
             }
         }
-
         return $data;
+    }
+
+    /**
+     * 获取列表数据的多语言信息
+     *
+     * @param [type] $class
+     * @param [type] $list
+     * @param [type] $locale
+     * @return array
+     */
+    public static function getListData($class,$list,$locale)
+    {
+        foreach($list as $key=>$val)
+        {
+            $list[$key] = static::getData($class,$val,$locale);
+        }
+        return $list;
     }
 
     public static function search($query,$item,$model,$index = 0)
