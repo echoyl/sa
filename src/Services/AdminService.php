@@ -444,6 +444,11 @@ class AdminService
 
     public static function log($force_type = false, $data = [])
     {
+        if(HelperService::isDev())
+        {
+            //开发环境不记录日志
+            return;
+        }
         if (!empty($data)) {
             $admin = $data;
         } else {

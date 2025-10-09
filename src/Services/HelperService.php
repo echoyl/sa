@@ -12,6 +12,7 @@ use DateTime;
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Services\admin\LocaleService;
+use Echoyl\Sa\Services\dev\utils\Schema;
 
 class HelperService
 {
@@ -938,4 +939,43 @@ class HelperService
     {
         return app()->make(SaServiceInterface::class);
     }
+
+    /**
+     * 检测数据表中不存在的字段并删除
+     *
+     * @param [type] $data 数据
+     * @param [type] $class 模型class
+     * @return void
+     */
+    public static function filterNotExistColumns($data,$class)
+    {
+        $model = new $class;
+        foreach($data as $key=>$val)
+        {
+            if(!Schema::hasColumn($model->getTable(),$key))
+            {
+                unset($data[$key]);
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * 递归合并数组
+     *
+     * @param [array] $a
+     * @param [array] $b
+     * @return array
+     */
+    public static function array_merge_cover($a, $b) {
+        foreach($b as $key => $value) {
+            if(is_array($value) && isset($a[$key]) && is_array($a[$key])) {
+                $a[$key] = static::array_merge_cover($a[$key], $value);
+            } else {
+                $a[$key] = $value;
+            }
+        }
+        return $a;
+    }
+
 }

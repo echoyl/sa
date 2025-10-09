@@ -1,7 +1,7 @@
 <?php
 namespace Echoyl\Sa\Models\wechat\offiaccount;
 use Echoyl\Sa\Models\Base;
-
+use Echoyl\Sa\Models\wechat\miniprogram\Account;
 //customer namespace start
 
 //customer namespace end

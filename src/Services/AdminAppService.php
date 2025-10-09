@@ -475,4 +475,24 @@ class AdminAppService implements SaAdminAppServiceInterface
     {
         return [];
     }
+
+    /**
+     * 控制器通过this->service->user() 获取当前登录用户
+     *
+     * @return any
+     */
+    public function admin()
+    {
+        return AdminService::user();
+    }
+
+    /**
+     * 控制器通过this->service->isSuper() 检测用户是否是超级管理员
+     *
+     * @return any
+     */
+    public function isSuper()
+    {
+        return AdminService::isSuper();
+    }
 }

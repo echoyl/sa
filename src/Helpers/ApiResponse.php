@@ -85,7 +85,7 @@ trait ApiResponse
      * @param $error
      * @return JsonResponse
      */
-    private function jsonResponse($status, $codeResponse, $data, $error): JsonResponse
+    protected function jsonResponse($status, $codeResponse, $data, $error): JsonResponse
     {
         list($code, $message) = $codeResponse;
         return response()->json([
