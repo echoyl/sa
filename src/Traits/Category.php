@@ -43,14 +43,14 @@ trait Category
 		$cid = request('cid',0);
 		//d($cid);
 		$this->cid = $cid?(is_array($cid)?array_pop($cid):$cid):$this->cid;
-		$displayorder = [];
+		$displayorder = $this->displayorder;
 		$sort_type = ['descend' => 'desc', 'ascend' => 'asc'];
         if (request('sort')) {
             //添加排序检测
             $sort = json_decode(request('sort'), true);
             if (!empty($sort)) {
                 foreach ($sort as $skey => $sval) {
-					$displayorder[] = [$skey,$sort_type[$sval] ?? 'desc'];
+					array_unshift($displayorder,[$skey,$sort_type[$sval] ?? 'desc']);
                 }
             }
         }

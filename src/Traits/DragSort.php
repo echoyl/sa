@@ -18,13 +18,14 @@ trait DragSort
             return 0;
         }
 		$model = $this->getModel();
+		$model = $this->getDragModel($model);
 		$model = $getModel?$getModel($model):$model;
 		return $model->max($field) + 1;
 	}
 
 	/**
 	 * 获取排序操作的实例化对象，自定义检索数据
-	 *
+	 * 在控制器中重写该方法可以实现数据过滤，比如区分平台数据 只修改当前用户所属平台相同的数据
 	 * @param [type] $model 实例化后的模型对象
 	 * @param [type] $active_data 当前drag的数据
 	 * @return any
