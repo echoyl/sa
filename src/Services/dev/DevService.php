@@ -799,7 +799,14 @@ class DevService
 
                 if(in_array($form_type,$int_value_form_types) || (in_array($form_type,$int_value_form_types_need_relation) && isset($all_models[$name])))
                 {
-                    $default_value = $default_value?intval($default_value):0;
+                    if($default_value)
+                    {
+                        //默认值支持非数字格式,如果是数字格式就转化为int
+                        $default_value = is_numeric($default_value)?intval($default_value):$default_value;
+                    }else
+                    {
+                        $default_value = 0;
+                    }
                 }
 
                 //['name' => 'shop_id', 'type' => 'search_select', 'default' => '0','data_name'=>'shop','label'=>'name'],

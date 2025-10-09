@@ -136,7 +136,7 @@ class ParseData
         }
         if($encode)
         {
-            $data = $this->filterNotExistColumns($data,$this->model_class);
+            $data = HelperService::filterNotExistColumns($data,$this->model_class);
         }else
         {
             if(isset($data['originData']))
@@ -184,26 +184,6 @@ class ParseData
             'last_val'=>$lval,//分类的id值 数字类型
             'array_val'=>$array_val
         ];
-    }
-
-    /**
-     * 检测数据表中不存在的字段并删除
-     *
-     * @param [type] $data 数据
-     * @param [type] $class 模型class
-     * @return void
-     */
-    public function filterNotExistColumns($data,$class)
-    {
-        $model = new $class;
-        foreach($data as $key=>$val)
-        {
-            if(!Schema::hasColumn($model->getTable(),$key))
-            {
-                unset($data[$key]);
-            }
-        }
-        return $data;
     }
 
     /**
