@@ -160,14 +160,15 @@ class ExcelService
             //检测hasone类型中如果dataindex是 xxx_id类型则转换
             $dont_set_types = ['cascader'];//如果是cascader类型的不进行转换
             $valueType = Arr::get($val,'valueType');
-            if(is_string($val['dataIndex']) && strpos($val['dataIndex'],'_id') !== false && !in_array($valueType,$dont_set_types))
+            $oringinal_key = $val['dataIndex'];
+            if(is_string($oringinal_key) && strpos($oringinal_key,'_id') !== false && !in_array($valueType,$dont_set_types))
             {
-                $data_name = str_replace('_id','',$val['dataIndex']);
+                $data_name = str_replace('_id','',$oringinal_key);
                 //获取lable名称
                 $label_name = Arr::get($val,'fieldProps.fieldNames.label','title');
                 $val['dataIndex'] = [$data_name,$label_name];
             }
-            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>$valueType];
+            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>$valueType,'oringinal_key'=>$oringinal_key];
         })->values();
 
         //d($columns);
@@ -223,7 +224,19 @@ class ExcelService
                 if (is_array($index)) {
                     //数组index
                     $_val = HelperService::getFromObject($val, $index);
-                    $_val = $_val || $_val === 0 ?$_val: $default;//如果值为0需要保留下来
+                    //如果值为0需要保留下来
+                    if(!$_val && $_val !== 0)
+                    {
+                        //读取原始数据
+                        $oringinal_key = Arr::get($col,'oringinal_key');
+                        if($oringinal_key)
+                        {
+                            $_val = $val[$oringinal_key]??$default;
+                        }else
+                        {
+                            $_val = $default;
+                        }
+                    }
                 } else {
                     //字符串 直接读取
                     $_val = $val[$index] ?? $default;
@@ -245,14 +258,18 @@ class ExcelService
                             $_val_arr[] = $deep_val;
                         }
                     }
-                    $_val = implode(',',$_val_arr);
+                    if(!empty($_val_arr)){
+                        //非空时才覆写数据，否则保持数据原样
+                        $_val = implode(',',$_val_arr);
+                    }
+                    
                 }
 
                 if ($type) {
                     switch ($type) {
                         case 'date':
                             $dateformat = Arr::get($setting,'dateformat','Y-m-d');
-                            $_val = date($dateformat, strtotime($_val));
+                            $_val = $_val?date($dateformat, strtotime($_val)):'';
                             break;
                         case 'int':
                             break;

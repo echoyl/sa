@@ -123,13 +123,24 @@ trait Export
     // public function import()
 	// {
 	// 	set_time_limit(0);
+    //     $datefun = function($excelTime)
+	// 	{
+	// 		return (int)(($excelTime - 25569) * 86400 - (8 * 60 * 60));
+	// 	};
 
     //     $insert_count = $update_count = $fail_count = 0;
 	// 	$inserts = [];
     //     $fail = [];
+    //     $index_maps = [
+    //         ['name'=>'field_name','index'=>'A'],
+    //     ];
+    //     $date_names = [
+	// 		'bz_time','yx_time','fz_time','ztjz_time','ztbg_time'
+	// 	];
 
 	// 	$file = request()->file('file');
 	// 	$data = ExcelService::getData($file);
+    //     $model = $this->getModel();
     //     foreach($data as $key=>$val)
     //     {
     //         if($key  < 1)
@@ -138,6 +149,39 @@ trait Export
 	// 			continue;
 	// 		}
     //         //处理数据逻辑
+
+    //         foreach($index_maps as $col)
+	// 		{
+	// 			$_v = Arr::get($val,ExcelService::columnIndexFromString($col['index']));
+	// 			if($_v)
+	// 			{
+    //                 if(in_array($col['name'],$date_names) && is_numeric($_v))
+	// 				{
+    //                     //检测如果是日期字段且值是数字类型则进行转换
+	// 					$_v = date('Y-m-d',$datefun($_v));
+	// 				}
+	// 				$info[$col['name']] = $_v;
+	// 			}
+	// 		}
+    //         $info = [];
+    //         $id = 0;
+	// 		$has = $model->where(['field_name'=>$info['field_name']])->first();
+	// 		if($has)
+	// 		{
+	// 			$id = $has['id'];
+	// 		}
+	// 		if($id)
+	// 		{
+	// 			$update_count++;
+	// 			//更新数据
+	// 			$model->where('id',$id)->update($info);
+	// 		}else
+	// 		{
+	// 			$info['created_at'] = now();
+	// 			$insert_count++;
+	// 			//新增数据
+	// 			$model->insert($info);
+	// 		}
     //     }
     //     return $this->successMsg(implode(' ',['变更数据:',$insert_count,'失败条数:',$fail_count]),$fail);
     // }
