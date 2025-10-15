@@ -586,7 +586,7 @@ class CrudController extends ApiBaseController
                     break;
                 case 'state':
                     $val = request('state',0);
-                    $data = ['state' => $val?1:0];
+                    $data = ['state' => $val];//state支持多种状态
                     //批量操作
                     //$this->parseData($data, 'encode', 'update');
                     //d($data);

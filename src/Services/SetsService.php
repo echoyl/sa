@@ -95,7 +95,7 @@ class SetsService
 
 		if(request()->isMethod('post') && $method == 'POST')
 		{
-			$post_data = filterEmpty(request('base'));
+			$post_data = filterEmpty(request('base'),['watermark']);
 
             $post_data = Utils::parseImageInPage($post_data,$dev_menu,$data,'encode',$deep_img_fields);
 
