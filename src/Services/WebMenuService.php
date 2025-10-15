@@ -8,6 +8,7 @@ use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
 use Echoyl\Sa\Services\web\UrlService;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -61,7 +62,10 @@ class WebMenuService
             //获取上级数据
             if ($val['parent_id']) {
                 $val['alias'] = implode('/', array_reverse(self::getParentAlias($val, $menus)));
-
+            }
+            if($val['specs'])
+            {
+                $val['specs'] = HelperService::json_validate($val['specs']);
             }
             self::createRoute($val);
         }
@@ -130,11 +134,26 @@ class WebMenuService
                 break;
             case 'post':
                 //post 即内容类型
+                // if($val['id'] == 85)
+                // {
+                //     d($val);
+                //     Log::channel('daily')->info('createRoute menu:',['val'=>$val]);
+                // }
                 if ($val['pagetype'] == 'list') {
                     //列表模块
                     Route::get($alias . '/{id}.html', self::$modules_routes[$val['module']]['detail']);
                     Route::get($alias . '/{cid}/{id}.html', self::$modules_routes[$val['module']]['detail'])->where('cid', '[0-9]+');
-                    Route::get($alias . '/{cid?}', self::$modules_routes[$val['module']]['list'])->where('cid', '[0-9]+');
+                    $is_single_category = Arr::get($val,'specs.is_single_category',0);
+                    if(!$is_single_category)
+                    {
+                        //新增如果设定为单一分类列表则不在连接路由中加入分类id
+                        Route::get($alias . '/{cid?}', self::$modules_routes[$val['module']]['list'])->where('cid', '[0-9]+');
+                    }else
+                    {
+                        Route::get($alias . '/{id}', self::$modules_routes[$val['module']]['detail']);//因为不需要判断是详情还是列表可以追加一个不用html后缀的路由
+                        Route::get($alias, self::$modules_routes[$val['module']]['list']);
+                    }
+                    
                     //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{id}.html','to'=>self::$modules_routes[$val['module']]['detail'],]);
                     //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{cid}/{id}.html','to'=>self::$modules_routes[$val['module']]['detail'],]);
                     //Log::channel('daily')->info('createRoute post:',['name'=>$alias . '/{cid?}','to'=>self::$modules_routes[$val['module']]['list'],]);
@@ -511,6 +530,7 @@ class WebMenuService
             $val['href'] = self::parseHref($val);
             $val['parsedBanner'] = HelperService::uploadParse($val['banner'],false);
             $val['parsedPics'] = HelperService::uploadParse($val['pics'],false);
+            $val['parsedTitlepic'] = HelperService::uploadParse($val['titlepic'],false);
             $val['selected'] = 0;
             if(isset($val['specs']))
             {

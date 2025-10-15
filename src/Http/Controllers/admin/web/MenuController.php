@@ -88,19 +88,20 @@ class MenuController extends CrudController
             if (in_array($alias, ['js', 'css', 'static'])) {
                 $data['alias'] = '';
             }
-            $has_where = [
-                ['parent_id', '=', $data['parent_id'] ?? 0],
-                ['alias', '=', $alias],
-                ['type','=',env('APP_NAME')],
-            ];
-            if ($id) {
-                $has_where[] = ['id', '!=', $id];
-            }
-            $has = $this->model->where($has_where)->first();
-            //这里检测同级导航菜单是否有相同别名的 有的话返回错误
-            if ($has) {
-                return ['code' => 1, 'msg' => '统计菜单中不能有重复的URL别名'];
-            }
+            //不再检测是否有重复的url，如果有重复以最后一条为准
+            // $has_where = [
+            //     ['parent_id', '=', $data['parent_id'] ?? 0],
+            //     ['alias', '=', $alias],
+            //     ['type','=',env('APP_NAME')],
+            // ];
+            // if ($id) {
+            //     $has_where[] = ['id', '!=', $id];
+            // }
+            // $has = $this->model->where($has_where)->first();
+            // //这里检测同级导航菜单是否有相同别名的 有的话返回错误
+            // if ($has) {
+            //     return ['code' => 1, 'msg' => '统计菜单中不能有重复的URL别名'];
+            // }
         }
 
         //检测如果没填写外链也没有填写别名 返回错误信息

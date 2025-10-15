@@ -160,12 +160,11 @@ class WebsiteService
                     $model = WebMenuService::getModel($data['admin_model']);
                     if($model)
                     {
-                        $detail = $model->where(['id' => $data['content_id']])->first();
-                        $content = $detail ? [
+                        $detail = $model->where(['id' => $data['content_id']?:$data['category_id']])->first();
+                        $content = $detail ? array_merge($detail->toArray(),[
                             'label' => $detail['title'],
                             'value' => $detail['id'],
-                            'id' => $detail['id'],
-                        ] : $content;
+                        ]) : $content;
                     }
                     
                 }
@@ -184,7 +183,7 @@ class WebsiteService
         return $data;
     }
 
-    public function getData($menu_id, $category_ids = [], $limit = 1, $withCategory = false,$where = [])
+    public function getData($menu_id, $category_ids = [], $limit = 1, $withCategory = false,$where = [],$order_by = [['displayorder', 'desc'], ['created_at', 'desc']])
     {
         $menu = (new Menu())->where(['id' => $menu_id])->with(['adminModel'])->first();
 
@@ -225,7 +224,7 @@ class WebsiteService
                         if($m)
                         {
                             //d($where);
-                            $data_list = $this->parseData($menu, $m->where($where)->whereRaw("FIND_IN_SET(?,category_id)", [$category['cid']]), $limit, $category['cid']);
+                            $data_list = $this->parseData($menu, $m->where($where)->whereRaw("FIND_IN_SET(?,category_id)", [$category['cid']]), $limit, $category['cid'],$order_by);
                         }else
                         {
                             $data_list = [];
@@ -245,7 +244,7 @@ class WebsiteService
                                 }
                             });
                         }
-                        $list = $this->parseData($menu, $m, $limit);
+                        $list = $this->parseData($menu, $m, $limit,0,$order_by);
                     }else
                     {
                         $list = [];
@@ -261,10 +260,14 @@ class WebsiteService
 
     }
 
-    public function parseData($menu, $m, $limit, $cid = 0)
+    public function parseData($menu, $m, $limit, $cid = 0,$order_by = [['displayorder', 'desc'], ['created_at', 'desc']])
     {
         $ps = new PostsService();
-        $list = $m->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('created_at', 'desc')->limit($limit)->get()->toArray();
+        foreach($order_by as $ob)
+        {
+            $m = $m->orderBy($ob[0],$ob[1]);
+        }
+        $list = $m->where(['state' => 1])->limit($limit)->get()->toArray();
         foreach ($list as $k => $val) {
             //$val = HelperService::autoParseImages($val);
             $val = HelperService::deImagesOne($val, ['titlepic']);

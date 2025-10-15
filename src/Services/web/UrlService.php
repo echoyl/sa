@@ -2,6 +2,7 @@
 namespace Echoyl\Sa\Services\web;
 
 use Echoyl\Sa\Services\WebMenuService;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\URL;
 
 class UrlService
@@ -22,14 +23,23 @@ class UrlService
         }
         if ($id) {
             //如果有id的话那么就是详情
+            $is_single_category = Arr::get($menu,'specs.is_single_category',0);
+            $is_suffix_none = Arr::get($menu,'specs.is_suffix_none',0);
             $ms = new WebMenuService;
             //$selected_cids = $ms->getSelectedCid($menu);
             $selected_cids = [];
-            $mid = $cid ? '/' . $cid : '';
+            $mid = $cid && !$is_single_category ? '/' . $cid : '';
             if (!empty($selected_cids)) {
                 $mid = '/' . implode('_', $selected_cids);
             }
-            $href = $menu['alias'] . $mid . '/' . $id . '.html';
+            
+            if($is_single_category && $is_suffix_none)
+            {
+                $href = $menu['alias'] . $mid . '/' . $id;
+            }else
+            {
+                $href = $menu['alias'] . $mid . '/' . $id . '.html';
+            }
         } else {
             //没有的话 那么就是列表了
             $href = $menu['alias'];
