@@ -168,8 +168,6 @@ class UploadService
     public function scale($path, $toSize= false,$admin = true)
     {
         $image = Image::read($path);
-        $height = $image->height();//获取图片的高
-        $width = $image->width();//获取图片的宽
 
         $toSize = $toSize ? : config($admin?'sa.admin_upload_max_wh':'sa.user_upload_max_wh',0);
         
@@ -184,7 +182,7 @@ class UploadService
                 $to_height = Arr::get($toSize,1,0);
             }
 
-            if(($to_height && $to_height < $height) || ($to_width && $to_width < $width))
+            if($this->shouldBeCompressed($path,[$to_width,$to_height],300))
             {
                 $image->scale($to_width, $to_height)->save($path);
             }
@@ -475,6 +473,14 @@ class UploadService
      */
     public function shouldBeCompressed($file,$size = [1000,1000],$quality = 512)
     {
+        [$to_width,$to_height] = $size;
+
+        if(!$to_width || !$to_height)
+        {
+            //有一个设置为0则表示不用压缩
+            return false;
+        }
+
         if(!$this->isImage($file))
         {
             return false;
@@ -487,10 +493,24 @@ class UploadService
             return false;
         }
 
-        $height = Image::read($file)->height();
-        $width = Image::read($file)->width();
+        $image = Image::read($file);
 
-        if($height <= $size[1] && $width <= $size[0])
+        $height = $image->height();
+        $width = $image->width();
+
+        //设定一个最小宽度值，如果是长图计算压缩后的宽度，如果低于这个最小宽度值 则不压缩了
+        $min_to_width = 375;
+        
+        if($height > $to_height)
+        {
+            $c_to_width = $width * $to_height / $height;
+            if($c_to_width < $min_to_width)
+            {
+                return false;
+            }
+        }
+
+        if($height <= $to_height && $width <= $to_width)
         {
             return false;
         }
