@@ -37,7 +37,6 @@ class UploaderController extends Controller
         } else {
             return ['code' => 0, 'msg' => $ret['msg'], 'data' => ''];
         }
-
     }
 
     public function refreshUploadVideo()
@@ -58,5 +57,4 @@ class UploaderController extends Controller
         }
         return ['code' => 0, 'msg' => '', 'data' => $as->getVideoUrl($id)];
     }
-
 }

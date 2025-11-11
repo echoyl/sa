@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud;
 
 use Echoyl\Sa\Services\dev\crud\CrudInterface;
@@ -15,10 +16,9 @@ class BaseField implements CrudInterface
     {
         $this->config = $config;
 
-        $this->col = $this->config['col']??['name'=>''];
+        $this->col = $this->config['col'] ?? ['name' => ''];
 
         $this->name = $this->col['name'];
-
     }
 
     public function encode($options = [])
@@ -45,8 +45,7 @@ class BaseField implements CrudInterface
         //select类型的话 未set 也是需要更新的，因为如果已经设置了can_be_null_columns表示该字段可以为空，所以需要更新为空
         $unset_types = ['select'];
 
-        if($from == 'update' && !$isset && !in_array($type,$unset_types))
-        {
+        if ($from == 'update' && !$isset && !in_array($type, $unset_types)) {
             //更新时 如果未传参数 则不更新
             $val = '__unset';
             return $this->getData($val);
@@ -63,33 +62,30 @@ class BaseField implements CrudInterface
         return $this->getData($val);
     }
 
-    public function search($m,$options = [])
+    public function search($m, $options = [])
     {
         return $m;
     }
 
     public function moveFile($value)
     {
-        if(strpos($value,$this->tmp_prefix) === 0)
-        {
+        if (strpos($value, $this->tmp_prefix) === 0) {
             //将文件转移
-            $new_value = str_replace($this->tmp_prefix,'',$value);
+            $new_value = str_replace($this->tmp_prefix, '', $value);
             //d(storage_path($this->storage_prefix.$value),storage_path($this->storage_prefix.$new_value));
-            Storage::move($value,$new_value);
+            Storage::move($value, $new_value);
             return $new_value;
         }
         return $value;
     }
 
-    public function diffFileVal($data,$origin_data)
+    public function diffFileVal($data, $origin_data)
     {
         $new_values = [];
         if (is_array($data) && !empty($data)) {
-            foreach($data as $key=>$item)
-            {
-                $value = Arr::get($item,'value');
-                if(!$value)
-                {
+            foreach ($data as $key => $item) {
+                $value = Arr::get($item, 'value');
+                if (!$value) {
                     continue;
                 }
                 $new_values[] = $value;
@@ -97,18 +93,23 @@ class BaseField implements CrudInterface
                 $data[$key]['value'] = $this->moveFile($value);
             }
         }
-        $origin_data = is_string($origin_data)?json_decode($origin_data,true):$origin_data;
+
+        $remove_origin_file_data = config('sa.remove_origin_file_data', true);
+
+        if (!$remove_origin_file_data) {
+            //未开启删除旧文件 直接返回
+            return $data;
+        }
+
+        $origin_data = is_string($origin_data) ? json_decode($origin_data, true) : $origin_data;
 
         if (is_array($origin_data) && !empty($origin_data)) {
-            foreach($origin_data as $item)
-            {
-                $value = Arr::get($item,'value');
-                if(!$value)
-                {
+            foreach ($origin_data as $item) {
+                $value = Arr::get($item, 'value');
+                if (!$value) {
                     continue;
                 }
-                if(!in_array($value,$new_values))
-                {
+                if (!in_array($value, $new_values)) {
                     //旧文件删除
                     Storage::delete($value);
                 }
@@ -117,31 +118,27 @@ class BaseField implements CrudInterface
         return $data;
     }
 
-    public function getData($val,$isset = true)
+    public function getData($val, $isset = true)
     {
         $data = $this->config['data'];
         $name = $this->name;
 
-        if($val === '__unset')
-        {
-            if($isset)
-            {
+        if ($val === '__unset') {
+            if ($isset) {
                 unset($data[$name]);
             }
-        }else
-        {
+        } else {
             $data[$name] = $val;
         }
         return $data;
     }
 
-    public function valToInt(array $val = [],$force = false)
+    public function valToInt(array $val = [], $force = false)
     {
         //如果是非json配置选项，而使用数据表数据 那么检测值是数字的情况下需要格式化explode后数字变成了字符串导致前端组件无法默认选中选项
-        $class = Arr::get($this->col,'class');
-        if($class || $force)
-        {
-            $val = collect($val)->map(fn ($v)=> is_numeric($v)? intval($v):$v)->toArray();
+        $class = Arr::get($this->col, 'class');
+        if ($class || $force) {
+            $val = collect($val)->map(fn($v) => is_numeric($v) ? intval($v) : $v)->toArray();
         }
         return $val;
     }
