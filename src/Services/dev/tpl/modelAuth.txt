@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Models$namespace$;
+
 $use_namespace$
 use Echoyl\Sa\Models\BaseAuth;
 
-//customer namespace start
+// customer namespace start
 $customer_namespace$
-//customer namespace end
+// customer namespace end
 
 class $name$ extends BaseAuth

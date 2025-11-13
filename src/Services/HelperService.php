@@ -1,48 +1,45 @@
 <?php
+
 namespace Echoyl\Sa\Services;
 
-use Echoyl\Sa\Models\dev\Model;
-use Echoyl\Sa\Services\dev\crud\CrudService;
-use Exception;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use DateTime;
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
+use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\admin\LocaleService;
+use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\utils\Schema;
+use Exception;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class HelperService
 {
     public static function picStr($pics = [])
     {
         $_pics = [];
-        if(!empty($pics))
-        {
-            foreach($pics as $val)
-            {
+        if (! empty($pics)) {
+            foreach ($pics as $val) {
                 $_pics[] = $val['value'];
             }
         }
 
-        return implode(',',$_pics);
+        return implode(',', $_pics);
     }
 
     public static function picArr($pics = '')
     {
-        if(!$pics)
-        {
+        if (! $pics) {
             return [];
         }
-        $pics = explode(',',$pics);
+        $pics = explode(',', $pics);
         $_pics = [];
-        foreach($pics as $val)
-        {
+        foreach ($pics as $val) {
             $_pics[] = [
-                'url'=>tomedia($val),
-                'value'=>$val
+                'url' => tomedia($val),
+                'value' => $val,
             ];
         }
 
@@ -57,18 +54,16 @@ class HelperService
      */
     public static function getConfigFields($data)
     {
-        if(empty($data))
-        {
+        if (empty($data)) {
             return [];
         }
         $fields = [];
-        foreach($data as $key=>$val)
-        {
-            if(isset($val['config']))
-            {
+        foreach ($data as $key => $val) {
+            if (isset($val['config'])) {
                 $fields[] = $key;
             }
         }
+
         return $fields;
     }
 
@@ -81,53 +76,47 @@ class HelperService
     public static function deImagesFromConfig(&$data)
     {
         $fields = self::getConfigFields($data);
-        
-        if(!empty($fields))
-        {
-            foreach($fields as $f)
-            {
+
+        if (! empty($fields)) {
+            foreach ($fields as $f) {
                 $data[$f]['value'] = self::autoParseImages($data[$f]['value']);
             }
         }
-        return;
+
     }
 
     public static function autoParseImages($data)
     {
-        if(!$data)
-        {
+        if (! $data) {
             return $data;
         }
         $img_fields = self::getImageFields($data);
-        if(!empty($img_fields))
-        {
-            self::parseImages($data,$img_fields,false);
+        if (! empty($img_fields)) {
+            self::parseImages($data, $img_fields, false);
         }
-        foreach($data as $key=>$deep_val)
-        {
-            if(in_array($key,$img_fields))
-            {
-                //已经是图片类型的不用再检测了
+        foreach ($data as $key => $deep_val) {
+            if (in_array($key, $img_fields)) {
+                // 已经是图片类型的不用再检测了
                 continue;
             }
-            if(is_array($deep_val) && !empty($deep_val))
-            {
-                //如果是
-                //$deep_val = self::autoParseImages($deep_val);
+            if (is_array($deep_val) && ! empty($deep_val)) {
+                // 如果是
+                // $deep_val = self::autoParseImages($deep_val);
                 // foreach($deep_val as $k=>$v)
                 // {
                 //     if(is_array($v))
                 //     {
-                        
+
                 //         $deep_val[$k] = self::autoParseImages($v);
-                        
+
                 //     }
-                    
+
                 // }
                 $data[$key] = self::autoParseImages($deep_val);
-                
+
             }
         }
+
         return $data;
     }
 
@@ -139,131 +128,119 @@ class HelperService
      */
     public static function getImageFields($data)
     {
-        if(empty($data))
-        {
+        if (empty($data)) {
             return [];
         }
         $fields = [];
-        foreach($data as $key=>$val)
-        {
-            if(is_array($val) && !empty($val))
-            {
-                if(isset($val[0]['value']) && isset($val[0]['uid']))
-                {
+        foreach ($data as $key => $val) {
+            if (is_array($val) && ! empty($val)) {
+                if (isset($val[0]['value']) && isset($val[0]['uid'])) {
                     $fields[] = $key;
                 }
             }
         }
+
         return $fields;
     }
 
     public static function userContent($content)
     {
-        if(is_array($content))
-        {
+        if (is_array($content)) {
             return $content;
         }
+
         return strip_tags($content);
-        //$search = ['<script',"</script>"];
-        //$replace = ['',''];
-        //return str_replace($search,$replace,$content);
+        // $search = ['<script',"</script>"];
+        // $replace = ['',''];
+        // return str_replace($search,$replace,$content);
     }
 
-    public static function list($model,$callback,$order_by = [],$where = [])
+    public static function list($model, $callback, $order_by = [], $where = [])
     {
-        $page = webapi_request('page',1);
-        $page_size = webapi_request('page_size',10);
+        $page = webapi_request('page', 1);
+        $page_size = webapi_request('page_size', 10);
 
         $m = $model->where($where);
 
         $count = $m->count();
-        foreach($order_by as $order)
-        {
-            $m = $m->orderBy($order[0],$order[1]);
+        foreach ($order_by as $order) {
+            $m = $m->orderBy($order[0], $order[1]);
         }
-        $list = $m->offset(($page-1)*$page_size)->limit($page_size)->get()->toArray();
+        $list = $m->offset(($page - 1) * $page_size)->limit($page_size)->get()->toArray();
         $data = [];
-        foreach($list as $val)
-        {
+        foreach ($list as $val) {
             $data[] = $callback($val);
         }
 
-        return ['code'=>0,'msg'=>'','data'=>[
-            'count'=>$count,'list'=>$data
+        return ['code' => 0, 'msg' => '', 'data' => [
+            'count' => $count, 'list' => $data,
         ]];
     }
 
-    public static function map($model,$callback,$order_by = [],$where = [])
+    public static function map($model, $callback, $order_by = [], $where = [])
     {
-        $page = webapi_request('page',1);
-        $page_size = webapi_request('page_size',10);
+        $page = webapi_request('page', 1);
+        $page_size = webapi_request('page_size', 10);
 
         $m = $model->where($where);
 
         $count = $m->count();
-        foreach($order_by as $order)
-        {
-            $m = $m->orderBy($order[0],$order[1]);
+        foreach ($order_by as $order) {
+            $m = $m->orderBy($order[0], $order[1]);
         }
-        $data = $m->offset(($page-1)*$page_size)->limit($page_size)->get()->map(fn($item) => $callback($item))->toArray();
+        $data = $m->offset(($page - 1) * $page_size)->limit($page_size)->get()->map(fn ($item) => $callback($item))->toArray();
 
-        return ['code'=>0,'msg'=>'','data'=>[
-            'count'=>$count,'list'=>$data
+        return ['code' => 0, 'msg' => '', 'data' => [
+            'count' => $count, 'list' => $data,
         ]];
     }
-	
-	public static function withs($model,$ids,$title = '')
+
+    public static function withs($model, $ids, $title = '')
     {
-        if(!is_array($ids))
-        {
-            $ids = explode(',',$ids);
+        if (! is_array($ids)) {
+            $ids = explode(',', $ids);
         }
-        $data = $model->whereIn('id',$ids)->orderbyRaw('FIND_IN_SET(id,?)',implode(',',$ids))->get();
-        if($title)
-        {
+        $data = $model->whereIn('id', $ids)->orderbyRaw('FIND_IN_SET(id,?)', implode(',', $ids))->get();
+        if ($title) {
             return $data->pluck('title');
-        }else
-        {
+        } else {
             return $data->toArray();
         }
     }
 
     public static function enImages($data, $keys = [])
     {
-        foreach($keys as $key)
-        {
+        foreach ($keys as $key) {
             $config = [
-                'data'=>$data,'col'=>['name'=>$key,'type'=>'image','default'=>''],
+                'data' => $data, 'col' => ['name' => $key, 'type' => 'image', 'default' => ''],
             ];
             $cs = new CrudService($config);
-            //make后的图片数据变成了json需要重新转换一下
-            $data = $cs->make('image',[
-                'encode'=>true,
-                'isset'=>isset($data[$key]),
+            // make后的图片数据变成了json需要重新转换一下
+            $data = $cs->make('image', [
+                'encode' => true,
+                'isset' => isset($data[$key]),
             ]);
-            if(isset($data[$key]) && $data[$key])
-            {
-                $data[$key] = json_decode($data[$key],true);
+            if (isset($data[$key]) && $data[$key]) {
+                $data[$key] = json_decode($data[$key], true);
             }
         }
-        //如果有原始数据 将原始数据删除
-        Arr::forget($data,'originData');
+        // 如果有原始数据 将原始数据删除
+        Arr::forget($data, 'originData');
+
         return self::parseImages($data, $keys);
     }
 
     /**
      * 字符串转数组，如果是数组则原值返回
      *
-     * @param array | string $key
+     * @param  array | string  $key
      * @return array | string
      */
     public static function str2Arr($key = [])
     {
-        if(is_string($key))
-        {
+        if (is_string($key)) {
             return [$key];
-        }else
-        {
+        } else {
             return $key;
         }
     }
@@ -271,9 +248,9 @@ class HelperService
     /**
      * Undocumented function
      *
-     * @param array $data 数据
-     * @param array $keys 需要转化为图片的键值
-     * @param boolean $fill_empty 是否自动填充 空白数据
+     * @param  array  $data  数据
+     * @param  array  $keys  需要转化为图片的键值
+     * @param  bool  $fill_empty  是否自动填充 空白数据
      * @return array
      */
     public static function deImages(&$data, $keys = [], $fill_empty = false)
@@ -282,11 +259,12 @@ class HelperService
         $data = self::parseImages($data, $keys, false);
         if ($fill_empty) {
             foreach ($keys as $key) {
-                if (!isset($data[$key]) || empty($data[$key])) {
+                if (! isset($data[$key]) || empty($data[$key])) {
                     $data[$key] = [['url' => '']];
                 }
             }
         }
+
         return $data;
     }
 
@@ -295,18 +273,17 @@ class HelperService
         $keys = self::str2Arr($keys);
         $data = self::parseImages($data, $keys, false);
         foreach ($keys as $key) {
-            if (!isset($data[$key]) || empty($data[$key])) {
+            if (! isset($data[$key]) || empty($data[$key])) {
                 $data[$key] = [];
-            }else
-            {
+            } else {
                 $ret = [];
-                foreach($data[$key] as $val)
-                {
+                foreach ($data[$key] as $val) {
                     $ret[] = $val['url'];
                 }
                 $data[$key] = $ret;
             }
         }
+
         return $data;
     }
 
@@ -314,68 +291,65 @@ class HelperService
      * 网站显示图片 直接返回图片url
      *
      * @param [type] $data
-     * @param array $keys
-     * @param boolean $fill_empty 默认返回空值
+     * @param  array  $keys
+     * @param  bool  $fill_empty  默认返回空值
      * @return void
      */
-    public static function deImagesOne(&$data, $keys = [], $fill_empty = true,$params = [])
+    public static function deImagesOne(&$data, $keys = [], $fill_empty = true, $params = [])
     {
         $keys = self::str2Arr($keys);
-        $data = self::parseImages($data, $keys, false,$params);
+        $data = self::parseImages($data, $keys, false, $params);
         if ($fill_empty) {
             foreach ($keys as $key) {
-                if (!isset($data[$key]) || empty($data[$key]) || !is_array($data[$key])) {
+                if (! isset($data[$key]) || empty($data[$key]) || ! is_array($data[$key])) {
                     $data[$key] = ['url' => '', 'name' => ''];
                 } else {
-                    $data[$key] = $data[$key][0]??['url' => '', 'name' => ''];
+                    $data[$key] = $data[$key][0] ?? ['url' => '', 'name' => ''];
                 }
             }
         }
+
         return $data;
     }
 
-    public static function parseImages(&$data, $keys = [], $encode = true,$params = [])
+    public static function parseImages(&$data, $keys = [], $encode = true, $params = [])
     {
         foreach ($keys as $key) {
             if (isset($data[$key])) {
-                $data[$key] = self::uploadParse($data[$key], $encode,$params);
+                $data[$key] = self::uploadParse($data[$key], $encode, $params);
             }
         }
+
         return $data;
     }
 
-    public static function aliyunVideoParse($data,$encode = true,$params = [])
+    public static function aliyunVideoParse($data, $encode = true, $params = [])
     {
-        if($encode)
-        {
-            if (is_array($data) && !empty($data)) {
+        if ($encode) {
+            if (is_array($data) && ! empty($data)) {
                 $_data = [];
                 foreach ($data as $item) {
-                    if(isset($item['url']))
-                    {
+                    if (isset($item['url'])) {
                         unset($item['url']);
                     }
-                    if(isset($item['play_url']))
-                    {
+                    if (isset($item['play_url'])) {
                         unset($item['play_url']);
                     }
                     $_data[] = $item;
                 }
 
-                
                 return json_encode($_data);
-            }else
-            {
+            } else {
                 return '';
             }
-        }else
-        {
+        } else {
             $_data = [];
-            if($data)
-            {
-                $data = is_string($data)? json_decode($data, 'true'):$data;
+            if ($data) {
+                $data = is_string($data) ? json_decode($data, 'true') : $data;
+
                 return $data;
             }
+
             return $_data;
         }
     }
@@ -384,196 +358,166 @@ class HelperService
      * 处理图片附件链接 完整
      *
      * @param [type] $url
-     * @param boolean $img
+     * @param  bool  $img
      * @return void
      */
-    public static function tomedia($url,$img = false)
+    public static function tomedia($url, $img = false)
     {
-        if(is_array($url))
-        {
+        if (is_array($url)) {
             $rt = [];
-            foreach($url as $val)
-            {
-                if($val)
-                {
-                    $rt[] = self::tomedia($val,$img);
+            foreach ($url as $val) {
+                if ($val) {
+                    $rt[] = self::tomedia($val, $img);
                 }
-                
+
             }
+
             return $rt;
-        }else
-        {
-            if(strpos($url,'http') !== false || strpos($url,'https') !== false)
-            {
+        } else {
+            if (strpos($url, 'http') !== false || strpos($url, 'https') !== false) {
                 return $url;
-            }else
-            {
-                return $url?self::getFileImagePrefix($img).$url:'';
+            } else {
+                return $url ? self::getFileImagePrefix($img).$url : '';
             }
         }
     }
 
     public static function getFileImagePrefix($img = false)
     {
-        $prefix = $img ?rtrim(env('APP_URL'),'/').'/img/storage' : rtrim(env('APP_URL'),'/').'/storage';//本地存储
-        if(env('ALIYUN_OSS'))
-        {
-            //如果开启阿里云存储 返回
-            $prefix = implode('/',[env('ALIYUN_DOMAIN'),env('ALIYUN_OSS')]);
+        $prefix = $img ? rtrim(env('APP_URL'), '/').'/img/storage' : rtrim(env('APP_URL'), '/').'/storage'; // 本地存储
+        if (env('ALIYUN_OSS')) {
+            // 如果开启阿里云存储 返回
+            $prefix = implode('/', [env('ALIYUN_DOMAIN'), env('ALIYUN_OSS')]);
         }
+
         return rtrim($prefix).'/';
     }
 
-    public static function uploadParse($data,$encode = true,$params = [])
+    public static function uploadParse($data, $encode = true, $params = [])
     {
-        if($encode)
-        {
-            if (is_array($data) && !empty($data)) {
+        if ($encode) {
+            if (is_array($data) && ! empty($data)) {
                 $_data = [];
                 foreach ($data as $item) {
-                    if(isset($item['url']))
-                    {
+                    if (isset($item['url'])) {
                         unset($item['url']);
                     }
-                    $value = Arr::get($item,'value');
-                    if(!$value)
-                    {
+                    $value = Arr::get($item, 'value');
+                    if (! $value) {
                         continue;
                     }
                     $_data[] = $item;
                 }
+
                 return json_encode($_data);
-            }else
-            {
+            } else {
                 return '';
             }
-        }else
-        {
+        } else {
             $_data = [];
-            if($data)
-            {
-                $data = is_string($data)? json_decode($data, 'true'):$data;
-                if(is_array($data))
-                {
-                    foreach($data as $key=>$val)
-                    {
-                        $query = !empty($params)?http_build_query($params):'';
+            if ($data) {
+                $data = is_string($data) ? json_decode($data, 'true') : $data;
+                if (is_array($data)) {
+                    foreach ($data as $key => $val) {
+                        $query = ! empty($params) ? http_build_query($params) : '';
 
                         $media = '';
 
-                        if(isset($val['value']))
-                        {
-                            $media = self::tomedia($val['value'],$query?true:false);
-                        }elseif(isset($val['url']))
-                        {
-                            $media = self::tomedia($val['url'],$query?true:false);
+                        if (isset($val['value'])) {
+                            $media = self::tomedia($val['value'], $query ? true : false);
+                        } elseif (isset($val['url'])) {
+                            $media = self::tomedia($val['url'], $query ? true : false);
                         }
 
-                        if($media)
-                        {
-                            $data[$key]['url'] = $query?implode(strpos($media,'?') !== false?'&':'?',[$media,$query]):$media;
+                        if ($media) {
+                            $data[$key]['url'] = $query ? implode(strpos($media, '?') !== false ? '&' : '?', [$media, $query]) : $media;
                         }
                     }
+
                     return $data;
                 }
             }
+
             return $_data;
         }
-        
+
     }
 
-    public static function asynUrl($url,$data = [],$method = 'GET')
+    public static function asynUrl($url, $data = [], $method = 'GET')
     {
         $res = Http::withHeaders([
             'Authorization' => request()->header('Authorization'),
             'Sa-Remember' => request()->header('Sa-Remember'),
         ])->timeout(1);
 
-		try{
-            if($method == 'GET')
-            {
-                $res->get($url,$data);
-            }else
-            {
-                $res->post($url,$data);
+        try {
+            if ($method == 'GET') {
+                $res->get($url, $data);
+            } else {
+                $res->post($url, $data);
             }
-		}catch(Exception $e)
-		{
-			//异步执行url 无返回
-		}
-        return;
+        } catch (Exception $e) {
+            // 异步执行url 无返回
+        }
+
     }
 
-    public static function searchWhereHas($model,$name,$columns,$search)
+    public static function searchWhereHas($model, $name, $columns, $search)
     {
-        if($search === '')
-        {
+        if ($search === '') {
             return $model;
         }
 
         $search_val = false;
-        if(is_string($search))
-        {
+        if (is_string($search)) {
             $json = self::json_validate($search);
-            if($json !== false)
-            {
+            if ($json !== false) {
                 $json = array_values($json);
                 $search_val = array_shift($json);
-            }else
-            {
+            } else {
                 $search_val = $search;
             }
-        }elseif(is_array($search))
-        {
-            if(empty($search))
-            {
+        } elseif (is_array($search)) {
+            if (empty($search)) {
                 return $model;
             }
             $search = array_values($search);
             $search_val = array_shift($search);
         }
-        
-        if(!$search_val)
-        {
+
+        if (! $search_val) {
             return $model;
         }
-        $model = $model->whereHas($name,function($q) use($columns,$search_val){
-            foreach($columns as $key=>$val)
-            {
-                if($key == 0)
-                {
-                    $q->where([[$val, 'like', '%' . $search_val . '%']]);
-                }else
-                {
-                    $q->orWhere([[$val, 'like', '%' . $search_val . '%']]);
+        $model = $model->whereHas($name, function ($q) use ($columns, $search_val) {
+            foreach ($columns as $key => $val) {
+                if ($key == 0) {
+                    $q->where([[$val, 'like', '%'.$search_val.'%']]);
+                } else {
+                    $q->orWhere([[$val, 'like', '%'.$search_val.'%']]);
                 }
             }
         });
+
         return $model;
     }
 
-    public static function searchWhereBetweenIn($model,$columns,$search_val,$where_type = 'whereBetween')
+    public static function searchWhereBetweenIn($model, $columns, $search_val, $where_type = 'whereBetween')
     {
-        if($search_val)
-        {
-            if(is_numeric($search_val))
-            {
+        if ($search_val) {
+            if (is_numeric($search_val)) {
                 $search_val = [$search_val];
-            }else
-            {
-                $search_val = is_string($search_val) ? json_decode($search_val,true):$search_val;
-                if($where_type == 'whereBetween' && is_array($search_val) && isset($search_val[1]))
-                {
-                    //检测是否是日期
-                    $d = DateTime::createFromFormat("Y-m-d",$search_val[1]);
-                    if($d && $d->format('Y-m-d') === $search_val[1])
-                    {
-                        //是日期 自动追加至当天最后一秒
+            } else {
+                $search_val = is_string($search_val) ? json_decode($search_val, true) : $search_val;
+                if ($where_type == 'whereBetween' && is_array($search_val) && isset($search_val[1])) {
+                    // 检测是否是日期
+                    $d = DateTime::createFromFormat('Y-m-d', $search_val[1]);
+                    if ($d && $d->format('Y-m-d') === $search_val[1]) {
+                        // 是日期 自动追加至当天最后一秒
                         $search_val[1] .= ' 23:59:59';
                     }
                 }
             }
-            $model = $model->$where_type($columns[0],$search_val);
+            $model = $model->$where_type($columns[0], $search_val);
         }
 
         return $model;
@@ -585,63 +529,57 @@ class HelperService
      * @param [type] $model 模型或query
      * @param [type] $columns 检索的字段
      * @param [type] $search_val 检索内容
-     * @param [type] $type 检索类型 
-     * @param array $more 更多参数 5个参数疯了
+     * @param [type] $type 检索类型
+     * @param  array  $more  更多参数 5个参数疯了
      * @return void
      */
-    public static function searchWhere($model,$columns,$search_val,$type,$more = [])
+    public static function searchWhere($model, $columns, $search_val, $type, $more = [])
     {
-        if($search_val === '')
-        {
+        if ($search_val === '') {
             return $model;
         }
 
-        if($search_val == 'all')
-        {
-            //保留关键字 搜索all 过滤掉
+        if ($search_val == 'all') {
+            // 保留关键字 搜索all 过滤掉
             return $model;
         }
 
         $search_val = urldecode($search_val);
 
-        if($type == 'like')
-        {
-            $search_val = '%' . $search_val . '%';
+        if ($type == 'like') {
+            $search_val = '%'.$search_val.'%';
         }
 
-        $origin_model = Arr::get($more,'origin_model');
+        $origin_model = Arr::get($more, 'origin_model');
 
-        if(count($columns) == 1)
-        {
-            //只搜索一个字段
-            $model = LocaleService::search($model,[$columns[0], $type, $search_val],$origin_model);
-        }else
-        {
-            //多个字段搜索
-            $model = $model->where(function($q) use($columns,$search_val,$type,$origin_model){
-                foreach($columns as $key=>$val)
-                {
-                    $q = LocaleService::search($q,[$val, $type, $search_val],$origin_model,$key);
+        if (count($columns) == 1) {
+            // 只搜索一个字段
+            $model = LocaleService::search($model, [$columns[0], $type, $search_val], $origin_model);
+        } else {
+            // 多个字段搜索
+            $model = $model->where(function ($q) use ($columns, $search_val, $type, $origin_model) {
+                foreach ($columns as $key => $val) {
+                    $q = LocaleService::search($q, [$val, $type, $search_val], $origin_model, $key);
                 }
             });
         }
+
         return $model;
     }
 
-    public static function uncamelize($camelCaps,$separator='_')
+    public static function uncamelize($camelCaps, $separator = '_')
     {
-        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1'.$separator.'$2', $camelCaps));
     }
 
     public static function json_validate($string)
     {
         // decode the JSON data
-        if(!is_string($string) || is_numeric($string))
-        {
+        if (! is_string($string) || is_numeric($string)) {
             return false;
         }
-        
-        $result = json_decode($string,true);
+
+        $result = json_decode($string, true);
         // switch and check possible JSON errors
         switch (json_last_error()) {
             case JSON_ERROR_NONE:
@@ -659,15 +597,15 @@ class HelperService
             case JSON_ERROR_SYNTAX:
                 $error = 'Syntax error, malformed JSON.';
                 break;
-            // PHP >= 5.3.3
+                // PHP >= 5.3.3
             case JSON_ERROR_UTF8:
                 $error = 'Malformed UTF-8 characters, possibly incorrectly encoded.';
                 break;
-            // PHP >= 5.5.0
+                // PHP >= 5.5.0
             case JSON_ERROR_RECURSION:
                 $error = 'One or more recursive references in the value to be encoded.';
                 break;
-            // PHP >= 5.5.0
+                // PHP >= 5.5.0
             case JSON_ERROR_INF_OR_NAN:
                 $error = 'One or more NAN or INF values in the value to be encoded.';
                 break;
@@ -688,41 +626,37 @@ class HelperService
         return $result;
     }
 
-    public static function getChild($model,$parseData = false,$order_by = [],$pid = 0,$pname = 'parent_id',$max_level = 0,$level = 1)
+    public static function getChild($model, $parseData = false, $order_by = [], $pid = 0, $pname = 'parent_id', $max_level = 0, $level = 1)
     {
         $list = clone $model;
         $list = $list->where([$pname => $pid]);
-        if(!empty($order_by))
-        {
-            foreach($order_by as $orderby)
-            {
-                $list = $list->orderBy($orderby[0],$orderby[1]);
+        if (! empty($order_by)) {
+            foreach ($order_by as $orderby) {
+                $list = $list->orderBy($orderby[0], $orderby[1]);
             }
         }
         $list = $list->get()->toArray();
         foreach ($list as $key => $val) {
-            if($parseData)
-            {
+            if ($parseData) {
                 $list[$key] = $parseData($val);
             }
-            if($max_level == 0 || $max_level > $level)
-            {
-                $children = self::getChild($model,$parseData,$order_by,$val['id'], $pname,$max_level,$level+1);
-                if (!empty($children)) {
+            if ($max_level == 0 || $max_level > $level) {
+                $children = self::getChild($model, $parseData, $order_by, $val['id'], $pname, $max_level, $level + 1);
+                if (! empty($children)) {
                     $list[$key]['children'] = $children;
                 }
             }
         }
+
         return $list;
     }
 
-    public static function getChildFromData($all_data,$parseData = false,$order_by = [],$pid = 0,$pname = 'parent_id',$max_level = 0,$level = 1)
+    public static function getChildFromData($all_data, $parseData = false, $order_by = [], $pid = 0, $pname = 'parent_id', $max_level = 0, $level = 1)
     {
         $list = collect($all_data);
-        $list = $list->where($pname,$pid);
+        $list = $list->where($pname, $pid);
 
-        if(!empty($order_by))
-        {
+        if (! empty($order_by)) {
             $list = $list->sortBy($order_by);
             // foreach($order_by as $orderby)
             // {
@@ -731,121 +665,112 @@ class HelperService
         }
         $list = $list->toArray();
         foreach ($list as $key => $val) {
-            if($parseData)
-            {
+            if ($parseData) {
                 $list[$key] = $parseData($val);
             }
-            if($max_level == 0 || $max_level > $level)
-            {
-                $children = self::getChildFromData($all_data,$parseData,$order_by,$val['id'], $pname,$max_level,$level+1);
-                if (!empty($children)) {
+            if ($max_level == 0 || $max_level > $level) {
+                $children = self::getChildFromData($all_data, $parseData, $order_by, $val['id'], $pname, $max_level, $level + 1);
+                if (! empty($children)) {
                     $list[$key]['children'] = $children;
                 }
             }
         }
+
         return array_values($list);
     }
 
-    public static function arrayResetKey($arr = [],$key = 'id')
+    public static function arrayResetKey($arr = [], $key = 'id')
     {
         $data = [];
-        foreach($arr as $val)
-        {
-            if(isset($val[$key]))
-            {
+        foreach ($arr as $val) {
+            if (isset($val[$key])) {
                 $data[$val[$key]] = $val;
             }
         }
+
         return $data;
     }
 
-    public static function getFromObject($data,$keys)
+    public static function getFromObject($data, $keys)
     {
         $name = '';
         $key = $keys[0];
 
-        if(isset($data[$key]))
-        {
-            if(is_array($data[$key]))
-            {
+        if (isset($data[$key])) {
+            if (is_array($data[$key])) {
                 array_shift($keys);
-                if(!empty($keys))
-                {
-                    return self::getFromObject($data[$key],$keys);
-                }else
-                {
+                if (! empty($keys)) {
+                    return self::getFromObject($data[$key], $keys);
+                } else {
                     $name = $data[$key];
                 }
-            }else
-            {
+            } else {
                 $name = $data[$key];
             }
         }
+
         return $name;
     }
 
-    public static function distanceRaw($lat,$lng,$lat_name = 'lat',$lng_name = 'lng')
+    public static function distanceRaw($lat, $lng, $lat_name = 'lat', $lng_name = 'lng')
     {
         $lat = floatval($lat);
         $lng = floatval($lng);
-        $distance = ' ACOS(SIN((' . $lat . ' * 3.1415) / 180 ) *SIN(('.$lat_name.' * 3.1415) / 180 ) +COS((' . $lat . ' * 3.1415) / 180 ) * COS(('.$lat_name.' * 3.1415) / 180 ) *COS((' . $lng . ' * 3.1415) / 180 - ('.$lng_name.' * 3.1415) / 180 ) ) * 6380';
+        $distance = ' ACOS(SIN(('.$lat.' * 3.1415) / 180 ) *SIN(('.$lat_name.' * 3.1415) / 180 ) +COS(('.$lat.' * 3.1415) / 180 ) * COS(('.$lat_name.' * 3.1415) / 180 ) *COS(('.$lng.' * 3.1415) / 180 - ('.$lng_name.' * 3.1415) / 180 ) ) * 6380';
+
         return $distance;
     }
 
-    public static function distanceRawDb($lat,$lng,$lat_name = 'lat',$lng_name = 'lng',$name = 'distance')
+    public static function distanceRawDb($lat, $lng, $lat_name = 'lat', $lng_name = 'lng', $name = 'distance')
     {
-        return DB::raw(self::distanceRaw($lat,$lng,$lat_name,$lng_name).' as '.$name);
+        return DB::raw(self::distanceRaw($lat, $lng, $lat_name, $lng_name).' as '.$name);
     }
 
     public static function parseMobile($mobile)
     {
-        return substr($mobile,0,3).'****'.substr($mobile,7,4);
+        return substr($mobile, 0, 3).'****'.substr($mobile, 7, 4);
     }
 
     public static function isMobileNumber($mobile)
     {
-        return preg_match("/^1\d{10}$/",$mobile);
+        return preg_match("/^1\d{10}$/", $mobile);
     }
 
-    public static function get($url,$query = [],$body = false,$pre = false)
+    public static function get($url, $query = [], $body = false, $pre = false)
     {
-        //Log::channel('daily')->info('request query:',['query'=>$query,'url'=>$url]);
+        // Log::channel('daily')->info('request query:',['query'=>$query,'url'=>$url]);
 
-        try{
+        try {
             $ins = Http::timeout(10);
-            if($pre)
-            {
+            if ($pre) {
                 $ins = $pre($ins);
             }
-            $res = $ins->get($url,$query);
-        }catch(Exception $e)
-        {
-            return [1,$e->getMessage()];
+            $res = $ins->get($url, $query);
+        } catch (Exception $e) {
+            return [1, $e->getMessage()];
         }
 
-        $data = $body?$res->body():$res->json();
-    
-        return [0,$data];
+        $data = $body ? $res->body() : $res->json();
+
+        return [0, $data];
     }
 
-    public static function post($url,$post,$body = false,$pre = false)
+    public static function post($url, $post, $body = false, $pre = false)
     {
-        //Log::channel('daily')->info('post start:',['params'=>$post]);
-        try{
+        // Log::channel('daily')->info('post start:',['params'=>$post]);
+        try {
             $ins = Http::timeout(10);
-            if($pre)
-            {
+            if ($pre) {
                 $ins = $pre($ins);
             }
-            $res = $ins->post($url,$post);
-        }catch(Exception $e)
-        {
-            return [1,$e->getMessage()];
+            $res = $ins->post($url, $post);
+        } catch (Exception $e) {
+            return [1, $e->getMessage()];
         }
 
-        $data = $body?$res->body():$res->json();
-        
-        return [0,$data];
+        $data = $body ? $res->body() : $res->json();
+
+        return [0, $data];
     }
 
     public static function pwd($str)
@@ -853,21 +778,23 @@ class HelperService
         return md5($str);
     }
 
-    public static function secondsToTime($seconds) {
+    public static function secondsToTime($seconds)
+    {
 
         $hours = floor($seconds / 3600);
-      
+
         $minutes = floor(($seconds - ($hours * 3600)) / 60);
-      
+
         $seconds = $seconds - ($hours * 3600) - ($minutes * 60);
-      
+
         return str_pad($hours, 2, '0', STR_PAD_LEFT).':'.str_pad($minutes, 2, '0', STR_PAD_LEFT).':'.str_pad($seconds, 2, '0', STR_PAD_LEFT);
-      
+
     }
+
     /**
      * 生成随机字符串
      *
-     * @param integer $length
+     * @param  int  $length
      * @return string
      */
     public static function uuid($length = 10)
@@ -883,34 +810,30 @@ class HelperService
      * @param [number] $to 移动到目标位置键值
      * @return array
      */
-    public static function arrayMove($arr,$from,$to)
+    public static function arrayMove($arr, $from, $to)
     {
-        if($from == $to)
-        {
+        if ($from == $to) {
             return $arr;
         }
         $active_data = $arr[$from];
-        if($from < $to)
-        {
-            //往后
-            array_splice($arr,$to + 1,0,[$active_data]);
-            //将之前的数据删除
+        if ($from < $to) {
+            // 往后
+            array_splice($arr, $to + 1, 0, [$active_data]);
+            // 将之前的数据删除
             unset($arr[$from]);
-        }else
-        {
-            //往前
-            //将之前的数据删除
+        } else {
+            // 往前
+            // 将之前的数据删除
             unset($arr[$from]);
-            if($to == 0)
-            {
-                //已经是第一个了
-                array_unshift($arr,$active_data);
-            }else
-            {
-                array_splice($arr,$to,0,[$active_data]);
+            if ($to == 0) {
+                // 已经是第一个了
+                array_unshift($arr, $active_data);
+            } else {
+                array_splice($arr, $to, 0, [$active_data]);
             }
-            
+
         }
+
         return array_values($arr);
     }
 
@@ -921,12 +844,12 @@ class HelperService
 
     public static function getDevModel($model_id)
     {
-        $model = new Model();
-        $data = $model->where(['id'=>$model_id])->first();
-        if($data)
-        {
+        $model = new Model;
+        $data = $model->where(['id' => $model_id])->first();
+        if ($data) {
             $data = $data->toArray();
         }
+
         return $data;
     }
 
@@ -947,16 +870,15 @@ class HelperService
      * @param [type] $class 模型class
      * @return void
      */
-    public static function filterNotExistColumns($data,$class)
+    public static function filterNotExistColumns($data, $class)
     {
         $model = new $class;
-        foreach($data as $key=>$val)
-        {
-            if(!Schema::hasColumn($model->getTable(),$key))
-            {
+        foreach ($data as $key => $val) {
+            if (! Schema::hasColumn($model->getTable(), $key)) {
                 unset($data[$key]);
             }
         }
+
         return $data;
     }
 
@@ -967,15 +889,16 @@ class HelperService
      * @param [array] $b
      * @return array
      */
-    public static function array_merge_cover($a, $b) {
-        foreach($b as $key => $value) {
-            if(is_array($value) && isset($a[$key]) && is_array($a[$key])) {
+    public static function array_merge_cover($a, $b)
+    {
+        foreach ($b as $key => $value) {
+            if (is_array($value) && isset($a[$key]) && is_array($a[$key])) {
                 $a[$key] = static::array_merge_cover($a[$key], $value);
             } else {
                 $a[$key] = $value;
             }
         }
+
         return $a;
     }
-
 }
