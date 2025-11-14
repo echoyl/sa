@@ -11,19 +11,21 @@ use Echoyl\Sa\Services\dev\MenuService;
 class PostsController extends CrudController
 {
     public $cid = 0;
+
     public $can_be_null_colunms = ['pics'];
 
     public $displayorder = [
         ['displayorder', 'desc'],
         ['id', 'desc'],
     ];
+
     public $spec_arr = [];
 
     public function __construct()
     {
-        $this->model = new Posts();
+        $this->model = new Posts;
 
-        if (!$this->cid) {
+        if (! $this->cid) {
             $as = new MenuService;
             $menu = $as->posts();
             $this->cid = $menu ? $menu['category_id'] : 0;
@@ -57,32 +59,33 @@ class PostsController extends CrudController
 
         $cids = (new Category)->childrenIds($this->cid);
         $cids = array_unique($cids);
-        //d($cids);
-        //$name = 'category_id';
-        if (!empty($cids)) {
+        // d($cids);
+        // $name = 'category_id';
+        if (! empty($cids)) {
             $m = $m->where(function ($q) use ($cids) {
                 foreach ($cids as $cid) {
-                    $q->orWhereRaw("FIND_IN_SET(?,category_id)", [$cid]);
+                    $q->orWhereRaw('FIND_IN_SET(?,category_id)', [$cid]);
                 }
             });
         }
 
         $search['spec_arr'] = $this->spec_arr;
+
         return [$m, $search];
     }
 
     public function postData(&$data)
     {
-        //$ws = new WebsiteService;
+        // $ws = new WebsiteService;
         $data['spec_arr'] = $this->spec_arr;
-        //$data['specs'] = $data['specs'] ? json_decode($data['specs'], true) : [];
-        return;
+        // $data['specs'] = $data['specs'] ? json_decode($data['specs'], true) : [];
+
     }
 
     public function beforePost(&$data)
     {
         if (isset($data['specs'])) {
-            //$data['specs'] = json_encode($data['specs']);
+            // $data['specs'] = json_encode($data['specs']);
         }
     }
 }

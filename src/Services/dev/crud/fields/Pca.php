@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Models\Pca as ModelsPca;
@@ -8,24 +9,27 @@ use Illuminate\Support\Arr;
 
 class Pca extends BaseField
 {
-    var $config;
-    var $keys = ['province','city','area'];
-    var $level = 3;
-    var $col;
+    public $config;
+
+    public $keys = ['province', 'city', 'area'];
+
+    public $level = 3;
+
+    public $col;
+
     public function __construct($config)
     {
         parent::__construct($config);
 
         $col = $this->col;
 
-        $this->level = Arr::get($col,'level',3);//省市区列数
-        $topCode = Arr::get($col,'topCode','');//省市区指定上级
-        $topLevel = $topCode?count(explode(',',$topCode)):0;
-        $topLevel = $topLevel > 3?3:$topLevel;
+        $this->level = Arr::get($col, 'level', 3); // 省市区列数
+        $topCode = Arr::get($col, 'topCode', ''); // 省市区指定上级
+        $topLevel = $topCode ? count(explode(',', $topCode)) : 0;
+        $topLevel = $topLevel > 3 ? 3 : $topLevel;
         $keys = $this->keys;
-        for($i=0;$i<$topLevel;$i++)
-        {
-            //如果有上级 那么将多余name弹出
+        for ($i = 0; $i < $topLevel; $i++) {
+            // 如果有上级 那么将多余name弹出
             array_shift($keys);
         }
         $this->keys = $keys;
@@ -39,39 +43,31 @@ class Pca extends BaseField
         $data = $this->config['data'];
         $need_set = true;
 
-        if($isset && $val != '__unset')
-        {
+        if ($isset && $val != '__unset') {
             $keys = $this->keys;
-            foreach($keys as $k=>$v)
-            {
-                if(!isset($val[$k]) || $k >= $this->level)
-                {
+            foreach ($keys as $k => $v) {
+                if (! isset($val[$k]) || $k >= $this->level) {
                     continue;
                 }
                 $data[$v] = $val[$k];
             }
-            if(!in_array($name,$keys))
-            {
-                //如果用了其它字段需要将该字段移除
+            if (! in_array($name, $keys)) {
+                // 如果用了其它字段需要将该字段移除
                 $val = '__unset';
-            }else
-            {
-                $need_set = false;//字段重复不需要再设值了
+            } else {
+                $need_set = false; // 字段重复不需要再设值了
             }
         }
-        if($val === '__unset')
-        {
-            if(isset($data[$name]))
-            {
+        if ($val === '__unset') {
+            if (isset($data[$name])) {
                 unset($data[$name]);
             }
-        }else
-        {
-            if($need_set)
-            {
+        } else {
+            if ($need_set) {
                 $data[$name] = $val;
             }
         }
+
         return $data;
     }
 
@@ -81,39 +77,33 @@ class Pca extends BaseField
         $keys = $this->keys;
         $data = $this->config['data'];
         $isset = $options['isset'];
-        if(!$isset)
-        {
+        if (! $isset) {
             return $data;
         }
-        foreach($keys as $k=>$v)
-        {
-            if(isset($data[$v]) && $data[$v] && $k < $this->level)
-            {
+        foreach ($keys as $k => $v) {
+            if (isset($data[$v]) && $data[$v] && $k < $this->level) {
                 $val[] = $data[$v];
             }
         }
         $this->name = $this->col['name'];
-        return $this->getData($val,$isset);
+
+        return $this->getData($val, $isset);
     }
 
-    public function search($m,$options = [])
+    public function search($m, $options = [])
     {
         $search_val = $options['search_val'];
 
         $json = HelperService::json_validate($search_val);
-        if($json)
-        {
+        if ($json) {
             $search_val = $json;
-        }else
-        {
+        } else {
             $search_val = [$search_val];
         }
 
-        foreach($this->keys as $k=>$v)
-        {
-            if(isset($search_val[$k]))
-            {
-                $m = $m->where($v,$search_val[$k]);
+        foreach ($this->keys as $k => $v) {
+            if (isset($search_val[$k])) {
+                $m = $m->where($v, $search_val[$k]);
             }
         }
 
@@ -123,7 +113,7 @@ class Pca extends BaseField
     /**
      * 自动解析数据中的省市区
      *
-     * @param string $split
+     * @param  string  $split
      * @return void
      */
     public function decodeStr($split = ' / ')
@@ -131,24 +121,23 @@ class Pca extends BaseField
         $all = self::allPluckData();
         $data = $this->config['data'];
         $strs = [];
-        foreach($this->keys as $key)
-        {
-            if(!isset($data[$key]))
-            {
+        foreach ($this->keys as $key) {
+            if (! isset($data[$key])) {
                 continue;
             }
-            if(isset($all[$data[$key]]))
-            {
+            if (isset($all[$data[$key]])) {
                 $strs[] = $all[$data[$key]];
             }
         }
-        return implode($split,$strs);
+
+        return implode($split, $strs);
     }
 
     public static function allPluckData()
     {
         static $data = [];
-        $data = ModelsPca::pluck('name','code');
+        $data = ModelsPca::pluck('name', 'code');
+
         return $data;
     }
 }

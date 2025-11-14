@@ -12,5 +12,4 @@ class Log extends Base
      * @var string
      */
     protected $table = 'socket_log';
-
 }

@@ -12,5 +12,4 @@ class Code extends Model
      * @var string
      */
     protected $table = 'tool_code';
-
 }

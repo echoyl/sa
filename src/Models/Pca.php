@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Models;
 
 class Pca extends Category
@@ -18,6 +19,7 @@ class Pca extends Category
     public $model_id = 25;
 
     public $timestamps = false;
+
     public function children($pid = 0)
     {
         return $this->hasMany(self::class, 'pcode', 'code');
@@ -30,9 +32,9 @@ class Pca extends Category
 
     public function childrenIds($id, $self = true)
     {
-        //获取子类的所有id
+        // 获取子类的所有id
         $ids = [];
-        if (!$id) {
+        if (! $id) {
             return $ids;
         }
         if ($self) {
@@ -48,6 +50,7 @@ class Pca extends Category
                 $ids = array_merge($ids, $this->childrenIds($val['code'], $self));
             }
         }
+
         return array_filter(array_unique($ids));
     }
 }

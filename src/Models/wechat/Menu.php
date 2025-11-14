@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Models\wechat;
 
 use Echoyl\Sa\Models\Base;
@@ -11,6 +12,4 @@ class Menu extends Base
      * @var string
      */
     protected $table = 'wechat_menu';
-
-    
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -13,22 +14,17 @@ class ModalSelects extends BaseField
         $val = $options['val'];
         $col = $this->config['col'];
         $isset = $options['isset'];
-        $id_name = $col['value']??'id';
-        if($isset && is_array($val))
-        {
+        $id_name = $col['value'] ?? 'id';
+        if ($isset && is_array($val)) {
             $_v = [];
-            foreach($val as $v)
-            {
-                if(isset($v['data']) && isset($v['data'][$id_name]))
-                {
+            foreach ($val as $v) {
+                if (isset($v['data']) && isset($v['data'][$id_name])) {
                     $_v[] = $v['data'][$id_name];
                 }
             }
-            if(!empty($_v))
-            {
-                $val = implode(',',$_v);
-            }else
-            {
+            if (! empty($_v)) {
+                $val = implode(',', $_v);
+            } else {
                 $val = '';
             }
         }
@@ -40,42 +36,37 @@ class ModalSelects extends BaseField
     {
         $isset = $options['isset'];
         $col = $this->config['col'];
-        $id_name = $col['value']??'id';
+        $id_name = $col['value'] ?? 'id';
         $vals = $options['val'];
-        $from = $options['from']??'';//只在详情时解析数据
-        $class = Arr::get($col,'class');
-        $data_name = Arr::get($col,'data_name');
+        $from = $options['from'] ?? ''; // 只在详情时解析数据
+        $class = Arr::get($col, 'class');
+        $data_name = Arr::get($col, 'data_name');
         $name = $this->name;
 
-        if($vals && $isset && $from == 'detail' && $class)
-        {
+        if ($vals && $isset && $from == 'detail' && $class) {
             $val = null;
-            $ids = explode(',',$vals);
+            $ids = explode(',', $vals);
             $classins = new $class;
-            $datas = $classins->whereIn($id_name,$ids)->orderByRaw('FIELD('.$id_name.', ' . $vals . ')')->get()->toArray();
-            foreach($datas as $d)
-            {
-                //再次处理数据
+            $datas = $classins->whereIn($id_name, $ids)->orderByRaw('FIELD('.$id_name.', '.$vals.')')->get()->toArray();
+            foreach ($datas as $d) {
+                // 再次处理数据
                 $ps = new ParseData($class);
-                $ps->make($d,'decode',$from,99);//只解析一层
-                $val[] = ['id'=>0,'data'=>$d];
+                $ps->make($d, 'decode', $from, 99); // 只解析一层
+                $val[] = ['id' => 0, 'data' => $d];
             }
-            if(!$val || !$isset)
-            {
+            if (! $val || ! $isset) {
                 $val = '__unset';
             }
 
-            $data = $this->getData($val,$isset);
-            if($data_name && isset($data[$name]))
-            {
+            $data = $this->getData($val, $isset);
+            if ($data_name && isset($data[$name])) {
                 $data[$data_name] = $data[$name];
                 $data[$name] = $vals;
             }
+
             return $data;
-        }else
-        {
+        } else {
             return $this->config['data'];
         }
     }
-
 }

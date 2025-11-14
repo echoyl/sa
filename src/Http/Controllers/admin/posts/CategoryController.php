@@ -9,12 +9,14 @@ use Echoyl\Sa\Services\dev\MenuService;
 class CategoryController extends CrudController
 {
     public $model;
+
     public $cid = 0;
+
     public function __construct(Category $model)
     {
         $this->model = $model;
-        
-        if (!$this->cid) {
+
+        if (! $this->cid) {
             $as = new MenuService;
             $this->cid = $as->categoryId('posts');
         }
@@ -35,14 +37,15 @@ class CategoryController extends CrudController
 
     public function index()
     {
-        //修改获取分类模式 直接递归 查询数据库获取数据
-        //$search = [];
+        // 修改获取分类模式 直接递归 查询数据库获取数据
+        // $search = [];
         $this->parseWiths($search);
-        $data = $this->model->getChild($this->cid,[],function($item){
-            $this->parseData($item,'decode','list');
+        $data = $this->model->getChild($this->cid, [], function ($item) {
+            $this->parseData($item, 'decode', 'list');
+
             return $item;
         });
-        
+
         return ['success' => true, 'msg' => '', 'data' => $data, 'search' => $search];
 
     }

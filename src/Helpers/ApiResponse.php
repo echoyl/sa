@@ -1,108 +1,102 @@
 <?php
 
-
 namespace Echoyl\Sa\Helpers;
 
-use Echoyl\Sa\Helpers\ResponseEnum;
 use Echoyl\Sa\Exceptions\AException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
-
 trait ApiResponse
 {
     /**
      * 成功
-     * @param null $data
-     * @param array $codeResponse
-     * @return JsonResponse
+     *
+     * @param  null  $data
+     * @param  array  $codeResponse
      */
-    public function success($data = null, $codeResponse=ResponseEnum::HTTP_OK): JsonResponse
+    public function success($data = null, $codeResponse = ResponseEnum::HTTP_OK): JsonResponse
     {
         return $this->jsonResponse('success', $codeResponse, $data, null);
     }
 
-    public function successMsg($msg = '',$data = null): JsonResponse
+    public function successMsg($msg = '', $data = null): JsonResponse
     {
         [$code] = ResponseEnum::HTTP_OK;
-        return $this->success($data, [$code,$msg]);
+
+        return $this->success($data, [$code, $msg]);
     }
 
     public function failMsg($msg = ''): JsonResponse
     {
         [$code] = ResponseEnum::HTTP_ERROR_DEFAULT;
-        return $this->fail([$code,$msg]);
+
+        return $this->fail([$code, $msg]);
     }
 
-    public function list($data,$total,$search = [])
+    public function list($data, $total, $search = [])
     {
-        list($code, $message) = ResponseEnum::HTTP_OK;
+        [$code, $message] = ResponseEnum::HTTP_OK;
+
         return response()->json([
-            'status'  => 'success',
-            'code'    => $code,
+            'status' => 'success',
+            'code' => $code,
             'msg' => $message,
-            'search'=>$search,
-            'total'=>$total,
-            'count'=>$total,
-            'data'    => $data ?? null,
-            'error'  => null,
-            'success'=>true
+            'search' => $search,
+            'total' => $total,
+            'count' => $total,
+            'data' => $data ?? null,
+            'error' => null,
+            'success' => true,
         ]);
-        
+
     }
 
     /**
      * 失败
-     * @param array $codeResponse
-     * @param null $data
-     * @param null $error
-     * @return JsonResponse
+     *
+     * @param  array  $codeResponse
+     * @param  null  $data
+     * @param  null  $error
      */
-    public function fail($codeResponse=ResponseEnum::HTTP_ERROR, $data = null, $error=null): JsonResponse
+    public function fail($codeResponse = ResponseEnum::HTTP_ERROR, $data = null, $error = null): JsonResponse
     {
         return $this->jsonResponse('fail', $codeResponse, $data, $error);
     }
 
-    public function notification($notification,$data = null)
+    public function notification($notification, $data = null)
     {
-        [$code,] = ResponseEnum::HTTP_OK;
+        [$code] = ResponseEnum::HTTP_OK;
+
         return response()->json([
-            'status'  => 'success',
-            'code'    => $code,
-            'notification' => is_array($notification)?json_encode($notification):$notification,
-            'data'    => $data ?? null,
-            'error'  => null,
-            'success'=>true
+            'status' => 'success',
+            'code' => $code,
+            'notification' => is_array($notification) ? json_encode($notification) : $notification,
+            'data' => $data ?? null,
+            'error' => null,
+            'success' => true,
         ]);
     }
 
     /**
      * json响应
-     * @param $status
-     * @param $codeResponse
-     * @param $data
-     * @param $error
-     * @return JsonResponse
      */
     protected function jsonResponse($status, $codeResponse, $data, $error): JsonResponse
     {
-        list($code, $message) = $codeResponse;
+        [$code, $message] = $codeResponse;
+
         return response()->json([
-            'status'  => $status,
-            'code'    => $code,
+            'status' => $status,
+            'code' => $code,
             'msg' => $message,
-            'data'    => $data ?? null,
-            'error'  => $error,
-            'success'=>true
+            'data' => $data ?? null,
+            'error' => $error,
+            'success' => true,
         ]);
     }
 
-
     /**
      * 成功分页返回
-     * @param $page
-     * @return JsonResponse
      */
     protected function successPaginate($page): JsonResponse
     {
@@ -111,38 +105,38 @@ trait ApiResponse
 
     private function paginate($page)
     {
-        if ($page instanceof LengthAwarePaginator){
+        if ($page instanceof LengthAwarePaginator) {
             return [
-                'total'  => $page->total(),
-                'page'   => $page->currentPage(),
-                'limit'  => $page->perPage(),
-                'pages'  => $page->lastPage(),
-                'list'   => $page->items()
+                'total' => $page->total(),
+                'page' => $page->currentPage(),
+                'limit' => $page->perPage(),
+                'pages' => $page->lastPage(),
+                'list' => $page->items(),
             ];
         }
-        if ($page instanceof Collection){
+        if ($page instanceof Collection) {
             $page = $page->toArray();
         }
-        if (!is_array($page)){
+        if (! is_array($page)) {
             return $page;
         }
         $total = count($page);
+
         return [
-            'total'  => $total, //数据总数
-            'page'   => 1, // 当前页码
-            'limit'  => $total, // 每页的数据条数
-            'pages'  => 1, // 最后一页的页码
-            'list'   => $page // 数据
+            'total' => $total, // 数据总数
+            'page' => 1, // 当前页码
+            'limit' => $total, // 每页的数据条数
+            'pages' => 1, // 最后一页的页码
+            'list' => $page, // 数据
         ];
     }
 
     /**
      * 业务异常返回
-     * @param array $codeResponse
-     * @param string $info
+     *
      * @throws BusinessException
      */
-    public function throwAException(array $codeResponse=ResponseEnum::HTTP_ERROR, string $info = '')
+    public function throwAException(array $codeResponse = ResponseEnum::HTTP_ERROR, string $info = '')
     {
         throw new AException($codeResponse, $info);
     }

@@ -1,11 +1,12 @@
 <?php
+
 namespace Echoyl\Sa\Services\export;
 
 use Echoyl\Sa\Services\dev\crud\fields\Pca;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
-use \Vtiful\Kernel\Excel;
+use Vtiful\Kernel\Excel;
 
 class ExcelService
 {
@@ -19,26 +20,26 @@ class ExcelService
     // {
     //     return Excel::store($obj,$file);
     // }
-    var $config;
+    public $config;
+
     /**
      * @var array 列表中返回的search数据。这里内置一个渲染数据的方法，当search中存在 name+s的数据时 自动获取数据
      */
-    var $search = [];
+    public $search = [];
+
     /**
      * @var array 需要合并的行 [['A',1,2,'内容']]
      */
-    var $merges = [];
-    
-    public function __construct($config,$search = [])
+    public $merges = [];
+
+    public function __construct($config, $search = [])
     {
-        $config['filename'] = date("YmdHis").'.xlsx';
+        $config['filename'] = date('YmdHis').'.xlsx';
         $this->config = $config;
         $this->tableConfigToColumns();
-        foreach($search as $key=>$val)
-        {
-            //$_search = [];
-            if(!is_array($val))
-            {
+        foreach ($search as $key => $val) {
+            // $_search = [];
+            if (! is_array($val)) {
                 continue;
             }
             $_search = $this->setDeepData($val);
@@ -55,8 +56,7 @@ class ExcelService
             //         $_search[$value] = $label;
             //     }
             // }
-            if(!empty($_search))
-            {
+            if (! empty($_search)) {
                 $this->search[$key] = $_search;
             }
         }
@@ -66,38 +66,34 @@ class ExcelService
      * 格式化search数据格式
      *
      * @param [type] $datas
-     * @param string $prefix_label 前缀标签 用于多级数据的拼接
+     * @param  string  $prefix_label  前缀标签 用于多级数据的拼接
      * @return void
      */
-    public function setDeepData($datas,$prefix_label = '')
+    public function setDeepData($datas, $prefix_label = '')
     {
         $_search = [];
-        foreach($datas as $k=>$v)
-        {
-            if(!is_numeric($k))
-            {
+        foreach ($datas as $k => $v) {
+            if (! is_numeric($k)) {
                 continue;
             }
-            $children = Arr::get($v,'children');
-            $value = Arr::get($v,'value',Arr::get($v,'id'));
-            $label = Arr::get($v,'label',Arr::get($v,'title'));
-            
-            $label = $prefix_label?implode(' - ',[$prefix_label,$label]):$label;
+            $children = Arr::get($v, 'children');
+            $value = Arr::get($v, 'value', Arr::get($v, 'id'));
+            $label = Arr::get($v, 'label', Arr::get($v, 'title'));
 
-            if($value !== null)
-            {
-                if($children)
-                {
+            $label = $prefix_label ? implode(' - ', [$prefix_label, $label]) : $label;
+
+            if ($value !== null) {
+                if ($children) {
                     $_search[$value] = [
-                        'children'=>$this->setDeepData($children,$label),
-                        'label'=>$label,
+                        'children' => $this->setDeepData($children, $label),
+                        'label' => $label,
                     ];
-                }else
-                {
+                } else {
                     $_search[$value] = $label;
                 }
             }
         }
+
         return $_search;
     }
 
@@ -108,175 +104,155 @@ class ExcelService
      * @param [type] $index
      * @return void
      */
-    public function getDeepData($datas,$index,$children = 'children')
+    public function getDeepData($datas, $index, $children = 'children')
     {
-        //d($datas,$index);
-        if(isset($datas[$index]))
-        {
+        // d($datas,$index);
+        if (isset($datas[$index])) {
             return $datas[$index];
-        }else
-        {
-            foreach($datas as $data)
-            {
-                if(isset($data[$children]))
-                {
-                    return $this->getDeepData($data[$children],$index,$children);
+        } else {
+            foreach ($datas as $data) {
+                if (isset($data[$children])) {
+                    return $this->getDeepData($data[$children], $index, $children);
                 }
             }
-            
+
         }
+
         return false;
     }
 
     public function tableConfigToColumns()
     {
-        $columns = Arr::get($this->config,'head.columns');
-        if($columns)
-        {
-            //已设置columns
+        $columns = Arr::get($this->config, 'head.columns');
+        if ($columns) {
+            // 已设置columns
             return;
         }
-        $desc = HelperService::json_validate(Arr::get($this->config,'dev_menu.desc'));
-        if(!$desc)
-        {
+        $desc = HelperService::json_validate(Arr::get($this->config, 'dev_menu.desc'));
+        if (! $desc) {
             return;
         }
 
-        $table_config = Arr::get($desc,'tableColumns',[]);
+        $table_config = Arr::get($desc, 'tableColumns', []);
 
-        $columns = collect($table_config)->filter(function($val){
-            $valtype = Arr::get($val,'valueType');
-            if(in_array($valtype,['option']))
-            {
+        $columns = collect($table_config)->filter(function ($val) {
+            $valtype = Arr::get($val, 'valueType');
+            if (in_array($valtype, ['option'])) {
                 return false;
             }
-            $hide_in_table = Arr::get($val,'hideInTable');
-            if($hide_in_table)
-            {
+            $hide_in_table = Arr::get($val, 'hideInTable');
+            if ($hide_in_table) {
                 return false;
             }
+
             return isset($val['dataIndex']) && $val['dataIndex'];
-        })->map(function($val){
-            //检测hasone类型中如果dataindex是 xxx_id类型则转换
-            $dont_set_types = ['cascader'];//如果是cascader类型的不进行转换
-            $valueType = Arr::get($val,'valueType');
+        })->map(function ($val) {
+            // 检测hasone类型中如果dataindex是 xxx_id类型则转换
+            $dont_set_types = ['cascader']; // 如果是cascader类型的不进行转换
+            $valueType = Arr::get($val, 'valueType');
             $oringinal_key = $val['dataIndex'];
-            if(is_string($oringinal_key) && strpos($oringinal_key,'_id') !== false && !in_array($valueType,$dont_set_types))
-            {
-                $data_name = str_replace('_id','',$oringinal_key);
-                //获取lable名称
-                $label_name = Arr::get($val,'fieldProps.fieldNames.label','title');
-                $val['dataIndex'] = [$data_name,$label_name];
+            if (is_string($oringinal_key) && strpos($oringinal_key, '_id') !== false && ! in_array($valueType, $dont_set_types)) {
+                $data_name = str_replace('_id', '', $oringinal_key);
+                // 获取lable名称
+                $label_name = Arr::get($val, 'fieldProps.fieldNames.label', 'title');
+                $val['dataIndex'] = [$data_name, $label_name];
             }
-            return ['key'=>$val['dataIndex'],'title'=>$val['title'],'type'=>$valueType,'oringinal_key'=>$oringinal_key];
+
+            return ['key' => $val['dataIndex'], 'title' => $val['title'], 'type' => $valueType, 'oringinal_key' => $oringinal_key];
         })->values();
 
-        //d($columns);
+        // d($columns);
 
-        Arr::set($this->config,'head.columns',$columns);
+        Arr::set($this->config, 'head.columns', $columns);
 
-        return;
     }
 
-    
-    public function export($data,$formatData = false)
+    public function export($data, $formatData = false)
     {
         $v = new Vtiful($this->config);
 
-        $data = $this->parseData($data,$formatData);
+        $data = $this->parseData($data, $formatData);
 
-        return $v->export($data,$this->merges);
+        return $v->export($data, $this->merges);
     }
 
-    
-
-    public function parseData($data,$formatData)
+    public function parseData($data, $formatData)
     {
-        $head = Arr::get($this->config,'head');
+        $head = Arr::get($this->config, 'head');
 
-        $columns = Arr::get($head,'columns',[]);
-        //d($columns);
+        $columns = Arr::get($head, 'columns', []);
+        // d($columns);
         $_data = [];
         $merges = [];
         $last_val_arr = [];
         $last_col_row = [];
-        foreach ($data as $datakey => $val) 
-        {
-            if($formatData)
-            {
+        foreach ($data as $datakey => $val) {
+            if ($formatData) {
                 $val = $formatData($val);
             }
             $data_item = [];
-            
-            foreach ($columns as $colkey=>$col) {
-                $index = $col['key']??$col['cname'];
+
+            foreach ($columns as $colkey => $col) {
+                $index = $col['key'] ?? $col['cname'];
                 $type = $col['type'] ?? '';
                 $add_t = $col['t'] ?? '';
                 $default = $col['default'] ?? '';
-                $setting = Arr::get($col,'setting',[]);
-                $row_merge = Arr::get($setting,'row_merge',false);//是否需要检测该列是否要合并
+                $setting = Arr::get($col, 'setting', []);
+                $row_merge = Arr::get($setting, 'row_merge', false); // 是否需要检测该列是否要合并
 
-                if(is_string($index) && strpos($index,'.') !== false)
-                {
-                    $index = explode('.',$index);
+                if (is_string($index) && strpos($index, '.') !== false) {
+                    $index = explode('.', $index);
                 }
                 $index = Utils::uncamelize($index);
                 if (is_array($index)) {
-                    //数组index
+                    // 数组index
                     $_val = HelperService::getFromObject($val, $index);
-                    //如果值为0需要保留下来
-                    if(!$_val && $_val !== 0)
-                    {
-                        //读取原始数据
-                        $oringinal_key = Arr::get($col,'oringinal_key');
-                        if($oringinal_key)
-                        {
-                            $_val = $val[$oringinal_key]??$default;
-                        }else
-                        {
+                    // 如果值为0需要保留下来
+                    if (! $_val && $_val !== 0) {
+                        // 读取原始数据
+                        $oringinal_key = Arr::get($col, 'oringinal_key');
+                        if ($oringinal_key) {
+                            $_val = $val[$oringinal_key] ?? $default;
+                        } else {
                             $_val = $default;
                         }
                     }
                 } else {
-                    //字符串 直接读取
+                    // 字符串 直接读取
                     $_val = $val[$index] ?? $default;
                 }
 
-                //读取search数据
-                $names = (is_array($index)?implode('.',$index):$index).'s';
-                if(isset($this->search[$names]))
-                {
-                    //修改为解析以逗号为分隔字符串信息
-                    $_vals = explode(',',$_val);
+                // 读取search数据
+                $names = (is_array($index) ? implode('.', $index) : $index).'s';
+                if (isset($this->search[$names])) {
+                    // 修改为解析以逗号为分隔字符串信息
+                    $_vals = explode(',', $_val);
                     $_val_arr = [];
-                    //d($names,$this->search);
-                    foreach($_vals as $_vals_val)
-                    {
-                        $deep_val = $this->getDeepData($this->search[$names],$_vals_val);
-                        if($deep_val !== false && !is_array($deep_val))
-                        {
+                    // d($names,$this->search);
+                    foreach ($_vals as $_vals_val) {
+                        $deep_val = $this->getDeepData($this->search[$names], $_vals_val);
+                        if ($deep_val !== false && ! is_array($deep_val)) {
                             $_val_arr[] = $deep_val;
                         }
                     }
-                    if(!empty($_val_arr)){
-                        //非空时才覆写数据，否则保持数据原样
-                        $_val = implode(',',$_val_arr);
+                    if (! empty($_val_arr)) {
+                        // 非空时才覆写数据，否则保持数据原样
+                        $_val = implode(',', $_val_arr);
                     }
-                    
+
                 }
 
                 if ($type) {
                     switch ($type) {
                         case 'date':
-                            $dateformat = Arr::get($setting,'dateformat','Y-m-d');
-                            $_val = $_val?date($dateformat, strtotime($_val)):'';
+                            $dateformat = Arr::get($setting, 'dateformat', 'Y-m-d');
+                            $_val = $_val ? date($dateformat, strtotime($_val)) : '';
                             break;
                         case 'int':
                             break;
                         case 'price':
                             $_val = intval($_val) / 100;
-                            if(!$_val)
-                            {
+                            if (! $_val) {
                                 $_val = '0';
                             }
                             break;
@@ -287,22 +263,20 @@ class ExcelService
                             $_val = ++$datakey;
                             break;
                         case 'pca':
-                            //多层数据的解析 获取去除最后一个元素的数组
-                            if(is_array($index) && count($index) > 1)
-                            {
+                            // 多层数据的解析 获取去除最后一个元素的数组
+                            if (is_array($index) && count($index) > 1) {
                                 array_pop($index);
-                                $config = ['data'=>HelperService::getFromObject($val, $index)];
-                            }else
-                            {
+                                $config = ['data' => HelperService::getFromObject($val, $index)];
+                            } else {
                                 $config = [
-                                    'data'=>$val
+                                    'data' => $val,
                                 ];
                             }
                             $cs = new Pca($config);
                             $_val = $cs->decodeStr();
                             break;
                         case 'uploader':
-                            //如果是上传类型 导出数据不使用该值
+                            // 如果是上传类型 导出数据不使用该值
                             $_val = '';
                             break;
                     }
@@ -310,28 +284,26 @@ class ExcelService
                 if ($add_t) {
                     $_val .= "\t";
                 }
-                $last_val = Arr::get($last_val_arr,$colkey,false);
-                if($row_merge)
-                {
-                    //开启了行合并
+                $last_val = Arr::get($last_val_arr, $colkey, false);
+                if ($row_merge) {
+                    // 开启了行合并
                     $column_name = Excel::stringFromColumnIndex($colkey);
-                    if($last_val === $_val)
-                    {
-                        //和上一个数据相同表示要合并
-                        $merges[] = [$column_name,$last_col_row[$colkey],$datakey,$_val];
-                    }else
-                    {
-                        //不同重新设置开始行数
+                    if ($last_val === $_val) {
+                        // 和上一个数据相同表示要合并
+                        $merges[] = [$column_name, $last_col_row[$colkey], $datakey, $_val];
+                    } else {
+                        // 不同重新设置开始行数
                         $last_col_row[$colkey] = $datakey;
                     }
                 }
                 $data_item[] = $_val;
-                
+
             }
             $last_val_arr = $data_item;
             $_data[] = $data_item;
         }
         $this->merges = $merges;
+
         return $_data;
     }
 
@@ -343,7 +315,7 @@ class ExcelService
      */
     public static function getData($file)
     {
-        $v = new Vtiful();
+        $v = new Vtiful;
 
         $data = $v->getSheetData($file);
 
@@ -352,8 +324,7 @@ class ExcelService
 
     /**
      * 统一使用 当前service 调用 Excel中的方法
-     * 
-     * @param string $cellCoordinates
+     *
      * @return void
      */
     public static function columnIndexFromString(string $cellCoordinates)

@@ -1,7 +1,7 @@
 <?php
+
 namespace Echoyl\Sa\Console\Commands;
 
-use Echoyl\Sa\ServiceProvider;
 use Illuminate\Foundation\Console\VendorPublishCommand;
 
 class SaCommand extends VendorPublishCommand
@@ -11,7 +11,7 @@ class SaCommand extends VendorPublishCommand
      *
      * @var string
      */
-    //protected $signature = 'sa:command {name} {type=list_0_0}';
+    // protected $signature = 'sa:command {name} {type=list_0_0}';
 
     protected $signature = 'deadmin:publish
                     {--existing : Publish and overwrite only the files that have already been published}
@@ -35,31 +35,25 @@ class SaCommand extends VendorPublishCommand
      */
     public function handle()
     {
-        if($this->option('update'))
-        {
-            //只更新静态文件 强制覆盖静态文件
-            //$this->input->setOption('force',true);
-            //将旧文件移除
+        if ($this->option('update')) {
+            // 只更新静态文件 强制覆盖静态文件
+            // $this->input->setOption('force',true);
+            // 将旧文件移除
 
             $this->tags = ['antadmin'];
 
-            foreach($this->tags as $tag)
-            {
-                foreach($this->pathsToPublish($tag) as $to)
-                {
+            foreach ($this->tags as $tag) {
+                foreach ($this->pathsToPublish($tag) as $to) {
                     $this->files->deleteDirectory($to);
                 }
             }
-        }else
-        {
-            //初始化发布 静态文件及配置，数据库文件
-            $this->tags = ['antadmin','deadmin'];
+        } else {
+            // 初始化发布 静态文件及配置，数据库文件
+            $this->tags = ['antadmin', 'deadmin'];
         }
 
         foreach ($this->tags ?: [null] as $tag) {
             $this->publishTag($tag);
         }
     }
-
-
 }

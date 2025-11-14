@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Echoyl\Sa\Traits;
 
 use Echoyl\Sa\Services\AdminService;
@@ -25,10 +24,10 @@ trait InsertAdminId
     public function getSysAdminIdData($data)
     {
         $admin = AdminService::user();
-        if($admin && !isset($data[$this->admin_id_name]))
-        {
+        if ($admin && ! isset($data[$this->admin_id_name])) {
             $data[$this->admin_id_name] = $admin['id'];
         }
+
         return $data;
     }
 }

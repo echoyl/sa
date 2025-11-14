@@ -10,7 +10,4 @@ class AttachmentGroup extends Category
      * @var string
      */
     protected $table = 'attachment_group';
-
-    
-
 }

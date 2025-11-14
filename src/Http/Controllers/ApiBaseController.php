@@ -7,21 +7,22 @@ use Echoyl\Sa\Helpers\VerifyRequestInput;
 use Echoyl\Sa\Services\HelperService;
 
 /**
- * @property \Echoyl\Sa\Services\AdminAppService                $service
+ * @property \Echoyl\Sa\Services\AdminAppService $service
  */
 class ApiBaseController extends Controller
 {
     // API接口响应
     use ApiResponse,VerifyRequestInput;
-    var $service;
-    var $is_admin = true;
+
+    public $service;
+
+    public $is_admin = true;
+
     public function __construct()
     {
-        if($this->is_admin)
-        {
+        if ($this->is_admin) {
             $this->service = HelperService::getAdminService();
-        }else
-        {
+        } else {
             $this->service = HelperService::getAppService();
         }
     }

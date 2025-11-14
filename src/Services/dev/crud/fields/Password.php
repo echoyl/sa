@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -15,8 +16,7 @@ class Password extends BaseField
         $val = $options['val'];
         $isset = $options['isset'];
 
-        if($isset && $val)
-        {
+        if ($isset && $val) {
             $data[$name] = HelperService::pwd($val);
         }
 
@@ -27,9 +27,8 @@ class Password extends BaseField
     {
         $data = $this->config['data'];
         $name = $this->name;
-        
-        if($options['isset'])
-        {
+
+        if ($options['isset']) {
             unset($data[$name]);
         }
 

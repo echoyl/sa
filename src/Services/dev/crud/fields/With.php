@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -14,11 +15,9 @@ class With extends BaseField
         $val = $options['val'];
         $isset = $options['isset'];
 
-        if($isset && $val)
-        {
-            foreach($val as $k=>$v)
-            {
-                $new_key = implode('_',[$name,$k]);
+        if ($isset && $val) {
+            foreach ($val as $k => $v) {
+                $new_key = implode('_', [$name, $k]);
                 $data[$new_key] = $v;
             }
         }

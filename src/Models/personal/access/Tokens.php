@@ -12,5 +12,4 @@ class Tokens extends Base
      * @var string
      */
     protected $table = 'personal_access_tokens';
-
 }

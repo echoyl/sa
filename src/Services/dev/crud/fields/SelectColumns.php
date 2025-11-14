@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -11,7 +12,6 @@ class SelectColumns extends BaseField
 
         $val = '__unset';
 
-        return $this->getData($val,$isset);
+        return $this->getData($val, $isset);
     }
-
 }

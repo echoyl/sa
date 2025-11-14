@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Echoyl\Sa\Traits;
 
 trait AdminDataSearch

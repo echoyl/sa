@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -9,8 +10,7 @@ class AliyunVideo extends BaseField
     public function encode($options = [])
     {
         $val = $options['val'];
-        if($val)
-        {
+        if ($val) {
             $val = HelperService::aliyunVideoParse($val, true);
         }
 
@@ -22,15 +22,13 @@ class AliyunVideo extends BaseField
 
         $val = $options['val'];
         $isset = $options['isset'];
-        
-        if($val)
-        {
+
+        if ($val) {
             $val = HelperService::aliyunVideoParse($val, false);
-        }else
-        {
+        } else {
             $val = '__unset';
         }
 
-        return $this->getData($val,$isset);
+        return $this->getData($val, $isset);
     }
 }

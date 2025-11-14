@@ -12,15 +12,15 @@ class Base extends Model
      *
      * @var array<string>|bool
      */
-    protected $guarded = ['sys_admin_uuid','id'];
-    
+    protected $guarded = ['sys_admin_uuid', 'id'];
+
     /**
      * 模型存在多语言的字段
      *
      * @var array
      */
     public $locale_columns = [];
-    
+
     protected function serializeDate(\DateTimeInterface $date)
     {
         return $date->format($this->dateFormat ?: 'Y-m-d H:i:s');
@@ -30,5 +30,4 @@ class Base extends Model
     {
         return [];
     }
-
 }

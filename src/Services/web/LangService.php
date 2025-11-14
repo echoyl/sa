@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\web;
 
 use Illuminate\Support\Arr;
@@ -11,14 +12,14 @@ class LangService
         return App::getLocale();
     }
 
-    public static function getVal($val,$name)
+    public static function getVal($val, $name)
     {
         $locale = self::getLang();
 
-        $key = implode('_',[$name,$locale]);
+        $key = implode('_', [$name, $locale]);
 
-        $v = Arr::get($val,$key);
+        $v = Arr::get($val, $key);
 
-        return $v ? : Arr::get($val,$name);
+        return $v ?: Arr::get($val, $name);
     }
 }

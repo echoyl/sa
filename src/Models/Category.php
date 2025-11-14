@@ -11,134 +11,137 @@ class Category extends Base
      */
     protected $table = 'category';
 
-    public function format($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'],$parseData = false)
+    public function format($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'], $parseData = false)
     {
         $data = self::allData($this->table)->filter(function ($item) use ($id) {
             return $item->parent_id === $id;
         })->sortByDesc('displayorder');
         $ret = [];
         foreach ($data as $val) {
-            $children = $this->format($val['id'], $fields,$parseData);
-            if($parseData)
-            {
+            $children = $this->format($val['id'], $fields, $parseData);
+            if ($parseData) {
                 $item = $parseData($val);
-            }else
-            {
+            } else {
                 $item = [
                     $fields['id'] => $val['id'],
                     $fields['title'] => $val['title'],
                     'parent_id' => $val['parent_id'],
-                    //$fields['children'] => $this->format($val['id'], $fields),
+                    // $fields['children'] => $this->format($val['id'], $fields),
                 ];
             }
-            
-            if(!empty($children))
-            {
+
+            if (! empty($children)) {
                 $item[$fields['children']] = $children;
             }
             $ret[] = $item;
         }
+
         return $ret;
     }
-    public function getItem($parseData,$val,$fields)
+
+    public function getItem($parseData, $val, $fields)
     {
-        if($parseData)
-        {
+        if ($parseData) {
             $item = $parseData($val);
-        }else
-        {
+        } else {
             $item = [
                 $fields['id'] => $val['id'],
                 $fields['title'] => $val['title'],
                 'parent_id' => $val['parent_id'],
-                //$fields['children'] => $this->format($val['id'], $fields),
+                // $fields['children'] => $this->format($val['id'], $fields),
             ];
         }
+
         return $item;
     }
-    public function formatHasTop($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'],$parseData = false,$level = 1)
+
+    public function formatHasTop($id = 0, $fields = ['id' => 'value', 'title' => 'label', 'children' => 'children'], $parseData = false, $level = 1)
     {
         $data = self::allData($this->table)->filter(function ($item) use ($id) {
             return $item->parent_id === $id;
         })->sortByDesc('displayorder');
-        
+
         $ret = [];
 
         foreach ($data as $val) {
-            $children = $this->formatHasTop($val['id'], $fields,$parseData,$level + 1);
-            
-            $item = $this->getItem($parseData,$val,$fields);
-            
-            if(!empty($children))
-            {
+            $children = $this->formatHasTop($val['id'], $fields, $parseData, $level + 1);
+
+            $item = $this->getItem($parseData, $val, $fields);
+
+            if (! empty($children)) {
                 $item[$fields['children']] = $children;
             }
             $ret[] = $item;
         }
-        if($level == 1 && $id)
-        {
-            //第一级且有父级id是插入数据
-            $top_one = self::allData($this->table)->first(function($item) use ($id) {
+        if ($level == 1 && $id) {
+            // 第一级且有父级id是插入数据
+            $top_one = self::allData($this->table)->first(function ($item) use ($id) {
                 return $item->id == $id;
             });
-            if($top_one)
-            {
-                $top_one = $this->getItem($parseData,$top_one->toArray(),$fields);
+            if ($top_one) {
+                $top_one = $this->getItem($parseData, $top_one->toArray(), $fields);
                 $top_one[$fields['children']] = $ret;
+
                 return [$top_one];
             }
         }
+
         return $ret;
     }
+
     public static function allData($table)
     {
         static $all = [];
-        if (!isset($all[$table]) || empty($all[$table])) {
+        if (! isset($all[$table]) || empty($all[$table])) {
             $all[$table] = self::all();
         }
+
         return $all[$table];
     }
+
     public function parentIds($id)
     {
         $data = $this->find($id);
-        if (!$data) {
+        if (! $data) {
             return '';
         }
         $ids = [];
         if ($data['parent_id'] != 0) {
             $pids = $this->parentIds($data['parent_id']);
-            if($pids)
-            {
-                foreach($pids as $pid)
-                {
+            if ($pids) {
+                foreach ($pids as $pid) {
                     $ids[] = $pid;
                 }
             }
         }
         $ids[] = $data['id'];
+
         return $ids;
     }
+
     public function parentInfo($id)
     {
         $par = [];
         $all = self::allData($this->table);
-        $data = collect($all)->first(function($val) use($id){
+        $data = collect($all)->first(function ($val) use ($id) {
             return $val['id'] == $id;
         });
         if ($data) {
             $par[] = ['id' => $data['id'], 'title' => $data['title']];
             if ($data['parent_id'] != 0) {
-                $par = array_merge($par,$this->parentInfo($data['parent_id']));
+                $par = array_merge($par, $this->parentInfo($data['parent_id']));
             }
         }
+
         return $par;
     }
+
     public function childrenIds($id, $self = true)
     {
-        //获取子类的所有id
+        // 获取子类的所有id
         $ids = [];
-        if (!$id) {
-            //return [];
+        if (! $id) {
+            // return [];
         }
         if ($self) {
             $ids[] = $id;
@@ -153,12 +156,14 @@ class Category extends Base
                 $ids = array_merge($ids, $this->childrenIds($val['id'], $self));
             }
         }
+
         return array_filter(array_unique($ids));
     }
+
     /**
      * 将数据全部取出后 循环获取自己的子集
      *
-     * @param integer $parent_id
+     * @param  int  $parent_id
      * @return void
      */
     public function children($parent_id = 0)
@@ -166,6 +171,7 @@ class Category extends Base
         $children = self::allData($this->table)->filter(function ($user) use ($parent_id) {
             return $user->parent_id == $parent_id;
         });
+
         return $children;
     }
 
@@ -175,43 +181,37 @@ class Category extends Base
      * @param [int] $cid
      * @return array
      */
-    public function getChild($cid = 0, $where = [],$parseData = false,$max_level = 0,$level = 1,$displayorder = [])
+    public function getChild($cid = 0, $where = [], $parseData = false, $max_level = 0, $level = 1, $displayorder = [])
     {
-        if(empty($displayorder))
-        {
-            $displayorder = [['displayorder','desc'],['id','asc']];
+        if (empty($displayorder)) {
+            $displayorder = [['displayorder', 'desc'], ['id', 'asc']];
         }
-        if(is_array($cid))
-        {
+        if (is_array($cid)) {
             $parent = $cid;
             $cid = $parent['id'];
-        }else
-        {
+        } else {
             $parent = false;
         }
-        
+
         $list = $this->where(['parent_id' => $cid])->where($where);
 
-
-        foreach($displayorder as $dis)
-        {
-            $list = $list->orderBy($dis[0],$dis[1]);
+        foreach ($displayorder as $dis) {
+            $list = $list->orderBy($dis[0], $dis[1]);
         }
         $list = $list->get()->toArray();
         foreach ($list as $key => $val) {
-            if($parseData)
-            {
-                $list[$key] = $parseData($val,$parent);
+            if ($parseData) {
+                $list[$key] = $parseData($val, $parent);
             }
-            if($max_level == 0 || $max_level > $level)
-            {
-                $children = $this->getChild($val, $where,$parseData,$max_level,$level+1,$displayorder);
-                if (!empty($children)) {
+            if ($max_level == 0 || $max_level > $level) {
+                $children = $this->getChild($val, $where, $parseData, $max_level, $level + 1, $displayorder);
+                if (! empty($children)) {
                     $list[$key]['children'] = $children;
                 }
             }
-            
+
         }
+
         return $list;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud;
 
 use Echoyl\Sa\Services\dev\crud\fields\AliyunVideo;
@@ -30,112 +31,111 @@ use Echoyl\Sa\Services\dev\crud\fields\With;
 
 /**
  * crud字段的渲染
+ *
  * @property \Echoyl\Sa\Services\dev\crud\item\Pca $pca
  */
 class CrudService
 {
-    var $config;
-    var $items;
+    public $config;
+
+    public $items;
+
     public function __construct($config)
     {
         $this->config = $config;
         $this->items = [
-            'pca'=>Pca::class,
-            'json'=>Json::class,
-            'image'=>Upload::class,
-            'file'=>Upload::class,
-            'tinyEditor'=>Content::class,
-            'mdEditor'=>Content::class,
-            'price'=>Price::class,
-            'mprice'=>Price::class,
-            'mmprice'=>Price::class,
-            'password'=>Password::class,
-            'tmapInput'=>Latlng::class,
-            'bmapInput'=>Latlng::class,
-            'mapInput'=>Latlng::class,
-            'latlng'=>Latlng::class,
-            'with'=>With::class,
-            'search_select'=>SearchSelect::class,
-            'searchSelect'=>SearchSelect::class,
-            'searchSelects'=>SearchSelects::class,
-            'link'=>Link::class,
-            'date'=>Date::class,
-            'datetime'=>Date::class,
-            'time'=>Date::class,
-            'select_columns'=>SelectColumns::class,
-            'config'=>Config::class,
-            'modalSelect'=>ModalSelect::class,
-            'modalSelects'=>ModalSelects::class,
-            'state'=>State::class,
-            'switch'=>Switchstate::class,
-            'selects'=>Selects::class,
-            'select'=>Select::class,
-            'radioButton'=>Radio::class,
-            'cascader'=>Cascader::class,
-            'cascaders'=>Cascader::class,
-            'aliyunVideo'=>AliyunVideo::class,
-            'model'=>Model::class,
-            'checkbox'=>Checkbox::class,
-            'saSlider'=>Slider::class
+            'pca' => Pca::class,
+            'json' => Json::class,
+            'image' => Upload::class,
+            'file' => Upload::class,
+            'tinyEditor' => Content::class,
+            'mdEditor' => Content::class,
+            'price' => Price::class,
+            'mprice' => Price::class,
+            'mmprice' => Price::class,
+            'password' => Password::class,
+            'tmapInput' => Latlng::class,
+            'bmapInput' => Latlng::class,
+            'mapInput' => Latlng::class,
+            'latlng' => Latlng::class,
+            'with' => With::class,
+            'search_select' => SearchSelect::class,
+            'searchSelect' => SearchSelect::class,
+            'searchSelects' => SearchSelects::class,
+            'link' => Link::class,
+            'date' => Date::class,
+            'datetime' => Date::class,
+            'time' => Date::class,
+            'select_columns' => SelectColumns::class,
+            'config' => Config::class,
+            'modalSelect' => ModalSelect::class,
+            'modalSelects' => ModalSelects::class,
+            'state' => State::class,
+            'switch' => Switchstate::class,
+            'selects' => Selects::class,
+            'select' => Select::class,
+            'radioButton' => Radio::class,
+            'cascader' => Cascader::class,
+            'cascaders' => Cascader::class,
+            'aliyunVideo' => AliyunVideo::class,
+            'model' => Model::class,
+            'checkbox' => Checkbox::class,
+            'saSlider' => Slider::class,
         ];
     }
 
-    public function make($name,$options = [])
+    public function make($name, $options = [])
     {
-        $method = $options['encode']?'encode':'decode';
+        $method = $options['encode'] ? 'encode' : 'decode';
 
-        //检测字段是否设置
+        // 检测字段是否设置
         $fieldname = $this->config['col']['name'];
         $post = $this->config['data'];
 
-        $originData = $post['originData']??[];
+        $originData = $post['originData'] ?? [];
 
-        $isset = isset($post[$fieldname])?true:false;
-        $val = $isset ? $post[$fieldname] : $this->config['col']['default'];//当前字段的值
+        $isset = isset($post[$fieldname]) ? true : false;
+        $val = $isset ? $post[$fieldname] : $this->config['col']['default']; // 当前字段的值
 
-        $origin_val = $originData[$fieldname]??false;
+        $origin_val = $originData[$fieldname] ?? false;
 
         $cls = $this->getClass($name);
 
-        if(!$cls)
-        {
-            //没有该字段的规则 直接返回data原样数据
+        if (! $cls) {
+            // 没有该字段的规则 直接返回data原样数据
             return $post;
         }
 
         $options = array_merge([
-            'isset'=>$isset,
-            'val'=>$val,
-            'type'=>$name,
-            'origin_val'=>$origin_val,
-            'from'=>'update'
-        ],$options);
+            'isset' => $isset,
+            'val' => $val,
+            'type' => $name,
+            'origin_val' => $origin_val,
+            'from' => 'update',
+        ], $options);
 
-        //如果是更新且数据未传过来 则不更新该字段
-        if($method == 'encode')
-        {
+        // 如果是更新且数据未传过来 则不更新该字段
+        if ($method == 'encode') {
             $check = $cls->checkUpdateUnset($options);
-            if($check !== false)
-            {
+            if ($check !== false) {
                 return $check;
             }
         }
-        
+
         $data = $cls->$method($options);
 
         return $data;
     }
 
-    public function search($m,$name,$options = [])
+    public function search($m, $name, $options = [])
     {
         $cls = $this->getClass($name);
-        if(!$cls || !method_exists($cls,'search'))
-        {
-            //没有该字段的规则 直接返回data原样数据
+        if (! $cls || ! method_exists($cls, 'search')) {
+            // 没有该字段的规则 直接返回data原样数据
             return $m;
         }
 
-        $m = $cls->search($m,$options);
+        $m = $cls->search($m, $options);
 
         return $m;
     }
@@ -148,11 +148,9 @@ class CrudService
      */
     public function getClass($name)
     {
-        if(isset($this->items[$name]))
-        {
+        if (isset($this->items[$name])) {
             return new $this->items[$name]($this->config);
-        }else
-        {
+        } else {
             return new BaseField($this->config);
         }
     }

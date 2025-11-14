@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Console\Commands;
 
 use Echoyl\Sa\Services\UploadService;
@@ -11,10 +12,11 @@ class HelperCommand extends Command
      *
      * @var string
      */
-    //protected $signature = 'sa:command {name} {type=list_0_0}';
+    // protected $signature = 'sa:command {name} {type=list_0_0}';
 
     protected $signature = 'deadmin:helper {params}
                     {--compressimage : compress image in dir,argument params should be the dir path}';
+
     /**
      * The console command description.
      *
@@ -29,12 +31,10 @@ class HelperCommand extends Command
      */
     public function handle()
     {
-        if($this->option('compressimage'))
-        {
+        if ($this->option('compressimage')) {
             $this->compressimage();
         }
 
-        return;
     }
 
     public function compressimage()
@@ -43,24 +43,22 @@ class HelperCommand extends Command
 
         $dir = storage_path('app/public/'.$params);
 
-        if(!is_dir($dir))
-        {
+        if (! is_dir($dir)) {
             $this->components->info($dir.' is not dir');
+
             return;
         }
 
         $list = scandir($dir);
         $us = new UploadService;
         $count = 0;
-        foreach($list as $file)
-        {
-            if ($file != "." && $file != "..") {
-                //检测是否是image
+        foreach ($list as $file) {
+            if ($file != '.' && $file != '..') {
+                // 检测是否是image
                 $filepath = $dir.'/'.$file;
-                if($us->shouldBeCompressed($filepath))
-                {
-                    //压缩图片
-                    $us->resizeImage($filepath,1000);
+                if ($us->shouldBeCompressed($filepath)) {
+                    // 压缩图片
+                    $us->resizeImage($filepath, 1000);
                     $this->components->info($filepath.' is compressed');
                     $count++;
                 }
@@ -68,7 +66,6 @@ class HelperCommand extends Command
         }
 
         $this->components->info($count.' files is compressed');
-        return;
-    }
 
+    }
 }

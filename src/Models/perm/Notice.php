@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Models\perm;
 
 use Echoyl\Sa\Models\Base;
@@ -15,15 +16,14 @@ class Notice extends Base
     public function getParseColumns()
     {
         static $data = [];
-        if(empty($data))
-        {
+        if (empty($data)) {
             $data = [];
         }
+
         return $data;
     }
 
-    //relationship start
-    
-    
-    //relationship end
+    // relationship start
+
+    // relationship end
 }

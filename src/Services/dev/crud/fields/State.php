@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -8,7 +9,6 @@ use Echoyl\Sa\Services\dev\crud\BaseField;
  */
 class State extends BaseField
 {
-
     public function encode($options = [])
     {
         $val = $options['val'];
@@ -21,6 +21,7 @@ class State extends BaseField
 
         return $this->getData($val);
     }
+
     public function decode($options = [])
     {
 
@@ -29,7 +30,7 @@ class State extends BaseField
         if ($from == 'detail') {
             $val = $val == 'enable' ? true : false;
         }
-        
+
         return $this->getData($val);
     }
 }

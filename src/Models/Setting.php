@@ -10,7 +10,6 @@ class Setting extends Base
      * @var string
      */
     protected $table = 'setting';
-    public $timestamps = false;
 
-    
+    public $timestamps = false;
 }

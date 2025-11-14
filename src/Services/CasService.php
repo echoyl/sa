@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Pca;
@@ -6,17 +7,14 @@ use Illuminate\Support\Arr;
 
 class CasService
 {
-
-    public function cascader($level = 3,$topCode = '')
+    public function cascader($level = 3, $topCode = '')
     {
-        $model = new Pca();
-        $topCode = $topCode?explode(',',$topCode):[];
+        $model = new Pca;
+        $topCode = $topCode ? explode(',', $topCode) : [];
         $top_level = count($topCode);
-        if($top_level > 0)
-        {
+        if ($top_level > 0) {
             $pcode = array_pop($topCode);
-        }else
-        {
+        } else {
             $pcode = 0;
         }
 
@@ -36,25 +34,25 @@ class CasService
                     }]);
                 }])->get()->toArray();
         }
-        
+
         return $provinces;
     }
 
     /**
      * 获取全部的pca数据信息 减少数据库请求
      *
-     * @param string $key
+     * @param  string  $key
      * @return void
      */
     public static function pcaData($key = 'code')
     {
         static $data = [];
-        $ret = Arr::get($data,$key);
-        if($ret)
-        {
+        $ret = Arr::get($data, $key);
+        if ($ret) {
             return $ret;
         }
         $data[$key] = Pca::get()->keyBy($key)->toArray();
+
         return $data[$key];
     }
 }

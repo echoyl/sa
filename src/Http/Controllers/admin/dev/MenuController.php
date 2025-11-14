@@ -1,13 +1,14 @@
 <?php
+
 namespace Echoyl\Sa\Http\Controllers\admin\dev;
 
-use Echoyl\Sa\Models\dev\Menu;
-use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
+use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\design\FormService;
 use Echoyl\Sa\Services\dev\design\PanelService;
 use Echoyl\Sa\Services\dev\design\TableService;
+use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
@@ -19,53 +20,55 @@ use Illuminate\Support\Arr;
 class MenuController extends CrudController
 {
     public $model;
+
     public $cid = 0;
+
     public function __construct(Menu $model)
     {
         parent::__construct();
         $this->model = $model;
         $post_parent_id = request('parent_id', 0);
         $this->default_post = [
-            //'parent_id' => $post_parent_id ?: $this->cid,
+            // 'parent_id' => $post_parent_id ?: $this->cid,
             'displayorder' => 0,
         ];
-        if($post_parent_id)
-        {
+        if ($post_parent_id) {
             $this->default_post['parent_id'] = intval($post_parent_id);
         }
 
-        $this->can_be_null_columns = ['title','admin_model_id','icon','category_id','other_config'];
+        $this->can_be_null_columns = ['title', 'admin_model_id', 'icon', 'category_id', 'other_config'];
 
         $this->with_column = ['adminModel.relations.foreignModel.menu'];
     }
 
     public function index()
     {
-        //修改获取分类模式 直接递归 查询数据库获取数据
+        // 修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
         $ds = new DevService;
         $this->parseWiths($search);
-        //$search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
-        //$search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
-        $search['table_menu'] = ['state'=>$search['states']];
-        $table_menu_id = request('state',1);
-        $model = $this->model->whereIn('type',Utils::packageTypeArr());
-        //d($table_menu_id);
-        if($table_menu_id != 'all')
-        { 
-            $model = $model->where(function($q) use($table_menu_id){
-                $q->where(['state'=>$table_menu_id,'parent_id'=>0])->orWhere([['parent_id','!=',0]]);
+        // $search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
+        // $search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
+        $search['table_menu'] = ['state' => $search['states']];
+        $table_menu_id = request('state', 1);
+        $model = $this->model->whereIn('type', Utils::packageTypeArr());
+        // d($table_menu_id);
+        if ($table_menu_id != 'all') {
+            $model = $model->where(function ($q) use ($table_menu_id) {
+                $q->where(['state' => $table_menu_id, 'parent_id' => 0])->orWhere([['parent_id', '!=', 0]]);
             });
         }
 
-        $data = HelperService::getChildFromData($model->get()->toArray(),function($item){
-            $this->parseData($item,'decode','list');
+        $data = HelperService::getChildFromData($model->get()->toArray(), function ($item) {
+            $this->parseData($item, 'decode', 'list');
+
             return $item;
-        },[['displayorder','desc'],['id','asc']]);
-        //d($data);
-        
+        }, [['displayorder', 'desc'], ['id', 'asc']]);
+        // d($data);
+
         $search['menus'] = $ds->getMenusTree();
-        return $this->list($data,count($data),$search);
+
+        return $this->list($data, count($data), $search);
 
     }
 
@@ -74,104 +77,91 @@ class MenuController extends CrudController
         $ds = new DevService;
         $ds->allMenu(true);
         $ds->allModel(true);
+
         return $this->success('success');
     }
 
     public function afterPost($id, $data)
     {
-        if($this->action_type == 'add')
-        {
+        if ($this->action_type == 'add') {
             $this->tableConfig($id);
             $this->formConfig($id);
             $this->otherConfig($id);
-        }else
-        {
-            $desc = $data['desc']?json_decode($data['desc'],true):[];
-            $this->updateDesc($desc,$data);
+        } else {
+            $desc = $data['desc'] ? json_decode($data['desc'], true) : [];
+            $this->updateDesc($desc, $data);
             $this->otherConfig($id);
         }
         $this->clearCache();
-        return;
+
     }
 
     public function postData(&$item)
     {
-        if(isset($item['admin_model']) && isset($item['admin_model']['columns']))
-        {
-            $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'],array_values(collect(Utils::$title_arr)->map(function($v,$k){
-                return ['title'=>$v,'name'=>$k];
+        if (isset($item['admin_model']) && isset($item['admin_model']['columns'])) {
+            $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'], array_values(collect(Utils::$title_arr)->map(function ($v, $k) {
+                return ['title' => $v, 'name' => $k];
             })->toArray()));
             $item['allModels'] = DevService::allModels();
 
         }
-        if(!$this->is_post)
-        {
-            if(isset($item['form_config']))
-            {
-                
+        if (! $this->is_post) {
+            if (isset($item['form_config'])) {
+
                 $formColumns = $item['form_config'];
                 $item['tabs'] = [];
-                if(isset($formColumns['tabs']))
-                {
-                    foreach($formColumns['tabs'] as $key=>$tab)
-                    {
-                        if(isset($tab['title']))
-                        {
-                            $item['tabs'][] = ['title'=>$tab['title']];
-                        }else
-                        {
+                if (isset($formColumns['tabs'])) {
+                    foreach ($formColumns['tabs'] as $key => $tab) {
+                        if (isset($tab['title'])) {
+                            $item['tabs'][] = ['title' => $tab['title']];
+                        } else {
                             $item['tabs'][] = $tab['tab'];
                         }
-                        
-                        $k = $key?'form_config'.$key:'form_config';
+
+                        $k = $key ? 'form_config'.$key : 'form_config';
                         $item[$k] = $tab['config'];
                     }
-                }else
-                {
-                    $item['tabs'][] = ['title'=>'基础信息'];
+                } else {
+                    $item['tabs'][] = ['title' => '基础信息'];
                 }
-                
-            }else
-            {
-                $item['tabs'][] = ['title'=>'基础信息'];
+
+            } else {
+                $item['tabs'][] = ['title' => '基础信息'];
             }
-            //新增全部菜单选择
+            // 新增全部菜单选择
             $ds = new DevService;
-            $item['menus'] = $ds->getMenusTree();//添加 confirm form | modal table 可以直接选择已创建的菜单信息
-        }else{
-            //带入用户数据以刷新前台页面数据
+            $item['menus'] = $ds->getMenusTree(); // 添加 confirm form | modal table 可以直接选择已创建的菜单信息
+        } else {
+            // 带入用户数据以刷新前台页面数据
             $item['currentUser'] = $this->getUserInfo();
         }
 
     }
 
-    public function beforePost(&$data, $id = 0, $item)
+    public function beforePost(&$data, $id, $item)
     {
-        //新增菜单的初始化数据
-        if(!$id)
-        {
-            $page_type = $data['page_type']??'table';
+        // 新增菜单的初始化数据
+        if (! $id) {
+            $page_type = $data['page_type'] ?? 'table';
             $data['page_type'] = $page_type;
 
-            if(!isset($data['admin_model_id']))
-            {
+            if (! isset($data['admin_model_id'])) {
                 return;
             }
 
             $table = [
-                ['key'=>'option']
+                ['key' => 'option'],
             ];
             $form = [
-                'tabs'=>[
+                'tabs' => [
                     [
-                        'tab'=>['title'=>'基础信息'],
-                        'config'=>[]
-                    ]
+                        'tab' => ['title' => '基础信息'],
+                        'config' => [],
+                    ],
                 ],
             ];
 
-            switch($page_type)
-            {
+            switch ($page_type) {
                 case 'table':
                 case 'category':
                     $data['table_config'] = $table;
@@ -183,11 +173,9 @@ class MenuController extends CrudController
                 case 'panel':
                     break;
                 default:
-                
+
             }
         }
-
-        return;
 
     }
 
@@ -200,20 +188,17 @@ class MenuController extends CrudController
     {
         $id = request('base.id');
         $toid = request('base.toid');
-        //当前菜单
-        $data = $this->model->where(['id'=>$id])->first();
-        $to = $this->model->where(['id'=>$toid])->first();
-        if(!$data)
-        {
-            return $this->fail([1,'数据错误']);
+        // 当前菜单
+        $data = $this->model->where(['id' => $id])->first();
+        $to = $this->model->where(['id' => $toid])->first();
+        if (! $data) {
+            return $this->fail([1, '数据错误']);
         }
-        if($to)
-        {
+        if ($to) {
             $parent_id = $to['id'];
             $type = $to['type'];
-        }else
-        {
-            //无目标菜单 复制到最外层
+        } else {
+            // 无目标菜单 复制到最外层
             $parent_id = 0;
             $type = $data['type'];
         }
@@ -237,32 +222,29 @@ class MenuController extends CrudController
     {
         $id = request('base.id');
         $toid = request('base.toid');
-        //当前菜单
-        $data = $this->model->where(['id'=>$id])->first();
+        // 当前菜单
+        $data = $this->model->where(['id' => $id])->first();
 
-        if(!$data)
-        {
-            return $this->fail([1,'数据错误']);
+        if (! $data) {
+            return $this->fail([1, '数据错误']);
         }
 
-        $to = $this->model->where(['id'=>$toid])->first();
+        $to = $this->model->where(['id' => $toid])->first();
 
-        if(!$to)
-        {
-            //无目标则 移动至最外层
+        if (! $to) {
+            // 无目标则 移动至最外层
             $parent_id = 0;
-        }else
-        {
+        } else {
             $parent_id = $to['id'];
         }
 
         $update = [
-            'parent_id'=>$parent_id
+            'parent_id' => $parent_id,
         ];
 
-        $this->model->where(['id'=>$data['id']])->update($update);
+        $this->model->where(['id' => $data['id']])->update($update);
         $data['parent_id'] = $parent_id;
-        //将该菜单下的所有数据对应的url全部重新生成一遍
+        // 将该菜单下的所有数据对应的url全部重新生成一遍
         $this->clearCache();
         $this->syncMenuUrl($data);
 
@@ -271,20 +253,18 @@ class MenuController extends CrudController
 
     public function syncMenuUrl($item)
     {
-        //更新当前菜单的url
-        //无数据或未指向模型 则返回
-        if($item && $item['admin_model_id'])
-        {
-            $desc = $item['desc']?json_decode($item['desc'],true):[];
-            $this->updateDesc($desc,$item);
+        // 更新当前菜单的url
+        // 无数据或未指向模型 则返回
+        if ($item && $item['admin_model_id']) {
+            $desc = $item['desc'] ? json_decode($item['desc'], true) : [];
+            $this->updateDesc($desc, $item);
         }
-        //查找子菜单
-        $children = $this->model->where(['parent_id'=>$item['id']])->get()->toArray();
-        foreach($children as $val)
-        {
+        // 查找子菜单
+        $children = $this->model->where(['parent_id' => $item['id']])->get()->toArray();
+        foreach ($children as $val) {
             $this->syncMenuUrl($val);
         }
-        return;
+
     }
 
     // public function postData(&$item)
@@ -293,29 +273,25 @@ class MenuController extends CrudController
     //     return;
     // }
 
-    protected function getItem($name = 'table_config',$id = 0)
-    {   
-        if(!$id)
-        {
+    protected function getItem($name = 'table_config', $id = 0)
+    {
+        if (! $id) {
             $id = request('base.id');
             $config = request('base.'.$name);
-        }else
-        {
+        } else {
             $config = false;
         }
-        
-        $item = $this->model->where(['id'=>$id])->with($this->with_column)->first();
-        if(!$item)
-        {
-            return $this->fail([1,'请先提交数据']);
+
+        $item = $this->model->where(['id' => $id])->with($this->with_column)->first();
+        if (! $item) {
+            return $this->fail([1, '请先提交数据']);
         }
         $item = $item->toArray();
-        if(!$config)
-        {
-            $config = isset($item[$name]) && $item[$name]?json_decode($item[$name],true):[];
+        if (! $config) {
+            $config = isset($item[$name]) && $item[$name] ? json_decode($item[$name], true) : [];
         }
 
-        return ['config'=>$config,'item'=>$item];
+        return ['config' => $config, 'item' => $item];
     }
 
     /**
@@ -325,10 +301,9 @@ class MenuController extends CrudController
      */
     public function tableConfig($id = 0)
     {
-        $item_data = $this->getItem('table_config',$id);
+        $item_data = $this->getItem('table_config', $id);
 
-        if(!is_array($item_data))
-        {
+        if (! is_array($item_data)) {
             return $item_data;
         }
 
@@ -337,169 +312,141 @@ class MenuController extends CrudController
 
         $ds = new DevService;
 
-        //根据form配置生成json配置
+        // 根据form配置生成json配置
         $left_menu = false;
-        $tool_bar_button = [];//头部操作栏
-        $select_bar_button = [];//底部选择操作栏
+        $tool_bar_button = []; // 头部操作栏
+        $select_bar_button = []; // 底部选择操作栏
         $json = [];
 
-        
         $need_update_config = false;
         $need_update_perms = false;
-        $perms = $item['perms']?json_decode($item['perms'],true):[];
-        $setting = $item['setting']?json_decode($item['setting'],true):[];
+        $perms = $item['perms'] ? json_decode($item['perms'], true) : [];
+        $setting = $item['setting'] ? json_decode($item['setting'], true) : [];
 
-        foreach($config as $kv=>$val)
-        {
-            $key = Arr::get($val,'key');
-            if($item['page_type'] == 'category' && $key == 'id')
-            {
-                //这里注入一个 如果是分类页面 自动将第一列改成 title + id 显示
-                //20231227 checkbox改成了鼠标悬浮后显示 这里不用了 应该需要删除id这个列表字段了 当不能checkable后才显示id
-                //$val = json_decode('{"key":"id","props":{"items":[{"id":"02bhysgdg9s","domtype":"text","btn":{"text":"{{record.title+ \' - \' + record.id}}"}}]},"type":"customerColumn"}',true);
+        foreach ($config as $kv => $val) {
+            $key = Arr::get($val, 'key');
+            if ($item['page_type'] == 'category' && $key == 'id') {
+                // 这里注入一个 如果是分类页面 自动将第一列改成 title + id 显示
+                // 20231227 checkbox改成了鼠标悬浮后显示 这里不用了 应该需要删除id这个列表字段了 当不能checkable后才显示id
+                // $val = json_decode('{"key":"id","props":{"items":[{"id":"02bhysgdg9s","domtype":"text","btn":{"text":"{{record.title+ \' - \' + record.id}}"}}]},"type":"customerColumn"}',true);
             }
-            //加入uid设置 如果没有uid 后台自动加入uid
-            if(!isset($val['uid']) || !$val['uid'])
-            {
+            // 加入uid设置 如果没有uid 后台自动加入uid
+            if (! isset($val['uid']) || ! $val['uid']) {
                 $val['uid'] = HelperService::uuid();
                 $need_update_config = true;
                 $config[$kv] = $val;
             }
-            if($item['admin_model'])
-            {
-                $columns = $ds->modelColumn2JsonTable($item['admin_model'],$val,$setting);
-            }else
-            {
+            if ($item['admin_model']) {
+                $columns = $ds->modelColumn2JsonTable($item['admin_model'], $val, $setting);
+            } else {
                 $columns = [];
             }
-            
-            if(isset($columns['valueType']) && in_array($columns['valueType'],['import','export','toolbar']))
-            {
+
+            if (isset($columns['valueType']) && in_array($columns['valueType'], ['import', 'export', 'toolbar'])) {
                 $tool_bar_button[] = $columns;
-                //自动将导入导出加入到权限设置中
-                if(in_array($columns['valueType'],['import','export']))
-                {
-                    $perms[$columns['valueType']] = $columns['valueType'] == 'import'?'导入':'导出';
+                // 自动将导入导出加入到权限设置中
+                if (in_array($columns['valueType'], ['import', 'export'])) {
+                    $perms[$columns['valueType']] = $columns['valueType'] == 'import' ? '导入' : '导出';
                     $need_update_perms = true;
                 }
-            }elseif(isset($columns['valueType']) && in_array($columns['valueType'],['selectbar']))
-            {
+            } elseif (isset($columns['valueType']) && in_array($columns['valueType'], ['selectbar'])) {
                 $select_bar_button[] = $columns;
-            }else
-            {
+            } else {
                 $json[] = $columns;
             }
-            
-            if(isset($val['table_menu']) && !empty($val['table_menu']))
-            {
-                //如果该字段设置了 table_menu
-                $key = $val['key']??Arr::get($val,'props.dataIndex');
-                if(is_array($key))
-                {
+
+            if (isset($val['table_menu']) && ! empty($val['table_menu'])) {
+                // 如果该字段设置了 table_menu
+                $key = $val['key'] ?? Arr::get($val, 'props.dataIndex');
+                if (is_array($key)) {
                     $key = $key[0];
                 }
-                if($key)
-                {
+                if ($key) {
                     $table_menu_key = $key;
                 }
             }
 
-            if(isset($val['left_menu']) && !empty($val['left_menu']))
-            {
-                //设置左侧菜单 配置
+            if (isset($val['left_menu']) && ! empty($val['left_menu'])) {
+                // 设置左侧菜单 配置
                 $key = $val['key'];
-                if(is_array($key))
-                {
+                if (is_array($key)) {
                     $key = $key[0];
                 }
-                
+
                 $left_menu = [
-                    'name'=>$key.'s',//读取值的复数
-                    'url_name'=>$key,
-                    'title'=>$columns['title'],
+                    'name' => $key.'s', // 读取值的复数
+                    'url_name' => $key,
+                    'title' => $columns['title'],
                 ];
-                if(isset($val['left_menu_field']) && $val['left_menu_field'])
-                {
-                    [$label,$value] = explode(',',$val['left_menu_field']);
-                    $left_menu['field'] = ['title'=>$label,'key'=>$value];
+                if (isset($val['left_menu_field']) && $val['left_menu_field']) {
+                    [$label,$value] = explode(',', $val['left_menu_field']);
+                    $left_menu['field'] = ['title' => $label, 'key' => $value];
                 }
             }
 
         }
         $pre_update = [];
-        if($need_update_config)
-        {
+        if ($need_update_config) {
             $pre_update['table_config'] = json_encode($config);
-            
+
         }
-        if($need_update_perms)
-        {
+        if ($need_update_perms) {
             $pre_update['perms'] = json_encode($perms);
         }
-        if(!empty($pre_update))
-        {
-            $this->model->where(['id'=>$item['id']])->update($pre_update);
-            //更新菜单后需要清除路由缓存，不然点击导出会报错
-            if(isset($pre_update['perms']))
-            {
+        if (! empty($pre_update)) {
+            $this->model->where(['id' => $item['id']])->update($pre_update);
+            // 更新菜单后需要清除路由缓存，不然点击导出会报错
+            if (isset($pre_update['perms'])) {
                 $this->clearCache();
             }
         }
-        
+
         $tableColumns = $json;
 
-        $desc = json_decode($item['desc'],true);
+        $desc = json_decode($item['desc'], true);
 
-        //左侧菜单
+        // 左侧菜单
         $desc['leftMenu'] = $left_menu;
 
-        //table tab切换
-        if(isset($table_menu_key))
-        {
+        // table tab切换
+        if (isset($table_menu_key)) {
             $desc['table_menu_key'] = $table_menu_key;
-        }else
-        {
-            if(isset($desc['table_menu_key']))
-            {
+        } else {
+            if (isset($desc['table_menu_key'])) {
                 unset($desc['table_menu_key']);
             }
         }
 
-        //工具菜单
+        // 工具菜单
         $desc['toolBarButton'] = $tool_bar_button;
 
         $desc['selectRowBtns'] = $select_bar_button;
-        
+
         $desc['tableColumns'] = $tableColumns;
 
-        return $this->updateDesc($desc,$item,['table_config'=>empty($config)?'':json_encode($config)]);
+        return $this->updateDesc($desc, $item, ['table_config' => empty($config) ? '' : json_encode($config)]);
 
     }
 
-    protected function formTabConfig($item,$config)
+    protected function formTabConfig($item, $config)
     {
-        //根据form配置生成json配置
+        // 根据form配置生成json配置
         $json = [];
         $ds = new DevService;
         $need_update_config = false;
-        foreach($config as $kv=>$val)
-        {
-            if(!isset($val['uid']) || !$val['uid'])
-            {
+        foreach ($config as $kv => $val) {
+            if (! isset($val['uid']) || ! $val['uid']) {
                 $val['uid'] = HelperService::uuid();
                 $need_update_config = true;
                 $config[$kv] = $val;
             }
             $group_title = isset($val['props']) && isset($val['props']['title']) ? $val['props']['title'] : '';
             $columns = [];
-            if(isset($val['columns']))
-            {
-                //读取列
+            if (isset($val['columns'])) {
+                // 读取列
                 $keys = $val['columns'];
-                foreach($keys as $kk=>$vv)
-                {
-                    if(!isset($vv['uid']) || !$vv['uid'])
-                    {
+                foreach ($keys as $kk => $vv) {
+                    if (! isset($vv['uid']) || ! $vv['uid']) {
                         $vv['uid'] = HelperService::uuid();
                         $need_update_config = true;
                         $keys[$kk] = $vv;
@@ -508,163 +455,140 @@ class MenuController extends CrudController
                 $config[$kv]['columns'] = $keys;
                 // if($item['admin_model'])
                 // {
-                    
+
                 // }
-                $columns = $ds->modelColumn2JsonForm($item['admin_model'],$keys);
-                
+                $columns = $ds->modelColumn2JsonForm($item['admin_model'], $keys);
+
                 // if(empty($columns))
                 // {
                 //     $columns = false;
                 // }
             }
-            if($columns !== false)
-            {
-                $json_item = ['valueType'=>'group','uid'=>$val['uid'],'columns'=>$columns];
-                //这里新增group也可以设置if条件
-                $if = Arr::get($val,'props.if',false);
-                if($if)
-                {
-                    $json_item['fieldProps'] = ['if'=>$if];
+            if ($columns !== false) {
+                $json_item = ['valueType' => 'group', 'uid' => $val['uid'], 'columns' => $columns];
+                // 这里新增group也可以设置if条件
+                $if = Arr::get($val, 'props.if', false);
+                if ($if) {
+                    $json_item['fieldProps'] = ['if' => $if];
                 }
-                
-                if($group_title)
-                {
+
+                if ($group_title) {
                     $json_item['title'] = $group_title;
                 }
-                
+
                 $json[] = $json_item;
             }
-            
-            
-        }
-        return [$json,$need_update_config?$config:false];
-    }
 
+        }
+
+        return [$json, $need_update_config ? $config : false];
+    }
 
     /**
      * 表单配置信息
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function formConfig($id = 0,$config = [])
+    public function formConfig($id = 0, $config = [])
     {
-        if($id)
-        {
-            $item_data = $this->getItem('form_config',$id);
-            if(!is_array($item_data))
-            {
+        if ($id) {
+            $item_data = $this->getItem('form_config', $id);
+            if (! is_array($item_data)) {
                 return $item_data;
             }
             $item = $item_data['item'];
             $config = $item_data['config'];
-        }else
-        {
-            $item = ['id'=>0,'desc'=>'','admin_model'=>false,'admin_model_id'=>0];
+        } else {
+            $item = ['id' => 0, 'desc' => '', 'admin_model' => false, 'admin_model_id' => 0];
         }
-        
-        $desc = $item['desc']?json_decode($item['desc'],true):[];
-        //如果有tab
+
+        $desc = $item['desc'] ? json_decode($item['desc'], true) : [];
+        // 如果有tab
 
         $input_tabs = request('base.tags');
         $tabs = false;
-        //数据库读取配置 + 配置中已经有了tabs设置
-        if(isset($config['tabs']))
-        {
+        // 数据库读取配置 + 配置中已经有了tabs设置
+        if (isset($config['tabs'])) {
             $tabs = $config['tabs'];
-        }else
-        {
-            if($input_tabs)
-            {
-                foreach($input_tabs as $key=>$tab)
-                {
-                    if(isset($tab['hidden']) && $tab['hidden'])
-                    {
+        } else {
+            if ($input_tabs) {
+                foreach ($input_tabs as $key => $tab) {
+                    if (isset($tab['hidden']) && $tab['hidden']) {
                         continue;
                     }
                     $tabs[] = [
-                        'tab'=>$tab,
-                        'config'=>$key?request('base.form_config'.$key):$config
+                        'tab' => $tab,
+                        'config' => $key ? request('base.form_config'.$key) : $config,
                     ];
                 }
             }
         }
-        
-        if($tabs !== false)
-        {
+
+        if ($tabs !== false) {
             $_tabs = [];
-            foreach($tabs as $key=>$tab)
-            {
-                //$_config = $key?request('base.form_config'.$key):$config;
+            foreach ($tabs as $key => $tab) {
+                // $_config = $key?request('base.form_config'.$key):$config;
                 $need_update_config = false;
-                [$formColumns,$update] = $this->formTabConfig($item,$tab['config']);
-                if(!isset($tab['tab']) && isset($tab['title']))
-                {
+                [$formColumns,$update] = $this->formTabConfig($item, $tab['config']);
+                if (! isset($tab['tab']) && isset($tab['title'])) {
                     $tab['tab'] = [
-                        'title'=>$tab['title']
+                        'title' => $tab['title'],
                     ];
                     unset($tab['title']);
                     $need_update_config = true;
                 }
-                if(!isset($tab['uid']) || !$tab['uid'])
-                {
+                if (! isset($tab['uid']) || ! $tab['uid']) {
                     $tab['uid'] = HelperService::uuid();
                     $need_update_config = true;
                 }
-                if(isset($tab['props']) && isset($tab['props']['outside']))
-                {
+                if (isset($tab['props']) && isset($tab['props']['outside'])) {
                     $tab['tab']['props'] = $tab['props']['outside'];
                 }
                 $_tabs[] = [
-                    'tab'=>$tab['tab'],
-                    'uid'=>$tab['uid'],
-                    'formColumns'=>$formColumns
+                    'tab' => $tab['tab'],
+                    'uid' => $tab['uid'],
+                    'formColumns' => $formColumns,
                 ];
-                if($update)
-                {
+                if ($update) {
                     $tab['config'] = $update;
                     $need_update_config = true;
                 }
-                if($need_update_config)
-                {
+                if ($need_update_config) {
                     $tabs[$key] = $tab;
                 }
             }
-            //d($tabs);
-            if(isset($desc['formColumns']))
-            {
+            // d($tabs);
+            if (isset($desc['formColumns'])) {
                 unset($desc['formColumns']);
             }
             $desc['tabs'] = $_tabs;
-            $config = ['tabs'=>$tabs];
+            $config = ['tabs' => $tabs];
 
-        }else
-        {
-            if(isset($desc['tabs']))
-            {
+        } else {
+            if (isset($desc['tabs'])) {
                 unset($desc['tabs']);
             }
-            //将默认加入tab（所有form都将是 tab模式 tab => [[row=>[...columns]]]） 去掉 单独 formColumns
-            [$formColumns,$update] = $this->formTabConfig($item,$config);
+            // 将默认加入tab（所有form都将是 tab模式 tab => [[row=>[...columns]]]） 去掉 单独 formColumns
+            [$formColumns,$update] = $this->formTabConfig($item, $config);
             $base_tab = [
-                'tab'=>['title'=>'基础信息'],
-                'uid'=>HelperService::uuid()
+                'tab' => ['title' => '基础信息'],
+                'uid' => HelperService::uuid(),
             ];
             $_tabs = [
-                array_merge($base_tab,['formColumns'=>$formColumns])
+                array_merge($base_tab, ['formColumns' => $formColumns]),
             ];
-            if(isset($desc['formColumns']))
-            {
+            if (isset($desc['formColumns'])) {
                 unset($desc['formColumns']);
             }
             $desc['tabs'] = $_tabs;
-            if($update)
-            {
+            if ($update) {
                 $config = $update;
             }
-            $config = ['tabs'=>[array_merge($base_tab,['config'=>$config])]];
+            $config = ['tabs' => [array_merge($base_tab, ['config' => $config])]];
         }
-        //默认还是会更新一次form_config 在之前已经生成了group的uid 和 columns 的uid
-        return $this->updateDesc($desc,$item,['form_config'=>empty($config)?'':json_encode($config)]);
+
+        // 默认还是会更新一次form_config 在之前已经生成了group的uid 和 columns 的uid
+        return $this->updateDesc($desc, $item, ['form_config' => empty($config) ? '' : json_encode($config)]);
     }
 
     /**
@@ -674,77 +598,71 @@ class MenuController extends CrudController
      */
     public function otherConfig($id = 0)
     {
-        
-        $item_data = $this->getItem('other_config',$id);
-        
-        if(!is_array($item_data))
-        {
+
+        $item_data = $this->getItem('other_config', $id);
+
+        if (! is_array($item_data)) {
             return $item_data;
         }
 
         $item = $item_data['item'];
         $config = $item_data['config'];
-        $desc = json_decode($item['desc'],true);
+        $desc = json_decode($item['desc'], true);
 
-        //这里需要 合并之前的配置 将生成的配置都保留 其它全部删除 然后合并现有的other 配置
+        // 这里需要 合并之前的配置 将生成的配置都保留 其它全部删除 然后合并现有的other 配置
         $_desc = [];
-        $keep_column = ['formColumns','toolBarButton','selectRowBtns','leftMenu','table_menu_key','tableColumns','tabs'];
-        foreach($keep_column as $kc)
-        {
-            if(isset($desc[$kc]))
-            {
+        $keep_column = ['formColumns', 'toolBarButton', 'selectRowBtns', 'leftMenu', 'table_menu_key', 'tableColumns', 'tabs'];
+        foreach ($keep_column as $kc) {
+            if (isset($desc[$kc])) {
                 $_desc[$kc] = $desc[$kc];
             }
         }
-        $desc = array_merge($_desc,$config);
+        $desc = array_merge($_desc, $config);
 
-        return $this->updateDesc($desc,$item,['other_config'=>empty($config)?'':json_encode($config)]);
+        return $this->updateDesc($desc, $item, ['other_config' => empty($config) ? '' : json_encode($config)]);
     }
 
-    protected function updateDesc($desc,$item,$data = [])
+    protected function updateDesc($desc, $item, $data = [])
     {
-        $desc = $this->getDescUrl($item,$desc);
+        $desc = $this->getDescUrl($item, $desc);
 
         $data['desc'] = json_encode($desc);
-        if($item['id'])
-        {
-            $this->model->where(['id'=>$item['id']])->update($data);
+        if ($item['id']) {
+            $this->model->where(['id' => $item['id']])->update($data);
         }
-        foreach($data as $key=>$value)
-        {
+        foreach ($data as $key => $value) {
             $json = HelperService::json_validate($value);
-            if($json !== false)
-            {
+            if ($json !== false) {
                 $data[$key] = $json;
             }
         }
+
         return $this->success($data);
     }
+
     /**
      * 根据menu记录获取desc字段中的url 和 postUrl
      *
      * @param [type] $item
-     * @param array $desc
+     * @param  array  $desc
      * @return array
      */
-    public function getDescUrl($item,$desc = [])
+    public function getDescUrl($item, $desc = [])
     {
         $ds = new DevService;
-        //所请求使用菜单的path路径
-        //如果没有选择模型清除链接
-        if($item['admin_model_id'])
-        {
-            $path = array_reverse($ds->getPath($item,$ds->allMenu(),'path'));
-            $desc['url'] = implode('/',$path);
-            if($item['page_type'] == 'form')
-            {
-                //如果指定form页面额外设置 postUrl参数
+        // 所请求使用菜单的path路径
+        // 如果没有选择模型清除链接
+        if ($item['admin_model_id']) {
+            $path = array_reverse($ds->getPath($item, $ds->allMenu(), 'path'));
+            $desc['url'] = implode('/', $path);
+            if ($item['page_type'] == 'form') {
+                // 如果指定form页面额外设置 postUrl参数
                 $desc['postUrl'] = $desc['url'];
             }
-        }else
-        {
-            $desc['url']  = $desc['postUrl'] = '';
+        } else {
+            $desc['url'] = $desc['postUrl'] = '';
         }
+
         return $desc;
     }
 
@@ -760,11 +678,10 @@ class MenuController extends CrudController
 
         $ts = new TableService($id);
 
-        if($ts->sort($columns))
-        {
-            //需要排序后再执行
-            //这里改变表格的排序 为什么要执行form的配置呢？先注释掉
-            //$this->formConfig($id);
+        if ($ts->sort($columns)) {
+            // 需要排序后再执行
+            // 这里改变表格的排序 为什么要执行form的配置呢？先注释掉
+            // $this->formConfig($id);
         }
 
         $this->tableConfig($id);
@@ -785,7 +702,7 @@ class MenuController extends CrudController
 
         $ts = new TableService($id);
 
-        $ts->setWidth($uid,$width);
+        $ts->setWidth($uid, $width);
 
         $this->tableConfig($id);
 
@@ -803,37 +720,32 @@ class MenuController extends CrudController
 
         $base = request('base');
 
-        //检测是否只选了 hide in table
-        $hide_in_table = Arr::get($base,'hide_in_table');
-        $can_search = Arr::get($base,'can_search');
-        if(!empty($hide_in_table) && empty($can_search))
-        {
+        // 检测是否只选了 hide in table
+        $hide_in_table = Arr::get($base, 'hide_in_table');
+        $can_search = Arr::get($base, 'can_search');
+        if (! empty($hide_in_table) && empty($can_search)) {
             return $this->failMsg('该元素页面中未显示，请不要只勾选表中隐藏');
         }
 
-        $edit_type = request('type','base');
-        
+        $edit_type = request('type', 'base');
+
         $ts = new TableService($id);
 
         $base = request('base');
 
         unset($base['id']);
 
-        $action_type = request('base.actionType',$type);
+        $action_type = request('base.actionType', $type);
 
-        if(isset($base['actionType']) || $action_type === null)
-        {
+        if (isset($base['actionType']) || $action_type === null) {
             unset($base['actionType']);
         }
-        
 
-        $edit_ret = $ts->edit($base,$action_type,$edit_type);
+        $edit_ret = $ts->edit($base, $action_type, $edit_type);
 
-        if($action_type == 'copyToMenu')
-        {
-            //复制后 需要更新的是目标菜单的desc字段
-            if(!$edit_ret)
-            {
+        if ($action_type == 'copyToMenu') {
+            // 复制后 需要更新的是目标菜单的desc字段
+            if (! $edit_ret) {
                 return $this->failMsg('复制失败');
             }
             $this->tableConfig($edit_ret);
@@ -854,12 +766,10 @@ class MenuController extends CrudController
     public function export($listData = false)
     {
         $c = new Dump;
-        [$code,$msg] = $c->export(request('ids'),'menu');
-        if($code)
-        {
-            return $this->fail([1,$msg]);
-        }else
-        {
+        [$code,$msg] = $c->export(request('ids'), 'menu');
+        if ($code) {
+            return $this->fail([1, $msg]);
+        } else {
             return $this->success($msg);
         }
     }
@@ -872,78 +782,75 @@ class MenuController extends CrudController
 
         $dump = new Dump;
 
-        [$code,$msg,$menu_ids] = $dump->import($content,request('id'));
+        [$code,$msg,$menu_ids] = $dump->import($content, request('id'));
 
-        if($code)
-        {
-            return $this->fail([1,$msg]);
-        }else
-        {
-            //刷新数据
+        if ($code) {
+            return $this->fail([1, $msg]);
+        } else {
+            // 刷新数据
             $this->updateMenuDesc($menu_ids);
-            return $this->success(null,[0,$msg]);
+
+            return $this->success(null, [0, $msg]);
         }
     }
 
     /**
      * form表单字段的排序功能  结构为多个tab 每个tab都是一个 二维数组
      * 排序的话 只支持同一个tab内的改变
+     *
      * @return void
      */
     public function sortFormColumns()
     {
         $id = request('id');
         $columns = request('columns');
-        $fs = new FormService($id,request('config.form_config',[]));
+        $fs = new FormService($id, request('config.form_config', []));
 
         $edit_ret = $fs->sort($columns);
         $ret_data = false;
-        if($edit_ret)
-        {
-            //需要排序后再执行
-            $ret_data = $this->formConfig($id,$edit_ret);
+        if ($edit_ret) {
+            // 需要排序后再执行
+            $ret_data = $this->formConfig($id, $edit_ret);
         }
 
-        return $this->devEditRet($id,'form',$ret_data?Arr::get($ret_data->getData(true),'data'):[]);
+        return $this->devEditRet($id, 'form', $ret_data ? Arr::get($ret_data->getData(true), 'data') : []);
 
     }
+
     public function sortPanelColumns()
     {
         $id = request('id');
         $columns = request('columns');
-        
+
         $ps = new PanelService($id);
 
-        if($ps->sort($columns))
-        {
-            //需要排序后再执行
+        if ($ps->sort($columns)) {
+            // 需要排序后再执行
             $this->otherConfig($id);
         }
 
-        return $this->devEditRet($id,'panel');
+        return $this->devEditRet($id, 'panel');
 
     }
 
     public function editPanelColumn($type = 'addRow')
     {
         $id = request('base.id');
-        
+
         $ps = new PanelService($id);
 
         $base = request('base');
 
-        $action_type = request('base.actionType',$type);
+        $action_type = request('base.actionType', $type);
 
-        if(isset($base['actionType']) || $action_type === null)
-        {
+        if (isset($base['actionType']) || $action_type === null) {
             unset($base['actionType']);
         }
-        if($ps->edit($base,$action_type))
-        {
+        if ($ps->edit($base, $action_type)) {
             $this->otherConfig($id);
         }
 
-        return $this->devEditRet($id,'panel');
+        return $this->devEditRet($id, 'panel');
     }
 
     public function deletePanelColumn()
@@ -959,47 +866,42 @@ class MenuController extends CrudController
     public function editFormColumn($type = 'edit')
     {
         $id = request('base.id');
-        
-        $fs = new FormService($id,request('base.config.form_config',[]));
 
-        $edit_type = request('type','base');
+        $fs = new FormService($id, request('base.config.form_config', []));
+
+        $edit_type = request('type', 'base');
 
         $base = request('base');
 
-        if(isset($base['config']))
-        {
+        if (isset($base['config'])) {
             unset($base['config']);
         }
 
         unset($base['id']);
 
-        $action_type = request('base.actionType',$type);
+        $action_type = request('base.actionType', $type);
 
-        if(isset($base['actionType']) || $action_type === null)
-        {
+        if (isset($base['actionType']) || $action_type === null) {
             unset($base['actionType']);
         }
 
-        
-        $edit_ret = $fs->edit($base,$action_type,$edit_type);
+        $edit_ret = $fs->edit($base, $action_type, $edit_type);
 
-        //d($edit_ret);
+        // d($edit_ret);
 
-        if($action_type == 'copyToMenu')
-        {
-            //复制后 需要更新的是目标菜单的desc字段
-            if(!$edit_ret)
-            {
+        if ($action_type == 'copyToMenu') {
+            // 复制后 需要更新的是目标菜单的desc字段
+            if (! $edit_ret) {
                 return $this->failMsg('复制失败');
             }
             $this->formConfig($edit_ret);
 
-            return $this->devEditRet($edit_ret,'form');
+            return $this->devEditRet($edit_ret, 'form');
         }
 
-        $ret_data = $this->formConfig($id,$edit_ret);
+        $ret_data = $this->formConfig($id, $edit_ret);
 
-        return $this->devEditRet($id,'form',Arr::get($ret_data->getData(true),'data'));
+        return $this->devEditRet($id, 'form', Arr::get($ret_data->getData(true), 'data'));
     }
 
     public function deleteFormColumn()
@@ -1011,7 +913,8 @@ class MenuController extends CrudController
     {
         $user = AdminService::user();
         $userinfo = AdminService::parseUser($user);
-        $userinfo = $this->service->parseUserInfo($userinfo,$user);
+        $userinfo = $this->service->parseUserInfo($userinfo, $user);
+
         return $userinfo;
     }
 
@@ -1023,53 +926,48 @@ class MenuController extends CrudController
      * @param [type] $schema
      * @return void
      */
-    public function devEditRet($id,$type = 'table',$item_data = [])
+    public function devEditRet($id, $type = 'table', $item_data = [])
     {
-        if($id)
-        {
-            $item = $this->model->where(['id'=>$id])->first();
-        }else
-        {
+        if ($id) {
+            $item = $this->model->where(['id' => $id])->first();
+        } else {
             $item = $item_data;
         }
 
-        if(empty($item))
-        {
-            return $this->successMsg('',['columns'=>[]]);
+        if (empty($item)) {
+            return $this->successMsg('', ['columns' => []]);
         }
-        
-        $desc = ($item['desc'] && is_string($item['desc'])) ? json_decode($item['desc'],true) : $item['desc'];
+
+        $desc = ($item['desc'] && is_string($item['desc'])) ? json_decode($item['desc'], true) : $item['desc'];
         $columns = [];
-        //$data = [];
-        if($type == 'table')
-        {
+        // $data = [];
+        if ($type == 'table') {
             $columns = $desc['tableColumns'];
-            //$data = ['tabs'=>$desc['tableColumns']];
-        }elseif($type == 'form')
-        {
+            // $data = ['tabs'=>$desc['tableColumns']];
+        } elseif ($type == 'form') {
             $columns = $desc['tabs'];
-            //$data = ['tabs'=>$desc['tabs']];
-        }elseif($type == 'panel')
-        {
+            // $data = ['tabs'=>$desc['tabs']];
+        } elseif ($type == 'panel') {
             $columns = $desc['panel'];
         }
 
         $ret = [
-            'columns'=>$columns,
-            'data'=>$item_data,
+            'columns' => $columns,
+            'data' => $item_data,
         ];
-        if($id)
-        {
+        if ($id) {
             $ret['currentUser'] = $this->getUserInfo();
         }
-        //design操作不再提示成功信息
-        return $this->success($ret,[0,'']); 
+
+        // design操作不再提示成功信息
+        return $this->success($ret, [0, '']);
     }
 
     public function remenu()
     {
         $ids = request('ids');
         $this->updateMenuDesc($ids);
+
         return $this->success('操作成功');
     }
 
@@ -1078,13 +976,12 @@ class MenuController extends CrudController
         $ds = new DevService;
         $ds->allMenu(true);
         $ds->allModel(true);
-        foreach($menu_ids as $menu_id)
-        {
+        foreach ($menu_ids as $menu_id) {
             $this->tableConfig($menu_id);
             $this->formConfig($menu_id);
             $this->otherConfig($menu_id);
         }
-        return;
+
     }
 
     /**
@@ -1096,19 +993,21 @@ class MenuController extends CrudController
     {
         $id = request('id', 0);
         if ($id) {
-            if (!is_array($id)) {
+            if (! is_array($id)) {
                 $id = [$id];
             }
         }
-        if (!empty($id)) {
+        if (! empty($id)) {
             $m = $this->model->whereIn('id', $id);
 
             $items = $m->get();
             foreach ($items as $val) {
                 $val->delete();
             }
-            return $this->success(['currentUser'=>$this->getUserInfo()]);
+
+            return $this->success(['currentUser' => $this->getUserInfo()]);
         }
-        return $this->fail([1,'参数错误']);
+
+        return $this->fail([1, '参数错误']);
     }
 }

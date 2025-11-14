@@ -1,9 +1,12 @@
 <?php
-namespace Echoyl\Sa\Models\wechat\pay;
-use Echoyl\Sa\Models\Base;
-//customer namespace start
 
-//customer namespace end
+namespace Echoyl\Sa\Models\wechat\pay;
+
+use Echoyl\Sa\Models\Base;
+
+// customer namespace start
+
+// customer namespace end
 class Log extends Base
 {
     /**
@@ -16,29 +19,29 @@ class Log extends Base
     public function getParseColumns()
     {
         static $data = [];
-        if(empty($data))
-        {
+        if (empty($data)) {
             $data = [
-			    [
-			        'name' => 'money',
-			        'type' => 'price',
-			        'default' => 0,
-			    ],
-			];
+                [
+                    'name' => 'money',
+                    'type' => 'price',
+                    'default' => 0,
+                ],
+            ];
         }
+
         return $data;
     }
 
-    //relationship start
-    
+    // relationship start
+
     public function refunds()
     {
-        return $this->hasMany(Refund::class,'log_id','id');
+        return $this->hasMany(Refund::class, 'log_id', 'id');
     }
-    
-    //relationship end
 
-    //customer code start
-	
-	//customer code end
+    // relationship end
+
+    // customer code start
+
+    // customer code end
 }

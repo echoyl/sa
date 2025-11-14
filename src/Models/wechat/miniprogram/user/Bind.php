@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Models\wechat\miniprogram\user;
 
 use Echoyl\Sa\Models\Base;
@@ -17,8 +18,8 @@ class Bind extends Base
 
     public function user()
     {
-        return $this->hasOne(User::class,'openid','openid');
+        return $this->hasOne(User::class, 'openid', 'openid');
     }
-    
-    //relationship end
+
+    // relationship end
 }

@@ -12,5 +12,6 @@ class Session extends Base
      * @var string
      */
     protected $table = 'wechat_session';
+
     public $timestamps = false;
 }

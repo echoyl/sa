@@ -12,7 +12,6 @@ class Sets extends Base
      * @var string
      */
     protected $table = 'wechat_sets';
-    public $timestamps = false;
 
-    
+    public $timestamps = false;
 }

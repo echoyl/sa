@@ -1,15 +1,17 @@
 <?php
+
 namespace Echoyl\Sa\Services\utils;
 
-use Illuminate\Support\Arr;
 use Echoyl\Sa\Services\utils\ImageService as Image;
+use Illuminate\Support\Arr;
 
 class WaterMarkService
 {
-    var $path;
-    var $setting;
+    public $path;
 
-    public function __construct($path,$setting = [])
+    public $setting;
+
+    public function __construct($path, $setting = [])
     {
         $this->setting = $setting;
         $this->path = $path;
@@ -19,61 +21,54 @@ class WaterMarkService
     {
         $watermark = $this->setting;
 
-        $enable = Arr::get($watermark,'enable',false);
+        $enable = Arr::get($watermark, 'enable', false);
 
-        if(!$enable)
-        {
+        if (! $enable) {
             return;
         }
 
-        $type = Arr::get($watermark,'type','text');
+        $type = Arr::get($watermark, 'type', 'text');
 
-        if($type == 'text')
-        {
+        if ($type == 'text') {
             $this->text();
-        }elseif($type == 'image')
-        {
+        } elseif ($type == 'image') {
             $this->image();
         }
 
-        return;
     }
 
     public function image()
     {
         $setting = $this->setting;
         $path = $this->path;
-        $image = Arr::get($setting,'image',[]);
+        $image = Arr::get($setting, 'image', []);
 
-        $url = Arr::get($image,'url');
+        $url = Arr::get($image, 'url');
 
-        if(!$url || !is_array($url) || empty($url))
-        {
+        if (! $url || ! is_array($url) || empty($url)) {
             return;
         }
         $img = Image::read($path);
         $watermark_path = storage_path('app/public/'.$url[0]['value']);
 
-        $align = Arr::get($setting,'align','left');
-        $valign = Arr::get($setting,'valign','bottom');
-        $offset_x = Arr::get($setting,'offset_x',0);
-        $offset_y = Arr::get($setting,'offset_y',0);
-        $opacity = Arr::get($setting,'opacity',100);
+        $align = Arr::get($setting, 'align', 'left');
+        $valign = Arr::get($setting, 'valign', 'bottom');
+        $offset_x = Arr::get($setting, 'offset_x', 0);
+        $offset_y = Arr::get($setting, 'offset_y', 0);
+        $opacity = Arr::get($setting, 'opacity', 100);
 
-        $angle = Arr::get($setting,'angle',0);
+        $angle = Arr::get($setting, 'angle', 0);
 
-        $position = implode('-',[$align,$valign]);
+        $position = implode('-', [$align, $valign]);
 
         $watermark_image = Image::read($watermark_path);
 
-        if($angle)
-        {
+        if ($angle) {
             $watermark_image->manager->rotate($angle);
         }
 
-        $img->place($watermark_image, $position, $offset_x, $offset_y,$opacity)->save($path);
+        $img->place($watermark_image, $position, $offset_x, $offset_y, $opacity)->save($path);
 
-        return;
     }
 
     /**
@@ -86,46 +81,43 @@ class WaterMarkService
     public function text()
     {
         $setting = $this->setting;
-        $text = Arr::get($setting,'text',[]);
+        $text = Arr::get($setting, 'text', []);
 
-        $content = Arr::get($text,'content');
+        $content = Arr::get($text, 'content');
 
-        if(!$content)
-        {
+        if (! $content) {
             return;
         }
 
-        $color = Arr::get($text,'color','#ffffff');
-        $fontsize = Arr::get($text,'fontsize','12');
-        //d($text);
-        //d($fontsize);
+        $color = Arr::get($text, 'color', '#ffffff');
+        $fontsize = Arr::get($text, 'fontsize', '12');
+        // d($text);
+        // d($fontsize);
         $path = $this->path;
         $img = Image::read($path);
 
-        $align = Arr::get($setting,'align','left');
-        $valign = Arr::get($setting,'valign','bottom');
-        $offset_x = Arr::get($setting,'offset_x',0);
-        $offset_y = Arr::get($setting,'offset_y',0);
+        $align = Arr::get($setting, 'align', 'left');
+        $valign = Arr::get($setting, 'valign', 'bottom');
+        $offset_x = Arr::get($setting, 'offset_x', 0);
+        $offset_y = Arr::get($setting, 'offset_y', 0);
 
-        $angle = Arr::get($setting,'angle',0);
+        $angle = Arr::get($setting, 'angle', 0);
 
-        $position = implode('-',[$align,$valign]);
+        $position = implode('-', [$align, $valign]);
 
         $image_size = $img->align($position, $offset_x, $offset_y);
-        //d($image_size);
+        // d($image_size);
 
-        $img->text($content, $image_size[0],$image_size[1], function ($font) use($color,$fontsize,$align,$valign,$angle) {
+        $img->text($content, $image_size[0], $image_size[1], function ($font) use ($color, $fontsize, $align, $valign, $angle) {
             $font->file(storage_path('app/public/font/msyhbd.ttc'));
             $font->color($color);
             $font->size(intval($fontsize));
             $font->align($align);
             $font->valign($valign);
-            if($angle)
-            {
+            if ($angle) {
                 $font->angle($angle);
             }
         })->save($path);
 
-        return;
     }
 }

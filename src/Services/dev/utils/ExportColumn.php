@@ -2,24 +2,29 @@
 
 namespace Echoyl\Sa\Services\dev\utils;
 
-use Echoyl\Sa\Models\dev\Menu;
-use Echoyl\Sa\Models\dev\model\Relation;
-use Illuminate\Support\Arr;
-
-
 class ExportColumn
 {
-    var $data = false;
-    var $config;
-    var $schema;
-    var $relation;
-    var $readonly = false;
-    var $menus;
-    var $form_type;
-    var $models;
-    var $key;
-    var $model;
-    var $props; //config中的props; 属性集中到这个字段中
+    public $data = false;
+
+    public $config;
+
+    public $schema;
+
+    public $relation;
+
+    public $readonly = false;
+
+    public $menus;
+
+    public $form_type;
+
+    public $models;
+
+    public $key;
+
+    public $model;
+
+    public $props; // config中的props; 属性集中到这个字段中
 
     public function __construct($config, $model, $menus, $models)
     {
@@ -38,22 +43,19 @@ class ExportColumn
             $key = $key[0];
         }
 
-
         $this->key = $key;
-
 
         $columns = json_decode($model['columns'], true);
         $schema = Utils::arrGet($columns, 'name', $key);
         $this->schema = $schema;
 
-        //如果本地字段 需要转化下驼峰格式？ 如果本地没有字段 通过关联的name获取相关关联
+        // 如果本地字段 需要转化下驼峰格式？ 如果本地没有字段 通过关联的name获取相关关联
         $relation = Utils::arrGet($model['relations'], $schema ? 'local_key' : 'name', $schema ? Utils::uncamelize($key) : $key);
         // if($key == 'hexiaoUser')
         // {
         //     d($relation,Utils::uncamelize($key));
         // }
         $this->relation = $relation;
-
 
         $p_title = $props['title'] ?? '';
         $title = $config['ctitle'] ?? '';
@@ -69,16 +71,14 @@ class ExportColumn
                     $_relation_title[] = $field['title'];
                 }
             }
-            
+
             $relation_title = implode(' - ', $_relation_title);
         }
-        //d($relation_title,$title,$title ?: ($schema ? $schema['title'] : ($relation_title ?: Utils::$title_arr[$key] ?? '')));
+        // d($relation_title,$title,$title ?: ($schema ? $schema['title'] : ($relation_title ?: Utils::$title_arr[$key] ?? '')));
         $this->data = [
-            'dataIndex' => $dataIndex, 
-            'title' => $title ?: ($schema ? $schema['title'] : ($relation_title ?: Utils::$title_arr[$key] ?? ''))
+            'dataIndex' => $dataIndex,
+            'title' => $title ?: ($schema ? $schema['title'] : ($relation_title ?: Utils::$title_arr[$key] ?? '')),
         ];
 
-
-        return;
     }
 }

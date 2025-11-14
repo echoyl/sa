@@ -13,9 +13,8 @@ class Log extends Base
      */
     protected $table = 'perm_log';
 
-
     public function user()
     {
-        return $this->hasOne(config('sa.userModel'),'id','user_id');
+        return $this->hasOne(config('sa.userModel'), 'id', 'user_id');
     }
 }

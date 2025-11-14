@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -15,10 +16,10 @@ class Date extends BaseField
     {
         $val = $options['val'];
         $isset = $options['isset'];
-        if(!$val)
-        {
+        if (! $val) {
             $val = '__unset';
         }
-        return $this->getData($val,$isset);
+
+        return $this->getData($val, $isset);
     }
 }

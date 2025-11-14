@@ -2,9 +2,9 @@
 
 namespace Echoyl\Sa\Http\Controllers\admin;
 
-use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Services\AdminService;
+use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\NoticeService;
 
 /**
@@ -14,7 +14,7 @@ class IndexController extends ApiBaseController
 {
     //
     public $menus = [];
-    
+
     public function index()
     {
 
@@ -26,16 +26,16 @@ class IndexController extends ApiBaseController
         if (request()->isMethod('post')) {
             $uinfo = AdminService::user();
             if ($uinfo['username'] == 'test') {
-                return $this->fail([1,'体验账号暂时不支持修改密码']);
+                return $this->fail([1, '体验账号暂时不支持修改密码']);
             }
 
             $base = request('base');
 
-            $old_password = trim($base['old_password']??'');
-            $new_password = trim($base['new_password']??'');
+            $old_password = trim($base['old_password'] ?? '');
+            $new_password = trim($base['new_password'] ?? '');
 
             if ($new_password && strlen($new_password) < 6) {
-                return $this->fail([1,'密码长度至少为6位']);
+                return $this->fail([1, '密码长度至少为6位']);
             }
 
             $update = [];
@@ -44,12 +44,12 @@ class IndexController extends ApiBaseController
 
             $base['originData'] = $uinfo;
 
-            $avatar_data = HelperService::enImages($base,['avatar']);
+            $avatar_data = HelperService::enImages($base, ['avatar']);
 
             $update = [
-                'realname' => $base['realname']??'',
-                'desc' => $base['desc']??'',
-                'mobile' => $base['mobile']??'',
+                'realname' => $base['realname'] ?? '',
+                'desc' => $base['desc'] ?? '',
+                'mobile' => $base['mobile'] ?? '',
                 'avatar' => $avatar_data['avatar'],
             ];
 
@@ -62,10 +62,11 @@ class IndexController extends ApiBaseController
                 }
 
             }
-            AdminService::updateUserInfo($uinfo['id'],$update);
-            //修改信息后需要返回当前用户信息，form表单需要重置
-            HelperService::deImages($update,['avatar']);
-            return $this->success(array_merge(['pwd' => $pwd,'logout'=>$pwd],$update),[0,'修改成功' . $msg]);
+            AdminService::updateUserInfo($uinfo['id'], $update);
+            // 修改信息后需要返回当前用户信息，form表单需要重置
+            HelperService::deImages($update, ['avatar']);
+
+            return $this->success(array_merge(['pwd' => $pwd, 'logout' => $pwd], $update), [0, '修改成功'.$msg]);
 
         }
         $uinfo = AdminService::user();
@@ -85,8 +86,9 @@ class IndexController extends ApiBaseController
     {
         AdminService::log('退出登录');
         AdminService::logout();
+
         return $this->success('退出成功');
-        //return ['code' => 0, 'msg' => '退出成功'];
+        // return ['code' => 0, 'msg' => '退出成功'];
     }
 
     public function currentUser()
@@ -94,8 +96,8 @@ class IndexController extends ApiBaseController
         $user = AdminService::user();
 
         $userinfo = AdminService::parseUser($user);
-        
-        $userinfo = $this->service->parseUserInfo($userinfo,$user);
+
+        $userinfo = $this->service->parseUserInfo($userinfo, $user);
 
         return $this->success($userinfo);
     }
@@ -108,6 +110,7 @@ class IndexController extends ApiBaseController
     public function notice()
     {
         $data = NoticeService::get();
+
         return $this->success($data);
     }
 
@@ -115,7 +118,8 @@ class IndexController extends ApiBaseController
     {
         $id = request('id');
         $type = request('type');
-        NoticeService::clear($id,$type);
+        NoticeService::clear($id, $type);
+
         return $this->success('操作成功');
     }
 
@@ -129,10 +133,10 @@ class IndexController extends ApiBaseController
         $password = request('base.password');
         $admin = AdminService::user();
 
-        if(!$password || AdminService::pwd($password) != $admin['password'])
-        {
-            return $this->fail([1,'密码输入错误']);
+        if (! $password || AdminService::pwd($password) != $admin['password']) {
+            return $this->fail([1, '密码输入错误']);
         }
-        return $this->success(null,[0,'解锁成功']);
+
+        return $this->success(null, [0, '解锁成功']);
     }
 }

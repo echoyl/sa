@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Services\dev\crud\fields;
 
 use Echoyl\Sa\Services\dev\crud\BaseField;
@@ -18,19 +19,16 @@ class SearchSelect extends BaseField
         $isset = $options['isset'];
         $col = $this->config['col'];
 
-        $id_name = $col['value']??'id';
+        $id_name = $col['value'] ?? 'id';
 
-        if($isset && $val)
-        {
-            if(isset($val[$id_name]))
-            {
+        if ($isset && $val) {
+            if (isset($val[$id_name])) {
                 $val = $val[$id_name];
-                
-            }elseif(isset($val['value']))
-            {
+
+            } elseif (isset($val['value'])) {
                 $val = $val['value'];
             }
-            
+
         }
         $data[$name] = $val;
 
@@ -42,33 +40,29 @@ class SearchSelect extends BaseField
         $data = $this->config['data'];
         $isset = $options['isset'];
         $col = $this->config['col'];
-        $id_name = $col['value']??'id';
+        $id_name = $col['value'] ?? 'id';
         $val = $options['val'];
 
-        if($val && $isset)
-        {
-            //未设置with数据，这个时候我们手动组合成值的结构，不然当选项中不存在该值时前端会报错
-            $val = ['value'=>$val,$id_name=>$val];
-            if(isset($col['data_name']) && isset($data[$col['data_name']]))
-            {
+        if ($val && $isset) {
+            // 未设置with数据，这个时候我们手动组合成值的结构，不然当选项中不存在该值时前端会报错
+            $val = ['value' => $val, $id_name => $val];
+            if (isset($col['data_name']) && isset($data[$col['data_name']])) {
                 $d = $data[$col['data_name']];
-                if($d)
-                {
-                    //$label = $d[$col['label']]??($d['title']??'');
-                    $val = array_merge($d,[
-                        //'label'=>$label,
-                        'value'=>$d[$id_name]??'',
-                        $id_name=>$d[$id_name]??''
+                if ($d) {
+                    // $label = $d[$col['label']]??($d['title']??'');
+                    $val = array_merge($d, [
+                        // 'label'=>$label,
+                        'value' => $d[$id_name] ?? '',
+                        $id_name => $d[$id_name] ?? '',
                     ]);
                 }
             }
         }
-        
-        if(!$val || !$isset)
-        {
+
+        if (! $val || ! $isset) {
             $val = '__unset';
         }
 
-        return $this->getData($val,$isset);
+        return $this->getData($val, $isset);
     }
 }

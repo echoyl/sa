@@ -1,4 +1,5 @@
 <?php
+
 namespace Echoyl\Sa\Models;
 
 class Smslog extends Base
@@ -9,7 +10,6 @@ class Smslog extends Base
      * @var string
      */
     protected $table = 'sms_log';
-    public $timestamps = false;
 
-    
+    public $timestamps = false;
 }
