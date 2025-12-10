@@ -89,6 +89,19 @@ trait Export
         }
 
         $data = $m->with($this->with_column)->get()->toArray();
+        // 先渲染一遍数据 和table页面保持一致 自定义渲染数据使用origin_data读取原始数据
+        if (! method_exists($this, 'exportFormatData')) {
+            // 没有自定义渲染导出数据那么设置一个默认的渲染方法
+            foreach ($data as $key => $val) {
+                $val['origin_data'] = $val;
+                $this->parseData($val, 'decode', 'list');
+                $val = $this->listItem($val);
+                if (! $listData) {
+                    unset($val['origin_data']);
+                }
+                $data[$key] = $val;
+            }
+        }
 
         if ($listData && method_exists($this, $listData)) {
             $data = $this->$listData($data);
@@ -98,6 +111,7 @@ trait Export
                 return $this->exportFormatData($val);
             } : false;
         }
+
         $ret = $es->export($data, $formatData);
 
         return $this->success($ret);

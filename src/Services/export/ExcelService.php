@@ -211,7 +211,10 @@ class ExcelService
                     if (! $_val && $_val !== 0) {
                         // 读取原始数据
                         $oringinal_key = Arr::get($col, 'oringinal_key');
-                        if ($oringinal_key) {
+                        // 如果有原始键值并且是字符串
+                        if ($oringinal_key && is_string($oringinal_key)) {
+                            // 这里没有数据那么index复原为oringinal_key
+                            $index = $oringinal_key;
                             $_val = $val[$oringinal_key] ?? $default;
                         } else {
                             $_val = $default;
