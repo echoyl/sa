@@ -26,7 +26,19 @@ class Json extends BaseField
         $val = $this->diffVal($val, $origin_val, true);
 
         if ($val && ! is_string($val)) {
-            $val = json_encode($val);
+            // 这里过滤二维数组中的空数组信息
+            $new_val = [];
+            foreach ($val as $k => $v) {
+                if (! is_numeric($k)) {
+                    // 如果不是数字键，则表示不是二维数组
+                    $new_val = $val;
+                    break;
+                }
+                if (! empty($v)) {
+                    $new_val[] = $v;
+                }
+            }
+            $val = empty($new_val) ? '' : json_encode($new_val);
         }
 
         return $this->getData($val);
