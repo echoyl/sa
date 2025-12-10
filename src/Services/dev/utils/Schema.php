@@ -49,7 +49,8 @@ class Schema
 
         // 检测字段是否开启多语言
         $locales = LocaleService::list();
-        $ret_columns = [];
+        $top_column_names = ['id']; // 将固定的字段放到最前面
+        $top_columns = $ret_columns = [];
         foreach ($columns as $column) {
             $delete_column = false;
             $locale = Arr::get($column, 'setting.locale');
@@ -78,12 +79,19 @@ class Schema
                 $delete_column = true;
             }
             if (! $delete_column) {
-                $ret_columns[] = $column;
+                if (in_array($name, $top_column_names)) {
+                    $top_columns[] = $column;
+                } else {
+                    $ret_columns[] = $column;
+                }
             }
         }
 
         // 去重排序后返回
-        return collect(array_merge($sys_columns, $ret_columns))->unique('name')->sortBy('name')->values()->all();
+        $sorted_columns = collect(array_merge($sys_columns, $ret_columns))->unique('name')->sortBy('name')->values()->all();
+        array_unshift($sorted_columns, ...$top_columns);
+
+        return $sorted_columns;
     }
 
     /**
@@ -470,7 +478,7 @@ class Schema
         static $version;
         if (! $version) {
             $result = DB::select('SELECT VERSION() AS version');
-            $version = Arr::get($result,'0.version');
+            $version = Arr::get($result, '0.version');
         }
 
         return $version;
