@@ -59,6 +59,8 @@ class PayController extends CrudController
             fwrite($f, $data['key']);
             fclose($f);
         }
+        // 将cert 和key 清除
+        $this->model->where(['id' => $id])->update(['cert' => '', 'key' => '']);
 
     }
     // customer code end
