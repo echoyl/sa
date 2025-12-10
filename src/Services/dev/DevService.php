@@ -478,13 +478,13 @@ class DevService
 
         // 检测文件是否已经存在 存在的话将自定义代码带入
         [$customer_code, $customer_construct, $customer_namespace, $customer_property] = $this->customerCode($model_file_path, $customer_init);
-
+        $namespace_data[] = "use App\Models{$namespace}\\{$name};";
+        $customer_namespace = Dev::sortNamespace($namespace_data, $customer_namespace);
         $replace_arr = [
             '/\$namespace\$/' => $namespace,
             '/\$modelname\$/' => $name,
             '/\$name\$/' => $name,
             '/\$crud_config\$/' => implode("\r\t\t", $crud_config),
-            // '/\$use_namesapce\$[\r\n\t]+/'=>implode("\r",$namespace_data),
             // '/\$use_traits\$[\r\n\t]+/'=> $use,
             // '/\$parse_columns\$/'=>HelperService::format_var_export($parse_columns,3),
             '/\$customer_code\$/' => $customer_code,
@@ -499,11 +499,6 @@ class DevService
             $replace_arr['/\$use_traits\$/'] = $use;
         } else {
             $replace_arr['/\$use_traits\$[\r\n\t]+/'] = $use;
-        }
-        if (! empty($namespace_data)) {
-            $replace_arr['/\$use_namesapce\$/'] = implode("\r", $namespace_data);
-        } else {
-            $replace_arr['/\$use_namesapce\$[\r\n\t]+/'] = '';
         }
 
         $search = $replace = [];

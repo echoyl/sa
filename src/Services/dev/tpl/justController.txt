@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\admin$namespace$;
 
 use App\Http\Controllers\admin\BaseController;
-$use_namesapce$
 //customer namespace start
 $customer_namespace$
 //customer namespace end
