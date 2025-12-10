@@ -20,7 +20,8 @@ use Echoyl\Sa\Traits\Export;
  * @method mixed handleSearch($search = []) 数据列表中额外的搜索条件等
  * @method mixed postData(&$item) 获取数据时格式化数据
  * @method mixed checkPost($item) 检测是否可以提交数据
- * @method mixed listData(&$list) 列表数据格式化
+ * @method mixed listData(&$list) 列表数据格式化 列表数据（列表自定义插入数据时可使用）
+ * @method mixed listItem($item) 列表数据格式化 单个数据
  * @method mixed setThis() 设置一个值 在select 获取数据的时候可以当做filter条件使用
  * @method mixed exportFormatData($val) 导出数据格式化数据方法
  * @method mixed beforeDestroy($m) 删除数据前的检测数据
@@ -398,6 +399,17 @@ class CrudController extends ApiBaseController
         return $m;
     }
 
+    /**
+     * 列表数据单个格式化 不需要使用foreach
+     *
+     * @param [type] $item
+     * @return void
+     */
+    public function listItem($item)
+    {
+        return $item;
+    }
+
     public function index()
     {
         $this->action_type = 'list';
@@ -459,10 +471,12 @@ class CrudController extends ApiBaseController
             ->get()->toArray();
         $has_customer_list = method_exists($this, $this->listDataName);
         foreach ($list as $key => $val) {
-            if ($has_customer_list) {
-                $val['origin_data'] = $val; // 保存原始数据 可以在自定义列表数据中消费
-            }
+            $val['origin_data'] = $val; // 保存原始数据 可以在自定义列表数据中消费
             $this->parseData($val, 'decode', 'list');
+            $val = $this->listItem($val);
+            if (! $has_customer_list) {
+                unset($val['origin_data']);
+            }
             $list[$key] = $val;
         }
 
@@ -875,9 +889,9 @@ class CrudController extends ApiBaseController
      * @param  string  $default
      * @return string
      */
-    public function failMessage($type,$default = '')
+    public function failMessage($type, $default = '')
     {
-        $arr = array_merge($this->service->fail_reason,$this->fail_reason_customer);
+        $arr = array_merge($this->service->fail_reason, $this->fail_reason_customer);
 
         return $arr[$type] ?? $default;
     }
