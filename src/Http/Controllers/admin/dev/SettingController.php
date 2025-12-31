@@ -3,7 +3,9 @@
 namespace Echoyl\Sa\Http\Controllers\admin\dev;
 
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
+use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\Setting;
+use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
 use Illuminate\Support\Facades\Process;
@@ -31,13 +33,26 @@ class SettingController extends ApiBaseController
      *
      * @return void
      */
-    public function formatFile()
+    public function formatFile($id)
     {
+        $model = Model::where(['id' => $id])->with(['relations.foreignModel'])->first();
+        if (! $model) {
+            return $this->failMsg('模型不存在');
+        }
+
+        $ds = new DevService;
+
+        $files = [];
+
+        $files[] = $ds->createControllerFile($model);
+
+        $files[] = $ds->createModelFile($model);
+
         if (! config('sa.formatCode.enable', false)) {
             return $this->success();
         }
-        $file_paths = request('file_path', []);
-        foreach ($file_paths as $file_path) {
+        // $file_paths = request('file_path', []);
+        foreach ($files as $file_path) {
             if (! $file_path || ! file_exists($file_path)) {
                 continue;
             }

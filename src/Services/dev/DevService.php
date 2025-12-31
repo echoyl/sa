@@ -1302,14 +1302,19 @@ class DevService
             $query->select(['id', 'title', 'model_id', 'name', 'foreign_model_id', 'type'])->whereIn('type', ['one', 'many']);
         }])->whereIn('admin_type', $types)->get()->toArray();
         foreach ($list as $val) {
-            $data[] = [
-                'id' => $val['id'],
-                'columns' => $val['columns'] ? json_decode($val['columns'], true) : [],
-                'search_columns' => $val['search_columns'] ? json_decode($val['search_columns'], true) : [],
-                'relations' => $val['relations'] ?: [],
-            ];
+            $data[] = static::modelItem($val);
         }
 
         return $data;
+    }
+
+    public static function modelItem($val)
+    {
+        return [
+            'id' => $val['id'],
+            'columns' => HelperService::json_validate($val['columns']) ?: ($val['columns'] ?: []),
+            'search_columns' => HelperService::json_validate($val['search_columns']) ?: ($val['search_columns'] ?: []),
+            'relations' => $val['relations'] ?: [],
+        ];
     }
 }

@@ -28,7 +28,6 @@ use Echoyl\Sa\Traits\Export;
  * @method mixed afterDestroy($item) 删除数据后置操作
  * @method mixed setBase($base) post数据后操作中可以自定义设置base数据的方法
  *
- * @property \App\Services\AdminAppService $service
  * @property \Illuminate\Database\Eloquent\Model $model
  */
 class CrudController extends ApiBaseController
@@ -60,8 +59,6 @@ class CrudController extends ApiBaseController
     public $uniqueFields = []; // 检测唯一字段 属性已转移至模型中
 
     public $model_id = 0; // 系统所选的模型id值
-
-    public $service;
 
     public $action_type = ''; // 操作类型 add edit
 

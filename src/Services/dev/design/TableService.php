@@ -170,7 +170,7 @@ class TableService extends BaseService
         if ($active === false) {
             return false;
         }
-        $data['props']['width'] = $width;
+        $data['props']['width'] = intval($width);
         $columns[$active] = $data;
         $this->model->where(['id' => $this->id])->update([$name => json_encode($columns)]);
 

@@ -9,6 +9,7 @@ use Echoyl\Sa\Services\dev\design\FormService;
 use Echoyl\Sa\Services\dev\design\PanelService;
 use Echoyl\Sa\Services\dev\design\TableService;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
@@ -45,7 +46,7 @@ class MenuController extends CrudController
     {
         // 修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
-        $ds = new DevService;
+        // $ds = new DevService;
         $this->parseWiths($search);
         // $search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
         // $search['table_menu'] = [['value'=>env('APP_NAME'),'label'=>'项目菜单'],['value'=>'system','label'=>'系统菜单']];
@@ -66,7 +67,7 @@ class MenuController extends CrudController
         }, [['displayorder', 'desc'], ['id', 'asc']]);
         // d($data);
 
-        $search['menus'] = $ds->getMenusTree();
+        // $search['menus'] = $ds->getMenusTree();
 
         return $this->list($data, count($data), $search);
 
@@ -98,13 +99,13 @@ class MenuController extends CrudController
 
     public function postData(&$item)
     {
-        if (isset($item['admin_model']) && isset($item['admin_model']['columns'])) {
-            $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'], array_values(collect(Utils::$title_arr)->map(function ($v, $k) {
-                return ['title' => $v, 'name' => $k];
-            })->toArray()));
-            $item['allModels'] = DevService::allModels();
+        // if (isset($item['admin_model']) && isset($item['admin_model']['columns'])) {
+        //     $item['admin_model']['columns'] = array_merge($item['admin_model']['columns'], array_values(collect(Utils::$title_arr)->map(function ($v, $k) {
+        //         return ['title' => $v, 'name' => $k];
+        //     })->toArray()));
+        //     $item['allModels'] = DevService::allModels();
 
-        }
+        // }
         if (! $this->is_post) {
             if (isset($item['form_config'])) {
 
@@ -129,8 +130,9 @@ class MenuController extends CrudController
                 $item['tabs'][] = ['title' => '基础信息'];
             }
             // 新增全部菜单选择
-            $ds = new DevService;
-            $item['menus'] = $ds->getMenusTree(); // 添加 confirm form | modal table 可以直接选择已创建的菜单信息
+            // 现在不需要返回了
+            // $ds = new DevService;
+            // $item['menus'] = $ds->getMenusTree(); // 添加 confirm form | modal table 可以直接选择已创建的菜单信息
         } else {
             // 带入用户数据以刷新前台页面数据
             $item['currentUser'] = $this->getUserInfo();
@@ -377,6 +379,7 @@ class MenuController extends CrudController
                     'name' => $key.'s', // 读取值的复数
                     'url_name' => $key,
                     'title' => $columns['title'],
+                    'page' => Arr::get($val, 'props.page', 0),
                 ];
                 if (isset($val['left_menu_field']) && $val['left_menu_field']) {
                     [$label,$value] = explode(',', $val['left_menu_field']);
@@ -938,25 +941,32 @@ class MenuController extends CrudController
             return $this->successMsg('', ['columns' => []]);
         }
 
-        $desc = ($item['desc'] && is_string($item['desc'])) ? json_decode($item['desc'], true) : $item['desc'];
+        // $desc = ($item['desc'] && is_string($item['desc'])) ? json_decode($item['desc'], true) : $item['desc'];
+        $ms = new MenuService;
+        $menu_data = $ms->menuItemData($item);
         $columns = [];
         // $data = [];
         if ($type == 'table') {
-            $columns = $desc['tableColumns'];
+            $columns = $menu_data['tableColumns'];
             // $data = ['tabs'=>$desc['tableColumns']];
         } elseif ($type == 'form') {
-            $columns = $desc['tabs'];
+            $columns = $menu_data['tabs'];
             // $data = ['tabs'=>$desc['tabs']];
         } elseif ($type == 'panel') {
-            $columns = $desc['panel'];
+            $columns = $menu_data['panel'];
         }
 
         $ret = [
             'columns' => $columns,
-            'data' => $item_data,
+            'data' => empty($item_data) ? false : $item_data,
+            'id' => $id,
+            'setData' => [// 需要重新设置前端页面pagemenu中的数据信息
+                'schema' => $item,
+                'data' => $menu_data,
+            ],
         ];
         if ($id) {
-            $ret['currentUser'] = $this->getUserInfo();
+            // $ret['currentUser'] = $this->getUserInfo();
         }
 
         // design操作不再提示成功信息

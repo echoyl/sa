@@ -48,7 +48,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => en
                     Route::middleware(['echoyl.superadmin'])->group(function () {
                         Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
                             Route::any('setting', 'SettingController@setting');
-                            Route::any('formatFile', 'SettingController@formatFile');
+                            Route::any('formatFile/{id}', 'SettingController@formatFile');
                             Route::post('menu/moveTo', 'MenuController@moveTo');
                             Route::post('menu/copyTo', 'MenuController@copyTo');
                             Route::post('menu/tableConfig', 'MenuController@tableConfig');

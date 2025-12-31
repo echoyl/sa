@@ -39,7 +39,7 @@ class ModelController extends CrudController
     {
         // 修改获取分类模式 直接递归 查询数据库获取数据
         $search = [];
-        $ds = new DevService;
+        // $ds = new DevService;
         $this->parseWiths($search);
         // $search['icons'] = (new Menu())->where([['icon','!=','']])->get()->pluck('icon');
 
@@ -60,9 +60,9 @@ class ModelController extends CrudController
         ];
         // d($data);
 
-        $search['foldermodels'] = $ds->getModelsFolderTree(); // 模型文件夹
-        $search['menus'] = $ds->getMenusTree(); // 增加快速创建内容模块 选择创建到菜单下
-        $search['models'] = $ds->getModelsTree(); // 可选模型
+        // $search['foldermodels'] = $ds->getModelsFolderTree(); // 模型文件夹
+        // $search['menus'] = $ds->getMenusTree(); // 增加快速创建内容模块 选择创建到菜单下
+        // $search['models'] = $ds->getModelsTree(); // 可选模型
 
         return $this->list($data, count($data), $search);
     }
@@ -110,11 +110,14 @@ class ModelController extends CrudController
 
     public function postData(&$item)
     {
-        $customer_columns = $this->service->modelCustomerColumns();
-        if (! empty($customer_columns)) {
-            $item['add_customer_columns'] = $customer_columns;
+        if (! $this->is_post) {
+            $customer_columns = $this->service->modelCustomerColumns();
+            if (! empty($customer_columns)) {
+                $item['add_customer_columns'] = $customer_columns;
+            }
+        } else {
+            $item = DevService::modelItem($item);
         }
-
     }
 
     /**
@@ -159,13 +162,14 @@ class ModelController extends CrudController
         // 默认都重新更新数据表结构
         $afterPostOptions = request('base.afterPostOptions', ['createModelSchema']);
 
-        $files = [];
+        // 生成文件异步访问 dev/formatFile 路由生成
+        // $files = [];
 
-        $files[] = $ds->createControllerFile($data);
+        // $files[] = $ds->createControllerFile($data);
 
-        $files[] = $ds->createModelFile($data);
+        // $files[] = $ds->createModelFile($data);
 
-        $ds->formatFile($files);
+        // $ds->formatFile($files);
 
         $ds->modelColumn2Export($data);
 

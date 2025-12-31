@@ -169,7 +169,7 @@ class AdminService
         // 加入开发环境时 全局数据
         if ($setting['dev']) {
             $ds = new DevService;
-            $setting['dev'] = [
+            $setting['devData'] = [
                 'allMenus' => $ds->getMenusTree(),
                 'allModels' => DevService::allModels(),
                 'allModelsTree' => $ds->getModelsTree(),
@@ -508,7 +508,7 @@ class AdminService
     {
         $key = $this->getLoginErrorKey();
         $times = $this->getLoginErrorTimes();
-        Cache::put($key,$type == 'add' ? $times + 1 : 0,now()->addDays(1));
+        Cache::put($key, $type == 'add' ? $times + 1 : 0, now()->addDays(1));
 
     }
 }

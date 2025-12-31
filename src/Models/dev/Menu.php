@@ -23,7 +23,13 @@ class Menu extends Category
             $data = [
                 ['name' => 'category_id', 'type' => 'cascader', 'default' => ''],
                 ['name' => 'admin_model', 'type' => 'model', 'default' => '', 'class' => Model::class],
-                ['name' => 'admin_model_id', 'type' => 'select', 'default' => 0, 'with' => true, 'data' => $ds->getModelsTree()],
+                // [
+                //     'name' => 'admin_model_id',
+                //     'type' => 'select',
+                //     'default' => 0,
+                //     'with' => true,
+                //     'data' => $ds->getModelsTree()
+                // ],
                 ['name' => 'type', 'type' => 'select', 'default' => DevService::appname(), 'data' => Utils::packageTypes(), 'with' => true],
                 ['name' => 'state', 'type' => 'switch', 'default' => 1, 'with' => true, 'data' => [
                     ['label' => '启用', 'value' => 1],

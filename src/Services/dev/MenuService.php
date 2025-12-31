@@ -79,20 +79,34 @@ class MenuService
                 // 将菜单隐藏
                 $item['hideInMenu'] = true;
             }
-            if ($val['desc']) {
-                $item['data'] = json_decode($val['desc'], true);
-            }
-            if ($val['open_type']) {
-                $item['data']['openType'] = $val['open_type'];
-            }
-            $item['data']['addable'] = $val['addable'] ? true : false;
-            $item['data']['editable'] = $val['editable'] ? true : false;
-            $item['data']['deleteable'] = $val['deleteable'] ? true : false;
-            $item['data']['setting'] = $val['setting'] ? json_decode($val['setting'], true) : [];
+            $item['data'] = $this->menuItemData($val);
             $ret[] = $item;
         }
 
         return $ret;
+    }
+
+    /**
+     * 将菜单数据转为前端需要的格式
+     *
+     * @param [type] $menu
+     * @return void
+     */
+    public function menuItemData($menu)
+    {
+        $data = [];
+        if ($menu['desc']) {
+            $data = is_string($menu['desc']) ? json_decode($menu['desc'], true) : $menu['desc'];
+        }
+        if ($menu['open_type']) {
+            $data['openType'] = $menu['open_type'];
+        }
+        $data['addable'] = $menu['addable'] ? true : false;
+        $data['editable'] = $menu['editable'] ? true : false;
+        $data['deleteable'] = $menu['deleteable'] ? true : false;
+        $data['setting'] = $menu['setting'] ? json_decode($menu['setting'], true) : [];
+
+        return $data;
     }
 
     public function get($id = 0, $auth_ids = false)
