@@ -1310,10 +1310,19 @@ class DevService
 
     public static function modelItem($val)
     {
+        $columns = Arr::get($val, 'columns', []);
+        if (! empty($columns)) {
+            $columns = HelperService::json_validate($columns) ?: $columns;
+        }
+        $search_columns = Arr::get($val, 'search_columns', []);
+        if (! empty($search_columns)) {
+            $search_columns = HelperService::json_validate($search_columns) ?: $search_columns;
+        }
+
         return [
             'id' => $val['id'],
-            'columns' => HelperService::json_validate($val['columns']) ?: ($val['columns'] ?: []),
-            'search_columns' => HelperService::json_validate($val['search_columns']) ?: ($val['search_columns'] ?: []),
+            'columns' => $columns,
+            'search_columns' => $search_columns,
             'relations' => $val['relations'] ?: [],
         ];
     }

@@ -45,7 +45,7 @@ class ParseData
     public function make(&$data, $in = 'encode', $from = 'detail', $deep = 1)
     {
         // $max_deep = $from == 'list'?1:3;
-
+        $action_type = $this->getParam('action_type', 'list'); // list add edit
         $max_deep = 3;
 
         $parse_columns = $this->getParseColumns();
@@ -104,7 +104,10 @@ class ParseData
                                 $val[$k] = $v;
                             }
                         } else {
-                            $ps->parseWiths($val);
+                            if (in_array($action_type, ['edit', 'add'])) {
+                                $ps->parseWiths($val);
+                            }
+
                             $ps->make($val, $in, $from, $deep + 1);
                         }
                         $data[$name] = $val;
