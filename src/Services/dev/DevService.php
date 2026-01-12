@@ -1312,7 +1312,8 @@ class DevService
     {
         $columns = Arr::get($val, 'columns', []);
         if (! empty($columns)) {
-            $columns = HelperService::json_validate($columns) ?: $columns;
+            $json = HelperService::json_validate($columns);
+            $columns = $json !== false ? $json : $columns;
         }
         $search_columns = Arr::get($val, 'search_columns', []);
 
@@ -1323,8 +1324,8 @@ class DevService
 
         return [
             'id' => $val['id'],
-            'columns' => $columns,
-            'search_columns' => $search_columns,
+            'columns' => $columns ?: [],
+            'search_columns' => $search_columns ?: [],
             'relations' => $val['relations'] ?: [],
         ];
     }
