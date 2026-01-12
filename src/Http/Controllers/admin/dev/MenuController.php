@@ -136,6 +136,8 @@ class MenuController extends CrudController
         } else {
             // 带入用户数据以刷新前台页面数据
             $item['currentUser'] = $this->getUserInfo();
+            $ds = new DevService;
+            $item['allMenus'] = $ds->getMenusTree();
         }
 
     }

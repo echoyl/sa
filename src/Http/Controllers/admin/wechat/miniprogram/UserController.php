@@ -36,14 +36,16 @@ class UserController extends CrudController
     }
 
     // customer code start
-    public function listData(&$list)
+    public function listItem($item)
     {
-        foreach ($list as $k => $v) {
-            $v['avatar'] = Arr::get($v, 'avatar.0.url', '');
-            $list[$k] = $v;
+        $avatar = Arr::get($item, 'avatar.0.url', '');
+        if (! $avatar) {
+            $avatar = Arr::get($item, 'origin_data.avatar', '');
         }
+        $item['avatar'] = $avatar;
 
-        return $list;
+        return $item;
+
     }
     // customer code end
 }

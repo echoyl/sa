@@ -30,7 +30,10 @@ class User extends BaseAuth
                     ['label' => '启用', 'value' => 1],
                 ], 'table_menu' => true],
                 ['name' => 'appid', 'type' => 'select', 'default' => 0, 'data' => (new Account)->get()->toArray(), 'with' => true],
-                ['name' => 'subscribe', 'type' => 'switch', 'default' => 1],
+                ['name' => 'subscribe', 'type' => 'switch', 'data' => [
+                    ['label' => '未关注', 'value' => 0],
+                    ['label' => '已关注', 'value' => 1],
+                ], 'default' => 1],
             ];
         }
 
