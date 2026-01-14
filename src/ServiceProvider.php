@@ -53,7 +53,18 @@ class ServiceProvider extends LaravelServiceProvider
             $this->publishes([
                 __DIR__.'/../database/schema/mysql-schema.dump' => database_path('schema/mysql-schema.dump'),
             ], 'deadmin');
-
+            // Controllers
+            $this->publishes([
+                __DIR__.'/../static/deadmin/Controllers' => app_path('Http/Controllers/admin'),
+            ], 'deadmin');
+            // Services
+            $this->publishes([
+                __DIR__.'/../static/deadmin/Services' => app_path('Services/deadmin'),
+            ], 'deadmin');
+            // app.php
+            $this->publishes([
+                __DIR__.'/../static/deadmin/app.php' => base_path('bootstrap/app.php'),
+            ], 'deadmin');
         }
 
         $router = $this->app['router'];

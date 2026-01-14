@@ -104,7 +104,9 @@ class IndexController extends ApiBaseController
 
     public function setting()
     {
-        return $this->success(AdminService::setting());
+        $auth = \Illuminate\Support\Facades\Auth::guard('sanctum');
+
+        return $this->success(AdminService::setting($auth->user()));
     }
 
     public function notice()

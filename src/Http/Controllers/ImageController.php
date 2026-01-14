@@ -19,7 +19,7 @@ class ImageController extends Controller
 
         // d($size_arr,$size_arr[$size]);
 
-        if (! isset($size_arr[$size])) {
+        if (! isset($size_arr[$size]) || ! class_exists('League\Glide\ServerFactory')) {
             return response()->file(public_path('storage/'.$path));
         }
 

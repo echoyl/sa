@@ -40,6 +40,11 @@ class SettingController extends ApiBaseController
             return $this->failMsg('模型不存在');
         }
 
+        if ($model['type'] == 0) {
+            // 文件夹直接跳过
+            return $this->success();
+        }
+
         $ds = new DevService;
 
         $files = [];
