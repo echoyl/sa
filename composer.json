@@ -12,7 +12,8 @@
         "php": "^8.0 | ^8.1 | ^8.2 | ^8.3",
         "laravel/framework": "^9.0 | ^10.0 | ^11.0 | ^12.0",
         "laravel/sanctum": "^3.0 | ^4.0",
-        "mews/captcha": "^3.2"
+        "mews/captcha": "^3.2",
+		"symfony/var-exporter": "^6.4|^7.0|^8.0"
     },
     "license": "MIT",
     "autoload": {
@@ -31,7 +32,6 @@
         }
     },
     "require-dev": {
-        "laravel/pint": "^1.25",
-        "symfony/var-exporter": "^6.3"
+        "laravel/pint": "^1.25"
     }
 }
