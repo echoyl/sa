@@ -15,8 +15,10 @@ trait ApiResponse
      * @param  null  $data
      * @param  array  $codeResponse
      */
-    public function success($data = null, $codeResponse = ResponseEnum::HTTP_OK): JsonResponse
+    public function success($data = null, $codeResponse = null): JsonResponse
     {
+        $codeResponse = $codeResponse ?: config('sa.responseEnum.HTTP_OK', ResponseEnum::HTTP_OK);
+
         return $this->jsonResponse('success', $codeResponse, $data, null);
     }
 
@@ -59,8 +61,10 @@ trait ApiResponse
      * @param  null  $data
      * @param  null  $error
      */
-    public function fail($codeResponse = ResponseEnum::HTTP_ERROR, $data = null, $error = null): JsonResponse
+    public function fail($codeResponse = null, $data = null, $error = null): JsonResponse
     {
+        $codeResponse = $codeResponse ?: config('sa.responseEnum.HTTP_ERROR', ResponseEnum::HTTP_ERROR);
+
         return $this->jsonResponse('fail', $codeResponse, $data, $error);
     }
 

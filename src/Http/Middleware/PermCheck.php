@@ -11,7 +11,7 @@ class PermCheck
     public function handle($request, Closure $next)
     {
         if (! AdminService::checkAuth()) {
-            [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM;
+            [$code,$msg] = config('sa.responseEnum.CLIENT_HTTP_UNAUTHORIZED_PERM', ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM);
 
             return response()->json(['code' => $code, 'msg' => $msg]);
         }

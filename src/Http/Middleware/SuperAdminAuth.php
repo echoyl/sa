@@ -11,7 +11,7 @@ class SuperAdminAuth
     {
         $user = AdminService::user();
 
-        if (! $user || ! AdminService::isSuper($user)) {
+        if (! $user || (! AdminService::isSuper($user) && ! AdminService::checkAuth())) {
             return response()->json(['code' => 1, 'msg' => '该账号角色非超级管理员']);
         }
 

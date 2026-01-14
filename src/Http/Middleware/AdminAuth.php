@@ -14,13 +14,13 @@ class AdminAuth
         // d(AdminService::user());
         if (! AdminService::checkToken()) {
             // 未登录的情况下返回登录失败
-            [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_EXPIRED;
+            [$code,$msg] = config('sa.responseEnum.CLIENT_HTTP_UNAUTHORIZED_EXPIRED', ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_EXPIRED);
 
             return response()->json(['code' => $code, 'msg' => $msg]);
         }
         $user = AdminService::user();
         if ($user['state'] != 1) {
-            [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM;
+            [$code,$msg] = config('sa.responseEnum.CLIENT_HTTP_UNAUTHORIZED_PERM', ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_PERM);
 
             return response()->json(['code' => $code, 'msg' => '该账号已禁用']);
         }
