@@ -331,3 +331,10 @@ if (! function_exists('shortDesc')) {
         return strlen($desc) > $length ? mb_substr($desc, 0, $length).$sufix : $desc;
     }
 }
+
+if (! function_exists('random_float')) {
+    function random_float($min, $max)
+    {
+        return number_format($min + mt_rand() / mt_getrandmax() * ($max - $min), 2, '.');
+    }
+}
