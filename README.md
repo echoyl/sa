@@ -4,8 +4,6 @@ v1.0.6 2026/01/15
 
 ## 安装
 
-使用 `git` 克隆代码后使用 `composer` 安装依赖
-
 ```bash
 
 $ laravel new example-app

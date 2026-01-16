@@ -16,7 +16,7 @@ Route::group(['namespace' => 'admin', 'prefix' => env('APP_PREFIX', '').env('APP
 
 Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', 'sadmin')], function () {
     // 默认暴露这些公用路由
-    Route::middleware('api')->group(function () {
+    Route::middleware(['api', 'echoyl.remember'])->group(function () {
 
         Route::get('setting', 'IndexController@setting');
         Route::group(['namespace' => 'dev', 'prefix' => 'dev'], function () {
@@ -26,7 +26,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => en
         Route::post('sms', 'SmsController@sms');
 
         // 需要登录的路由
-        Route::middleware(['echoyl.remember', 'auth:sanctum', 'echoyl.sa'])->group(function () {
+        Route::middleware(['auth:sanctum', 'echoyl.sa'])->group(function () {
             Route::any('currentUser', 'IndexController@currentUser');
             Route::any('notice', 'IndexController@notice');
             Route::any('clearNotice', 'IndexController@clearNotice');
