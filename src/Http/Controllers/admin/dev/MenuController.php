@@ -794,8 +794,13 @@ class MenuController extends CrudController
         } else {
             // 刷新数据
             $this->updateMenuDesc($menu_ids);
+            $ds = new DevService;
+            $ret = [
+                'currentUser' => $this->getUserInfo(),
+                'allMenus' => $ds->getMenusTree(),
+            ];
 
-            return $this->success(null, [0, $msg]);
+            return $this->success($ret, [0, $msg]);
         }
     }
 
