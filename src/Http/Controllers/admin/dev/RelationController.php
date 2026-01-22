@@ -127,7 +127,7 @@ class RelationController extends CrudController
 
     public function afterPost($id, $data)
     {
-        return $this->createFile($data['model_id']);
+        // return $this->createFile($data['model_id']);
     }
 
     public function destroy()
