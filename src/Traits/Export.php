@@ -88,31 +88,35 @@ trait Export
             }
         }
 
-        $data = $m->with($this->with_column)->get()->toArray();
-        // 先渲染一遍数据 和table页面保持一致 自定义渲染数据使用origin_data读取原始数据
-        if (! method_exists($this, 'exportFormatData')) {
-            // 没有自定义渲染导出数据那么设置一个默认的渲染方法
-            foreach ($data as $key => $val) {
-                $val['origin_data'] = $val;
-                $this->parseData($val, 'decode', 'list');
-                $val = $this->listItem($val);
-                if (! $listData) {
-                    unset($val['origin_data']);
+        $page_size = 1000;
+
+        $m->with($this->with_column)->chunk($page_size, function ($data) use ($es, $listData) {
+            // $data = $data->toArray();
+            if (! method_exists($this, 'exportFormatData')) {
+                // 没有自定义渲染导出数据那么设置一个默认的渲染方法
+                foreach ($data as $key => $val) {
+                    $val['origin_data'] = $val;
+                    $this->parseData($val, 'decode', 'list');
+                    $val = $this->listItem($val);
+                    if (! $listData) {
+                        unset($val['origin_data']);
+                    }
+                    $data[$key] = $val;
                 }
-                $data[$key] = $val;
             }
-        }
 
-        if ($listData && method_exists($this, $listData)) {
-            $data = $this->$listData($data);
-            $formatData = false;
-        } else {
-            $formatData = method_exists($this, 'exportFormatData') ? function ($val) {
-                return $this->exportFormatData($val);
-            } : false;
-        }
+            if ($listData && method_exists($this, $listData)) {
+                $data = $this->$listData($data);
+                $formatData = false;
+            } else {
+                $formatData = method_exists($this, 'exportFormatData') ? function ($val) {
+                    return $this->exportFormatData($val);
+                } : false;
+            }
+            $es = $es->exportPage($data, $formatData);
+        });
 
-        $ret = $es->export($data, $formatData);
+        $ret = $es->getUrl();
 
         return $this->success($ret);
     }

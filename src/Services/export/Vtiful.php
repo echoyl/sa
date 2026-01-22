@@ -17,6 +17,8 @@ class Vtiful
 
     public $data_length = 0;
 
+    public $page_count = 1; // 数据的页数
+
     public $folder = 'export';
 
     public $config;
@@ -220,12 +222,13 @@ class Vtiful
      * 导出列表数据
      *
      * @param [type] $data
-     * @return void
+     * @return $this
      */
     public function export($data, $merges = [])
     {
+        $this_data_count = count($data);
 
-        $this->data_length = count($data);
+        $this->data_length += $this_data_count;
 
         $data_style = Arr::get($this->config, 'data');
 
@@ -237,9 +240,15 @@ class Vtiful
             $this->excel->defaultFormat($default_style);
         }
 
-        $this->top()->head();
+        if ($this->page_count == 1) {
+            // 在第一页的时候初始化顶部和头部
+            $this->top()->head();
+        }
 
         $data_row_number = $this->has_top ? 2 : 1;
+        if ($this->page_count > 1) {
+            $data_row_number += $this->data_length - $this_data_count; // 第二页以后数据开始的行
+        }
 
         if ($row_height) {
             // 设置行高
@@ -257,6 +266,20 @@ class Vtiful
         }
 
         $this->excel->output();
+        unset($data);
+        $this->page_count++;
+
+        return $this;
+
+    }
+
+    /**
+     * 获取导出的文件信息
+     *
+     * @return void
+     */
+    public function getUrl()
+    {
 
         $filename = $this->config['filename'];
         $ret = ['url' => tomedia($this->folder.'/'.$filename), 'download' => $filename];

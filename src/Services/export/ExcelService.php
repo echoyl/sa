@@ -32,6 +32,8 @@ class ExcelService
      */
     public $merges = [];
 
+    public $vtifulInstance;
+
     public function __construct($config, $search = [])
     {
         $config['filename'] = date('YmdHis').'.xlsx';
@@ -60,6 +62,7 @@ class ExcelService
                 $this->search[$key] = $_search;
             }
         }
+        $this->vtifulInstance = new Vtiful($this->config);
     }
 
     /**
@@ -169,11 +172,31 @@ class ExcelService
 
     public function export($data, $formatData = false)
     {
-        $v = new Vtiful($this->config);
+        $v = $this->vtifulInstance;
 
         $data = $this->parseData($data, $formatData);
 
-        return $v->export($data, $this->merges);
+        return $v->export($data, $this->merges)->getUrl();
+    }
+
+    /**
+     * 分页导出数据
+     *
+     * @param [type] $data
+     * @param  bool  $formatData
+     * @return $this
+     */
+    public function exportPage($data, $formatData = false)
+    {
+        $data = $this->parseData($data, $formatData);
+        $this->vtifulInstance = $this->vtifulInstance->export($data, $this->merges);
+
+        return $this;
+    }
+
+    public function getUrl()
+    {
+        return $this->vtifulInstance->getUrl();
     }
 
     public function parseData($data, $formatData)
