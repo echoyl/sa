@@ -22,6 +22,9 @@ class ImageController extends Controller
         if (! isset($size_arr[$size]) || ! class_exists('League\Glide\ServerFactory')) {
             return response()->file(public_path('storage/'.$path));
         }
+        if (! file_exists(public_path('storage/'.$path))) {
+            return false;
+        }
 
         $less11 = version_compare(App::version(), '11') < 0;
 

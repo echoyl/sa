@@ -594,10 +594,10 @@ class CrudController extends ApiBaseController
                             }
                         }
                         $this->model->where('id', $id)->update($data);
-                        
+
                     }
                     if (method_exists($this, 'postData')) {
-                        $item = $item??[];
+                        $item = $item ?? [];
                         $item['state'] = $data['state'];
                         $this->postData($item);
                         $data = $item;
@@ -608,6 +608,7 @@ class CrudController extends ApiBaseController
                 case 'displayorder':
                     $data = ['displayorder' => intval(request('displayorder'))];
                     $this->model->where('id', $id)->update($data);
+
                     return $this->success();
                     break;
                 case 'dragSort':

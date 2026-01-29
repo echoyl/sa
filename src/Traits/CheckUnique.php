@@ -19,7 +19,6 @@ trait CheckUnique
         // $message = '';
         $is_has = false;
         foreach ($uniqueFields as $field) {
-
             $where = [];
             if (is_array($field)) {
                 // 增加了提示语 检测格式 如果有 columns和message
@@ -63,6 +62,7 @@ trait CheckUnique
                 $is_has = true;
                 break;
             }
+            $key = ''; // 重置key
         }
 
         return $is_has ? $key : '';

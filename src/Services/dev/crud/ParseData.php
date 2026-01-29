@@ -239,6 +239,10 @@ class ParseData
                                             $filter_empty = true;
                                             break;
                                         }
+                                        if ($filter_val == 'skip') {
+                                            // 如果设定的值为skip则跳过这条筛选
+                                            continue;
+                                        }
                                     }
 
                                     if (in_array($ww[1], ['in', 'between'])) {

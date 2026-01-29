@@ -360,7 +360,9 @@ class TableColumn
                 $relation = $this->getRelation($model, $this->model['relations']);
                 if (is_array($model)) {
                     $first_level_relation = Utils::arrGet($this->model['relations'], 'name', Utils::uncamelize($model[0]));
-                    $relation['foreign_key'] = $first_level_relation['foreign_key'];
+                    if ($first_level_relation) {
+                        $relation['foreign_key'] = $first_level_relation['foreign_key'];
+                    }
                 }
 
                 // 如果选择了指定的菜单配置
@@ -613,12 +615,12 @@ class TableColumn
         if (isset($setting['pca_level'])) {
             $p = [
                 'level' => intval($setting['pca_level']),
-                'topCode' => Arr::get($setting,'pca_topCode',''),
+                'topCode' => Arr::get($setting, 'pca_topCode', ''),
             ];
         }
         $this->data['fieldProps'] = array_merge([
             'changeOnSelect' => true,
-        ],$p);
+        ], $p);
 
     }
 }
