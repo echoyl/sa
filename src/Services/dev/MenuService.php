@@ -45,7 +45,7 @@ class MenuService
      *
      * @param  int  $id
      * @param  bool | array  $auth_ids
-     * @return void
+     * @return array
      */
     public function getMenuData($id = 0, $auth_ids = false, $prefix = [])
     {
@@ -61,13 +61,14 @@ class MenuService
         $ret = [];
         foreach ($data as $val) {
             $path = array_merge($prefix, [$val['path']]);
+            $routes = $this->getMenuData($val['id'], $auth_ids, $path);
             $item = [
                 'name' => $val['title'],
                 'path' => $val['path'],
                 'ab_path' => '/'.implode('/', $path),
                 'icon' => $val['icon'],
                 'access' => 'routeFilter',
-                'routes' => $this->getMenuData($val['id'], $auth_ids, $path),
+                'routes' => $routes,
                 // 'data' => (new stdClass),
                 'data' => [],
                 'page_type' => $val['page_type'],
@@ -78,6 +79,16 @@ class MenuService
             if ($val['status'] == 0) {
                 // 将菜单隐藏
                 $item['hideInMenu'] = true;
+            } else {
+                // 检测子routes是否全部都是hideInMenu
+                if (count($routes) > 0) {
+                    $show_routes = collect($item['routes'])->filter(function ($v) {
+                        return ! isset($v['hideInMenu']) || ! $v['hideInMenu'];
+                    })->count();
+                    if ($show_routes <= 0) {
+                        $item['hideInMenu'] = true;
+                    }
+                }
             }
             $item['data'] = $this->menuItemData($val);
             $ret[] = $item;
@@ -147,6 +158,9 @@ class MenuService
         $first_child = collect($menu['routes'])->first(function ($v) {
             return ! isset($v['hideInMenu']) || ! $v['hideInMenu'];
         });
+        if (! $first_child) {
+            return;
+        }
         // d($children);
         if (! empty($first_child['routes'])) {
             // d($this->getFirstChildPath($first_child['routes'],$first_child['path']));
