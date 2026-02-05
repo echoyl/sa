@@ -962,7 +962,7 @@ class MenuController extends CrudController
         } elseif ($type == 'panel') {
             $columns = $menu_data['panel'];
         }
-
+        $action_type = request('base.actionType'); // 当复制到其它菜单时需要判断是否更新当前页面
         $ret = [
             'columns' => $columns,
             'data' => empty($item_data) ? false : $item_data,
@@ -971,6 +971,7 @@ class MenuController extends CrudController
                 'schema' => $item,
                 'data' => $menu_data,
             ],
+            'setThisPage' => $action_type == 'copyToMenu' ? false : true,
         ];
         if ($id) {
             // $ret['currentUser'] = $this->getUserInfo();
