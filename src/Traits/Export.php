@@ -13,7 +13,7 @@ trait Export
         $this_model = $this->getModel();
         $model = HelperService::getDevModel($this_model->model_id);
         if (! $model) {
-            return [1, 'model error'];
+            return [1, 'model error', ''];
         }
 
         $index = request('export_index', 0);
@@ -22,7 +22,9 @@ trait Export
 
         $default_config = ['label' => 'default', 'value' => 'default'];
 
-        $export_config = Arr::get($setting, 'export', [$default_config]);
+        $set_export_config = Arr::get($setting, 'export');
+
+        $export_config = $set_export_config ?: [$default_config];
 
         if ($index) {
             $config = collect($export_config)->first(function ($item) use ($index) {
@@ -36,13 +38,13 @@ trait Export
         }
 
         if (! $config) {
-            return [1, 'export config error'];
+            return [1, 'export config error', ''];
         }
 
         // $ds->modelColumn2Export($model);
         $config['config']['dev_menu'] = request('dev_menu'); // 如果未设置表头，直接读取列表的表头进行导出
 
-        return [0, $config];
+        return [0, $config, $set_export_config];
 
     }
 
@@ -55,7 +57,7 @@ trait Export
     public function export($listData = false)
     {
         // 获取导出格式的配置
-        [$code,$config] = $this->getExportConfig();
+        [$code,$config,$set_config] = $this->getExportConfig();
 
         if ($code) {
             return $this->failMsg($config);
@@ -90,9 +92,10 @@ trait Export
 
         $page_size = 1000;
 
-        $m->with($this->with_column)->chunk($page_size, function ($data) use ($es, $listData) {
+        $m->with($this->with_column)->chunk($page_size, function ($data) use ($es, $listData, $set_config) {
             // $data = $data->toArray();
-            if (! method_exists($this, 'exportFormatData')) {
+            // 未手动设置导出模板是需要自动格式化数据，兼容之前手动设置模板后有格式化价格的字段后重复格式的问题
+            if (! method_exists($this, 'exportFormatData') && ! $set_config) {
                 // 没有自定义渲染导出数据那么设置一个默认的渲染方法
                 foreach ($data as $key => $val) {
                     $val['origin_data'] = $val;
