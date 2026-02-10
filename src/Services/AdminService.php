@@ -436,9 +436,7 @@ class AdminService
             // 只记录post的日志
             // 屏蔽敏感数据
             $rq = request()->all();
-            if (isset($rq['post'])) {
-                unset($rq['post']);
-            }
+            Arr::forget($rq, ['post', 'dev_menu']); // 日志记录request详情屏蔽post和dev_menu
             $log_data = self::logParse($rq);
 
             if ($force_type) {
