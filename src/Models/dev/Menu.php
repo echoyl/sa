@@ -15,6 +15,8 @@ class Menu extends Category
      */
     protected $table = 'dev_menu';
 
+    public $locale_columns = ['title'];
+
     public function getParseColumns()
     {
         static $data = [];

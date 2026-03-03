@@ -48,7 +48,7 @@ class Schema
         }
 
         // 检测字段是否开启多语言
-        $locales = LocaleService::list();
+        // $locales = LocaleService::list();
         $top_column_names = ['id']; // 将固定的字段放到最前面
         $top_columns = $ret_columns = [];
         foreach ($columns as $column) {
@@ -58,12 +58,19 @@ class Schema
             $name = Arr::get($column, 'name');
             $title = Arr::get($column, 'title');
             if ($locale) {
-                foreach ($locales as $lang) {
-                    $lang_columns = $column;
-                    $lang_columns['name'] = implode('_', [$name, $lang['name']]);
-                    $lang_columns['title'] = implode('-', [$title, $lang['title']]);
-                    $ret_columns[] = $lang_columns;
-                }
+                // 增加一个多语言字段
+                $ret_columns[] = array_merge($column, [
+                    'name' => implode('_', [$name, 'locale']),
+                    'type' => 'longtext', // 类型为json存储多语言字段内容
+                    'title' => implode('_', [$title, 'locale']),
+                ]);
+                // 之前是按照开启的多语言种类进行生成字段，现在只生成一个字段来存储
+                // foreach ($locales as $lang) {
+                //     $lang_columns = $column;
+                //     $lang_columns['name'] = implode('_', [$name, $lang['name']]);
+                //     $lang_columns['title'] = implode('-', [$title, $lang['title']]);
+                //     $ret_columns[] = $lang_columns;
+                // }
             }
             // 如果类型是 cascader cascaders需要自动注入_ + 字段名称 的字段
             if (in_array($form_type, ['cascader', 'cascaders'])) {
@@ -313,9 +320,10 @@ class Schema
      * 创建数据表
      *
      * @param [type] $model dev_model表数据
+     * @param [type] $drop_columns 是否删除多余字段 默认删除
      * @return string 当前表名不带前缀
      */
-    public function createModelSchema($model)
+    public function createModelSchema($model, $drop_columns = true)
     {
         $all = $this->allModel(true);
 
@@ -371,18 +379,21 @@ class Schema
                 $now_fields[$field_name] = $column;
             }
 
-            // DROP COLUMN `table_name`;
-            $tmp = array_diff_key($dist_field, $now_fields);
-            if (! empty($tmp)) {
-                // 多余的字段则删除
-                foreach ($tmp as $key => $column) {
-                    $sqls[] = " DROP COLUMN `{$key}`";
-                    if (in_array($key, $pris)) {
-                        $pris = collect($pris)->filter(fn ($v) => $v != $key)->values()->all();
-                        $add_primary = true;
+            if ($drop_columns) {
+                // DROP COLUMN `table_name`;
+                $tmp = array_diff_key($dist_field, $now_fields);
+                if (! empty($tmp)) {
+                    // 多余的字段则删除
+                    foreach ($tmp as $key => $column) {
+                        $sqls[] = " DROP COLUMN `{$key}`";
+                        if (in_array($key, $pris)) {
+                            $pris = collect($pris)->filter(fn ($v) => $v != $key)->values()->all();
+                            $add_primary = true;
+                        }
                     }
                 }
             }
+
             $sqls = collect($sqls)->sort()->values()->all();
             if ($add_primary) {
                 $sqls[] = ' DROP PRIMARY KEY';

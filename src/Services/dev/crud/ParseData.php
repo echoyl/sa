@@ -2,12 +2,14 @@
 
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
 /**
  * @property \Echoyl\Sa\Services\AdminAppService $adminService
+ * @property \Echoyl\Sa\Models\Base $model_class
  */
 class ParseData
 {
@@ -31,6 +33,11 @@ class ParseData
         return Arr::get($this->params, $name, $default);
     }
 
+    /**
+     * 获取当前模型需要转化的字段
+     *
+     * @return array
+     */
     public function getParseColumns()
     {
         $model = new $this->model_class;
@@ -40,6 +47,18 @@ class ParseData
         }
 
         return $parse_columns;
+    }
+
+    /**
+     * 获取模型多语言字段
+     *
+     * @return array
+     */
+    public function getLocaleColumns()
+    {
+        $model = new $this->model_class;
+
+        return $model->locale_columns;
     }
 
     public function make(&$data, $in = 'encode', $from = 'detail', $deep = 1)
@@ -57,6 +76,9 @@ class ParseData
         if (! is_array($data)) {
             $data = $data->toArray();
         }
+
+        $locale_columns = $this->getLocaleColumns();
+        $parse_columns = LocaleService::parseColumns($locale_columns, $parse_columns);
 
         foreach ($parse_columns as $col) {
             $name = $col['name'];
@@ -126,12 +148,14 @@ class ParseData
                 ]);
             }
         }
+
         if ($encode) {
-            $data = HelperService::filterNotExistColumns($data, $this->model_class);
+            $data = HelperService::filterNotExistColumns(LocaleService::encode($locale_columns, $data), $this->model_class);
         } else {
             if (isset($data['originData'])) {
                 unset($data['originData']);
             }
+            $data = LocaleService::decode($locale_columns, $data);
         }
 
     }

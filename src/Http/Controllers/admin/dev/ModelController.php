@@ -160,7 +160,7 @@ class ModelController extends CrudController
         $ds = new DevService;
 
         // 默认都重新更新数据表结构
-        $afterPostOptions = request('base.afterPostOptions', ['createModelSchema']);
+        $afterPostOptions = request('base.afterPostOptions', ['createModelSchema', 'dropColumns']);
 
         // 生成文件异步访问 dev/formatFile 路由生成
         // $files = [];
@@ -175,7 +175,7 @@ class ModelController extends CrudController
 
         // 检测如果需要创建数据库表
         if (in_array('createModelSchema', $afterPostOptions)) {
-            $ds->createModelSchema($data);
+            $ds->createModelSchema($data, in_array('dropColumns', $afterPostOptions));
         }
 
         $this->clearCache();

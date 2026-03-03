@@ -6,6 +6,7 @@ use Echoyl\Sa\Console\Commands\HelperCommand;
 use Echoyl\Sa\Console\Commands\SaCommand;
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 
 class ServiceProvider extends LaravelServiceProvider
@@ -31,6 +32,25 @@ class ServiceProvider extends LaravelServiceProvider
     {
         //
         $this->loadRoutesFrom(__DIR__.'/routes.php');
+
+        // 确保在应用 boot 完成后再 prepend 中间件到路由组（兼容没有 Kernel::prependMiddleware 的版本）
+        $this->app->booted(function () {
+            $router = $this->app['router'];
+            if (method_exists($router, 'prependMiddlewareToGroup')) {
+                $router->prependMiddlewareToGroup('api', \Echoyl\Sa\Http\Middleware\RememberToken::class);
+            } else {
+                // 回退到注册别名（确保中间件可用）
+                if (method_exists($router, 'aliasMiddleware')) {
+                    $router->aliasMiddleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
+                }
+            }
+        });
+
+        // 加载 namespaced PHP 翻译 (使用 trans('sa::messages.key'))
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'sa');
+
+        // 加载 JSON 翻译 (使用 __('key'))
+        $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
 
         // 数据迁移
         // $this->loadMigrationsFrom(__DIR__.'/../database/schema');

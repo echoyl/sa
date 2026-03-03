@@ -6,6 +6,7 @@ use Echoyl\Sa\Exceptions\AException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Lang;
 
 trait ApiResponse
 {
@@ -17,7 +18,8 @@ trait ApiResponse
      */
     public function success($data = null, $codeResponse = null): JsonResponse
     {
-        $codeResponse = $codeResponse ?: config('sa.responseEnum.HTTP_OK', ResponseEnum::HTTP_OK);
+        $key = 'sa::response.success';
+        $codeResponse = $codeResponse ?: [ResponseEnum::HTTP_OK[0], Lang::has($key) ? __($key) : ResponseEnum::HTTP_OK[1]];
 
         return $this->jsonResponse('success', $codeResponse, $data, null);
     }
@@ -63,7 +65,8 @@ trait ApiResponse
      */
     public function fail($codeResponse = null, $data = null, $error = null): JsonResponse
     {
-        $codeResponse = $codeResponse ?: config('sa.responseEnum.HTTP_ERROR', ResponseEnum::HTTP_ERROR);
+        $key = 'sa::response.fail';
+        $codeResponse = $codeResponse ?: [ResponseEnum::HTTP_ERROR[0], Lang::has($key) ? __($key) : ResponseEnum::HTTP_ERROR[1]];
 
         return $this->jsonResponse('fail', $codeResponse, $data, $error);
     }

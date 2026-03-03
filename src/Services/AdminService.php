@@ -166,6 +166,7 @@ class AdminService
         $setting['lang'] = Arr::get($setting, 'lang', true);
         // $setting['splitMenus'] = Arr::get($setting,'splitMenus',false);//默认不再开启自动分割菜单
         $setting['locales'] = LocaleService::getSetting($user);
+        $setting['locale'] = env('APP_LOCALE');
         // 加入开发环境时 全局数据
         if ($setting['dev']) {
             $ds = new DevService;

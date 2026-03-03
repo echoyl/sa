@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Services\dev;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\ExportColumn;
 use Echoyl\Sa\Services\dev\utils\FormItem;
@@ -35,9 +36,9 @@ class DevService
      * @param [type] $data 模型数据
      * @return string 不带前缀的表名
      */
-    public function createModelSchema($data)
+    public function createModelSchema($data, $drop_columns = true)
     {
-        return (new UtilsSchema)->createModelSchema($data);
+        return (new UtilsSchema)->createModelSchema($data, $drop_columns);
     }
 
     public function tabel2SchemaJson($name, $parent_id)
@@ -1012,6 +1013,7 @@ class DevService
         $types = $admin_type ?: Utils::packageTypeArr();
 
         $data = HelperService::getChildFromData($model->whereIn('type', $types)->get()->toArray(), function ($item) {
+            $item['title'] = LocaleService::get('title', $item);
 
             return [
                 'id' => $item['id'],

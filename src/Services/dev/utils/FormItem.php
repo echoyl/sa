@@ -4,7 +4,6 @@ namespace Echoyl\Sa\Services\dev\utils;
 
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
-use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 
@@ -677,18 +676,10 @@ class FormItem
      */
     private function placeholder($type = 'select')
     {
-
-        if (LocaleService::enable()) {
-            $arr = [
-                'select' => "{{t('form.pleaseselect')}}",
-                'input' => "{{t('form.pleasetypein')}}",
-            ];
-        } else {
-            $arr = [
-                'select' => '请选择',
-                'input' => '请输入',
-            ];
-        }
+        $arr = [
+            'select' => "{{t('form.pleaseselect')}}",
+            'input' => "{{t('form.pleasetypein')}}",
+        ];
 
         return $arr[$type] ?? '';
     }

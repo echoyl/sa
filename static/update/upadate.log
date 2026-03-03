@@ -143,3 +143,7 @@ ALTER TABLE `la_web_menu`
  ALTER TABLE `la_wechat_pay`
  ADD COLUMN `apikey_v3`  varchar(255) NOT NULL DEFAULT '' COMMENT '商户秘钥v3',
  ADD COLUMN `displayorder`  int(11) NOT NULL DEFAULT 0 COMMENT '排序值';
+
+ 2026-02-25
+ALTER TABLE `la_dev_menu` 
+ADD COLUMN `title_locale` longtext NULL COMMENT '菜单名称多语言内容' AFTER `title`;

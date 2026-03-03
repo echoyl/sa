@@ -9,7 +9,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers', 'prefix' => env('APP
 });
 
 Route::group(['namespace' => 'admin', 'prefix' => env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', 'sadmin')], function () {
-    Route::middleware(['echoyl.remember', 'auth:sanctum', 'echoyl.sa', 'echoyl.permcheck'])->group(function () {
+    Route::middleware(['api', 'echoyl.remember',  'auth:sanctum', 'echoyl.sa', 'echoyl.permcheck'])->group(function () {
         DevService::aliasRoute();
     });
 });

@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Services\dev;
 
 use Echoyl\Sa\Models\dev\Menu;
+use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use stdClass;
 
@@ -61,6 +62,7 @@ class MenuService
         $ret = [];
         foreach ($data as $val) {
             $path = array_merge($prefix, [$val['path']]);
+            $val['title'] = LocaleService::get('title', $val);
             $routes = $this->getMenuData($val['id'], $auth_ids, $path);
             $item = [
                 'name' => $val['title'],
