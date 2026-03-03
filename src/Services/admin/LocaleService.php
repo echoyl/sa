@@ -2,6 +2,7 @@
 
 namespace Echoyl\Sa\Services\admin;
 
+use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
@@ -97,13 +98,12 @@ class LocaleService
         if (! $model || ! $model->locale_columns || ! in_array($name, $model->locale_columns)) {
             return $index == 0 ? $query->where([$item]) : $query->orWhere([$item]);
         }
-        $locales = self::list();
 
-        $fn = function ($q) use ($locales, $item, $name) {
+        $fn = function ($q) use ($item, $name, $model) {
             $q->where([$item]);
-            foreach ($locales as $lang) {
-                $new_item = $item;
-                $new_item[0] = implode('_', [$name, $lang['name']]);
+            $new_item = $item;
+            $new_item[0] = implode('_', [$name, 'locale']);
+            if (Schema::hasColumn($model->getTable(), $new_item[0])) {
                 $q->orWhere([$new_item]);
             }
         };

@@ -39,13 +39,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | 自定义返回的信息 参考 vendor\echoyl\sa\src\Helpers\ResponseEnum.php
+    | 多语言配置
     |--------------------------------------------------------------------------
     |
     | 未设置则使用默认值
     |
     */
-    'responseEnum' => [
-        'CLIENT_HTTP_UNAUTHORIZED_PERM' => [401301, '账号无权操作'],
+    'locales' => [
+        ['title' => '简体中文', 'name' => 'zh-CN'],
+        ['title' => 'English', 'name' => 'en-US'],
+        // ['title' => '繁體中文', 'name' => 'zh-TW'],
     ],
 ];
