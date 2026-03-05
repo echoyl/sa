@@ -28,7 +28,7 @@ class LocaleService
     public static function getSetting($user = false)
     {
         $languages = self::list();
-
+        $ret = [];
         foreach ($languages as $lang) {
             $ret[] = [
                 'name' => $lang['name'],
