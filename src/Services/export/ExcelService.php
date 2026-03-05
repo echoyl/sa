@@ -252,20 +252,21 @@ class ExcelService
                 $names = (is_array($index) ? implode('.', $index) : $index).'s';
                 if (isset($this->search[$names])) {
                     // 修改为解析以逗号为分隔字符串信息
-                    $_vals = explode(',', $_val);
-                    $_val_arr = [];
-                    // d($names,$this->search);
-                    foreach ($_vals as $_vals_val) {
-                        $deep_val = $this->getDeepData($this->search[$names], $_vals_val);
-                        if ($deep_val !== false && ! is_array($deep_val)) {
-                            $_val_arr[] = $deep_val;
+                    $_vals = is_string($_val) ? explode(',', $_val) : (is_numeric($_val) ? [$_val] : $_val);
+                    if (is_array($_vals)) {
+                        $_val_arr = [];
+                        // d($names,$this->search);
+                        foreach ($_vals as $_vals_val) {
+                            $deep_val = $this->getDeepData($this->search[$names], $_vals_val);
+                            if ($deep_val !== false && ! is_array($deep_val)) {
+                                $_val_arr[] = $deep_val;
+                            }
+                        }
+                        if (! empty($_val_arr)) {
+                            // 非空时才覆写数据，否则保持数据原样
+                            $_val = implode(',', $_val_arr);
                         }
                     }
-                    if (! empty($_val_arr)) {
-                        // 非空时才覆写数据，否则保持数据原样
-                        $_val = implode(',', $_val_arr);
-                    }
-
                 }
 
                 if ($type) {

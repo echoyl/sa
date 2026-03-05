@@ -90,33 +90,39 @@ trait Export
             }
         }
 
+        if (! empty($this->with_count)) {
+            $m = $m->withCount($this->with_count);
+        }
+
         $page_size = 1000;
 
         $m->with($this->with_column)->chunk($page_size, function ($data) use ($es, $listData, $set_config) {
+            $rows = [];
             // $data = $data->toArray();
             // 未手动设置导出模板是需要自动格式化数据，兼容之前手动设置模板后有格式化价格的字段后重复格式的问题
             if (! method_exists($this, 'exportFormatData') && ! $set_config) {
                 // 没有自定义渲染导出数据那么设置一个默认的渲染方法
-                foreach ($data as $key => $val) {
+                foreach ($data as $row) {
+                    $val = $row->toArray();
                     $val['origin_data'] = $val;
                     $this->parseData($val, 'decode', 'list');
                     $val = $this->listItem($val);
                     if (! $listData) {
                         unset($val['origin_data']);
                     }
-                    $data[$key] = $val;
+                    $rows[] = $val;
                 }
             }
 
             if ($listData && method_exists($this, $listData)) {
-                $data = $this->$listData($data);
+                $rows = $this->$listData($rows);
                 $formatData = false;
             } else {
                 $formatData = method_exists($this, 'exportFormatData') ? function ($val) {
                     return $this->exportFormatData($val);
                 } : false;
             }
-            $es = $es->exportPage($data, $formatData);
+            $es = $es->exportPage($rows, $formatData);
         });
 
         $ret = $es->getUrl();
