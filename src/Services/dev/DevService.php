@@ -789,7 +789,7 @@ class DevService
                             })->toArray();
                             // d($d['data']);
                         } else {
-                            $d['data'] = '[]';
+                            $d['data'] = []; // 这里如果是空应该是数组格式 而不是字符串'[]'
                         }
                     }
                     $d['with'] = true;
