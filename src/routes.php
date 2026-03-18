@@ -99,6 +99,7 @@ Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => en
                         // 通过已有数据表生成json
                         Route::get('model/getJsonFromTable', 'ModelController@getJsonFromTable');
                         Route::get('model/getFormCodeByColumns', 'ModelController@getFormCodeByColumns');
+                        Route::any('model/fakeData', 'ModelController@fakeData');
                         // 复制关联
                         Route::any('relation/copyToModel', 'RelationController@copyToModel');
 

@@ -9,8 +9,10 @@ use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Creator;
 use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\Dump;
+use Echoyl\Sa\Services\dev\utils\FakeData;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Support\Arr;
 
 class ModelController extends CrudController
 {
@@ -367,5 +369,30 @@ if ($validator->fails())
         ];
 
         return $this->success($data);
+    }
+
+    /**
+     * 生成fake数据
+     *
+     * @return void
+     */
+    public function fakeData()
+    {
+        if (request()->isMethod('post')) {
+            $fs = new FakeData;
+            $base = request('base');
+            $ret = $fs->generate([
+                'columns' => Arr::get($base, 'columns'),
+                'count' => Arr::get($base, 'count', 200),
+                'id' => Arr::get($base, 'id'),
+            ]);
+            if ($ret !== true) {
+                return $this->failMsg($ret);
+            }
+
+            return $this->success([]);
+        } else {
+            return $this->post();
+        }
     }
 }

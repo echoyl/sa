@@ -93,7 +93,7 @@ class SetsService
         $dev_menu = request('dev_menu');
 
         if (request()->isMethod('post') && $method == 'POST') {
-            $post_data = filterEmpty(request('base'), ['watermark']);
+            $post_data = filterEmpty(request('base'), ['watermark', 'tech']);
 
             $post_data = Utils::parseImageInPage($post_data, $dev_menu, $data, 'encode', $deep_img_fields);
 
@@ -181,7 +181,7 @@ class SetsService
             if (! $item && $key == 'setting') {
                 $item = $this->model->where(['key' => $key, 'app_name' => 'deadmin'])->first();
             }
-            Cache::set($cache_key,$item);
+            Cache::set($cache_key, $item);
         }
         $data[$key] = $item;
 

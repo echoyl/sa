@@ -135,7 +135,11 @@ class AdminService
 
         // HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
         $setting['title'] = Arr::get($setting, 'title', 'DeAdmin');
-        $setting['tech'] = Arr::get($setting, 'tech', 'DeAdmin 技术支持');
+        $setting['tech'] = Arr::get($setting, 'tech', ''); // 为空时不显示底部
+        // 没有底部的时候需要设置一个token值(不管是否有底部)
+        if (true || ! $setting['tech']) {
+            Arr::set($setting, 'antdpro.token.pageContainer.paddingBlockPageContainerContent', 0);
+        }
         $setting['subtitle'] = Arr::get($setting, 'subtitle', '后台管理系统');
         $setting['baseurl'] = Arr::get($setting, 'baseurl', '/antadmin/');
         $setting['logo'] = Arr::get($setting, 'logo.0.url');
