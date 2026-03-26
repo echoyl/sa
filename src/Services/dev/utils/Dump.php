@@ -16,6 +16,8 @@ class Dump
 
     public $max_sql_size = 50;
 
+    public $export_model_ids = []; // 存储导出的model id 判断是否去重
+
     public function emptyLine()
     {
         $this->content .= $this->crlf;
@@ -205,14 +207,18 @@ class Dump
         return [0, '操作成功，模型:'.$model_count.' 菜单:'.$menu_count.' 关系:'.$relation_count, $menu_ids];
     }
 
-    public function exportModel($model_id)
+    public function exportModel($model_id, $level = 0)
     {
+        if (in_array($model_id, $this->export_model_ids)) {
+            return [];
+        }
         // 新增递归将所有上级数据也都导出（当导出一个新模型的时候如果有上级的话程序就炸了）暂时不去重了
         $model = Model::where(['id' => $model_id])->with(['relations'])->first();
         $datas = [];
         if (! $model) {
             return $datas;
         }
+        $this->export_model_ids[] = $model_id;
         $model = $model->toArray();
         if ($model['parent_id']) {
             // 存在上级 导出上级数据
@@ -224,6 +230,15 @@ class Dump
             'model' => $model,
             'relations' => $relations,
         ];
+
+        if ($level < 1) {
+            foreach ($relations as $val) {
+                // 这里导出一层的relation的关联模型 - 实际应用中可能存在本地环境有模型但线上未导入的情况，如果从线上拉取到本地可能导致数据丢失
+                if ($val['foreign_model_id']) {
+                    $datas = array_merge($datas, $this->exportModel($val['foreign_model_id'], $level + 1));
+                }
+            }
+        }
 
         return $datas;
     }

@@ -18,7 +18,6 @@ class Category extends Base
         })->sortByDesc('displayorder');
         $ret = [];
         foreach ($data as $val) {
-            $children = $this->format($val['id'], $fields, $parseData);
             if ($parseData) {
                 $item = $parseData($val);
             } else {
@@ -29,6 +28,13 @@ class Category extends Base
                     // $fields['children'] => $this->format($val['id'], $fields),
                 ];
             }
+
+            if (! $item) {
+                // parseData 如果自定义返回空则跳过
+                continue;
+            }
+
+            $children = $this->format($val['id'], $fields, $parseData);
 
             if (! empty($children)) {
                 $item[$fields['children']] = $children;
