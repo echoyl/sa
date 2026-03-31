@@ -62,7 +62,7 @@ class FormItem
             $unset_dataindex = true;
         }
 
-        if (in_array($key, ['id', 'created_at_s'])) {
+        if (in_array($key, ['created_at_s'])) {
             return;
             $this->data = [
                 'dataIndex' => $key,
