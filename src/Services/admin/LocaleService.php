@@ -30,6 +30,10 @@ class LocaleService
         $languages = self::list();
         $ret = [];
         foreach ($languages as $lang) {
+            $configs = static::getLocaleTranslations($lang['name']);
+            if (empty($configs)) {
+                continue;
+            }
             $ret[] = [
                 'name' => $lang['name'],
                 'title' => $lang['title'],
