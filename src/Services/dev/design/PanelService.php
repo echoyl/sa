@@ -24,7 +24,7 @@ class PanelService extends BaseService
         if (! $cpage) {
             $pagination = false;
         } else {
-            $pagination['pageSize'] = $cpage;
+            $pagination['defaultPageSize'] = $cpage;
         }
 
         $config['pagination'] = $pagination;
@@ -40,7 +40,7 @@ class PanelService extends BaseService
         if (! $cpage) {
             $pagination = false;
         } else {
-            $pagination['pageSize'] = $cpage;
+            $pagination['defaultPageSize'] = $cpage;
         }
 
         $config['pagination'] = $pagination;
