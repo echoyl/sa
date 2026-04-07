@@ -6,6 +6,7 @@ use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
+use stdClass;
 
 class LocaleService
 {
@@ -32,12 +33,12 @@ class LocaleService
         foreach ($languages as $lang) {
             $configs = static::getLocaleTranslations($lang['name']);
             if (empty($configs)) {
-                continue;
+                $configs = new stdClass;
             }
             $ret[] = [
                 'name' => $lang['name'],
                 'title' => $lang['title'],
-                'configs' => static::getLocaleTranslations($lang['name']),
+                'configs' => $configs,
             ];
         }
 
