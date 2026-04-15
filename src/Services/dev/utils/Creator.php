@@ -165,13 +165,17 @@ class Creator
                     'value' => 'id',
                 ],
             ],
-            [
+        ];
+
+        if ($category_level > 1) {
+            // 分类层级大于1的话 需要增加额外字段存储层级信息
+            $model_columns[] = [
                 'title' => $c_title,
                 'name' => implode('_', ['', $c_name]),
                 'type' => 'varchar',
                 'length' => 500,
-            ],
-        ];
+            ];
+        }
 
         // 页面中 table 和form 需要增加的字段
         $menu_columns = [
