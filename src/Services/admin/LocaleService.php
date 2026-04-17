@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services\admin;
 
 use Echoyl\Sa\Services\dev\utils\Schema;
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
 use stdClass;
@@ -201,6 +202,8 @@ class LocaleService
     {
         $language = request()->header($name, env('APP_LOCALE', 'zh-CN')); // 默认简中
 
+        $language = $language == 'en' ? 'en-US' : $language; // 英文使用en-US .env文件中默认是en,前端是en-US 需要转化一下
+
         return $language;
     }
 
@@ -233,7 +236,7 @@ class LocaleService
         $locale = $locale ?? app()->getLocale();
 
         $loader = app('translation.loader'); // 通常是 Illuminate\Translation\FileLoader
-        $files = app(\Illuminate\Filesystem\Filesystem::class);
+        $files = app(Filesystem::class);
 
         $result = [];
 
