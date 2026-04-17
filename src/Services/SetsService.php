@@ -181,6 +181,9 @@ class SetsService
             if (! $item && $key == 'setting') {
                 $item = $this->model->where(['key' => $key, 'app_name' => 'deadmin'])->first();
             }
+            if ($item) {
+                $item = $item->toArray();
+            }
             Cache::set($cache_key, $item);
         }
         $data[$key] = $item;
