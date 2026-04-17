@@ -1,6 +1,6 @@
 {
     "name": "echoyl/sa",
-    "description": "echoyl's sa",
+    "description": "echoyl/deadmin 依赖的核心包文件",
     "type": "project",
     "authors": [
         {
@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "php": "^8.0 | ^8.1 | ^8.2 | ^8.3",
-        "laravel/framework": "^9.0 | ^10.0 | ^11.0 | ^12.0",
+        "php": "^8.0 | ^8.1 | ^8.2 | ^8.3 | ^8.4",
+        "laravel/framework": "^9.0 | ^10.0 | ^11.0 | ^12.0 | ^13.0",
         "laravel/sanctum": "^3.0 | ^4.0",
         "mews/captcha": "^3.2",
 		"symfony/var-exporter": "^6.4|^7.0|^8.0"
