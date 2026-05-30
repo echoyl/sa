@@ -72,7 +72,8 @@ class ModelController extends CrudController
     public function copyToFolder()
     {
         $id = request('base.id');
-        $toid = request('base.toid');
+        $toid = request('base.toid'); // 被复制的模型id
+        $toname = request('base.toname'); // 复制后的模型名称
         // 当前模型
         $data = $this->model->where(['id' => $id])->with(['relations'])->first();
         $to_folder = (new Model)->where(['id' => $toid])->first();
@@ -96,6 +97,9 @@ class ModelController extends CrudController
         $data['parent_id'] = $to_folder['id'];
         $data['title'] .= '-复制';
         $data['admin_type'] = $to_folder['admin_type'];
+        if ($toname) {
+            $data['name'] = $toname; // 如果未设定则使用被复制模型名称
+        }
 
         $new_model_id = (new Model)->insertGetId($data);
 
@@ -155,7 +159,7 @@ class ModelController extends CrudController
             return;
         }
 
-        if (env('APP_ENV') != 'local') {
+        if (! HelperService::isDev()) {
             return; // 生产环境直接返回
         }
 
@@ -201,7 +205,7 @@ class ModelController extends CrudController
      */
     public function quickCreate()
     {
-        if (env('APP_ENV') != 'local') {
+        if (! HelperService::isDev()) {
             return $this->fail([1, '环境错误！']);
         }
 
@@ -257,7 +261,7 @@ class ModelController extends CrudController
      */
     public function createModelSchema($id = 0)
     {
-        if (env('APP_ENV') != 'local') {
+        if (! HelperService::isDev()) {
             return $this->fail([1, '环境错误！']);
         }
         $id = $id ?: request('id');
@@ -273,7 +277,7 @@ class ModelController extends CrudController
 
     public function createModelFile()
     {
-        if (env('APP_ENV') != 'local') {
+        if (! HelperService::isDev()) {
             return $this->fail([1, '环境错误！']);
         }
         $id = request('id');
@@ -289,7 +293,7 @@ class ModelController extends CrudController
 
     public function createControllerFile()
     {
-        if (env('APP_ENV') != 'local') {
+        if (! HelperService::isDev()) {
             return $this->fail([1, '环境错误！']);
         }
         $id = request('id');

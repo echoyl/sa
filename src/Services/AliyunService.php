@@ -149,7 +149,7 @@ class AliyunService
     public static function sendSMS($mobile, $data, $params)
     {
         // 注册 SMS_8740008 登录 SMS_8740010 // 审核通过 SMS_183791211 审核失败 SMS_183796303
-        if (env('APP_ENV') == 'local') {
+        if (HelperService::isDev()) {
             // return ['code'=>0,'msg'=>'发送成功'];
             // return ['code'=>0,'msg'=>'发送成功','codex'=>isset($data['code'])?$data['code']:''];
         }

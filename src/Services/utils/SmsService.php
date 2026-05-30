@@ -51,7 +51,7 @@ class SmsService
     {
         $mobile = $this->mobile;
 
-        if ($code == 6666 && env('APP_ENV') == 'local') {
+        if ($code == 6666 && HelperService::isDev()) {
             return true;
         }
         $model = new Smslog;

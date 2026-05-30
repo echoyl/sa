@@ -517,7 +517,7 @@ class CrudController extends ApiBaseController
 
         $id = request('id', 0);
         $id = $id ?: request('base.id', 0);
-        $m = $this->model;
+        $m = $this->getModel();
         if (! empty($this->with_column)) {
             $m = $m->with($this->with_column);
         }

@@ -21,7 +21,7 @@ class WechatService
     public static function wxconfig($url, $config = [])
     {
         $app = self::getApp();
-        if (env('APP_ENV') == 'local') {
+        if (HelperService::isDev()) {
             $wxconfig = json_encode([]);
         } else {
             $app->jssdk->setUrl($url ?: env('APP_URL'));
@@ -354,7 +354,7 @@ class WechatService
     {
         // $app = self::getApp();
         $model = new User;
-        if (env('APP_ENV') == 'local') {
+        if (HelperService::isDev()) {
             return true;
         }
 
@@ -653,7 +653,7 @@ class WechatService
 
         $refund_id = $model->insertGetId($refund_data);
 
-        if (env('APP_ENV') == 'local') {
+        if (HelperService::isDev()) {
             // 模拟退款成功
             $result = [
                 'status' => 'SUCCESS',

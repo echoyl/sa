@@ -175,11 +175,13 @@ class Schema
                 break;
             case 'vachar':
             case 'varchar':
+            case 'varbinary':
+                $type = $val['type'] == 'varbinary' ? 'varbinary' : 'varchar';
                 $length = $length ?: 255;
                 if ($default_value == 'null') {
-                    $field_sql = "`{$name}`  varchar({$length}) DEFAULT NULL COMMENT '{$comment}'";
+                    $field_sql = "`{$name}`  {$type}({$length}) DEFAULT NULL COMMENT '{$comment}'";
                 } else {
-                    $field_sql = "`{$name}`  varchar({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
+                    $field_sql = "`{$name}`  {$type}({$length}) NOT NULL DEFAULT '{$default_value}' COMMENT '{$comment}'";
                 }
                 break;
             case 'date':

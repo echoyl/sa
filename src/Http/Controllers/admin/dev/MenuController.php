@@ -145,8 +145,18 @@ class MenuController extends CrudController
     public function beforePost(&$data, $id, $item)
     {
         // 新增菜单的初始化数据
+        $page_type = $data['page_type'] ?? 'table';
+        //
+        $only_action_types = ['form', 'panel', 'panel2', 'justTable'];
+        if (! in_array($page_type, $only_action_types)) {
+            $path = $data['path'] ?? '';
+            // 检测path是否是数字开头且有.[]()等字符
+            if (preg_match('/^\d|[\.\[\]\(\)]/', $path)) {
+                return $this->failMsg('路径不能以数字开头或者有.[]()等字符');
+            }
+
+        }
         if (! $id) {
-            $page_type = $data['page_type'] ?? 'table';
             $data['page_type'] = $page_type;
 
             if (! isset($data['admin_model_id'])) {
@@ -192,6 +202,7 @@ class MenuController extends CrudController
     {
         $id = request('base.id');
         $toid = request('base.toid');
+        $topath = request('base.topath');
         // 当前菜单
         $data = $this->model->where(['id' => $id])->first();
         $to = $this->model->where(['id' => $toid])->first();
@@ -212,6 +223,9 @@ class MenuController extends CrudController
         $data['parent_id'] = $parent_id;
         $data['title'] .= ' - 复制';
         $data['type'] = $type;
+        if ($topath) {
+            $data['path'] = $topath; // 如果未设定则使用被复制path
+        }
         $this->model->insert($data);
 
         return $this->success('操作成功');
