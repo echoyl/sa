@@ -80,7 +80,16 @@ class SetsService
         return implode('_', [$this->cache_prefix, $key]);
     }
 
-    public function post($key, $deep_img_fields = [], $method = 'POST')
+    /**
+     * 获取或提交配置数据
+     *
+     * @param [type] $key 配置的key值，在数据表中唯一
+     * @param  array  $deep_img_fields  需要解析图片的数组字段 示例 ['titlepic',['logo','image'],['loginBgImage','image']]
+     * @param  string  $method  提交方式
+     * @param  array  $empty_fields  可为空的字段，设置后该字段能被更新为空
+     * @return void
+     */
+    public function post($key, $deep_img_fields = [], $method = 'POST', $empty_fields = ['watermark', 'tech'])
     {
         $app_name = $this->appName();
         // 编辑模式不再读取缓存
@@ -93,7 +102,8 @@ class SetsService
         $dev_menu = request('dev_menu');
 
         if (request()->isMethod('post') && $method == 'POST') {
-            $post_data = filterEmpty(request('base'), ['watermark', 'tech']);
+
+            $post_data = filterEmpty(request('base'), $empty_fields);
 
             $post_data = Utils::parseImageInPage($post_data, $dev_menu, $data, 'encode', $deep_img_fields);
 

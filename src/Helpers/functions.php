@@ -163,13 +163,18 @@ if (! function_exists('filterEmpty')) {
         //     return $v !== '' && $v !== null;
         // },ARRAY_FILTER_USE_BOTH);
         return collect($arr)->filter(function ($v, $k) use ($null_arr) {
-            if (in_array($k, $null_arr) && ($v === '' || is_null($v))) {
+            if (($null_arr === false || in_array($k, $null_arr)) && ($v === '' || is_null($v))) {
                 return true;
             }
 
             // return $v !== null;
             return $v !== '' && $v !== null;
         })->map(function ($v) {
+            if (is_array($v)) {
+                // 深层次过滤 保留字段名称,如果前端传空值，但是使用request获取后，值变成了null这里会转换成空字符串
+                return filterEmpty($v, false);
+            }
+
             return is_null($v) ? '' : $v;
         })->toArray();
     }

@@ -130,7 +130,8 @@ class AdminService
         if (isset($setting['theme'])) {
             $theme = $setting['theme'];
             unset($setting['theme']);
-            $setting = array_merge($theme, $setting);
+            $setting['antdtheme'] = $theme;
+            // $setting = array_merge($theme, $setting);//之前为什么要合并，忘记了，这里会导致antdtheme 失效
         }
 
         // HelperService::deImagesOne($setting,['logo','favicons','loginBgImage']);
@@ -180,6 +181,12 @@ class AdminService
                 'allModelsTree' => $ds->getModelsTree(),
                 'folderModelsTree' => $ds->getModelsFolderTree(),
             ];
+        }
+        // 清除setting中是空的项
+        foreach ($setting as $key => $val) {
+            if (empty($val)) {
+                unset($setting[$key]);
+            }
         }
 
         return $setting;

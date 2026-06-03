@@ -8,6 +8,7 @@ use Echoyl\Sa\Models\Setting;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Process;
 
 class SettingController extends ApiBaseController
@@ -23,8 +24,19 @@ class SettingController extends ApiBaseController
     {
         // 设置系统设置中的菜单，主要可以自动检索出菜单中的图片字段信息
         request()->offsetSet('dev_menu', Utils::$setting_dev_menu);
+        $ret = (new SetsService)->post('setting', [], 'POST', ['watermark', 'tech']);
+        $code = Arr::get($ret, 'code', 1);
+        $data = Arr::get($ret, 'data', []);
+        if (! $code) {
+            $un_set_keys = ['map', 'login', 'socket'];
+            foreach ($data as $k => $v) {
+                if (empty($v) && in_array($k, $un_set_keys)) {
+                    unset($data[$k]);
+                }
+            }
+        }
 
-        return (new SetsService)->post('setting');
+        return ['code' => $code, 'data' => $data];
         // return (new SetsService)->post('setting',[['logo','image'],['loginBgImage','image']]);
     }
 
