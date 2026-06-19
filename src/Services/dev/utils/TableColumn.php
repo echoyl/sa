@@ -557,6 +557,10 @@ class TableColumn
                     'data' => [
                         'actype' => 'state',
                     ],
+                    'options' => [
+                        ['label' => $close, 'value' => 0],
+                        ['label' => $open, 'value' => 1],
+                    ],
                 ],
             ];
             if ($disabled) {

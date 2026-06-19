@@ -57,6 +57,10 @@ class Schema
             $form_type = Arr::get($column, 'form_type');
             $name = Arr::get($column, 'name');
             $title = Arr::get($column, 'title');
+            if ($name == 'id') {
+                // 创建表未添加id字段后，再修改表增加id字段默认会设置id为key
+                $column['pk'] = true;
+            }
             if ($locale) {
                 // 增加一个多语言字段
                 $ret_columns[] = array_merge($column, [
@@ -156,7 +160,11 @@ class Schema
         $name = $val['name'];
         $length = $val['length'] ?? 0;
         $setting = Arr::get($val, 'setting', []);
-        switch ($val['type']) {
+        $type = $val['type'];
+        if ($type == 'vachar') {
+            $type = 'varchar';
+        }
+        switch ($type) {
             case 'int':
                 if (! $default_value) {
                     $default_value = 0;
@@ -168,15 +176,15 @@ class Schema
                 }
                 break;
             case 'bigint':
+            case 'tinyint':
                 if (! $default_value) {
                     $default_value = 0;
                 }
-                $field_sql = "`{$name}`  bigint NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
+                $field_sql = "`{$name}` {$type}  NOT NULL DEFAULT {$default_value} COMMENT '{$comment}'";
                 break;
             case 'vachar':
             case 'varchar':
             case 'varbinary':
-                $type = $val['type'] == 'varbinary' ? 'varbinary' : 'varchar';
                 $length = $length ?: 255;
                 if ($default_value == 'null') {
                     $field_sql = "`{$name}`  {$type}({$length}) DEFAULT NULL COMMENT '{$comment}'";
@@ -353,8 +361,10 @@ class Schema
                 $dist_field[$val[0]] = $val;
                 if ($val['Key'] == 'PRI') {
                     $pris[] = $val[0];
+
                 }
             }
+            $old_pris = $pris; // 原始表是否有主键
             $now_fields = [];
             $sqls = [];
 
@@ -398,7 +408,11 @@ class Schema
 
             $sqls = collect($sqls)->sort()->values()->all();
             if ($add_primary) {
-                $sqls[] = ' DROP PRIMARY KEY';
+                if (! empty($old_pris)) {
+                    // 删除原始主键
+                    $sqls[] = ' DROP PRIMARY KEY';
+                }
+
                 $primarys = collect($pris)->map(fn ($v) => "`{$v}`")->values()->all();
                 $sqls[] = ' ADD PRIMARY KEY ('.implode(',', $primarys).') USING BTREE';
             }

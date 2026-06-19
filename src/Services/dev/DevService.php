@@ -847,7 +847,7 @@ class DevService
                 // 省市区选择器
                 if ($form_type == 'pca') {
                     $d['default'] = '__unset';
-                    $d['level'] = $setting['pca_level'] ?? 1;
+                    $d['level'] = $setting['pca_level'] ?? 3; // 默认设置为3层
                     $d['topCode'] = Arr::get($setting, 'pca_topCode', '');
                 }
                 // modalSelect

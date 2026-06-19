@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Http\Controllers\admin\dev;
 
 use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\Menu;
+use Echoyl\Sa\Services\AdminAppService;
 use Echoyl\Sa\Services\AdminService;
 use Echoyl\Sa\Services\dev\design\FormService;
 use Echoyl\Sa\Services\dev\design\PanelService;
@@ -13,10 +14,11 @@ use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\dev\utils\Dump;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
 /**
- * @property \Echoyl\Sa\Services\AdminAppService $service
+ * @property AdminAppService $service
  */
 class MenuController extends CrudController
 {
@@ -84,14 +86,15 @@ class MenuController extends CrudController
 
     public function afterPost($id, $data)
     {
+        $this->tableConfig($id);
+        $this->formConfig($id);
+        $this->otherConfig($id);
         if ($this->action_type == 'add') {
-            $this->tableConfig($id);
-            $this->formConfig($id);
-            $this->otherConfig($id);
+
         } else {
-            $desc = $data['desc'] ? json_decode($data['desc'], true) : [];
-            $this->updateDesc($desc, $data);
-            $this->otherConfig($id);
+            // $desc = $data['desc'] ? json_decode($data['desc'], true) : [];
+            $this->updateDesc(false, $data);
+            // $this->otherConfig($id);after
         }
         $this->clearCache();
 
@@ -506,7 +509,7 @@ class MenuController extends CrudController
     /**
      * 表单配置信息
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function formConfig($id = 0, $config = [])
     {
@@ -643,6 +646,14 @@ class MenuController extends CrudController
 
     protected function updateDesc($desc, $item, $data = [])
     {
+        if (! $desc) {
+            $desc = $this->getItem('desc', $item['id']); // desc未传数据则重新读取最新数据
+            if (! is_array($desc)) {
+                return $desc;
+            }
+            $desc = $desc['config'];
+        }
+
         $desc = $this->getDescUrl($item, $desc);
 
         $data['desc'] = json_encode($desc);
