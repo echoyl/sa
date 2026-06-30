@@ -253,10 +253,10 @@ class HelperService
      * @param  bool  $fill_empty  是否自动填充 空白数据
      * @return array
      */
-    public static function deImages(&$data, $keys = [], $fill_empty = false)
+    public static function deImages(&$data, $keys = [], $fill_empty = false, $params = [])
     {
         $keys = self::str2Arr($keys);
-        $data = self::parseImages($data, $keys, false);
+        $data = self::parseImages($data, $keys, false, $params);
         if ($fill_empty) {
             foreach ($keys as $key) {
                 if (! isset($data[$key]) || empty($data[$key])) {
@@ -268,10 +268,10 @@ class HelperService
         return $data;
     }
 
-    public static function deImagesArr(&$data, $keys = [])
+    public static function deImagesArr(&$data, $keys = [], $params = [])
     {
         $keys = self::str2Arr($keys);
-        $data = self::parseImages($data, $keys, false);
+        $data = self::parseImages($data, $keys, false, $params);
         foreach ($keys as $key) {
             if (! isset($data[$key]) || empty($data[$key])) {
                 $data[$key] = [];
