@@ -27,6 +27,8 @@ class TableService extends BaseService
             // table 快速设置列字段展示
             $checked = $base['checked'];
             unset($base['checked']);
+            // 默认设置一个宽
+            Arr::set($base, 'props.width', 180);
             if ($checked) {
                 // 勾选 新增
                 $action_type = 'add';

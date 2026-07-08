@@ -7,11 +7,30 @@ use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\HelperService;
 use Faker\Factory;
+use Faker\Generator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class FakeData
 {
+    public $model_class = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var Generator
+     */
+    public $faker = null;
+
+    /**
+     * Undocumented variable
+     *
+     * @var Generator
+     */
+    public $faker_back = null;
+
+    public $select_id_map = []; // 读取class中的关联获取关联模型中的id数组
+
     /**
      * Generate fake data
      *
@@ -38,6 +57,8 @@ class FakeData
             return '模型不存在';
         }
         [$class,$model] = $model_detail;
+        $this->model_class = $class; // 保存当前模型的class
+        $this->getRelationIds();
 
         $table_columns = HelperService::json_validate($model->columns);
 
@@ -46,6 +67,8 @@ class FakeData
         }
 
         $datas = [];
+        $this->faker = $this->getFaker();
+        $this->faker_back = $this->getFaker('zh_TW');
         $form_columns = $this->getColumnsValue($table_columns, $columns);
         for ($i = 0; $i < $count; $i++) {
             $item = $this->getItem($form_columns);
@@ -61,6 +84,35 @@ class FakeData
         $this->updateModelColumns($model, $form_columns);
 
         return true;
+
+    }
+
+    public function getRelationIds()
+    {
+        if (! $this->model_class) {
+            return;
+        }
+        $model = new $this->model_class;
+        $columns = $model->getParseColumns();
+        foreach ($columns as $column) {
+            $type = Arr::get($column, 'type');
+            $class = Arr::get($column, 'class');
+            $name = Arr::get($column, 'name');
+            if (in_array($type, ['select', 'selects'])) {
+                if ($class) {
+                    $class_model = new $class;
+                    $this->select_id_map[$name] = $class_model->limit(100)->pluck('id');
+                } else {
+                    $data = Arr::get($column, 'data');
+                    if ($data) {
+                        $this->select_id_map[$name] = collect($data)->map(fn ($v) => $v['id'])->toArray();
+                    }
+
+                }
+
+            }
+
+        }
 
     }
 
@@ -99,12 +151,12 @@ class FakeData
         return $cust[$lang] ?? $lang;
     }
 
-    public function getFaker()
+    public function getFaker($lang = '')
     {
         if (! class_exists('Faker\Factory')) {
             return false;
         }
-        $faker = Factory::create($this->getLang());
+        $faker = Factory::create($lang ?: $this->getLang());
 
         return $faker;
     }
@@ -123,8 +175,10 @@ class FakeData
 
         $data = [];
         $skip_columns = ['id', 'created_at', 'updated_at', 'displayorder'];
-        $faker = $this->getFaker();
+        $faker = $this->faker;
         $hidden_columns = [];
+        $random_items = [];
+        $lang = $this->getLang();
         foreach ($columns as $column) {
 
             $name = Arr::get($column, 'name');
@@ -144,70 +198,98 @@ class FakeData
             }
             $type = Arr::get($column, 'fake_type');
             $v = false;
-            if ($type) {
-                // 如果设定了值的类型则使用设定的值
-
-                $fake_options = Arr::get($column, 'fake_options');
-
-                switch ($type) {
-                    case 'text':
-                        $v = $faker->text(50);
-                        break;
-                    case 'content':
-                        $v = $faker->paragraphs(5, true);
-                        break;
-                    case 'address':
-                        $v = $faker->address();
-                        break;
-                    case 'username':
-                        $v = $faker->name();
-                        break;
-                    case 'company':
-                        $v = $faker->company();
-                        break;
-                    case 'phoneNumber':
-                        $v = $faker->phoneNumber();
-                        break;
-                    case 'randomNumber':
-                        if ($fake_options) {
-                            [$min,$max] = explode(',', $fake_options);
-                            $v = $faker->numberBetween(intval($min), intval($max));
-                        } else {
-                            $v = $faker->randomNumber(6);
-                        }
-                        break;
-                    case 'randomStr':
-                        if ($fake_options) {
-                            $v = $faker->randomElement(explode(',', $fake_options));
-                        } else {
-                            $v = Str::random(10);
-                        }
-                        break;
-                    case 'password':
-                        $v = $faker->password();
-                        break;
-
+            if (! $type) {
+                $type_map = [
+                    'switch' => 'randomNumber',
+                    'image' => 'image',
+                    'radioButton' => 'randomStr',
+                    'tinyEditor' => 'content',
+                    'textarea' => 'text',
+                    'varchar' => 'text',
+                    'select' => 'randomStr',
+                    'selects' => 'randomStr',
+                    'pca' => 'pca',
+                    'mapInput' => 'mapInput',
+                ];
+                // 如果没有设定值类型，则根据form_type自动生成值
+                $form_type = Arr::get($column, 'form_type', Arr::get($column, 'type'));
+                $type = Arr::get($type_map, $form_type);
+                $name = Arr::get($column, 'name');
+                if (in_array($form_type, ['select', 'selects']) && isset($this->select_id_map[$name])) {
+                    $random_items = $this->select_id_map[$name];
                 }
-            } else {
-                // 根据form_type 自动生成值
-                $form_type = Arr::get($column, 'form_type');
-                switch ($form_type) {
-                    case 'switch':
-                        $v = $faker->numberBetween(0, 1);
-                        break;
-                    case 'image':
-                        $v = json_encode([['value' => 'example.png']]);
-                        break;
-                    case 'radioButton':
-                        $json = Arr::get($column, 'setting.json');
-                        if ($json) {
-                            $v = $faker->randomElement(collect($json)->map(fn ($v) => $v['id'])->toArray());
-                        }
+                // 下面通过字段名称默认配置生成数据的类型
+                if ($name == 'username') {
+                    $type = 'username';
                 }
-
+                if ($name == 'address') {
+                    $type = 'address';
+                }
+                if ($name == 'company') {
+                    $type = 'company';
+                }
+                if ($name == 'mobile' || $name == 'phone' || $name == 'tel') {
+                    $type = 'phoneNumber';
+                }
             }
+
+            $fake_options = Arr::get($column, 'fake_options');
+
+            switch ($type) {
+                case 'text':
+                    $v = $lang == 'zh_CN' ? $this->faker_back->realText(20) : $faker->text(20);
+                    break;
+                case 'content':
+                    $v = $lang == 'zh_CN' ? $this->faker_back->realText(200) : $faker->paragraphs(5, true);
+                    break;
+                case 'address':
+                    $v = $faker->address();
+                    break;
+                case 'username':
+                    $v = $faker->name();
+                    break;
+                case 'company':
+                    $v = $faker->company();
+                    break;
+                case 'phoneNumber':
+                    $v = $faker->phoneNumber();
+                    break;
+                case 'randomNumber':
+                    [$min,$max] = $fake_options ? explode(',', $fake_options) : [0, 1];
+                    $v = $faker->numberBetween(intval($min), intval($max));
+                    break;
+                case 'randomStr':
+                    $fake_options = $fake_options ? explode(',', $fake_options) : $random_items;
+                    if ($fake_options) {
+                        $v = $faker->randomElement($fake_options);
+                    } else {
+                        $v = Str::random(10);
+                    }
+                    break;
+                case 'password':
+                    $v = $faker->password();
+                    break;
+                case 'image':
+                    $v = json_encode([['value' => 'example.png']]);
+                    break;
+                case 'pca':
+                    // 随机一个省市区
+                    $v = '310000'; // 上海市
+                    $data['city'] = '310100'; // 上海市
+                    $data['area'] = $faker->randomElement(['310101', '310104', '310105', '310106', '310107', '310109', '310110', '310112', '310113', '310114', '310115', '310116', '310117', '310118', '310120', '310151']);
+                    break;
+                case 'mapInput':// 地图选点
+                    $v = $faker->randomFloat(8, 31.20869, 31.25097);
+                    $data['lng'] = $faker->randomFloat(8, 121.4027, 121.49231);
+                    break;
+            }
+
             if ($v !== false) {
-                $data[$name] = $v;
+                if (! isset($data[$name])) {
+                    // 未设置的字段，直接赋值
+                    $data[$name] = $v;
+                }
+
                 if (in_array($name, $hidden_columns)) {
                     $data['_'.$name] = json_encode([$v]);
                 }
