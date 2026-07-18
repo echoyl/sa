@@ -50,10 +50,10 @@
 
 #### 2.1.1请求参数 (Body)
 
-| 参数名   | 类型   | 必填 | 描述                           | 示例值   |
-| :------- | :----- | :--- | :----------------------------- | :------- |
-| username | String | 是   | 用户名或注册邮箱               | `admin`  |
-| password | String | 是   | 用户密码（建议前端加密后传输） | `123456` |
+| 参数名   | 类型   | 必填 | 描述                 | 示例值   |
+| :------- | :----- | :--- | :------------------- | :------- |
+| username | String | 是   | 用户名或注册邮箱     | `admin`  |
+| password | String | 是   | 用户密码（明文传输） | `123456` |
 
 #### 2.1.2响应参数
 
@@ -524,22 +524,22 @@ curl -X POST "http://localhost:8000/sadmin/dev/menu" \
 
 ### 4.0 模型字段说明
 
-| 字段名称       | 类型         | 默认值         | 描述                                      |
-| :------------- | :----------- | :------------- | :---------------------------------------- |
-| id             | int          | AUTO_INCREMENT | id                                        |
-| title          | varchar(255) | ''             | 标题                                      |
-| name           | varchar(255) | ''             | 名称                                      |
-| type           | int          | 0              | 0-文件夹, 1-模型                          |
-| columns        | text         | NULL           | 模型的表字段信息                          |
-| created_at     | datetime     | NULL           | 创建时间                                  |
-| updated_at     | datetime     | NULL           | 更新时间                                  |
-| parent_id      | int          | 0              | 上级id                                    |
-| displayorder   | int          | 0              | 显示排序                                  |
-| leixing        | varchar(255) | ''             | 模型类型 (category \| normal)             |
-| admin_type     | varchar(255) | ''             | system - 系统模型 \| other - 所属项目模型 |
-| search_columns | text         | NULL           | 字段搜索配置                              |
-| unique_fields  | varchar(255) | ''             | 模型的唯一索引字段                        |
-| setting        | text         | NULL           | 其它设置都放这                            |
+| 字段名称       | 类型         | 默认值         | 描述                                                         |
+| :------------- | :----------- | :------------- | :----------------------------------------------------------- |
+| id             | int          | AUTO_INCREMENT | id                                                           |
+| title          | varchar(255) | ''             | 标题                                                         |
+| name           | varchar(255) | ''             | 名称                                                         |
+| type           | int          | 0              | 0-文件夹, 1-模型                                             |
+| columns        | text         | NULL           | 模型的表字段信息                                             |
+| created_at     | datetime     | NULL           | 创建时间                                                     |
+| updated_at     | datetime     | NULL           | 更新时间                                                     |
+| parent_id      | int          | 0              | 上级id                                                       |
+| displayorder   | int          | 0              | 显示排序                                                     |
+| leixing        | varchar(255) | ''             | 模型类型 (category - 分类 \| normal - 通用 \| auth - 可登录) |
+| admin_type     | varchar(255) | ''             | system - 系统模型 \| other - 所属项目模型                    |
+| search_columns | text         | NULL           | 字段搜索配置                                                 |
+| unique_fields  | varchar(255) | ''             | 模型的唯一索引字段                                           |
+| setting        | text         | NULL           | 其它设置都放这                                               |
 
 #### 4.0.1 columns 字段配置
 
@@ -606,6 +606,23 @@ curl -X POST "http://localhost:8000/sadmin/dev/menu" \
 	{ "label": "页面配置 - Config", "value": "config" }
 ]
 ```
+
+#### 4.0.2 setting 字段配置
+
+模型未涉及到以下功能则不传setting字段
+
+| 参数名               | 类型   | 描述                     | 示例值         |
+| :------------------- | :----- | :----------------------- | :------------- |
+| soft_delete          | bool   | 是否开启软删除           | true \| false  |
+| with_system_admin_id | bool   | 是否自动插入系统用户ID   | true \| false  |
+| global_data_search   | bool   | 是否使用全局过滤数据     | true \| false  |
+| global_post_check    | bool   | 是否使用全局检测提交数据 | true \| false  |
+| has_uuids            | bool   | 是否开启自动插入uuid     | true \| false  |
+| has_uuids_name       | string | UUID字段名               | sys_admin_uuid |
+| justModelFile        | bool   | 是否仅生成模型文件       | true \| false  |
+| justControllerFile   | bool   | 是否仅生成控制器文件     | true \| false  |
+| openDragSort         | bool   | 是否开启拖拽排序         | true \| false  |
+| with_platform_id     | bool   | 是否开启Platform字段     | true \| false  |
 
 ### 4.1 获取模型列表
 
@@ -743,7 +760,7 @@ curl -X POST "http://localhost:8000/sadmin/dev/model" \
 | model_id               | int          | 0              | 所属模型id                                                             |
 | title                  | varchar(255) | ''             | 关系名称                                                               |
 | name                   | varchar(255) | ''             | 模型关系名称                                                           |
-| type                   | varchar(255) | ''             | 关系类型 (one \| many)                                                 |
+| type                   | varchar(255) | ''             | 关系类型 (one \| many \| cascaders \| cascader)                        |
 | foreign_model_id       | int          | 0              | 关联模型id                                                             |
 | foreign_key            | varchar(255) | ''             | 关联模型字段名称                                                       |
 | local_key              | varchar(255) | ''             | 当前模型的字段名称                                                     |
