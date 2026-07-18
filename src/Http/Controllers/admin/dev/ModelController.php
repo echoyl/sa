@@ -6,6 +6,7 @@ use Echoyl\Sa\Http\Controllers\admin\CrudController;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\ModelService;
 use Echoyl\Sa\Services\dev\utils\Creator;
 use Echoyl\Sa\Services\dev\utils\Dev;
 use Echoyl\Sa\Services\dev\utils\Dump;
@@ -140,7 +141,9 @@ class ModelController extends CrudController
             unset($data['afterPostOptions']);
         }
         if (isset($data['columns'])) {
-            $data['columns'] = array_values(collect($data['columns'])->sortBy('name')->toArray());
+            // 处理columns逻辑，新增默认字段，排序等
+            $ms = new ModelService;
+            $data['columns'] = $ms->moreColumns($data, $item);
         }
 
     }

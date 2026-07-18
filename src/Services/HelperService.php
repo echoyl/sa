@@ -7,6 +7,7 @@ use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Services\admin\LocaleService;
+use Echoyl\Sa\Services\admin\PlatformService;
 use Echoyl\Sa\Services\dev\crud\CrudService;
 use Echoyl\Sa\Services\dev\utils\Schema;
 use Exception;
@@ -572,6 +573,25 @@ class HelperService
         return strtolower(preg_replace('/([a-z])([A-Z])/', '$1'.$separator.'$2', $camelCaps));
     }
 
+    /**
+     * 获取数据信息，如果参数是json格式，则解析为数组，否则原样返回
+     *
+     * @param [type] $data
+     * @return array
+     */
+    public static function getJson($data)
+    {
+        if (! is_string($data)) {
+            return $data;
+        }
+        $is_json = Str::isJson($data);
+        if ($is_json) {
+            return json_decode($data, true);
+        }
+
+        return $data;
+    }
+
     public static function json_validate($string)
     {
         // decode the JSON data
@@ -900,5 +920,16 @@ class HelperService
         }
 
         return $a;
+    }
+
+    /**
+     * 获取平台service class 默认使用包中的class，可以自定义继承该类重写方法
+     * 不设置默认值，如果没有配置择表示不开启平台功能
+     *
+     * @return PlatformService
+     */
+    public static function getPlatformService()
+    {
+        return config('sa.platformService');
     }
 }

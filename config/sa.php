@@ -50,4 +50,15 @@ return [
         ['title' => 'English', 'name' => 'en-US'],
         // ['title' => '繁體中文', 'name' => 'zh-TW'],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | PlatformService 配置
+    |--------------------------------------------------------------------------
+    |
+    | 默认使用包中的service
+    |
+    */
+    //'platformService' => PlatformService::class, // 平台service 配置后会开启平台功能
+    //'platformClass' => Enterprise::class, // 平台模型
 ];

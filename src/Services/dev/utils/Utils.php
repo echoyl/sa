@@ -46,6 +46,18 @@ class Utils
         'config' => 'jsonForm',
     ];
 
+    /**
+     * 默认label显示
+     *
+     * @var array
+     */
+    public static $label_map = [
+        'open' => '启用',
+        'close' => '禁用',
+        'yes' => '是',
+        'no' => '否',
+    ];
+
     public static $setting_dev_menu = [
         'desc' => [
             'tabs' => [

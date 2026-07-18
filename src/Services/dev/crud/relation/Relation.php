@@ -28,9 +28,11 @@ class Relation
             $type = $column['type'];
             $name = $column['name'];
 
-            $disable_after_post = Arr::get($column, 'setting.disable_after_post', false);
+            // $disable_after_post = Arr::get($column, 'setting.disable_after_post', false);
+            // 现在修改成默认关闭状态，开启的话需要在关联设置中开启
+            $enable_after_post = Arr::get($column, 'setting.enable_after_post', false);
 
-            if ($disable_after_post) {
+            if (! $enable_after_post) {
                 // 禁用了关联后续操作
                 continue;
             }

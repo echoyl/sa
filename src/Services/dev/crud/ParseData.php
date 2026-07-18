@@ -2,14 +2,18 @@
 
 namespace Echoyl\Sa\Services\dev\crud;
 
+use Echoyl\Sa\Models\Base;
 use Echoyl\Sa\Services\admin\LocaleService;
+use Echoyl\Sa\Services\AdminAppService;
 use Echoyl\Sa\Services\dev\utils\Schema;
+use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
 /**
- * @property \Echoyl\Sa\Services\AdminAppService $adminService
- * @property \Echoyl\Sa\Models\Base $model_class
+ * @property AdminAppService $adminService
+ * @property Base $model_class
  */
 class ParseData
 {
@@ -38,9 +42,9 @@ class ParseData
      *
      * @return array
      */
-    public function getParseColumns()
+    public function getParseColumns($model = false)
     {
-        $model = new $this->model_class;
+        $model = $this->getModel($model);
         $parse_columns = [];
         if (method_exists($model, 'getParseColumns')) {
             $parse_columns = $model->getParseColumns();
@@ -54,11 +58,14 @@ class ParseData
      *
      * @return array
      */
-    public function getLocaleColumns()
+    public function getLocaleColumns($model = false)
     {
-        $model = new $this->model_class;
+        return $this->getModel($model)->locale_columns;
+    }
 
-        return $model->locale_columns;
+    public function getModel($model = false)
+    {
+        return $model ?: new $this->model_class;
     }
 
     public function make(&$data, $in = 'encode', $from = 'detail', $deep = 1)
@@ -67,7 +74,9 @@ class ParseData
         $action_type = $this->getParam('action_type', 'list'); // list add edit
         $max_deep = 3;
 
-        $parse_columns = $this->getParseColumns();
+        $model = $this->getModel();
+
+        $parse_columns = $this->getParseColumns($model);
 
         $can_be_null_columns = $this->getParam('can_be_null_columns'); // 这个属性 后面需要设置在model中
 
@@ -77,7 +86,15 @@ class ParseData
             $data = $data->toArray();
         }
 
-        $locale_columns = $this->getLocaleColumns();
+        // 检测模型是否有 需要自动填充admin user id或平台id
+        if ($model->with_system_admin_id) {
+            $data = $model->getSysAdminIdData($data);
+        }
+        if ($model->with_platform_id) {
+            $data = $model->getPlatformIdData($data);
+        }
+
+        $locale_columns = $this->getLocaleColumns($model);
         $parse_columns = LocaleService::parseColumns($locale_columns, $parse_columns);
 
         foreach ($parse_columns as $col) {
@@ -112,13 +129,12 @@ class ParseData
                     }
                 } else {
                     if ($deep <= $max_deep && $isset && $val) {
-                        $cls = new $col['class'];
                         // d($name,$val,$max_deep);
                         // model类型只支持1级 多级的话 需要更深层次的with 这里暂时不实现了
                         // 思路 需要在生成controller文件的 with配置中 继续读取关联模型的关联
                         // 20240930 更深一层的 parseWiths 暂时取消掉
                         // $this->parseWiths($val,$cls_p_c);
-                        $ps = new ParseData($cls);
+                        $ps = new ParseData($col['class']);
                         if ($type == 'models') {
                             foreach ($val as $k => $v) {
                                 // 1对多不获取withs的内容了
@@ -198,7 +214,7 @@ class ParseData
      *
      * @param [type] $m
      * @param  bool  $origin_model
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return Model
      */
     public function globalDataSearch($m, $origin_model = false)
     {
@@ -223,6 +239,7 @@ class ParseData
         $set_this = $this->getParam('set_this');
 
         foreach ($parse_columns as $with) {
+            $name = '';
             if (isset($with['with'])) {
                 $name = $with['name'].'s';
                 if (isset($with['class'])) {
@@ -314,7 +331,11 @@ class ParseData
                 // 已经默认 在select 中 columns 加入了label和value字段 不再处理数据
                 // $table_menu[$with['name']] = $with['data']??$data[$name];
                 // 这里处理下数据 之后将移除
-                $table_menu_data = $with['data'] ?? $data[$name];
+                $default = [
+                    ['label' => Utils::$label_map['close'], 'value' => 0],
+                    ['label' => Utils::$label_map['open'], 'value' => 1],
+                ];
+                $table_menu_data = $with['data'] ?? Arr::get($data, $name, $default);
                 $table_menu[$with['name']] = collect($table_menu_data)->map(function ($v) {
                     if (isset($v['id'])) {
                         $v['value'] = $v['id'];

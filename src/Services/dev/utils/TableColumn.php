@@ -531,8 +531,8 @@ class TableColumn
     public function switch()
     {
         $setting = $this->schema['setting'] ?? [];
-        $open = $setting['open'] ?? '开';
-        $close = $setting['close'] ?? '关';
+        $open = $setting['open'] ?? Utils::$label_map['open'];
+        $close = $setting['close'] ?? Utils::$label_map['close'];
         // switch开关
         // 是switch 或者select 需要设置数据类型为enum
         // $valueEnum = new stdClass;

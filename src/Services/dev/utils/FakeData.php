@@ -101,7 +101,7 @@ class FakeData
             if (in_array($type, ['select', 'selects'])) {
                 if ($class) {
                     $class_model = new $class;
-                    $this->select_id_map[$name] = $class_model->limit(100)->pluck('id');
+                    $this->select_id_map[$name] = $class_model->limit(100)->pluck('id')->toArray();
                 } else {
                     $data = Arr::get($column, 'data');
                     if ($data) {
@@ -177,10 +177,9 @@ class FakeData
         $skip_columns = ['id', 'created_at', 'updated_at', 'displayorder'];
         $faker = $this->faker;
         $hidden_columns = [];
-        $random_items = [];
         $lang = $this->getLang();
         foreach ($columns as $column) {
-
+            $random_items = [];
             $name = Arr::get($column, 'name');
             if (substr($name, 0, 1) == '_') {
                 // 以 _ 开始的字段都是隐藏字段 为了包含选中数据全部信息的数据，都是json格式
@@ -199,38 +198,42 @@ class FakeData
             $type = Arr::get($column, 'fake_type');
             $v = false;
             if (! $type) {
-                $type_map = [
-                    'switch' => 'randomNumber',
-                    'image' => 'image',
-                    'radioButton' => 'randomStr',
-                    'tinyEditor' => 'content',
-                    'textarea' => 'text',
-                    'varchar' => 'text',
-                    'select' => 'randomStr',
-                    'selects' => 'randomStr',
-                    'pca' => 'pca',
-                    'mapInput' => 'mapInput',
-                ];
-                // 如果没有设定值类型，则根据form_type自动生成值
-                $form_type = Arr::get($column, 'form_type', Arr::get($column, 'type'));
-                $type = Arr::get($type_map, $form_type);
-                $name = Arr::get($column, 'name');
-                if (in_array($form_type, ['select', 'selects']) && isset($this->select_id_map[$name])) {
-                    $random_items = $this->select_id_map[$name];
-                }
                 // 下面通过字段名称默认配置生成数据的类型
-                if ($name == 'username') {
-                    $type = 'username';
+                $fieldnames = [
+                    'username' => 'username',
+                    'address' => 'address',
+                    'company' => 'company',
+                    'mobile' => 'phoneNumber',
+                    'phone' => 'phoneNumber',
+                    'tel' => 'phoneNumber',
+                    'email' => 'email',
+                ];
+                $type = $fieldnames[$name] ?? false;
+                if (! $type) {
+                    $type_map = [
+                        'switch' => 'randomNumber',
+                        'image' => 'image',
+                        'radioButton' => 'randomStr',
+                        'tinyEditor' => 'content',
+                        'textarea' => 'text',
+                        'varchar' => 'text',
+                        'select' => 'randomStr',
+                        'selects' => 'randomStr',
+                        'pca' => 'pca',
+                        'mapInput' => 'mapInput',
+                        'datetime' => 'datetime',
+                        'date' => 'date',
+                        'digit' => 'digit',
+                        'email' => 'email',
+                    ];
+                    // 如果没有设定值类型，则根据form_type自动生成值
+                    $form_type = Arr::get($column, 'form_type', Arr::get($column, 'type'));
+                    $type = Arr::get($type_map, $form_type);
+                    if (in_array($form_type, ['select', 'selects', 'modalSelect']) && isset($this->select_id_map[$name])) {
+                        $random_items = $this->select_id_map[$name];
+                    }
                 }
-                if ($name == 'address') {
-                    $type = 'address';
-                }
-                if ($name == 'company') {
-                    $type = 'company';
-                }
-                if ($name == 'mobile' || $name == 'phone' || $name == 'tel') {
-                    $type = 'phoneNumber';
-                }
+
             }
 
             $fake_options = Arr::get($column, 'fake_options');
@@ -258,12 +261,15 @@ class FakeData
                     [$min,$max] = $fake_options ? explode(',', $fake_options) : [0, 1];
                     $v = $faker->numberBetween(intval($min), intval($max));
                     break;
+                case 'digit':
+                    $v = $faker->numberBetween(10, 1000);
+                    break;
                 case 'randomStr':
-                    $fake_options = $fake_options ? explode(',', $fake_options) : $random_items;
-                    if ($fake_options) {
+                    $fake_options = $fake_options ? (! is_numeric($fake_options) ? explode(',', $fake_options) : $fake_options) : $random_items;
+                    if (is_array($fake_options) && ! empty($fake_options)) {
                         $v = $faker->randomElement($fake_options);
                     } else {
-                        $v = Str::random(10);
+                        $v = Str::random(is_numeric($fake_options) ? $fake_options : 10);
                     }
                     break;
                 case 'password':
@@ -281,6 +287,15 @@ class FakeData
                 case 'mapInput':// 地图选点
                     $v = $faker->randomFloat(8, 31.20869, 31.25097);
                     $data['lng'] = $faker->randomFloat(8, 121.4027, 121.49231);
+                    break;
+                case 'datetime':
+                    $v = $faker->dateTimeBetween('-1 years', 'now')->format('Y-m-d H:i:s');
+                    break;
+                case 'date':
+                    $v = $faker->dateTimeBetween('-1 years', 'now')->format('Y-m-d');
+                    break;
+                case 'email':
+                    $v = $faker->email();
                     break;
             }
 

@@ -665,9 +665,6 @@ class CrudController extends ApiBaseController
                 if ($check_uniue_result) {
                     return $this->failMsg($check_uniue_result);
                 }
-                if ($this->model->with_system_admin_id) {
-                    $data = $this->model->getSysAdminIdData($data);
-                }
 
                 $id = $newModel->insertGetId($data);
             }

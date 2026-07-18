@@ -247,6 +247,13 @@ class AdminService
             'menuData' => self::menuData($user),
         ];
 
+        $platform_service = HelperService::getPlatformService();
+
+        if ($platform_service) {
+            // 检测是否开启平台配置，用户信息返回平台列表，可以在前端页面中切换
+            $info['platforms'] = $platform_service::getList($user);
+        }
+
         return $info;
     }
 

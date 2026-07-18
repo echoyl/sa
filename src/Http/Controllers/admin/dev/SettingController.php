@@ -6,6 +6,7 @@ use Echoyl\Sa\Http\Controllers\ApiBaseController;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\Setting;
 use Echoyl\Sa\Services\dev\DevService;
+use Echoyl\Sa\Services\dev\ModelService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\SetsService;
 use Illuminate\Support\Arr;
@@ -56,6 +57,10 @@ class SettingController extends ApiBaseController
             // 文件夹直接跳过
             return $this->success();
         }
+
+        // 检测处理是否有关联需要创建或更新
+        $ms = new ModelService;
+        $ms->moreRelations($model);
 
         $ds = new DevService;
 

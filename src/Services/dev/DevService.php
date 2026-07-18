@@ -127,6 +127,7 @@ class DevService
         $traits = [
             'soft_delete' => ['SoftDeletes', 'use Illuminate\Database\Eloquent\SoftDeletes;'],
             'with_system_admin_id' => ['InsertAdminId', 'use Echoyl\Sa\Traits\InsertAdminId;'],
+            'with_platform_id' => ['WithPlatformId', 'use Echoyl\Sa\Traits\WithPlatformId;'],
             'global_data_search' => ['AdminDataSearch', 'use Echoyl\Sa\Traits\AdminDataSearch;'],
             'global_post_check' => ['AdminPostCheck', 'use Echoyl\Sa\Traits\AdminPostCheck;'],
             'has_uuids' => ['HasUuids', 'use Illuminate\Database\Eloquent\Concerns\HasUuids;'],
@@ -1313,10 +1314,14 @@ class DevService
     public static function modelItem($val)
     {
         $columns = Arr::get($val, 'columns', []);
+        $setting = Arr::get($val, 'setting', []);
+        $setting = HelperService::json_validate($setting);
+
         if (! empty($columns)) {
             $json = HelperService::json_validate($columns);
             $columns = $json !== false ? $json : $columns;
         }
+
         $search_columns = Arr::get($val, 'search_columns', []);
 
         if (! empty($search_columns)) {

@@ -7,7 +7,19 @@ use Illuminate\Support\Arr;
 
 class PlatformService
 {
+    /**
+     * 关联的platform_id字段名称
+     *
+     * @var string
+     */
     public static $platform_key = 'platform_id';
+
+    /**
+     * 平台表中的title字段名称
+     *
+     * @var string
+     */
+    public static $platform_title = 'title';
 
     /**
      * @var array 可使用 0 和 当前平台的数据
@@ -27,7 +39,7 @@ class PlatformService
     public static $deny_table_names = ['platform'];
 
     /**
-     * @var string 平台表名
+     * @var string 平台表名 配置platformClass后自动使用该对象的表名
      */
     public static $platform_table = 'platform';
 
@@ -39,34 +51,64 @@ class PlatformService
      */
     public static $user_id_tabel = ['perm_log'];
 
+    /**
+     * 获取平台表名 如果有自定义的platformClass 则使用该对象的表名，否则使用platform_table
+     *
+     * @return void
+     */
+    public static function getPlatformTable()
+    {
+        $class = static::getPlatformClass();
+        if ($class) {
+            return (new $class)->getTable();
+        } else {
+            return static::$platform_table;
+        }
+    }
+
+    public static function getPlatformClass()
+    {
+        return config('sa.platformClass');
+    }
+
     public static function search($m, $model)
     {
-        if (AdminService::isSuper()) {
-            // 超级管理员不需要搜索过滤
-            return $m;
-        }
+        $platform_key = static::$platform_key;
+        $user_platform_id = static::getUserPlatformId();
 
         $table_name = $model->getTable();
-
-        if (static::isDeny($table_name)) {
-            return $m->where(['id' => -1]);
-        }
-
-        $user = AdminService::user();
-        $platform_key = static::$platform_key;
-        $user_platform_id = Arr::get($user, $platform_key);
 
         // 是否可以使用0 和当前平台的数据
         $can_use_public_data = in_array($table_name, static::$no_table_names);
 
-        if (in_array($table_name, static::$platform_table_names)) {
+        if (in_array($table_name, static::$platform_table_names) || $model->with_platform_id) {
+            if (AdminService::isSuper()) {
+                // 增加平台切换后要读取header中的platform_id
+                $request_id = request($platform_key);
+                if ($request_id || ! $user_platform_id) {
+                    // 如果有请求参数,则使用请求参数,没有获取到user_platform_id也不做数据过滤
+                    return $m;
+                }
+            }
             if ($can_use_public_data) {
                 $m = $m->whereIn($platform_key, [$user_platform_id, 0]);
             } else {
                 $m = $m->where($platform_key, $user_platform_id);
             }
 
-        } elseif ($table_name == static::$platform_table) {
+            return $m;
+        }
+
+        if (AdminService::isSuper()) {
+            // 超级管理员不需要搜索过滤
+            return $m;
+        }
+
+        if (static::isDeny($table_name)) {
+            return $m->where(['id' => -1]);
+        }
+
+        if ($table_name == static::getPlatformTable()) {
             $m = $m->where('id', $user_platform_id);
         } else {
             $sys_admin_ids = static::adminIds($user_platform_id, $can_use_public_data);
@@ -104,7 +146,7 @@ class PlatformService
         $key_name = 'sys_admin_id';
         $platform_key = static::$platform_key;
 
-        if (in_array($table_name, static::$platform_table_names)) {
+        if (in_array($table_name, static::$platform_table_names) || $model->with_platform_id) {
             $key_name = $platform_key;
         }
 
@@ -115,7 +157,6 @@ class PlatformService
         $sys_admin_id = Arr::get($item, $key_name);
 
         $user = AdminService::user();
-
         // d($sys_admin_id);
         if ($id) {
             // edit
@@ -135,7 +176,7 @@ class PlatformService
         } else {
             // add 添加数据系统默认会插入 sys_admin_id
             // 如果是set_platform_table中的表 需要插入平台id
-            if (in_array($table_name, static::$set_platform_table)) {
+            if (in_array($table_name, static::$set_platform_table) || $model->with_platform_id) {
                 $data[$platform_key] = $user[$platform_key];
             }
 
@@ -221,10 +262,54 @@ class PlatformService
         }
 
         $query = $query->whereHas('user', function ($q) use ($force) {
-            $q = static::platformQuery($q,$force);
+            $q = static::platformQuery($q, $force);
         });
 
         return $query;
 
+    }
+
+    /**
+     * 读取当前用户的平台列表 superadmin获取全部，非superadmin获取当前用户平台
+     *
+     * @return array
+     */
+    public static function getList($user = false)
+    {
+        $user = $user ?: AdminService::user();
+        $platform_key = static::$platform_key;
+        $platform_title = static::$platform_title;
+        $platform_id = Arr::get($user, $platform_key);
+        $platformClass = static::getPlatformClass();
+        if (! $platformClass) {
+            return [];
+        }
+        $select = ['id as key', $platform_title.' as label'];
+        $platforms = $platformClass::select($select);
+        if (! AdminService::isSuper()) {
+            $platforms = $platforms->where(['id' => $platform_id]);
+        }
+
+        return $platforms->get()->toArray();
+    }
+
+    /**
+     * 获取用户平台id 这里会检测前端请求header中sa-platform
+     *
+     * @param  bool  $user
+     * @return void
+     */
+    public static function getUserPlatformId($user = false)
+    {
+        $user = $user ?: AdminService::user();
+        $key = static::$platform_key;
+        $admin_platform_id = 0;
+        if (AdminService::isSuper($user)) {
+            $admin_platform_id = request()->header('sa-platform');
+        } else {
+            $admin_platform_id = Arr::get($user, $key);
+        }
+
+        return $admin_platform_id;
     }
 }

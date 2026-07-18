@@ -454,6 +454,7 @@ class AdminAppService implements SaAdminAppServiceInterface
 
     /**
      * 开启全局数据过滤检索
+     * 检测是否有配置platformService，有则调用search方法
      *
      * @param [type] $m
      * @param [type] $search
@@ -461,6 +462,11 @@ class AdminAppService implements SaAdminAppServiceInterface
      */
     public function dataSearch($m, $model)
     {
+        $platformService = HelperService::getPlatformService();
+        if ($platformService) {
+            return $platformService::search($m, $model);
+        }
+
         return $m;
     }
 
@@ -472,6 +478,11 @@ class AdminAppService implements SaAdminAppServiceInterface
      */
     public function postCheck(&$data, $item, $model)
     {
+        $platformService = HelperService::getPlatformService();
+        if ($platformService) {
+            return $platformService::validateData($data, $item, $model);
+        }
+
         return true;
     }
 
