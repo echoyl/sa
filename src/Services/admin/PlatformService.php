@@ -297,7 +297,7 @@ class PlatformService
      * 获取用户平台id 这里会检测前端请求header中sa-platform
      *
      * @param  bool  $user
-     * @return void
+     * @return int
      */
     public static function getUserPlatformId($user = false)
     {
