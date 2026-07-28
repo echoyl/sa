@@ -342,6 +342,11 @@ class ParseData
                     }
                     if (isset($v['title'])) {
                         $v['label'] = $v['title'];
+                    } else {
+                        // 再检测一个name，（title，name，label都是用的比较频繁的字段）
+                        if (isset($v['name'])) {
+                            $v['label'] = $v['name'];
+                        }
                     }
 
                     return $v;

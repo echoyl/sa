@@ -267,7 +267,7 @@ class FakeData
                 case 'randomStr':
                     $fake_options = $fake_options ? (! is_numeric($fake_options) ? explode(',', $fake_options) : $fake_options) : $random_items;
                     if (is_array($fake_options) && ! empty($fake_options)) {
-                        $v = $faker->randomElement($fake_options);
+                        $v = $faker->randomElement(array_unique($fake_options));
                     } else {
                         $v = Str::random(is_numeric($fake_options) ? $fake_options : 10);
                     }
