@@ -13,10 +13,11 @@ class AdminAuth
     {
         // 检测用户是否登录了
         // d(AdminService::user());
+        [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_EXPIRED;
         if (! AdminService::checkToken()) {
             // 未登录的情况下返回登录失败
             $key = 'sa::response.expired';
-            [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_EXPIRED;
+
             $msg = Lang::has($key) ? __($key) : $msg;
 
             return response()->json(['code' => $code, 'msg' => $msg]);
@@ -24,7 +25,6 @@ class AdminAuth
         $user = AdminService::user();
         if ($user['state'] != 1) {
             $key = 'sa::response.nopermission';
-            [$code,$msg] = ResponseEnum::CLIENT_HTTP_UNAUTHORIZED_EXPIRED;
             $msg = Lang::has($key) ? __($key) : $msg;
 
             return response()->json(['code' => $code, 'msg' => $msg]);

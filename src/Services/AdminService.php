@@ -184,7 +184,7 @@ class AdminService
         }
         // 清除setting中是空的项
         foreach ($setting as $key => $val) {
-            if (empty($val)) {
+            if (empty($val) && ! is_bool($val)) {
                 unset($setting[$key]);
             }
         }
@@ -205,10 +205,11 @@ class AdminService
         $ms = new MenuService;
         if (! $is_super) {
             $perms2 = explode(',', $user['perms2']);
+            $page_ids = $ms->getPageId(); // 所有是页面的菜单id
             foreach ($perms2 as $perm) {
                 [$id,$action_name] = explode('.', $perm);
-                if ($action_name && $action_name == 'dataList') {
-                    // 将不需要菜单的action 过滤掉
+                if (in_array($id, $page_ids) && $action_name && ! in_array($action_name, $ms->action_with_page)) {
+                    // 如果是页面类型的菜单，并且action不在页面默认的action中，则过滤掉
                     continue;
                 }
                 $parent_ids = $ms->getParentId($id);

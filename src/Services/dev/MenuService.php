@@ -42,6 +42,15 @@ class MenuService
     ];
 
     /**
+     * 有页面的action
+     *
+     * @var array
+     */
+    public $action_with_page = [
+        'index', 'show', 'add', 'edit',
+    ];
+
+    /**
      * 获取后台菜单信息
      *
      * @param  int  $id
@@ -64,6 +73,10 @@ class MenuService
             $path = array_merge($prefix, [$val['path']]);
             $val['title'] = LocaleService::get('title', $val);
             $routes = $this->getMenuData($val['id'], $auth_ids, $path);
+            // 子路由菜单是空的话 就不显示
+            if (count($routes) <= 0) {
+                // continue;
+            }
             $item = [
                 'name' => $val['title'],
                 'path' => $val['path'],
@@ -192,6 +205,18 @@ class MenuService
         return $data;
     }
 
+    /**
+     * 获取所有是页面的菜单id
+     *
+     * @return void
+     */
+    public function getPageId()
+    {
+        return $this->getAll()->filter(function ($item) {
+            return in_array($item->page_type, ['table', 'category', 'justTable', 'xmarkdown']) === true;
+        })->map(fn ($val) => $val['id'])->toArray();
+    }
+
     public function categoryId($model = '')
     {
         $where = [
@@ -222,19 +247,9 @@ class MenuService
         return $menu;
     }
 
-    public function getAll2()
-    {
-        static $data = [];
-        if (empty($data)) {
-            $data = (new Menu)->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
-        }
-
-        return $data;
-    }
-
     public function perms($id = 0, $enable_keys = [])
     {
-        $data = $this->getAll2()->filter(function ($item) use ($id) {
+        $data = $this->getAll()->filter(function ($item) use ($id) {
             return $item->parent_id === $id && in_array($item->type, Utils::packageTypeArr()) === true;
         })->toArray();
         $ret = [];
@@ -458,7 +473,7 @@ class MenuService
 
     public function getParentId($id)
     {
-        $item = $this->getAll2()->first(function ($item) use ($id) {
+        $item = $this->getAll()->first(function ($item) use ($id) {
             return $item->id == $id;
         });
         if ($item) {
