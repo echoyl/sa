@@ -54,6 +54,8 @@ class Schema
         foreach ($columns as $column) {
             $delete_column = false;
             $locale = Arr::get($column, 'setting.locale');
+            $index = Arr::get($column, 'setting.index');
+            $column['index'] = $index ? true : false;
             $form_type = Arr::get($column, 'form_type');
             $name = Arr::get($column, 'name');
             $title = Arr::get($column, 'title');
@@ -122,13 +124,16 @@ class Schema
 
         $columns = $this->mergeSchemaColumns($columns, $par);
 
-        $primarys = [];
+        $primarys = $indexs = [];
 
         $sql_columns = [];
 
         foreach ($columns as $val) {
             if ($val['name'] == 'id' || isset($val['pk'])) {
                 $primarys[] = $val['name'];
+            }
+            if (Arr::get($val, 'index')) {
+                $indexs[] = $val['name'];
             }
             $field_sql = $this->schemaColumnSql($val);
             $sql_columns[] = $field_sql;
@@ -137,6 +142,10 @@ class Schema
         if (! empty($primarys)) {
             $primarys = collect($primarys)->map(fn ($v) => "`{$v}`")->values()->all();
             $sql_columns[] = 'PRIMARY KEY ('.implode(',', $primarys).') USING BTREE';
+        }
+
+        foreach ($indexs as $index) {
+            $sql_columns[] = "INDEX `{$index}`(`{$index}`) USING BTREE";
         }
 
         $table_sql[] = implode(",\r", $sql_columns);
@@ -355,13 +364,14 @@ class Schema
             $dist_f = DB::getPdo()->query('desc '.$table_name);
 
             $dist_field = [];
-            $pris = []; // 索引
+            $pris = $indexs = $column_indexs = $drop_indexs = []; // 主键 和 普通索引
             $add_primary = false;
             foreach ($dist_f as $key => $val) {
                 $dist_field[$val[0]] = $val;
                 if ($val['Key'] == 'PRI') {
                     $pris[] = $val[0];
-
+                } elseif ($val['Key'] == 'MUL') {
+                    $indexs[] = $val[0]; // 和每列对比，如果不存在索引则需要创建索引，这里会删除已没有的索引，删除索引自行操作
                 }
             }
             $old_pris = $pris; // 原始表是否有主键
@@ -387,6 +397,12 @@ class Schema
                         $pris[] = $field_name;
                         $add_primary = true; // 标记重新生成primary key
                     }
+                }
+                if (Arr::get($column, 'index')) {
+                    // 如果列设置了索引
+                    $column_indexs[] = $field_name;
+                } elseif (in_array($field_name, $indexs)) {
+                    $drop_indexs[] = $field_name; // 当前字段没有设置索引但是原始表有索引，则删除
                 }
                 $now_fields[$field_name] = $column;
             }
@@ -415,6 +431,16 @@ class Schema
 
                 $primarys = collect($pris)->map(fn ($v) => "`{$v}`")->values()->all();
                 $sqls[] = ' ADD PRIMARY KEY ('.implode(',', $primarys).') USING BTREE';
+            }
+            // 对比索引后如果未存在则创建索引
+            foreach ($column_indexs as $index) {
+                if (! in_array($index, $indexs)) {
+                    $sqls[] = "ADD INDEX `{$index}`(`{$index}`) USING BTREE";
+                }
+            }
+            // 删除多余的索引
+            foreach ($drop_indexs as $index) {
+                $sqls[] = "DROP INDEX `{$index}`";
             }
             $sqls = "ALTER TABLE `{$table_name}`\r".implode(",\r", $sqls).';';
             DB::table('dev_sqllog')->insert([
