@@ -80,8 +80,11 @@ class ExcelService
                 continue;
             }
             $children = Arr::get($v, 'children');
-            $value = Arr::get($v, 'value', Arr::get($v, 'id'));
-            $label = Arr::get($v, 'label', Arr::get($v, 'title'));
+            // value 和 lable的默认字段名称
+            $value_keys = ['value', 'id', 'key'];
+            $label_keys = ['label', 'title', 'name'];
+            $value = Arr::get($v, 'value', Arr::get($v, 'id', Arr::get($v, 'key')));
+            $label = Arr::get($v, 'label', Arr::get($v, 'title', Arr::get($v, 'name')));
 
             $label = $prefix_label ? implode(' - ', [$prefix_label, $label]) : $label;
 
@@ -323,8 +326,14 @@ class ExcelService
                         $last_col_row[$colkey] = $datakey;
                     }
                 }
-                $data_item[] = $_val;
 
+                // 最后再检测数据
+                if (is_array($_val)) {
+                    // 获取title name等字段信息
+                    $_val = Arr::get($_val, 'title', Arr::get($_val, 'name', ''));
+                }
+
+                $data_item[] = $_val;
             }
             $last_val_arr = $data_item;
             $_data[] = $data_item;
