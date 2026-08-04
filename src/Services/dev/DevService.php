@@ -857,6 +857,14 @@ class DevService
                         $d['value'] = $relation['foreign_key'];
                     }
                 }
+                // 将setting记录
+                if (! empty($setting)) {
+                    // 只记录需要记录的key lat lng
+                    $set_setting = collect($setting)->only(['lat', 'lng'])->toArray();
+                    if (! empty($set_setting)) {
+                        $d['setting'] = $set_setting;
+                    }
+                }
                 // 富文本
                 $parse_columns[] = $d;
             }
