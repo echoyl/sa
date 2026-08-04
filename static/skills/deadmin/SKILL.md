@@ -11,9 +11,19 @@ description: 创建模型，菜单时调用API，只调用api。
 
 ## 使用流程
 
+- **【必须】任何deadmin相关操作前，必须先完整读取本SKILL.md文件**，确保了解所有规则后再执行操作
 - 调用api接口前如果没有登录，则需要先调用登录接口，登录成功后返回token，后续调用接口时需要将token放在请求头中
+- **【重要必须】请求数据编码格式必须为UTF-8**，传输中文时必须确保请求体使用UTF-8编码，否则后台会显示乱码
+- **【重要】PowerShell 发送中文注意事项**：PowerShell 5.1 的 `ConvertTo-Json | Invoke-WebRequest -Body` 管道发送中文时会丢失编码，导致服务器存储为 `????`。必须改用 `[System.Text.Encoding]::UTF8.GetBytes()` 将 JSON 转为 UTF-8 字节数组，写入文件后用 `Invoke-WebRequest -InFile` 发送，例如：
+  ```powershell
+  $json = '{"base":{"title":"应用管理","name":"app"}}'
+  $utf8 = [System.Text.Encoding]::UTF8.GetBytes($json)
+  [System.IO.File]::WriteAllBytes("request.json", $utf8)
+  Invoke-WebRequest -Uri $url -Method POST -InFile "request.json" -ContentType "application/json; charset=utf-8" -Headers $headers
+  ```
 - 如果登录触发验证码（返回 `图形验证码错误`），则清除 `storage/framework/cache/data` 目录中的缓存文件（保留 `.gitignore`）后重试
 - 根据用户命令调用对应的api接口，接口文档在`Apis.md`中
+- **【必须】创建模型前必须完整阅读本SKILL.md中所有关于模型的规则**，包括：模型字段规则、字段form类型规则、创建或修改模型、创建或修改关联、创建模块等章节，确保所有规则都得到遵守
 
 ## 模型字段规则
 
@@ -44,6 +54,12 @@ description: 创建模型，菜单时调用API，只调用api。
 
 ## 使用方法
 
+### 重要规则
+
+- **【禁止】禁止直接修改、删除或创建模型PHP文件**，所有模型操作必须通过API接口完成
+- **【必须】修改模型时必须调用`提交保存模型`API接口**，然后调用`格式化模型文件`接口生成正确的PHP文件
+- **【必须】删除模型时必须调用`删除模型`API接口**，不要直接删除文件
+
 ### 创建或修改模型
 
 `type`的值为 `0`为模型文件夹，`1`为真实模型需要创建模型字段信息
@@ -51,7 +67,10 @@ description: 创建模型，菜单时调用API，只调用api。
 - 自动创建上级模型文件夹或找到可能的上级模型文件夹，自动配置名称和标题
 - **【重要】模型`name`禁止使用下划线`_`**。虽然模型上下级关系通过`parent_id`和`name`使用`_`拼接生成数据表名，但`name`中的`_`会导致生成的PHP控制器和模型类名包含下划线（如`Daily_menuController`），违反PascalCase命名规范。应使用无下划线的单词，如`dailymenu`而非`daily_menu`。其对应的数据表名为`上级名_模型名`（如`dining_dailymenu`），由系统自动拼接
 - 如果是模型文件夹则创建完成，以下步骤忽略
-- 自动生成模型生成模型可能存在的字段信息，根据模型字段规则配置每个字段的form_tyoe，每个模型默认都有`{id:ID,state:状态,displayorder:排序}`3个字段都是int类型。
+- **【必须】创建模型时必须显式添加以下3个默认字段**（系统不会自动补充），按此顺序放在自定义字段前后均可：
+  - `{"title":"ID","name":"id","type":"int","form_type":""}`
+  - `{"title":"状态","name":"state","type":"int","default":1,"form_type":"switch","table_menu":true}` — 注意 state 是开关类型，需配置 `table_menu:true` 以启用 Tab 菜单筛选
+  - `{"title":"排序","name":"displayorder","type":"int","default":0,"form_type":"digit"}`
 - 如果模型为分类，则`leixing`字段配置为 category，否则默认为 normal，分类模型默认加上`parent_id`上级id字段，无form_type
 - 生成了模型配置后调用`提交保存模型`接口创建该模型
 - 修改模型之前先调用`获取模型详情`接口获取当前模型最新信息（包括最新的columns），基于当前最新数据进行修改，修改模型后重新调用`提交保存模型`接口
@@ -61,7 +80,8 @@ description: 创建模型，菜单时调用API，只调用api。
 
 ### 创建或修改关联
 
-关联字段命名规则：当前模型中存储关联ID的字段使用`关联名称_id`格式，例如 `category_id`、`tag_id`、`role_id`。
+- **【重要】单独创建或修改关联后，必须重新调用`提交保存模型`接口保存该模型，否则关联不会生效**
+- 关联字段命名规则：当前模型中存储关联ID的字段使用`关联名称_id`格式，例如 `category_id`、`tag_id`、`role_id`。
 
 - 1.文章模型有分类关联，则 news为文章模型，category为分类模型，关联名为 category,两个关联的字段名分别为 news.caetgory_id 和 category.id,关联关系为hasOne
 - 2.文章模型有评论关联，comment为评论模型，关联名为 comments,两个关联的字段名分别为 news.id 和 comment.news_id,关联关系为hasMany
@@ -106,8 +126,10 @@ description: 创建模型，菜单时调用API，只调用api。
 
 - 自动判断是否要创建上级菜单
 - 如果未选模型，则page_type配置，自动根据菜单名称生成title和path
-- 如果选了模型，则根据模型名称生成title和path，如果模型为分类，则page_type配置为 category,否则默认为 table,open_type配置为 drawer
-- **【必须】** 创建菜单时必须配置完整的`table_config`和`form_config`，不能为空
+- 如果选了模型，则根据模型名称生成title和path，如果模型为分类，则page_type配置为 category,否则默认为 table
+- **【默认值】** open_type默认值为`drawer`（抽屉弹层），所有菜单默认使用drawer方式打开
+- **【必须】** 创建菜单时必须配置完整的`table_config`和`form_config`，不能为空。
+- **【重要】`table_config`和`form_config`必须在同一个请求中提交**，分开提交会导致后提交的数据覆盖先提交的数据（另一个变为空）
 - **【注意】首次创建菜单（id=0）时服务器不会保存`table_config`和`form_config`，创建后返回的配置为空（列表仅有option列、表单为空）。必须在创建成功后立即用该id重新调用`提交保存菜单`接口进行第二次更新，才能正确写入配置**
 - **【验证】创建/更新菜单后必须调用`获取菜单详情`接口验证`table_config`和`form_config`是否完整保存。如发现列表只有option列、表单为空，说明配置未保存，需重新提交补全**
 - 根据模型的字段信息手动配置`table_config`和`form_config`：
@@ -120,4 +142,21 @@ description: 创建模型，菜单时调用API，只调用api。
 
 ### 创建模块
 
-先创建上级模型类型为文件夹和上级菜单,再自动生成模型和菜单，自动生成模块可能存在的模型和菜单，如果有关联模型，则自动创建该关联模型,不要创建重复的模型或菜单。
+**【重要】创建模块必须遵循以下结构：**
+
+1. 先创建上级模型类型为**文件夹**（type=0），作为模块的根目录
+2. 再在该文件夹下创建模块所需的各个模型（type=1）
+3. **子模型的name字段不能包含上级文件夹的name**，上级name已体现在parent_id关系中
+   - 例：文件夹name="employee"，子模型name应为"role"，而非"employeerole"
+4. 先创建上级菜单作为模块入口，再在该菜单下创建各功能子菜单
+5. 自动判断模块可能存在的模型和菜单，如果有关联模型，则自动创建该关联模型
+6. 不要创建重复的模型或菜单
+
+**模块结构示例：**
+
+```
+员工模块文件夹 (name="employee", type=0)
+├── 员工模型 (name="employee", type=1, leixing=auth)
+├── 角色模型 (name="role", type=1, leixing=normal)  ← 注意：不是"employeerole"
+└── 关联关系
+```

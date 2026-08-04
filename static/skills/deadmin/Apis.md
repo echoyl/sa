@@ -7,15 +7,16 @@
 - **Base URL** : `/.env` 文件中的 `APP_URL`,如果没有则使用 `http://localhost:8000`
 - **URL前缀**: `/.env` 文件中的 `APP_ADMIN_PREFIX`,如果没有则使用 `sadmin`
 - **认证方式**: Bearer Token (在 Header 中携带 `Authorization: Bearer <token>`)
+- **【重要】请求编码**: 请求体必须使用UTF-8编码，否则中文数据会显示乱码
 
 ---
 
 ### Header 参数
 
-| 参数名        | 类型   | 必填 | 描述                                  |
-| :------------ | :----- | :--- | :------------------------------------ |
-| Authorization | String | 是   | 身份验证令牌，格式为 `Bearer {token}` |
-| Content-Type  | String | 是   | `application/json`                    |
+| 参数名        | 类型   | 必填 | 描述                                                                 |
+| :------------ | :----- | :--- | :------------------------------------------------------------------- |
+| Authorization | String | 是   | 身份验证令牌，格式为 `Bearer {token}`                                |
+| Content-Type  | String | 是   | `application/json; charset=utf-8`，传输中文时必须使用UTF-8编码      |
 
 ### 响应参数
 
@@ -564,7 +565,7 @@ curl -X POST "http://localhost:8000/sadmin/dev/menu" \
 | └ swtich关闭         | close              | 开关类型关闭的描述语                                                                   | 否       |
 | └ 多语言             | locale             | 是否开启多语言 true false                                                              | 否       |
 | └ 图片裁切           | image_crop         | 图片上传是否开启裁剪 true false                                                        | 否       |
-| └ json可选数据       | json               | 提供json选择数据 [{label,value,color}]                                                 | 否       |
+| └ json可选数据       | json               | 提供json选择数据 [{id,title}] — 注意：格式为{id,title}，不是{label,value}              | 否       |
 | 菜单                 | table_menu         | 列表中时否开启tab菜单 true false                                                       | 否       |
 
 其中`form_type`的值有：取value值,默认位空值
