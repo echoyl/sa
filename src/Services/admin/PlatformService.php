@@ -286,7 +286,7 @@ class PlatformService
         }
         $select = ['id as key', $platform_title.' as label'];
         $platforms = $platformClass::select($select);
-        if (! AdminService::isSuper()) {
+        if (! AdminService::isSuper($user)) {
             $platforms = $platforms->where(['id' => $platform_id]);
         }
 
@@ -311,5 +311,14 @@ class PlatformService
         }
 
         return $admin_platform_id;
+    }
+
+    public static function getUserPlatform($user = false)
+    {
+        $id = static::getUserPlatformId($user);
+        $class = static::getPlatformClass();
+        $platform = (new $class)->where(['id' => $id])->first();
+
+        return $platform;
     }
 }

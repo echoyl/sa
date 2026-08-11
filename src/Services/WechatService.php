@@ -72,6 +72,13 @@ class WechatService
             $config['private_key'] = $key_path;
             $config['certificate'] = $cert_path;
         }
+        $public_key = base_path('cert/pub_key_'.$pay['id'].'.pem');
+
+        if (isset($pay['public_key_id']) && file_exists($public_key)) {
+            $config['platform_certs'] = [
+                $pay['public_key_id'] => $public_key,
+            ];
+        }
 
         $app = new PayApplication($config);
 
@@ -108,6 +115,7 @@ class WechatService
         $app_id = $app->getConfig()->get('app_id');
         $mch_id = $app->getConfig()->get('mch_id');
         $notify_url = $app->getConfig()->get('notify_url');
+        $platform_certs = $app->getConfig()->get('platform_certs');
         $par = [
             'mchid' => $mch_id, // <---- 请修改为您的商户号
             'out_trade_no' => $pay_log['sn'],
@@ -128,9 +136,23 @@ class WechatService
 
         // 发起订单
         try {
-            $result = $app->getClient()->postJson('v3/pay/transactions/jsapi', $par)->toArray();
+            $client = $app->getClient();
+            if ($platform_certs) {
+                $client = $client->withSerialHeader();
+            }
+            $result = $client->postJson('v3/pay/transactions/jsapi', $par)->toArray();
         } catch (Exception $e) {
-            return [1, '请求失败:'.$e->getMessage()];
+            // 捕获微信返回的原始错误信息(如 403 等非 2xx 响应)，便于快速定位问题
+            $err_body = '';
+            if (method_exists($e, 'getResponse')) {
+                $err_response = $e->getResponse();
+                if ($err_response) {
+                    $err_body = method_exists($err_response, 'getContent') ? (string) $err_response->getContent(false) : (string) $err_response;
+                }
+            }
+            Log::channel('daily')->info('pay_msg_error:', ['message' => $e->getMessage(), 'body' => $err_body]);
+
+            return [1, '请求失败:'.$e->getMessage().($err_body ? ' '.$err_body : '')];
         }
 
         // $result = $app->order->unify($par);
@@ -145,7 +167,9 @@ class WechatService
 
             return [0, $config];
         } else {
-            return [1, '支付调用失败'];
+            Log::channel('daily')->info('pay_msg_fail:', ['result' => $result]);
+
+            return [1, '支付调用失败:'.json_encode($result, JSON_UNESCAPED_UNICODE)];
         }
     }
 
@@ -153,7 +177,7 @@ class WechatService
      * 生成小程序二维码
      *
      * @param [type] $scene
-     * @param  \EasyWeChat\MiniApp\Application  $app
+     * @param  Application  $app
      * @param  string  $page
      * @param  string  $path
      * @return void
@@ -381,7 +405,7 @@ class WechatService
      * @param [type] $openid
      * @param  bool  $flag
      * @param  bool  $user
-     * @param  \EasyWeChat\OfficialAccount\Application  $app
+     * @param  OfficialAccountApplication  $app
      * @return void
      */
     public static function subscribe($openid, $flag, $user, $app)
@@ -496,7 +520,7 @@ class WechatService
      * Undocumented function
      *
      * @param [type] $openid
-     * @param  \EasyWeChat\OfficialAccount\Application  $app
+     * @param  OfficialAccountApplication  $app
      * @return void
      */
     public static function getOffiaccountUser($openid, $app)

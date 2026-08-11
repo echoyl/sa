@@ -112,6 +112,14 @@ class Order extends Creator
 
     public function goods()
     {
+        // 创建关联至商品模型 必填项
+        $goods_model_id = request('base.goods_id');
+
+        if (! $goods_model_id) {
+            // 未选择商品模型，则表示创建简单的订单模块，不需要关联商品等复杂操作
+            return;
+        }
+
         $model_data = [
             'title' => '商品',
             'name' => 'goods',
@@ -152,8 +160,7 @@ class Order extends Creator
 
         $menu_id = $this->checkHasMenu($menu);
         $this->goods_page = $menu_id;
-        // 创建关联至商品模型 必填项
-        $goods_model_id = request('base.goods_id');
+
         $this->goods_model_id = $goods_model_id;
         $this->goodss_relation_id = $this->addRelation($model_id, Model::where(['id' => $goods_model_id])->first(), ['local_key' => 'goods_id']);
         $goods_items_relation = Relation::where(['model_id' => $goods_model_id, 'name' => 'items'])->first();
@@ -245,13 +252,15 @@ class Order extends Creator
         // 创建关联 state_id 和 hasmany goods
         $this->addRelation($model_id, Model::where(['id' => $this->state_model_id])->first(), ['local_key' => 'state_id']);
 
-        $this->addRelation($model_id, Model::where(['id' => $this->goodss_model_id])->first(), [
-            'type' => 'many',
-            'local_key' => 'id',
-            'foreign_key' => 'order_id',
-            'name' => 'goodss',
-            'select_columns' => implode(',', [implode('-', [$this->goodss_relation_id, 'guiges', '']), implode('-', [$this->goodss_relation_id, $this->goods_items_relation_id, 'items', ''])]),
-        ]);
+        if ($this->goodss_model_id) {
+            $this->addRelation($model_id, Model::where(['id' => $this->goodss_model_id])->first(), [
+                'type' => 'many',
+                'local_key' => 'id',
+                'foreign_key' => 'order_id',
+                'name' => 'goodss',
+                'select_columns' => implode(',', [implode('-', [$this->goodss_relation_id, 'guiges', '']), implode('-', [$this->goodss_relation_id, $this->goods_items_relation_id, 'items', ''])]),
+            ]);
+        }
 
         $user_model_id = request('base.user_id');
         if ($user_model_id) {
@@ -300,6 +309,10 @@ class Order extends Creator
 
     public function customerCode()
     {
+        if (! $this->goodss_model_id) {
+            // 未选择商品模型 则不需要使用自定义代码
+            return [];
+        }
         $customer_code = <<<'EOD'
 public function listData(&$list)
     {
@@ -485,6 +498,6 @@ EOD;
             'use Echoyl\Sa\Services\shop\OrderService;',
         ];
 
-        return [$customer_code, '', implode("\r",$customer_namespace), ''];
+        return [$customer_code, '', implode("\r", $customer_namespace), ''];
     }
 }

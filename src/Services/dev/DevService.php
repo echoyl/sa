@@ -801,32 +801,19 @@ class DevService
                 }
                 if ($form_type == 'switch') {
                     // switch 也支持 table_menu
-                    $valueEnum = [];
-                    if (isset($setting['close']) && isset($setting['open'])) {
-                        $valueEnum = [
-                            ['label' => $setting['close'], 'value' => 0],
-                            ['label' => $setting['open'], 'value' => 1],
-                        ];
-                    }
-
-                    // $_value = [];
-                    // foreach($valueEnum as $key=>$val)
-                    // {
-                    //     $_value[strval($key)] = $val;
-                    // }
-                    // d($valueEnum);
+                    // 这里写入默认的close和open名称
+                    $valueEnum = [
+                        ['label' => $setting['close'] ?? Utils::$label_map['close'], 'value' => 0],
+                        ['label' => $setting['open'] ?? Utils::$label_map['open'], 'value' => 1],
+                    ];
 
                     $d['default'] = $default_value ? 1 : 0;
                     if ($table_menu) {
 
                         $d['table_menu'] = true;
-                    } else {
-                        // continue;
                     }
-                    if (! empty($valueEnum)) {
-                        $d['with'] = true;
-                        $d['data'] = $valueEnum;
-                    }
+                    $d['with'] = true;
+                    $d['data'] = $valueEnum;
                 }
                 if (($form_type == 'search_select' || $form_type == 'searchSelect' || $form_type == 'searchSelects') && isset($all_relations[$name])) {
                     if ($label) {

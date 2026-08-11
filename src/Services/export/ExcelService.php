@@ -38,7 +38,7 @@ class ExcelService
     {
         $config['filename'] = date('YmdHis').'.xlsx';
         $this->config = $config;
-        $this->tableConfigToColumns();
+        $this->tableConfigToColumns($search);
         foreach ($search as $key => $val) {
             // $_search = [];
             if (! is_array($val)) {
@@ -127,7 +127,7 @@ class ExcelService
         return false;
     }
 
-    public function tableConfigToColumns()
+    public function tableConfigToColumns($search = [])
     {
         $columns = Arr::get($this->config, 'head.columns');
         if ($columns) {
@@ -141,7 +141,7 @@ class ExcelService
 
         $table_config = Arr::get($desc, 'tableColumns', []);
 
-        $columns = collect($table_config)->filter(function ($val) {
+        $columns = collect($table_config)->filter(function ($val) use ($search) {
             $valtype = Arr::get($val, 'valueType');
             if (in_array($valtype, ['option'])) {
                 return false;
@@ -150,13 +150,33 @@ class ExcelService
             if ($hide_in_table) {
                 return false;
             }
+            if ($valtype == 'tableDynamicColumns') {
+                // 检测search中是否有该dataIndex字段，有则将该数据解构到columns中
+                return ! empty(Arr::get($search, $val['dataIndex']));
+            }
 
             return isset($val['dataIndex']) && $val['dataIndex'];
-        })->map(function ($val) {
+        })->flatMap(function ($val) use ($search) {
             // 检测hasone类型中如果dataindex是 xxx_id类型则转换
             $dont_set_types = ['cascader']; // 如果是cascader类型的不进行转换
             $valueType = Arr::get($val, 'valueType');
             $oringinal_key = $val['dataIndex'];
+            if ($valueType == 'tableDynamicColumns') {
+                // 读取search中的数据解构为columns
+                $dynamic_columns = Arr::get($search, $val['dataIndex'], []);
+                $cols = [];
+                foreach ($dynamic_columns as $item) {
+                    $key = Arr::get($item, 'dataIndex', Arr::get($item, 'key', ''));
+                    $cols[] = [
+                        'key' => $key,
+                        'title' => Arr::get($item, 'title', Arr::get($item, 'label', '')),
+                        'type' => Arr::get($item, 'valueType', 'text'),
+                        'oringinal_key' => $key,
+                    ];
+                }
+
+                return $cols;
+            }
             if (is_string($oringinal_key) && strpos($oringinal_key, '_id') !== false && ! in_array($valueType, $dont_set_types)) {
                 $data_name = str_replace('_id', '', $oringinal_key);
                 // 获取lable名称
@@ -164,7 +184,7 @@ class ExcelService
                 $val['dataIndex'] = [$data_name, $label_name];
             }
 
-            return ['key' => $val['dataIndex'], 'title' => $val['title'], 'type' => $valueType, 'oringinal_key' => $oringinal_key];
+            return [['key' => $val['dataIndex'], 'title' => $val['title'], 'type' => $valueType, 'oringinal_key' => $oringinal_key]];
         })->values();
 
         // d($columns);
