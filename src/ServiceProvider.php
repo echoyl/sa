@@ -6,6 +6,10 @@ use Echoyl\Sa\Console\Commands\HelperCommand;
 use Echoyl\Sa\Console\Commands\SaCommand;
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
+use Echoyl\Sa\Http\Middleware\AdminAuth;
+use Echoyl\Sa\Http\Middleware\PermCheck;
+use Echoyl\Sa\Http\Middleware\RememberToken;
+use Echoyl\Sa\Http\Middleware\SuperAdminAuth;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 
@@ -37,11 +41,11 @@ class ServiceProvider extends LaravelServiceProvider
         $this->app->booted(function () {
             $router = $this->app['router'];
             if (method_exists($router, 'prependMiddlewareToGroup')) {
-                $router->prependMiddlewareToGroup('api', \Echoyl\Sa\Http\Middleware\RememberToken::class);
+                $router->prependMiddlewareToGroup('api', RememberToken::class);
             } else {
                 // 回退到注册别名（确保中间件可用）
                 if (method_exists($router, 'aliasMiddleware')) {
-                    $router->aliasMiddleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
+                    $router->aliasMiddleware('echoyl.remember', RememberToken::class);
                 }
             }
         });
@@ -62,7 +66,7 @@ class ServiceProvider extends LaravelServiceProvider
             ]);
             // 静态发布文件
             // build的文件
-            $this->publishes([__DIR__.'/../static/dist' => public_path('antadmin')], 'antadmin');
+            $this->publishes([__DIR__.'/../static/antadmin' => public_path('antadmin')], 'antadmin');
             // 前端开发文件
             // $this->publishes([__DIR__ . '/../static/dev' => public_path('antadmindev')], 'antadmindev');
             // 配置文件
@@ -90,14 +94,14 @@ class ServiceProvider extends LaravelServiceProvider
         $router = $this->app['router'];
 
         if (method_exists($router, 'aliasMiddleware')) {
-            $router->aliasMiddleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
-            $router->aliasMiddleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
-            $router->aliasMiddleware('echoyl.permcheck', \Echoyl\Sa\Http\Middleware\PermCheck::class);
-            $router->aliasMiddleware('echoyl.superadmin', \Echoyl\Sa\Http\Middleware\SuperAdminAuth::class);
+            $router->aliasMiddleware('echoyl.sa', AdminAuth::class);
+            $router->aliasMiddleware('echoyl.remember', RememberToken::class);
+            $router->aliasMiddleware('echoyl.permcheck', PermCheck::class);
+            $router->aliasMiddleware('echoyl.superadmin', SuperAdminAuth::class);
         }
-        $router->middleware('echoyl.sa', \Echoyl\Sa\Http\Middleware\AdminAuth::class);
-        $router->middleware('echoyl.remember', \Echoyl\Sa\Http\Middleware\RememberToken::class);
-        $router->middleware('echoyl.permcheck', \Echoyl\Sa\Http\Middleware\PermCheck::class);
-        $router->middleware('echoyl.superadmin', \Echoyl\Sa\Http\Middleware\SuperAdminAuth::class);
+        $router->middleware('echoyl.sa', AdminAuth::class);
+        $router->middleware('echoyl.remember', RememberToken::class);
+        $router->middleware('echoyl.permcheck', PermCheck::class);
+        $router->middleware('echoyl.superadmin', SuperAdminAuth::class);
     }
 }
