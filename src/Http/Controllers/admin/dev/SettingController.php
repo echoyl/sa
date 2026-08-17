@@ -25,7 +25,9 @@ class SettingController extends ApiBaseController
     {
         // 设置系统设置中的菜单，主要可以自动检索出菜单中的图片字段信息
         request()->offsetSet('dev_menu', Utils::$setting_dev_menu);
-        $ret = (new SetsService)->post('setting', [], 'POST', ['watermark', 'tech']);
+        $ret = (new SetsService)->post('setting', [], 'POST', [
+            'watermark', 'tech', 'loginBgImage', 'tmap_key', 'bmap_key', 'tianmap_key', 'amap_key', 'amap_skey',
+        ]);
         $code = Arr::get($ret, 'code', 1);
         $data = Arr::get($ret, 'data', []);
         if (! $code) {

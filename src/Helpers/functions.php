@@ -138,7 +138,7 @@ if (! function_exists('str_random')) {
      * @param  int  $length
      * @return string
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @deprecated Str::random() should be used directly instead. Will be removed in Laravel 6.0.
      */
@@ -177,6 +177,26 @@ if (! function_exists('filterEmpty')) {
 
             return is_null($v) ? '' : $v;
         })->toArray();
+    }
+}
+if (! function_exists('fillEmpty')) {
+    /**
+     * 填充空值
+     *
+     * @param  array  $arr
+     * @param  array  $empty_arr
+     * @return array
+     */
+    function fillEmpty($arr, $empty_arr = [])
+    {
+        // empty_arr 中的值如果未在$arr中配置 则设置为空值
+        foreach ($empty_arr as $key) {
+            if (! isset($arr[$key]) || empty($arr[$key])) {
+                $arr[$key] = '';
+            }
+        }
+
+        return $arr;
     }
 }
 if (! function_exists('webapi_request')) {

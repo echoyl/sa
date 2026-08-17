@@ -105,6 +105,8 @@ class SetsService
 
             $post_data = filterEmpty(request('base'), $empty_fields);
 
+            $post_data = fillEmpty($post_data, $empty_fields);
+
             $post_data = Utils::parseImageInPage($post_data, $dev_menu, $data, 'encode', $deep_img_fields);
 
             $data = [
