@@ -4,6 +4,7 @@ namespace Echoyl\Sa;
 
 use Echoyl\Sa\Console\Commands\HelperCommand;
 use Echoyl\Sa\Console\Commands\SaCommand;
+use Echoyl\Sa\Console\Commands\TableCommand;
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Constracts\SaServiceInterface;
 use Echoyl\Sa\Http\Middleware\AdminAuth;
@@ -63,6 +64,7 @@ class ServiceProvider extends LaravelServiceProvider
             $this->commands([
                 SaCommand::class,
                 HelperCommand::class,
+                TableCommand::class,
             ]);
             // 静态发布文件
             // build的文件

@@ -4,6 +4,7 @@ namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Constracts\SaAdminAppServiceInterface;
 use Echoyl\Sa\Models\Pca;
+use Illuminate\Support\Facades\Schema;
 
 class AdminAppService implements SaAdminAppServiceInterface
 {
@@ -273,7 +274,7 @@ class AdminAppService implements SaAdminAppServiceInterface
             ],
         ];
 
-        $pca = (new Pca)->where(['pcode' => 0])->get()->toArray();
+        $pca = Schema::hasTable('pca') ? (new Pca)->where(['pcode' => 0])->get()->toArray() : [];
         $mapdatas = collect($pca)->map(function ($q) {
             return [
                 'code' => $q['code'], 'la' => rand(0, 100), 'li' => rand(0, 100), 'name' => $q['name'], 'id' => $q['code'],
