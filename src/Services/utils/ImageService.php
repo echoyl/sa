@@ -36,7 +36,13 @@ class ImageService
             $is_old = true;
         } else {
             $manager = new ImageManager(new Driver);
-            $manager = $manager->read($path);
+            // 检测$manager是否有read方法
+            if (method_exists($manager, 'read')) {
+                $manager = $manager->read($path);
+            } else {
+                $manager = $manager->decodePath($path);
+            }
+
             $is_old = false;
         }
 
