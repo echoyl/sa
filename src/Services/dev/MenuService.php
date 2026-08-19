@@ -5,6 +5,8 @@ namespace Echoyl\Sa\Services\dev;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\utils\Utils;
+use Echoyl\Sa\Services\HelperService;
+use Illuminate\Support\Arr;
 use stdClass;
 
 class MenuService
@@ -124,13 +126,15 @@ class MenuService
         if ($menu['desc']) {
             $data = is_string($menu['desc']) ? json_decode($menu['desc'], true) : $menu['desc'];
         }
-        if ($menu['open_type']) {
+        if (isset($menu['open_type']) && $menu['open_type']) {
             $data['openType'] = $menu['open_type'];
         }
-        $data['addable'] = $menu['addable'] ? true : false;
-        $data['editable'] = $menu['editable'] ? true : false;
-        $data['deleteable'] = $menu['deleteable'] ? true : false;
-        $data['setting'] = $menu['setting'] ? json_decode($menu['setting'], true) : [];
+        // 有键值并且有值检测
+
+        $data['addable'] = Arr::get($menu, 'addable') ? true : false;
+        $data['editable'] = Arr::get($menu, 'editable') ? true : false;
+        $data['deleteable'] = Arr::get($menu, 'deleteable') ? true : false;
+        $data['setting'] = HelperService::getJson(Arr::get($menu, 'setting', []));
 
         return $data;
     }
