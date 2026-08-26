@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Services;
 
 use Echoyl\Sa\Models\Setting;
+use Echoyl\Sa\Services\dev\crud\fields\Json;
 use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Illuminate\Support\Arr;
@@ -101,6 +102,8 @@ class SetsService
         }
         $dev_menu = request('dev_menu');
 
+        $json = new Json([]);
+
         if (request()->isMethod('post') && $method == 'POST') {
 
             $post_data = filterEmpty(request('base'), $empty_fields);
@@ -108,6 +111,8 @@ class SetsService
             $post_data = fillEmpty($post_data, $empty_fields);
 
             $post_data = Utils::parseImageInPage($post_data, $dev_menu, $data, 'encode', $deep_img_fields);
+
+            $post_data = $json->removeEmptyArray($post_data);
 
             $data = [
                 'key' => $key,
@@ -124,6 +129,7 @@ class SetsService
 
             return ['code' => 0, 'msg' => '提交成功', 'data' => Utils::parseImageInPage($post_data, $dev_menu, false, 'decode', $deep_img_fields)];
         } else {
+            $data = $json->removeEmptyArray($data);
             $data = Utils::parseImageInPage($data, $dev_menu, false, 'decode', $deep_img_fields);
 
             return ['code' => 0, 'data' => $data];

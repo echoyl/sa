@@ -532,7 +532,7 @@ class UploadService
                 $filepath = $dir.'/'.$file;
                 if ($this->shouldBeCompressed($filepath)) {
                     // 压缩图片
-                    $this->resizeImage($filepath,1000);
+                    $this->resizeImage($filepath, 1000);
                     $compressed[] = $file;
                 }
             }

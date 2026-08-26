@@ -123,7 +123,7 @@ class MenuController extends CrudController
                         }
 
                         $k = $key ? 'form_config'.$key : 'form_config';
-                        $item[$k] = $tab['config'];
+                        $item[$k] = $tab['config'] ?? '';
                     }
                 } else {
                     $item['tabs'][] = ['title' => '基础信息'];

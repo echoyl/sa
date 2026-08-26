@@ -26,6 +26,7 @@ class Json extends BaseField
         $val = $this->diffVal($val, $origin_val, true);
 
         if ($val && ! is_string($val)) {
+            $val = $this->removeEmptyArray($val);
             // 这里过滤二维数组中的空数组信息
             $new_val = [];
             foreach ($val as $k => $v) {
@@ -58,9 +59,36 @@ class Json extends BaseField
         }
         $val = $this->diffVal($val, $val, false);
 
+        $val = $this->removeEmptyArray($val);
+
         $isset = $options['isset'];
 
         return $this->getData($val, $isset);
+    }
+
+    /**
+     * 递归检测键值是否为空的数组，如果是则移除该键，从最深层开始往上级检测
+     *
+     * @return array|string
+     */
+    public function removeEmptyArray($val)
+    {
+        if (! is_array($val)) {
+            return $val;
+        }
+
+        foreach ($val as $k => $v) {
+            if (is_array($v)) {
+                $v = $this->removeEmptyArray($v);
+                if (empty($v)) {
+                    unset($val[$k]);
+                } else {
+                    $val[$k] = $v;
+                }
+            }
+        }
+
+        return $val;
     }
 
     /**
