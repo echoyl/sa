@@ -3,6 +3,7 @@
 namespace Echoyl\Sa\Services\dev\design;
 
 use Echoyl\Sa\Models\dev\Menu;
+use Echoyl\Sa\Services\dev\MenuService;
 use Illuminate\Support\Arr;
 
 class BaseService
@@ -25,7 +26,9 @@ class BaseService
         $this->model = new Menu;
         $this->config = $config ? $config : [];
 
-        $item = $this->model->where(['id' => $id])->first();
+        $ms = new MenuService;
+
+        $item = $ms->menu(['id' => $id]);
         if ($item) {
             $item = $item->toArray();
             $this->item = $item;

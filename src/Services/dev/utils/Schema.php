@@ -511,9 +511,9 @@ class Schema
      */
     public static function hasColumn($table, $column)
     {
-        if (env('DB_CONNECTION') == 'mysql' && self::getMysqlVersion() < '5.7') {
+        if (env('DB_CONNECTION') == 'mysql' && static::getMysqlVersion() < '5.7') {
             // 只有当mysql版本低于5.7时才会使用这个方法
-            $columns = self::getTableColumns($table);
+            $columns = static::getTableColumns($table);
 
             return in_array($column, $columns);
         } else {
@@ -531,7 +531,7 @@ class Schema
         static $version;
         if (! $version) {
             $result = DB::select('SELECT VERSION() AS version');
-            $version = Arr::get($result, '0.version');
+            $version = $result[0]->version ?? '';
         }
 
         return $version;

@@ -80,6 +80,7 @@ class MenuController extends CrudController
         $ds = new DevService;
         $ds->allMenu(true);
         $ds->allModel(true);
+        MenuService::flushCache();
 
         return $this->success('success');
     }
@@ -230,6 +231,7 @@ class MenuController extends CrudController
             $data['path'] = $topath; // 如果未设定则使用被复制path
         }
         $this->model->insert($data);
+        MenuService::flushCache();
 
         return $this->success('操作成功');
     }
@@ -963,6 +965,7 @@ class MenuController extends CrudController
      */
     public function devEditRet($id, $type = 'table', $item_data = [])
     {
+        MenuService::flushCache(); // 清除缓存
         if ($id) {
             $item = $this->model->where(['id' => $id])->first();
         } else {
@@ -1016,15 +1019,13 @@ class MenuController extends CrudController
 
     public function updateMenuDesc($menu_ids = [])
     {
-        $ds = new DevService;
-        $ds->allMenu(true);
-        $ds->allModel(true);
         foreach ($menu_ids as $menu_id) {
             $this->tableConfig($menu_id);
             $this->formConfig($menu_id);
             $this->otherConfig($menu_id);
         }
 
+        $this->clearCache();
     }
 
     /**
@@ -1047,6 +1048,7 @@ class MenuController extends CrudController
             foreach ($items as $val) {
                 $val->delete();
             }
+            MenuService::flushCache();
 
             return $this->success(['currentUser' => $this->getUserInfo()]);
         }

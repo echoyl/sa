@@ -7,10 +7,12 @@ use Echoyl\Sa\Services\admin\LocaleService;
 use Echoyl\Sa\Services\dev\utils\Utils;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use stdClass;
 
 class MenuService
 {
+    public const CACHE_KEY = 'devMenuServiceAll';
     /**
      * @var array 模型默认基础权限子集
      */
@@ -203,10 +205,19 @@ class MenuService
     {
         static $data = [];
         if (empty($data)) {
-            $data = (new Menu)->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+            $data = Cache::get(self::CACHE_KEY);
+            if (! $data) {
+                $data = (new Menu)->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+                Cache::set(self::CACHE_KEY, $data);
+            }
         }
 
         return $data;
+    }
+
+    public static function flushCache()
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**
@@ -227,14 +238,30 @@ class MenuService
             'model' => $model,
             'path' => request('path'),
         ];
-        $item = (new Menu)->where($where)->first();
+        $item = $this->getAll()->first(function ($m) use ($where) {
+            foreach ($where as $key => $val) {
+                if ($m[$key] != $val) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 
         return $item ? $item['category_id'] : 0;
     }
 
     public function menu($where)
     {
-        return (new Menu)->where($where)->first();
+        return $this->getAll()->first(function ($m) use ($where) {
+            foreach ($where as $key => $val) {
+                if ($m[$key] != $val) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 
     public function posts()
@@ -396,13 +423,17 @@ class MenuService
             $menu = $this->posts();
             if ($menu) {
                 // 检测内容模块是否有子内容
-                $child = (new Menu)->where(['path' => $posts_child, 'parent_id' => $menu['id']])->first();
+                $child = $this->getAll()->first(function ($m) use ($posts_child, $menu) {
+                    return $m['path'] == $posts_child && $m['parent_id'] == $menu['id'];
+                });
 
                 return [$name, $child ?: $menu];
             }
 
         }
-        $menu = (new Menu)->where(['router' => $router])->first();
+        $menu = $this->getAll()->first(function ($m) use ($router) {
+            return $m['router'] == $router;
+        });
         // 如果直接指定了路由
         if ($menu) {
             return [$name, $menu];
@@ -415,9 +446,14 @@ class MenuService
         }
 
         // 先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
-        $m = (new Menu)->where(['path' => $name, 'state' => 1])->whereIn('page_type', ['form', 'panel', 'panel2', 'justTable', 'api'])->whereIn('type', [env('APP_NAME'), 'system']);
+        $type_arr = [env('APP_NAME'), 'system'];
+        $m = $this->getAll()->filter(function ($item) use ($name, $type_arr) {
+            return $item['path'] == $name && in_array($item['page_type'], ['form', 'panel', 'panel2', 'justTable', 'api']) && in_array($item['type'], $type_arr);
+        });
         if (! empty($r)) {
-            $m = $this->searchParent($m, $r);
+            $m = $m->filter(function ($item) use ($r) {
+                return $this->hasParents($item, $r);
+            });
         }
         $form_menu = $m->first();
         if ($form_menu) {
@@ -438,23 +474,15 @@ class MenuService
         }
 
         // 通过路由切割来找到菜单
-        $m2 = (new Menu)->where(['path' => $r[0]])->whereIn('type', [env('APP_NAME'), 'system']);
+        $m2 = $this->getAll()->filter(function ($item) use ($r, $type_arr) {
+            return $item['path'] == $r[0] && in_array($item['type'], $type_arr);
+        });
         // d(['path'=>$r[0],'type'=>env('APP_NAME')]);
         // 这里不知道怎么回事只做到了 3层菜单模式 应该写一个递归 无限级菜单读取
         if (isset($r[1])) {
-            array_shift($r);
-            $m2 = $this->searchParent($m2, $r);
-            // $m = $m->whereHas('parent',function($q) use($r){
-            //     $q->where(['path'=>$r[0]]);
-            //     if(isset($r[1]))
-            //     {
-            //         array_shift($r);
-            //         $q->whereHas('parent',function($query) use($r){
-            //             $query->where(['path'=>$r[0]]);
-            //         });
-            //     }
-            // });
-
+            $m2 = $m2->filter(function ($item) use ($r) {
+                return $this->hasParents($item, array_slice($r, 1));
+            });
         }
         $menu = $m2->first();
 
@@ -462,17 +490,19 @@ class MenuService
         return [$name, $menu ?: ['id' => 0]];
     }
 
-    public function searchParent($query, $path)
+    public function hasParents($item, $path)
     {
-        $query->where(['state' => 1])->whereHas('parent', function ($q) use ($path) {
-            $q->where(['path' => $path[0]])->whereIn('type', [env('APP_NAME'), 'system']);
-            if (isset($path[1])) {
-                array_shift($path);
-                $q = $this->searchParent($q, $path);
-            }
+        $parent = $this->getAll()->first(function ($m) use ($item) {
+            return $m['id'] == $item['parent_id'];
         });
+        if (! $parent || $parent['path'] != $path[0] || ! in_array($parent['type'], [env('APP_NAME'), 'system'])) {
+            return false;
+        }
+        if (isset($path[1])) {
+            return $this->hasParents($parent, array_slice($path, 1));
+        }
 
-        return $query;
+        return true;
     }
 
     public function getParentId($id)
