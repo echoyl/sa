@@ -511,14 +511,14 @@ class Schema
      */
     public static function hasColumn($table, $column)
     {
-        if (env('DB_CONNECTION') == 'mysql' && static::getMysqlVersion() < '5.7') {
-            // 只有当mysql版本低于5.7时才会使用这个方法
+        if (env('DB_CONNECTION') == 'mysql') {
+            // 复用带缓存的表字段信息 避免每次调用都查询数据库
             $columns = static::getTableColumns($table);
 
             return in_array($column, $columns);
-        } else {
-            return FacadesSchema::hasColumn($table, $column);
         }
+
+        return FacadesSchema::hasColumn($table, $column);
     }
 
     /**
