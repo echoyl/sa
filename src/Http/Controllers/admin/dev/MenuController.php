@@ -553,7 +553,7 @@ class MenuController extends CrudController
             foreach ($tabs as $key => $tab) {
                 // $_config = $key?request('base.form_config'.$key):$config;
                 $need_update_config = false;
-                [$formColumns,$update] = $this->formTabConfig($item, $tab['config']);
+                [$formColumns,$update] = $this->formTabConfig($item, $tab['config'] ?? []);
                 if (! isset($tab['tab']) && isset($tab['title'])) {
                     $tab['tab'] = [
                         'title' => $tab['title'],

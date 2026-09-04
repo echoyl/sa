@@ -233,7 +233,7 @@ class AdminService
         HelperService::deImagesOne($user, ['avatar']);
         $avatar = $user['avatar']['url'] ?: ($setting['logo']['url'] ?: '');
 
-        $as = new MenuService;
+        // $as = new MenuService;
         $rolename = Arr::get($user, 'role.title', '超级管理员');
         $info = [
             'id' => $user['id'],

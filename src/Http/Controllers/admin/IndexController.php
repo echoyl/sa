@@ -3,12 +3,15 @@
 namespace Echoyl\Sa\Http\Controllers\admin;
 
 use Echoyl\Sa\Http\Controllers\ApiBaseController;
+use Echoyl\Sa\Services\AdminAppService;
 use Echoyl\Sa\Services\AdminService;
+use Echoyl\Sa\Services\dev\MenuService;
 use Echoyl\Sa\Services\HelperService;
 use Echoyl\Sa\Services\NoticeService;
+use Illuminate\Support\Facades\Auth;
 
 /**
- * @property \Echoyl\Sa\Services\AdminAppService $service
+ * @property AdminAppService $service
  */
 class IndexController extends ApiBaseController
 {
@@ -95,6 +98,8 @@ class IndexController extends ApiBaseController
     {
         $user = AdminService::user();
 
+        MenuService::flushCache();
+
         $userinfo = AdminService::parseUser($user);
 
         $userinfo = $this->service->parseUserInfo($userinfo, $user);
@@ -104,7 +109,7 @@ class IndexController extends ApiBaseController
 
     public function setting()
     {
-        $auth = \Illuminate\Support\Facades\Auth::guard('sanctum');
+        $auth = Auth::guard('sanctum');
 
         return $this->success(AdminService::setting($auth->user()));
     }

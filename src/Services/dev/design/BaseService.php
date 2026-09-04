@@ -35,6 +35,15 @@ class BaseService
             $this->config = isset($item[$name]) && $item[$name] ? json_decode($item[$name], true) : [];
         }
 
+        // 补齐config中 tabs项的config字段，因为json格式会清除空数组字段
+        if (isset($this->config['tabs']) && is_array($this->config['tabs'])) {
+            foreach ($this->config['tabs'] as $k => $v) {
+                if (! isset($v['config'])) {
+                    $this->config['tabs'][$k]['config'] = [];
+                }
+            }
+        }
+
     }
 
     /**
