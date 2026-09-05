@@ -150,7 +150,7 @@ class DevService
         $hasone_tpl = "
     public function _name()
     {
-        return \$this->has_type(_modelName::class, '_foreignKey', '_localKey')_filterWhere_orderBy_withDefault;
+        return \$this->has_RelationType(_modelName::class, '_foreignKey', '_localKey')_filterWhere_orderBy_withDefault;
     }";
 
         $has_model = [ucfirst($model['name'])];
@@ -224,7 +224,7 @@ class DevService
                 '_modelName',
                 '_foreignKey',
                 '_localKey',
-                '_type',
+                '_RelationType',
                 '_withDefault',
                 '_filterWhere',
                 '_orderBy',

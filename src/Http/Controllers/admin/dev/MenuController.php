@@ -948,6 +948,7 @@ class MenuController extends CrudController
 
     public function getUserInfo()
     {
+        MenuService::flushCache(); // 清除缓存
         $user = AdminService::user();
         $userinfo = AdminService::parseUser($user);
         $userinfo = $this->service->parseUserInfo($userinfo, $user);

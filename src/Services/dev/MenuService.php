@@ -39,6 +39,11 @@ class MenuService
     ];
 
     /**
+     * @var array 缓存的全量菜单数据（同请求内复用）
+     */
+    protected static $allData = [];
+
+    /**
      * @var array 仅列表类型基础权限子集
      */
     public $justTablePerms = [
@@ -203,20 +208,20 @@ class MenuService
 
     public function getAll()
     {
-        static $data = [];
-        if (empty($data)) {
-            $data = Cache::get(self::CACHE_KEY);
-            if (! $data) {
-                $data = (new Menu)->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
-                Cache::set(self::CACHE_KEY, $data);
+        if (empty(self::$allData)) {
+            self::$allData = Cache::get(self::CACHE_KEY);
+            if (! self::$allData) {
+                self::$allData = (new Menu)->where(['state' => 1])->orderBy('displayorder', 'desc')->orderBy('id', 'asc')->get();
+                Cache::set(self::CACHE_KEY, self::$allData);
             }
         }
 
-        return $data;
+        return self::$allData;
     }
 
     public static function flushCache()
     {
+        self::$allData = [];
         Cache::forget(self::CACHE_KEY);
     }
 
