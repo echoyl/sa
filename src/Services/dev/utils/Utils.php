@@ -34,6 +34,7 @@ class Utils
         'digit' => 'digit',
         'confirm' => 'confirm',
         'radioButton' => 'select',
+        'radioSegmented' => 'select',
         'checkbox' => 'select',
         'aliyunVideo' => 'aliyunVideo',
         'modalSelect' => 'modalSelect',

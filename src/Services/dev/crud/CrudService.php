@@ -32,7 +32,7 @@ use Echoyl\Sa\Services\dev\crud\fields\With;
 /**
  * crud字段的渲染
  *
- * @property \Echoyl\Sa\Services\dev\crud\item\Pca $pca
+ * @property item\Pca $pca
  */
 class CrudService
 {
@@ -75,6 +75,7 @@ class CrudService
             'selects' => Selects::class,
             'select' => Select::class,
             'radioButton' => Radio::class,
+            'radioSegmented' => Radio::class,
             'cascader' => Cascader::class,
             'cascaders' => Cascader::class,
             'aliyunVideo' => AliyunVideo::class,

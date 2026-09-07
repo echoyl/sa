@@ -708,7 +708,7 @@ class DevService
                 $default_value = $column['default'] ?? '';
 
                 $int_value_form_types = ['price']; // 需要直接转化为int类型
-                $int_value_form_types_need_relation = ['select', 'search_select', 'radioButton', 'searchSelect'];
+                $int_value_form_types_need_relation = ['select', 'search_select', 'radioButton', 'radioSegmented', 'searchSelect'];
 
                 if (in_array($form_type, $int_value_form_types) || (in_array($form_type, $int_value_form_types_need_relation) && isset($all_models[$name]))) {
                     if ($default_value) {
@@ -749,7 +749,7 @@ class DevService
                 }
 
                 // 需要设置class的字段类型
-                $need_set_class_form_types = ['select', 'selects', 'radioButton', 'checkbox', 'searchSelects', 'cascaders', 'cascader', 'modalSelects'];
+                $need_set_class_form_types = ['select', 'selects', 'radioButton', 'radioSegmented', 'checkbox', 'searchSelects', 'cascaders', 'cascader', 'modalSelects'];
                 if (in_array($form_type, $need_set_class_form_types) && isset($all_models[$name])) {
                     $d['class'] = '@php'.$all_models[$name].'::class@endphp';
                 }
@@ -759,7 +759,7 @@ class DevService
                     $d['data_name'] = Utils::uncamelize($all_relations[$name]['name']);
                 }
 
-                if (in_array($form_type, ['select', 'selects', 'radioButton', 'checkbox'])) {
+                if (in_array($form_type, ['select', 'selects', 'radioButton', 'radioSegmented', 'checkbox'])) {
                     if (isset($all_models[$name])) {
                         // 如果是select 且设置了tabel menu，那么form_data设置的label 和value
                         // 新增数据筛选配置

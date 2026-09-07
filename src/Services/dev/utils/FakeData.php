@@ -214,6 +214,7 @@ class FakeData
                         'switch' => 'randomNumber',
                         'image' => 'image',
                         'radioButton' => 'randomStr',
+                        'radioSegmented' => 'randomStr',
                         'tinyEditor' => 'content',
                         'textarea' => 'text',
                         'varchar' => 'text',

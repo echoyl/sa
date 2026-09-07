@@ -284,6 +284,7 @@ class CrudController extends ApiBaseController
                     break;
                 case 'select':
                 case 'radioButton':
+                case 'radioSegmented':
                     $m = $m->where($name, $search_val);
                     break;
                 case 'pca':

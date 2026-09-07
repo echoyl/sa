@@ -510,7 +510,7 @@ class FormItem
         $label = $setting['label'] ?? '';
         $value = $setting['value'] ?? '';
 
-        if (in_array($this->form_type, ['select', 'selects', 'radioButton', 'checkbox'])) {
+        if (in_array($this->form_type, ['select', 'selects', 'radioButton', 'radioSegmented', 'checkbox'])) {
             if ($this->schema) {
                 // 当有数据库字段时，自动获取字段名 否则还是使用组件自带的label 和 value
                 $label = $label ?: 'title';
@@ -554,7 +554,7 @@ class FormItem
             $d['fieldProps']['buttonStyle'] = 'solid';
         }
 
-        if (in_array($this->form_type, ['radioButton', 'checkbox'])) {
+        if (in_array($this->form_type, ['radioButton', 'radioSegmented', 'checkbox'])) {
             $d['valueType'] = $this->form_type;
         }
 
