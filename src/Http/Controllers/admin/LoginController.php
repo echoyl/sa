@@ -50,6 +50,9 @@ class LoginController extends ApiBaseController
         } else {
             $username = $request->input('username');
             $pwd = $request->input('password');
+            if (! $username || ! $pwd) {
+                return $this->fail([1, '请输入账号密码']);
+            }
 
             $info = AdminService::doLoginByUsername($username, $pwd);
         }
