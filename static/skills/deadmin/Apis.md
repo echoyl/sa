@@ -1,901 +1,571 @@
-# DeAdmin后台管理接口文档
+# deadmindev 前端页面接口文档
 
-## 1. 接口概述
+> 适用范围：本项目前端 `src/pages` 目录下各页面调用的后端接口。
+> 文档同时面向开发者与 AI，字段表与 JSON 示例可直接用于联调、Mock 与代码生成。
+> 阅读建议：先看「通用约定」，再按页面（第 2~7 章）查阅具体接口。
 
-本文档描述了用户管理相关的 RESTful API 接口规范。所有接口均使用 JSON 格式进行数据交互。
+## 目录
 
-- **Base URL** : `/.env` 文件中的 `APP_URL`,如果没有则使用 `http://localhost:8000`
-- **URL前缀**: `/.env` 文件中的 `APP_ADMIN_PREFIX`,如果没有则使用 `sadmin`
-- **认证方式**: Bearer Token (在 Header 中携带 `Authorization: Bearer <token>`)
-- **【重要】请求编码**: 请求体必须使用UTF-8编码，否则中文数据会显示乱码
+- [1. 通用约定](#1-通用约定)
+- [2. 登录相关 `pages/login`](#2-登录相关-pageslogin)
+- [3. 菜单管理 `pages/dev/menu`](#3-菜单管理-pagesdevmenu)
+- [4. 模型管理 `pages/dev/model`](#4-模型管理-pagesdevmodel)
+- [5. 关联管理 `pages/dev/modelRelation`](#5-关联管理-pagesdevmodelrelation)
+- [6. 系统设置 `pages/dev/setting`](#6-系统设置-pagesdevsetting)
+- [7. 示例与其它 `pages/dev/test`](#7-示例与其它-pagesdevtest)
 
 ---
 
-### Header 参数
+## 1. 通用约定
 
-| 参数名        | 类型   | 必填 | 描述                                                                 |
-| :------------ | :----- | :--- | :------------------------------------------------------------------- |
-| Authorization | String | 是   | 身份验证令牌，格式为 `Bearer {token}`                                |
-| Content-Type  | String | 是   | `application/json; charset=utf-8`，传输中文时必须使用UTF-8编码      |
+### 1.1 请求基础
 
-### 响应参数
+- 所有接口与前端同源部署，路径前缀 `baseurl`（后台设置中配置，构建期写死，默认 `antadmin`）。
+- 请求统一由 `src/components/Sadmin/lib/request`（UmiRequest 封装）发出，自动携带登录凭证。
+- 内容类型 `application/json`。
 
-| 参数名 | 类型      | 描述                                             |
-| :----- | :-------- | :----------------------------------------------- |
-| code   | `Integer` | 业务状态码，`0` 表示成功                         |
-| msg    | `String`  | 提示信息                                         |
-| data   | `Any`     | 返回数据，可能是`对象`，`数组`或`字符串`或`null` |
-
-以下接口响应参数若无特定说明，都包含以上参数。
-
-### 全局错误码code说明
-
-| HTTP 状态码 | 业务错误码 | 描述               | 处理建议                        |
-| :---------- | :--------- | :----------------- | :------------------------------ |
-| 200         | 0          | 请求成功           | -                               |
-| 200         | 1001       | Token 无效或已过期 | 重新登录获取新 Token            |
-| 400         | 40001      | 参数校验失败       | 检查请求参数是否符合规范        |
-| 401         | 40100      | Token 无效或已过期 | 重新登录获取新 Token            |
-| 403         | 40300      | 无权限访问该资源   | 确认当前用户角色权限            |
-| 404         | 40401      | 资源不存在         | 检查资源 ID 是否正确            |
-| 429         | 42900      | 请求过于频繁       | 稍后重试，注意限流策略          |
-| 500         | 50000      | 服务器内部错误     | 请联系管理员并提供 X-Request-ID |
-
-## 2. 用户相关
-
-### 2.1 登录后台获取token
-
-- **接口描述** : 用户通过账号和密码进行身份验证，成功后返回访问令牌（Access Token）。
-- **请求路径**: `/login`
-- **请求方法**: `POST`
-
-#### 2.1.1请求参数 (Body)
-
-| 参数名   | 类型   | 必填 | 描述                 | 示例值   |
-| :------- | :----- | :--- | :------------------- | :------- |
-| username | String | 是   | 用户名或注册邮箱     | `admin`  |
-| password | String | 是   | 用户密码（明文传输） | `123456` |
-
-#### 2.1.2响应参数
-
-| 参数名          | 类型   | 描述                        |
-| :-------------- | :----- | :-------------------------- |
-| data            | Object | 登录凭证数据对象            |
-| └─ access_token | String | 登录token，用于后续接口鉴权 |
-| └─ userinfo     | Object | 登录用户信息                |
-| └─ setting      | Object | 后台配置信息                |
-
-#### 2.1.3请求示例
-
-```bash
-curl -X POST "http://localhost:8000/sadmin/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "123456"
-  }'
-```
-
-#### 2.1.4成功响应示例
-
-**HTTP Status**: `200 OK`
+### 1.2 统一响应结构
 
 ```json
 {
 	"code": 0,
-	"msg": "登录成功，页面跳转中...",
-	"data": {
-		"access_token": "514|7QpAJGI1NWefL75R5T53ab5oc0NkNRQlphAs6Z3A1822cd49",
-		"setting": {},
-		"userinfo": { "id": 1 }
-	}
+	"msg": "操作成功",
+	"data": {},
+	"total": 100,
+	"search": {}
 }
 ```
 
-#### 2.1.5错误响应示例
+| 字段     | 类型   | 说明                                          |
+| -------- | ------ | --------------------------------------------- |
+| `code`   | int    | `0` 成功；非 0 失败（见下方错误码）           |
+| `msg`    | string | 提示信息                                      |
+| `data`   | any    | 详情 / 操作返回数据                           |
+| `total`  | int    | 仅列表接口：符合条件的总记录数                |
+| `search` | object | 仅列表接口：附带的下拉/枚举数据、摘要、页脚等 |
 
-**HTTP Status**: `404 Not Found`
+> 约定：`code == 0` 视为成功；`code == 1`（或其非 0 值）为业务失败；未返回 `code` 视为接口异常。
 
-```json
-{
-	"code": 1,
-	"msg": "User not found",
-	"data": null
-}
+### 1.3 业务错误码（登录相关）
+
+| code             | 含义                                                                     |
+| ---------------- | ------------------------------------------------------------------------ |
+| `2`              | 需要输入图形验证码（前端显示验证码输入框）                               |
+| `3`              | 帐密错误 / 需图形验证码（短信登录时同时刷新图形验证码）                  |
+| `401` / `401301` | 未登录 / 无权限（`GET` 会跳转 `403`，`POST` 或带 `drawer` 标记不会跳转） |
+
+### 1.4 CRUD 接口规范（dev 系列页面通用）
+
+`SaForm` / `SaTable` 组件统一遵循以下 URL 语义：
+
+| 动作      | 方法与 URL       | 请求体                                           | 说明                                           |
+| --------- | ---------------- | ------------------------------------------------ | ---------------------------------------------- |
+| 列表      | `GET {url}`      | Query：`current`、`pageSize` + 搜索字段          | 分页，响应带 `total`、`search`                 |
+| 详情      | `GET {url}/show` | Query：`id` 等主键参数                           | 返回单条记录放 `data`                          |
+| 新增/编辑 | `POST {url}`     | `{ "base": { 各字段 } }`                         | 有 `id` 为编辑，无 `id`（或 `dataId=0`）为新增 |
+| 删除      | `DELETE {url}/1` | `{ "id": 123 }`                                  | URL 固定 `/1`，真实 id 在 body                 |
+| 状态切换  | `POST {url}`     | `{ "id": 123, "state": "1", "actype": "state" }` | 开关列切换启用/停用                            |
+
+> 提交时所有字段统一包裹在 `base` 对象中（`base` 由组件自动组装），业务参数（如 `model_id`）与 `base` 平级。
+
+### 1.5 列表请求示例
+
+```
+GET dev/menu?current=1&pageSize=10&title=菜单&reloadUid=xxx
 ```
 
-## 3.菜单相关
+`reloadUid`：页面刷新标记，由组件传参；服务端收到即可忽略。
 
-### 3.0 菜单字段说明
-
-| 字段名称       | 类型         | 默认值         | 描述                                          |
-| :------------- | :----------- | :------------- | :-------------------------------------------- |
-| id             | int          | AUTO_INCREMENT | 主键ID                                        |
-| title          | varchar(500) | ''             | 菜单标题                                      |
-| title_locale   | longtext     | NULL           | 菜单名称多语言内容                            |
-| path           | varchar(500) | ''             | 菜单路径                                      |
-| parent_id      | int          | 0              | 父级菜单ID                                    |
-| displayorder   | int          | 0              | 显示排序                                      |
-| status         | int          | 0              | 菜单隐藏控制 (1:显示, 0:隐藏)                 |
-| icon           | varchar(500) | ''             | 菜单图标                                      |
-| desc           | text         | NULL           | 额外数据 (json格式)                           |
-| created_at     | datetime     | NULL           | 创建时间                                      |
-| updated_at     | datetime     | NULL           | 更新时间                                      |
-| state          | int          | 0              | 状态枚举 (1或0)                               |
-| category_id    | int          | 0              | 模型的分类id值                                |
-| router         | varchar(50)  | ''             | 菜单指定路由 (为空时自动根据父级拼接)         |
-| perms          | varchar(500) | ''             | 菜单指定的子权限 (json格式)                   |
-| type           | varchar(500) | system         | 菜单类型 (system:系统菜单, 其它:对应项目菜单) |
-| admin_model_id | int          | 0              | 所选的模型id                                  |
-| table_config   | text         | NULL           | 列表展示列的配置信息                          |
-| form_config    | text         | NULL           | 表单展示的配置信息                            |
-| other_config   | text         | NULL           | 其它额外配置信息                              |
-| page_type      | varchar(255) | ''             | 菜单页面类型 (category 或 table)              |
-| open_type      | varchar(255) | page           | form页面打开方式 (page 或 drawer)             |
-| addable        | int          | 1              | 是否可以新增                                  |
-| editable       | int          | 1              | 表单是否可以提交                              |
-| deleteable     | int          | 1              | 数据是否可以删除                              |
-| setting        | text         | NULL           | 其它设置集合                                  |
-
-#### 3.0.1 `table_config` 与 `form_config`字段
-
-table_config结构为 column[]
-
-form_config结构为
-
-```json
-{
-  "tabs": [//可多个tab
-    {
-      "tab": {//表单标签页
-        "title": "基础信息",//标签页标题
-      },
-      "config": [//表单字段配置
-        {//每组为一行
-          "columns": [`column`],//每行中的列，列为column类型
-          "uid": "6NRPLAflL3",//分组每行的唯一标识
-        },
-		...//多行
-	  ]
-	},
-  ]
-}
-```
-
-菜单页面中列表和表单展示的字段配置，有值则传参，没有值不需要传递该参数
-
-定义为 column
-
-| 字段名称      | 类型               | 默认值 | 描述                                                                                              |
-| :------------ | :----------------- | :----- | :------------------------------------------------------------------------------------------------ |
-| uid           | string             | -      | 当前项的唯一id，不填写后端接口自动生成                                                            |
-| key           | string \| string[] | -      | 模型字段名称，如果是数组表示关联中的字段，支持多层级                                              |
-| type          | string             | ''     | 组件类型,不传该值会默认使用模型中选择的form_type                                                  |
-| props         | object             | {}     | 当前字段的其它配置信息                                                                            |
-| can_search    | array              | []     | 当前字段是否可以检索，[1] 表示true 空，不传或[]表示false 仅列表 `table_config`                    |
-| hide_in_table | array              | []     | 当前字段是否在表格中隐藏，[1] 表示true 空，不传或[]表示false 仅列表 `table_config`                |
-| table_menu    | array              | []     | 是否开启table中的tab切换筛选，[1] 表示true 空，不传或[]表示false 仅列表 `table_config`            |
-| sort          | array              | []     | 当前字段是否开启排序，[1] 表示true 空，不传或[]表示false 仅列表 `table_config`                    |
-| editable      | bool               | false  | 当前字段是否开启编辑 仅列表 `table_config`                                                        |
-| editable_type | string             | number | 当前字段开启编辑的输入框类型 支持 number 和 string 即数字输入框和文本输入框 仅列表 `table_config` |
-| readonly      | bool               | false  | 是否只读 仅表单 `form_config`                                                                     |
-| required      | bool               | false  | 是否必填 仅表单 `form_config`                                                                     |
-| hidden        | bool               | false  | 是否隐藏 仅表单 `form_config`                                                                     |
-| disabled      | bool               | false  | 是否禁用 仅表单 `form_config`                                                                     |
-
-其中，`props` 对象可以包含以下属性：
-
-| 参数名        | 类型   | 描述                                                                                                                             |
-| :------------ | :----- | :------------------------------------------------------------------------------------------------------------------------------- |
-| title         | string | 自定义表头title或form项label                                                                                                     |
-| dataIndex     | string | 自定义数据的key，数据接口返回新增自定义的键值等                                                                                  |
-| width         | string | 列宽 px                                                                                                                          |
-| span          | number | 列的栅格 共24格                                                                                                                  |
-| tip           | object | `{placeholder,tooltip,extra}` 表单 placeholder提示，tooltip问好hover提示，组件后追加 extra提示                                   |
-| fieldProps    | object | antdesign pro components的表单项配置                                                                                             |
-| if            | string | 当前项是否显示的条件格式位 {{record?.show}} 双括号包裹表达式，返回真则显示否则隐藏，record表示当前数据信息，user表示当前用户信息 |
-| dom_direction | string | 自定义dom列的排列方式有 `horizontal` `vertical` `dropdown` `none`                                                                |
-| copyable      | bool   | 是否可复制，显示复制按钮                                                                                                         |
-| ellipsis      | bool   | 是否缩略显示长文本                                                                                                               |
-| fixed         | string | 列表列固定位置有 `none` `left` `right`                                                                                           |
-
-其中 `type`表单类型有：
-
-```json
-[
-	{ "label": "日期 - date", "value": "date" },
-	{ "label": "日期区间 - dateRange", "value": "dateRange" },
-	{ "label": "日期时间 - dateTime", "value": "dateTime" },
-	{ "label": "时间区间 - dateTimeRange", "value": "dateTimeRange" },
-	{ "label": "上传 - uploader", "value": "uploader" },
-	{ "label": "自定义显示 - customerColumn", "value": "customerColumn" },
-	{ "label": "密码 - password", "value": "password" },
-	{ "label": "头像显示 - avatar", "value": "avatar" },
-	{ "label": "导出 - export", "value": "export" },
-	{ "label": "导入 - import", "value": "import" },
-	{ "label": "头部操作栏 - toolbar", "value": "toolbar" },
-	{ "label": "底部选择操作栏 - selectbar", "value": "selectbar" },
-	{ "label": "省市区 - pca", "value": "pca" },
-	{ "label": "用户权限 - userPerm", "value": "userPerm" },
-	{ "label": "html显示", "value": "html" },
-	{ "label": "Select选择器", "value": "select" },
-	{ "label": "拾色器 - colorPicker", "value": "colorPicker" },
-	{ "label": "下拉操作 - dropdownAction", "value": "dropdownAction" },
-	{ "label": "异步下拉选择器 - debounceSelect", "value": "debounceSelect" },
-	{ "label": "搜索select", "value": "searchSelect" },
-	{ "label": "评分 - rate", "value": "rate" },
-	{ "label": "滑动条 - slider", "value": "saSlider" },
-	{ "label": "操作栏 - option", "value": "option" },
-	{ "label": "排序 - dragsort", "value": "dragsort" },
-	{ "label": "日期年 - dateYear", "value": "dateYear" },
-	{ "label": "日期季度 - dateQuarter", "value": "dateQuarter" },
-	{ "label": "日期月 - dateMonth", "value": "dateMonth" },
-	{ "label": "日期周 - dateWeek", "value": "dateWeek" },
-	{ "label": "月份区间 - dateMonthRange", "value": "dateMonthRange" },
-	{ "label": "周区间 - dateWeekRange", "value": "dateWeekRange" },
-	{ "label": "年区间 - dateYearRange", "value": "dateYearRange" },
-	{ "label": "季度区间 - dateQuarterRange", "value": "dateQuarterRange" },
-	{ "label": "时间 - time", "value": "time" },
-	{ "label": "编辑表格 - saFormTable", "value": "saFormTable" },
-	{ "label": "属性配置 - jsonForm", "value": "jsonForm" },
-	{ "label": "多行编辑 - formList", "value": "formList" },
-	{ "label": "多行编辑 - saFormList", "value": "saFormList" },
-	{ "label": "json编辑器 - jsonEditor", "value": "jsonEditor" },
-	{ "label": "jsonCode", "value": "jsonCode" },
-	{ "label": "弹层选择器 - modalSelect", "value": "modalSelect" },
-	{ "label": "富文本 - tinyMCE", "value": "tinyEditor" },
-	{ "label": "规格编辑 - guigePanel", "value": "guigePanel" },
-	{ "label": "权限配置 - permGroup", "value": "permGroup" },
-	{ "label": "自定义 - cdependency", "value": "cdependency" },
-	{ "label": "微信自定义菜单 - wxMenu", "value": "wxMenu" },
-	{ "label": "穿梭框 - saTransfer", "value": "saTransfer" },
-	{ "label": "地图选点 - mapInput", "value": "mapInput" },
-	{ "label": "地图显示 - mapShow", "value": "mapShow" },
-	{ "label": "文本域 - textarea", "value": "textarea" },
-	{ "label": "markdown编辑器 - mdEditor", "value": "mdEditor" },
-	{ "label": "分割线 - divider", "value": "divider" },
-	{ "label": "数字 - digit", "value": "digit" },
-	{ "label": "icon选择器 - iconSelect", "value": "iconSelect" },
-	{ "label": "treeSelect", "value": "treeSelect" },
-	{ "label": "cascader", "value": "cascader" },
-	{ "label": "radio", "value": "radio" },
-	{ "label": "checkbox", "value": "checkbox" },
-	{ "label": "switch", "value": "switch" },
-	{ "label": "AutoComplete", "value": "saAutoComplete" },
-	{ "label": "单选按钮 - radioButton", "value": "radioButton" },
-	{ "label": "日期时间 - datetime", "value": "datetime" },
-	{ "label": "日历表单 - formCalendar", "value": "formCalendar" },
-	{ "label": "alert提醒 - alert", "value": "alert" }
-]
-```
-
-### 3.1 获取菜单列表
-
-- **接口描述** : 获取后台菜单列表。
-- **请求路径**: `/dev/menu`
-- **请求方法**: `GET`
-
-#### 3.1.1 响应参数
-
-| 参数名     | 类型  | 描述               |
-| :--------- | :---- | :----------------- |
-| data       | Array | 菜单列表数据       |
-| └─chilren  | Array | 子菜单列表         |
-| └─其它字段 | Any   | 菜单的其它字段信息 |
-
-#### 3.1.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/menu" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 3.1.3 成功响应示例
-
-**HTTP Status**: `200 OK`
+列表响应示例：
 
 ```json
 {
 	"code": 0,
-	"message": "success",
+	"msg": "ok",
+	"total": 12,
 	"data": [
 		{
-			//菜单的字段信息
+			"id": 1,
+			"title": "菜单",
+			"path": "menu",
+			"type": "table",
+			"displayorder": 0
 		}
-	]
-}
-```
-
-### 3.2 获取菜单详情
-
-- **接口描述** : 获取后台菜单列表。
-- **请求路径**: `/dev/menu/show`
-- **请求方法**: `GET`
-
-#### 3.2.1 请求参数
-
-| 参数名 | 类型    | 必填 | 描述                      | 默认值 |
-| :----- | :------ | :--- | :------------------------ | :----- |
-| id     | Integer | 否   | 菜单ID，0的话表示新增菜单 | `0`    |
-
-#### 3.2.1 响应参数
-
-| 参数名 | 类型   | 描述         |
-| :----- | :----- | :----------- |
-| data   | Object | 模型信息数据 |
-
-#### 3.2.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/menu/show?id=1" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 3.2.3 成功响应示例
-
-**HTTP Status**: `200 OK`
-
-```json
-{
-	"code": 0,
-	"message": "success",
-	"data": {
-		//菜单的字段信息
+	],
+	"search": {
+		"types": [{ "label": "菜单", "value": "menu" }]
 	}
 }
 ```
 
-### 3.3 提交保存菜单
-
-- **接口描述** : 提交保存菜单。
-- **请求路径**: `/dev/menu`
-- **请求方法**: `POST`
-
-#### 3.3.1 请求参数 (Body)
-
-| 参数名 | 类型   | 必填 | 描述     | 示例值                                    |
-| :----- | :----- | :--- | :------- | :---------------------------------------- |
-| base   | Object | 是   | 菜单字段 | `{id:1, title:'菜单名称',path:'news'...}` |
-
-#### 3.3.2 响应参数
-
-| 参数名 | 类型   | 描述                   |
-| :----- | :----- | :--------------------- |
-| data   | Object | 修改后或新增后菜单信息 |
-
-#### 3.3.3 请求示例
-
-```bash
-curl -X POST "http://localhost:8000/sadmin/dev/menu" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "base": {
-        "id": 1,
-		"title": "菜单名称",
-		"path": "news"
-    }
-  }'
-```
-
-### 3.4 表格列表列操作
-
-- **接口描述** : 表格列表列的操作包括新增、修改。
-- **请求路径**: `/dev/menu/editTableColumn`
-- **请求方法**: `POST`
-
-#### 3.4.1 请求参数 (Body)
-
-| 参数名       | 类型               | 必填 | 描述                                        | 示例值                         |
-| :----------- | :----------------- | :--- | :------------------------------------------ | :----------------------------- |
-| base         | Object             | 是   | 提交的字段信息                              | {}                             |
-| └ id         | int                | 是   | 菜单id                                      | 1                              |
-| └ actionType | string             | 是   | `add` 新增列 默认 `edit`编辑                | edit add                       |
-| └ key        | string \| string[] | 是   | 模型字段                                    | 'desc' 或者 ['desc']           |
-| └ uid        | string             | 是   | 新增时表示在该列后新增，编辑时为编辑列的uid | 2TuijwKcRP                     |
-| └ 其它字段   | any                | 否   | 菜单项column中的其它字段                    | `{props:{title:"自定义标题"}}` |
-
-#### 3.4.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.5 表格列表列排序
-
-- **接口描述** : 表格列表列的排序。
-- **请求路径**: `/dev/menu/sortTableColumns`
-- **请求方法**: `POST`
-
-#### 3.5.1 请求参数 (Body)
-
-| 参数名  | 类型  | 必填 | 描述                                | 示例值                       |
-| :------ | :---- | :--- | :---------------------------------- | :--------------------------- |
-| id      | int   | 是   | 菜单id                              | 1                            |
-| columns | array | 是   | ['当前列的uid','移动到目标列的uid'] | ["RxE3WSkqjQ", "uchmvgsWeY"] |
-
-#### 3.5.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.6 表格列表列删除
-
-- **接口描述** : 表格列表列的排序。
-- **请求路径**: `/dev/menu/deleteTableColumn`
-- **请求方法**: `POST`
-
-#### 3.6.1 请求参数 (Body)
-
-| 参数名 | 类型   | 必填 | 描述           | 示例值     |
-| :----- | :----- | :--- | :------------- | :--------- |
-| base   | Object | 是   | 提交的字段信息 |            |
-| └ id   | int    | 是   | 菜单id         | 1          |
-| └ uid  | string | 是   | 删除列的uid    | 2TuijwKcRP |
-
-#### 3.6.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.7 表单列操作
-
-- **接口描述** : 表单列的操作包括新增、修改。
-- **请求路径**: `/dev/menu/editFormColumn`
-- **请求方法**: `POST`
-
-#### 3.7.1 请求参数 (Body)
-
-| 参数名       | 类型               | 必填 | 描述                                        | 示例值                         |
-| :----------- | :----------------- | :--- | :------------------------------------------ | :----------------------------- |
-| base         | Object             | 是   | 提交的字段信息                              | {}                             |
-| └ id         | int                | 是   | 菜单id                                      | 1                              |
-| └ actionType | string             | 是   | `add` 新增列 默认 `edit`编辑                | edit add                       |
-| └ key        | string \| string[] | 是   | 模型字段                                    | 'desc' 或者 ['desc']           |
-| └ uid        | string             | 是   | 新增时表示在该列后新增，编辑时为编辑列的uid | 2TuijwKcRP                     |
-| └ 其它字段   | any                | 否   | 菜单项column中的其它字段                    | `{props:{title:"自定义标题"}}` |
-
-#### 3.7.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.8 表单列排序
-
-- **接口描述** : 表格列表列的排序。
-- **请求路径**: `/dev/menu/sortFormColumns`
-- **请求方法**: `POST`
-
-#### 3.8.1 请求参数 (Body)
-
-| 参数名  | 类型  | 必填 | 描述                                        | 示例值                       |
-| :------ | :---- | :--- | :------------------------------------------ | :--------------------------- |
-| id      | int   | 是   | 菜单id                                      | 1                            |
-| columns | array | 是   | ['当前列的uid','移动到目标列或目标组的uid'] | ["RxE3WSkqjQ", "uchmvgsWeY"] |
-
-#### 3.8.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.9 表单列列删除
-
-- **接口描述** : 表格列表列的排序。
-- **请求路径**: `/dev/menu/deleteFormColumn`
-- **请求方法**: `POST`
-
-#### 3.9.1 请求参数 (Body)
-
-| 参数名 | 类型   | 必填 | 描述           | 示例值     |
-| :----- | :----- | :--- | :------------- | :--------- |
-| base   | Object | 是   | 提交的字段信息 |            |
-| └ id   | int    | 是   | 菜单id         | 1          |
-| └ uid  | string | 是   | 删除列的uid    | 2TuijwKcRP |
-
-#### 3.9.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
-
-### 3.10 菜单删除
-
-- **接口描述** : 表格列表列的排序。
-- **请求路径**: `/dev/menu/1`
-- **请求方法**: `DELETE`
-
-#### 3.10.1 请求参数 (Body)
-
-| 参数名 | 类型 | 必填 | 描述   | 示例值 |
-| :----- | :--- | :--- | :----- | :----- |
-| id     | int  | 是   | 菜单id | 1      |
-
-#### 3.10.2 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | string | 操作结果 |
+> `search` 中可携带各下拉字段的枚举（如菜单表单的 `types`），配合 `requestDataName` 使用。
 
 ---
 
-## 4.模型相关
+## 2. 登录相关 `pages/login`
 
-### 4.0 模型字段说明
+登录页同时支持「账号密码登录」与「手机短信登录」，两种 `loginType` 共用 `POST login`。
 
-| 字段名称       | 类型         | 默认值         | 描述                                                         |
-| :------------- | :----------- | :------------- | :----------------------------------------------------------- |
-| id             | int          | AUTO_INCREMENT | id                                                           |
-| title          | varchar(255) | ''             | 标题                                                         |
-| name           | varchar(255) | ''             | 名称                                                         |
-| type           | int          | 0              | 0-文件夹, 1-模型                                             |
-| columns        | text         | NULL           | 模型的表字段信息                                             |
-| created_at     | datetime     | NULL           | 创建时间                                                     |
-| updated_at     | datetime     | NULL           | 更新时间                                                     |
-| parent_id      | int          | 0              | 上级id                                                       |
-| displayorder   | int          | 0              | 显示排序                                                     |
-| leixing        | varchar(255) | ''             | 模型类型 (category - 分类 \| normal - 通用 \| auth - 可登录) |
-| admin_type     | varchar(255) | ''             | system - 系统模型 \| other - 所属项目模型                    |
-| search_columns | text         | NULL           | 字段搜索配置                                                 |
-| unique_fields  | varchar(255) | ''             | 模型的唯一索引字段                                           |
-| setting        | text         | NULL           | 其它设置都放这                                               |
+### 2.1 `POST login` 登录
 
-#### 4.0.1 columns 字段配置
+| 参数         | 类型   | 必填        | 说明                                     |
+| ------------ | ------ | ----------- | ---------------------------------------- |
+| `loginType`  | string | 是          | `account` 或 `phone`                     |
+| `username`   | string | 是(account) | 账号                                     |
+| `password`   | string | 是(account) | 密码                                     |
+| `autoLogin`  | bool   | 否          | 记住登录（前端写入缓存）                 |
+| `captcha`    | string | 条件        | 图形验证码；服务端返回 `code=2/3` 后必填 |
+| `mobile`     | string | 是(phone)   | 手机号                                   |
+| `mobilecode` | string | 是(phone)   | 短信验证码                               |
 
-| 字段名称             | 字段名 (dataIndex) | 描述                                                                                   | 是否必填 |
-| -------------------- | ------------------ | -------------------------------------------------------------------------------------- | -------- |
-| 可为空               | empty              | `[1]` checkbox传递 数组表示true                                                        | 否       |
-| 名称                 | title              | 字段名称                                                                               | 是       |
-| 字段                 | name               | 字段名                                                                                 | 是       |
-| 类型                 | type               | 数据库表字段类型值，如果选择枚举类型，需要在字段配置中配置json可选数据，第一个为默认值 | 是       |
-| 默认值               | default            | 字段默认值                                                                             | 否       |
-| 长度                 | length             | 字段长度 当时varchar或char时需要传输                                                   | 否       |
-| 备注                 | desc               | 字段描述                                                                               | 否       |
-| form类型             | form_type          | 字段表单自动类型                                                                       | 否       |
-| 配置                 | setting            | -                                                                                      | 否       |
-| └ 图片或视频数量限制 | image_count        | 上传图片类型设置图片数量限制                                                           | 否       |
-| └ 省市区层级         | pca_level          | 省市区层级设置 1,2,3分成3层                                                            | 否       |
-| └ 省市区前缀         | pca_topCode        | 限定上级省市显示，逗号分割                                                             | 否       |
-| └ label              | label              | 选择器label 默认title                                                                  | 否       |
-| └ value              | value              | 选择器value 默认id                                                                     | 否       |
-| └ children           | children           | 选择器children 默认children                                                            | 否       |
-| └ swtich开启         | open               | 开关类型打开的描述语                                                                   | 否       |
-| └ swtich关闭         | close              | 开关类型关闭的描述语                                                                   | 否       |
-| └ 多语言             | locale             | 是否开启多语言 true false                                                              | 否       |
-| └ 图片裁切           | image_crop         | 图片上传是否开启裁剪 true false                                                        | 否       |
-| └ json可选数据       | json               | 提供json选择数据 [{id,title}] — 注意：格式为{id,title}，不是{label,value}              | 否       |
-| 菜单                 | table_menu         | 列表中时否开启tab菜单 true false                                                       | 否       |
-
-其中`form_type`的值有：取value值,默认位空值
-
-```json
-[
-	{ "label": "搜索cascader", "value": "search_select" },
-	{ "label": "搜索select - 单选", "value": "searchSelect" },
-	{ "label": "搜索selects - 多选", "value": "searchSelects" },
-	{ "label": "下拉选择- select", "value": "select" },
-	{ "label": "单选按钮 - radioButton", "value": "radioButton" },
-	{ "label": "下拉多选 -selects", "value": "selects" },
-	{ "label": "checkbox - checkbox", "value": "checkbox" },
-	{ "label": "图片上传 - image", "value": "image" },
-	{ "label": "文件上传 - file", "value": "file" },
-	{ "label": "阿里云视频上传 - aliyunVideo", "value": "aliyunVideo" },
-	{ "label": "密码 - password", "value": "password" },
-	{ "label": "文本域 - textarea", "value": "textarea" },
-	{ "label": "开关 - switch", "value": "switch" },
-	{ "label": "时间 - datetime", "value": "datetime" },
-	{ "label": "日期 - date", "value": "date" },
-	{ "label": "Time - time", "value": "time" },
-	{ "label": "层级多选 - cascaders", "value": "cascaders" },
-	{ "label": "层级选择 - cascader", "value": "cascader" },
-	{ "label": "省市区 - pca", "value": "pca" },
-	{ "label": "地图选点 - mapInput", "value": "mapInput" },
-	{ "label": "富文本 - tinyMCE", "value": "tinyEditor" },
-	{ "label": "价格2- price", "value": "price" },
-	{ "label": "价格3- mprice", "value": "mprice" },
-	{ "label": "价格4- mmprice", "value": "mmprice" },
-	{ "label": "数字- digit", "value": "digit" },
-	{ "label": "json", "value": "json" },
-	{ "label": "单选弹层 - modalSelect", "value": "modalSelect" },
-	{ "label": "多选弹层 - modalSelects", "value": "modalSelects" },
-	{ "label": "拾色器 - colorPicker", "value": "colorPicker" },
-	{ "label": "图标选择器 - iconSelect", "value": "iconSelect" },
-	{ "label": "markdown编辑器 - mdEditor", "value": "mdEditor" },
-	{ "label": "滑动条 - slider", "value": "saSlider" },
-	{ "label": "页面配置 - Config", "value": "config" }
-]
-```
-
-#### 4.0.2 setting 字段配置
-
-模型未涉及到以下功能则不传setting字段
-
-| 参数名               | 类型   | 描述                     | 示例值         |
-| :------------------- | :----- | :----------------------- | :------------- |
-| soft_delete          | bool   | 是否开启软删除           | true \| false  |
-| with_system_admin_id | bool   | 是否自动插入系统用户ID   | true \| false  |
-| global_data_search   | bool   | 是否使用全局过滤数据     | true \| false  |
-| global_post_check    | bool   | 是否使用全局检测提交数据 | true \| false  |
-| has_uuids            | bool   | 是否开启自动插入uuid     | true \| false  |
-| has_uuids_name       | string | UUID字段名               | sys_admin_uuid |
-| justModelFile        | bool   | 是否仅生成模型文件       | true \| false  |
-| justControllerFile   | bool   | 是否仅生成控制器文件     | true \| false  |
-| openDragSort         | bool   | 是否开启拖拽排序         | true \| false  |
-| with_platform_id     | bool   | 是否开启Platform字段     | true \| false  |
-
-### 4.1 获取模型列表
-
-- **接口描述** : 获取模型列表。
-- **请求路径**: `/dev/model`
-- **请求方法**: `GET`
-
-#### 4.1.1 响应参数
-
-| 参数名     | 类型  | 描述               |
-| :--------- | :---- | :----------------- |
-| data       | Array | 模型列表数据       |
-| └─chilren  | Array | 子模型列表         |
-| └─其它字段 | Any   | 模型的其它字段信息 |
-
-#### 4.1.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/model" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 4.1.3 成功响应示例
-
-**HTTP Status**: `200 OK`
+请求示例：
 
 ```json
 {
-	"code": 0,
-	"message": "success",
-	"data": [
-		{
-			//模型的字段信息
-		}
-	]
+	"username": "admin",
+	"password": "123456",
+	"autoLogin": true,
+	"loginType": "account",
+	"captcha": "ab12"
 }
 ```
 
-### 4.2 获取模型详情
-
-- **接口描述** : 获取后台菜单列表。
-- **请求路径**: `/dev/model/show`
-- **请求方法**: `GET`
-
-#### 4.2.1 请求参数
-
-| 参数名 | 类型    | 必填 | 描述                      | 默认值 |
-| :----- | :------ | :--- | :------------------------ | :----- |
-| id     | Integer | 否   | 模型ID，0的话表示新增模型 | `0`    |
-
-#### 4.2.1 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | Object | 模型信息 |
-
-#### 4.2.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/model/show?id=1" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 4.2.3 成功响应示例
-
-**HTTP Status**: `200 OK`
+响应示例：
 
 ```json
 {
 	"code": 0,
-	"message": "success",
+	"msg": "登录成功",
 	"data": {
-		//模型的字段信息
+		"access_token": "eyJhbGciOiJIUzI1NiJ9....",
+		"userinfo": { "name": "admin", "redirect": "/" }
 	}
 }
 ```
 
-### 4.3 提交保存模型
+说明：登录成功后前端将 `access_token` 存入缓存并在后续请求携带；`loginType == 'account'` 且未登录时会当作未授权自动跳转 403。
 
-- **接口描述** : 提交保存模型。
-- **请求路径**: `/dev/model`
-- **请求方法**: `POST`
+### 2.2 `POST sms` 发送短信验证码
 
-#### 4.3.1 请求参数 (Body)
+| 参数      | 类型   | 必填 | 说明                                       |
+| --------- | ------ | ---- | ------------------------------------------ |
+| `mobile`  | string | 是   | 手机号                                     |
+| `captcha` | string | 是   | 图形验证码（发送短信前必须已通过图形验证） |
 
-| 参数名 | 类型   | 必填 | 描述     | 示例值                                    |
-| :----- | :----- | :--- | :------- | :---------------------------------------- |
-| base   | Object | 是   | 模型字段 | `{id:1, title:'模型名称',name:'news'...}` |
+请求示例：
 
-#### 4.3.2 响应参数
-
-| 参数名 | 类型   | 描述                   |
-| :----- | :----- | :--------------------- |
-| data   | Object | 修改后或新增后菜单信息 |
-
-#### 4.3.3 请求示例
-
-```bash
-curl -X POST "http://localhost:8000/sadmin/dev/model" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "base": {
-        "id": 1,
-		"title": "模型名称",
-		"name": "news"
-    }
-  }'
+```json
+{ "mobile": "13800138000", "captcha": "ab12" }
 ```
 
-### 4.4 格式化模型文件
+### 2.3 `POST {loginThunder.url}` 雷霆登录
 
-- **接口描述** : 提交保存模型。
-- **请求路径**: `/dev/formatFile\{id}`
-- **请求方法**: `GET`
+- 地址由后台设置动态配置（`adminSetting.loginThunder.url`）。
+- 请求体：`{ "client_id": "xxx" }`，`client_id` 为浏览器随机标识。
 
-#### 4.4.1 请求参数 (GET)
+### 2.4 `GET {loginWechat.url}` 微信扫码登录
 
-| 参数名 | 类型 | 必填 | 描述   | 示例值 |
-| :----- | :--- | :--- | :----- | :----- |
-| id     | int  | 是   | 模型ID | 1      |
-
-#### 4.4.2 响应参数
-
-| 参数名 | 类型   | 描述                   |
-| :----- | :----- | :--------------------- |
-| data   | Object | 修改后或新增后菜单信息 |
-
-## 5.关联相关
-
-### 5.0 关联字段说明
-
-| 字段名称               | 类型         | 默认值         | 描述                                                                   |
-| :--------------------- | :----------- | :------------- | :--------------------------------------------------------------------- |
-| id                     | int          | AUTO_INCREMENT | 主键ID                                                                 |
-| model_id               | int          | 0              | 所属模型id                                                             |
-| title                  | varchar(255) | ''             | 关系名称                                                               |
-| name                   | varchar(255) | ''             | 模型关系名称                                                           |
-| type                   | varchar(255) | ''             | 关系类型 (one \| many \| cascaders \| cascader)                        |
-| foreign_model_id       | int          | 0              | 关联模型id                                                             |
-| foreign_key            | varchar(255) | ''             | 关联模型字段名称                                                       |
-| local_key              | varchar(255) | ''             | 当前模型的字段名称                                                     |
-| created_at             | datetime     | NULL           | 创建时间                                                               |
-| updated_at             | datetime     | NULL           | 更新时间                                                               |
-| can_search             | int          | 0              | 1-支持搜索                                                             |
-| search_columns         | varchar(255) | ''             | 搜索哪些字段 英文逗号拼接                                              |
-| show_column_name       | varchar(255) | ''             | 关联模型展示信息的字段名称 英文逗号拼接                                |
-| with_count             | int          | 0              | 是否计算数量                                                           |
-| with_sum               | varchar(255) | ''             | hasmany类型时存储需要计算和的字段 英文逗号拼接                         |
-| is_with                | int          | 1              | 该关联是否加入with数组                                                 |
-| select_columns         | varchar(500) | ''             | 关联模型包含字段 (可以包含多级) 英文逗号拼接                           |
-| is_with_in_page        | int          | NULL           | 该关联是否加入页面级的with (数据会设置到columnData中供组件使用context) |
-| in_page_select_columns | varchar(255) | ''             | 关联包含的字段 (只包含一级) 英文逗号拼接                               |
-| with_default           | varchar(500) | ''             | 关联的默认返回数据 (withDefault)                                       |
-| filter                 | varchar(500) | ''             | 关联模型数据筛选条件 json [[id,>,10]]                                  |
-| order_by               | varchar(500) | ''             | 关联数据排序方式 json [[id,desc]]                                      |
-| setting                | text         | NULL           | 其它设置放在这里，之后不再新增字段                                     |
+- 地址由后台设置动态配置（`adminSetting.loginWechat.url`）。
+- 前端以其拼装二维码 URL：`{url}?client_id=xxx&timestamp=xxx`，轮询二维码状态由服务端处理。
 
 ---
 
-### 5.1 获取关联列表
+## 3. 菜单管理 `pages/dev/menu`
 
-- **接口描述** : 获取模型列表。
-- **请求路径**: `/dev/relation`
-- **请求方法**: `GET`
+基础路由 `dev/menu`，子操作见下表。
 
-#### 5.1.1 请求参数
+| 接口                             | 方法与 URL              | 说明             |
+| -------------------------------- | ----------------------- | ---------------- |
+| 列表 / 详情 / 保存 / 删除 / 状态 | 见 1.4 CRUD 规范        | 主表 `dev/menu`  |
+| 复制到                           | `POST dev/menu/copyTo`  | 见 3.2           |
+| 移动到                           | `POST dev/menu/moveTo`  | 见 3.3           |
+| 导入                             | `POST dev/menu/import`  | 上传 `.sql` 文件 |
+| 重建配置                         | `POST dev/menu/remenu`  | 无 request 参数  |
+| 关联内容分类                     | `GET web/menu/category` | 见 3.4           |
 
-| 参数名   | 类型    | 必填 | 描述         | 默认值 |
-| :------- | :------ | :--- | :----------- | :----- |
-| model_id | Integer | 是   | 查询模型的id | `0`    |
+### 3.1 保存字段（`base` 内字段，菜单表单）
 
-#### 5.1.1 响应参数
+| dataIndex        | 类型   | 必填   | 说明                                                                                      |
+| ---------------- | ------ | ------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `title`          | string | 是     | 名称；为空时菜单隐藏；支持多语言模板 `{{t("key")}}`                                       |
+| `path`           | string | 否     | 路径；resource 型页面不能以数字开头，且不能含正则字符如 `.[]()`                           |
+| `parent_id`      | int    | 否     | 上级菜单 id（`menuSelect`）                                                               |
+| `type`           | string | 是     | 菜单类型（枚举 `types` 由接口 `search` 返回）                                             |
+| `displayorder`   | int    | 否     | 排序权重，值越大越靠前                                                                    |
+| `admin_model_id` | int    | 否     | 关联数据模型 id（`modelSelect`）                                                          |
+| `icon`           | string | 否     | 图标名称（`iconSelect`）                                                                  |
+| `page_type`      | string | 否     | 页面类型：`table/category/form/panel/panel2/justTable/api/xmarkdown/iframe`，默认 `table` |
+| `open_type`      | string | 否     | 打开方式：`page/drawer/modal`，默认 `page`                                                |
+| `addable`        | bool   | 否     | 是否可新增，默认开                                                                        |
+| `editable`       | bool   | 否     | 是否可编辑，默认开                                                                        |
+| `deleteable`     | bool   | 否     | 是否可删除，默认开                                                                        |
+| `status`         | bool   | 否     | 是否显示菜单；隐藏仍可访问，默认开                                                        |
+| `state`          | bool   | 否     | 是否启用，默认开                                                                          |
+| `setting`        | object | 否     | 菜单设置（子表单 `tableSet` 生成，含 iframeUrl 等）                                       |
+| `category_id`    | int    | string | 否                                                                                        | 关联内容分类（级联选择，依赖 `admin_model_id`） |
+| `desc`           | object | 否     | JSON 描述（jsonEditor）                                                                   |
+| `perms`          | object | 否     | 权限配置 JSON                                                                             |
+| `other_config`   | object | 否     | 其它配置 JSON                                                                             |
 
-| 参数名 | 类型  | 描述     |
-| :----- | :---- | :------- |
-| data   | Array | 关联数据 |
-
-#### 5.1.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/relation?model_id=1" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 5.1.3 成功响应示例
-
-**HTTP Status**: `200 OK`
-
-```json
-{
-	"code": 0,
-	"message": "success",
-	"data": [
-		{
-			//关联的字段信息
-		}
-	]
-}
-```
-
-### 5.2 获取关联详情
-
-- **接口描述** : 获取后台菜单列表。
-- **请求路径**: `/dev/relation/show`
-- **请求方法**: `GET`
-
-#### 5.2.1 请求参数
-
-| 参数名 | 类型    | 必填 | 描述                      | 默认值 |
-| :----- | :------ | :--- | :------------------------ | :----- |
-| id     | Integer | 否   | 关联ID，0的话表示新增模型 | `0`    |
-
-#### 5.2.1 响应参数
-
-| 参数名 | 类型   | 描述     |
-| :----- | :----- | :------- |
-| data   | Object | 关联信息 |
-
-#### 5.2.2 请求示例
-
-```bash
-curl -X GET "http://localhost:8000/sadmin/dev/relation/show?id=1" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-```
-
-#### 5.2.3 成功响应示例
-
-**HTTP Status**: `200 OK`
+提交示例：
 
 ```json
 {
-	"code": 0,
-	"message": "success",
-	"data": {
-		//关联的字段信息
+	"base": {
+		"title": "用户管理",
+		"path": "user",
+		"parent_id": 0,
+		"type": "menu",
+		"page_type": "table",
+		"open_type": "page",
+		"addable": true,
+		"editable": true,
+		"deleteable": true,
+		"status": true,
+		"state": true,
+		"displayorder": 0,
+		"admin_model_id": 3,
+		"icon": "UserOutlined"
 	}
 }
 ```
 
-### 5.3 提交保存关联
+#### 3.1.1 菜单设置 `setting` 字段详解
 
-- **接口描述** : 提交保存关联。
-- **请求路径**: `/dev/relation`
-- **请求方法**: `POST`
+`setting` 由对话框子表单 `src/components/Sadmin/dev/vars/menu/set.tsx`（tableSet）生成，共 **5 个 Tab**，各字段如下。未涉及的 Tab 属性后端无需关心，保存时整包存入 `setting` 字段。
 
-#### 5.3.1 请求参数 (Body)
+**Tab1 列表设置**（作用于表格详情页）
 
-| 参数名 | 类型   | 必填 | 描述     | 示例值                                                                                                                   |
-| :----- | :----- | :--- | :------- | :----------------------------------------------------------------------------------------------------------------------- |
-| base   | Object | 是   | 模型字段 | `{id:1, title:'分类',name:'category',model_id:1000,foreign_model_id:1001,type:one,local_key:category_id,foreign_key:id}` |
+| dataIndex                        | 类型           | 默认     | 说明                                           |
+| -------------------------------- | -------------- | -------- | ---------------------------------------------- |
+| `showType`                       | radioSegmented | `table`  | 显示类型：`table/card`                         |
+| `table.size`                     | radioSegmented | `middle` | 尺寸：`large/middle/small`                     |
+| `table.scroll.y`                 | string         | -        | 滚动高度（px），留空则自动                     |
+| `table.scroll.x`                 | string         | -        | 滚动宽度，`max-content` 即可                   |
+| `table.styles.section.minHeight` | string         | -        | 内容区最小高度                                 |
+| `table.bordered`                 | switch         | -        | 是否显示边框                                   |
+| `table.checkHoverDisable`        | switch         | -        | 禁用勾选框悬浮效果                             |
+| `scollYFullscreen`               | switch         | -        | 滚动自动全屏（自动计算高度）                   |
+| `minHeightFullscreen`            | switch         | `true`   | 最小高度自动全屏（开启时不要自定义 minHeight） |
+| `checkDisable`                   | switch         | -        | 禁用勾选                                       |
+| `pagination.defaultPageSize`     | digit          | `20`     | 分页数量                                       |
+| `pagination.showQuickJumper`     | switch         | `true`   | 快速跳转                                       |
 
-#### 5.3.2 响应参数
+**Tab2 卡片列表设置**（`showType=card` 时生效）
 
-| 参数名 | 类型   | 描述                   |
-| :----- | :----- | :--------------------- |
-| data   | Object | 修改后或新增后关联信息 |
+| dataIndex                    | 类型  | 默认  | 说明       |
+| ---------------------------- | ----- | ----- | ---------- |
+| `card.grid.column`           | digit | `6`   | 列数       |
+| `card.grid.gutter`           | digit | `16`  | 间隔       |
+| `card.grid.coverImageHeight` | digit | `180` | 封面图高度 |
+| `card.grid.descriptionRows`  | digit | `2`   | 描述行数   |
 
-#### 5.3.3 请求示例
+**Tab3 表单设置**（表单/编辑弹窗）
 
-```bash
-curl -X POST "http://localhost:8000/sadmin/dev/relation" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "base": {
-        "id": 1,
-		"title": "分类",
-		"name": "category",
-		"model_id": 1000,
-		"foreign_model_id": 1001,
-		"type": "one",
-		"local_key": "category_id",
-		"foreign_key": "id"
-    }
-  }'
-```
+| dataIndex                | 类型           | 默认       | 说明                                             |
+| ------------------------ | -------------- | ---------- | ------------------------------------------------ |
+| `formWidth`              | digit          | -          | 表单宽度                                         |
+| `steps_form`             | switch         | -          | 是否分步表单                                     |
+| `form.layout`            | radioSegmented | `vertical` | 标签布局：`horizontal/vertical/inline`           |
+| `form.variant`           | radioSegmented | `filled`   | variant：`outlined/borderless/filled/underlined` |
+| `stepsProps.orientation` | radioSegmented | -          | 分步表单步骤方向：`horizontal/vertical`          |
+
+**Tab4 左侧菜单**（分类/详情类页面左侧树形菜单，父子级字段见下文）
+
+| dataIndex                   | 类型   | 默认          | 说明                                                         |
+| --------------------------- | ------ | ------------- | ------------------------------------------------------------ |
+| `leftMenu.close`            | switch | `true`        | 是否隐藏左侧菜单                                             |
+| `leftMenu.span`             | digit  | `3`           | 宽度（n/24；markdown 类型为 px 值）                          |
+| `leftMenu.title`            | string | -             | 左侧标题                                                     |
+| `leftMenu.name`             | string | `categorys`   | 数据源 name：列表 `search` 返回数据中的 key                  |
+| `leftMenu.url_name`         | string | `category_id` | URL 参数名（markdown 默认 `id`）                             |
+| `leftMenu.field.title`      | string | `label`       | 树节点标题字段                                               |
+| `leftMenu.field.key`        | string | `value`       | 树节点 key 字段                                              |
+| `leftMenu.field.children`   | string | `children`    | 树节点子级字段                                               |
+| `leftMenu.page`             | int    | -             | 关联页面菜单 id（`menuSelect`；关联后启用左树编辑/删除功能） |
+| `leftMenu.paragraphTag`     | string | `p`           | markdown 段落标签                                            |
+| `leftMenu.mdAnchorLevel`    | digit  | `3`           | markdown 目录锚点层级（`<=1` 关闭锚点目录）                  |
+| `leftMenu.contentMaxWidth`  | string | -             | markdown 内容最大宽度                                        |
+| `leftMenu.defaultExpandAll` | switch | `true`        | 是否全部展开                                                 |
+| `leftMenu.showLine`         | switch | `true`        | 是否显示连接线                                               |
+
+**Tab5 其它设置**
+
+| dataIndex        | 类型   | 默认    | 说明                                     |
+| ---------------- | ------ | ------- | ---------------------------------------- |
+| `level`          | string | -       | 分类层级（分类页）                       |
+| `fold`           | switch | -       | 分类是否收缩                             |
+| `iframeUrl`      | string | -       | Iframe 地址（`page_type=iframe` 时使用） |
+| `show_selectbar` | switch | `true`  | 显示选择操作栏                           |
+| `viewable`       | switch | `false` | 操作栏查看项                             |
+
+### 3.2 `POST dev/menu/copyTo` 复制菜单
+
+| 参数     | 类型   | 必填 | 说明                               |
+| -------- | ------ | ---- | ---------------------------------- |
+| `id`     | int    | 是   | 被复制菜单 id（组件自动附带）      |
+| `toid`   | int    | 否   | 复制到哪个菜单下（`menuSelect`）   |
+| `topath` | string | 否   | 复制后的 path，不填使用原菜单 path |
+
+### 3.3 `POST dev/menu/moveTo` 移动菜单
+
+参数同 3.2（`id` + `toid` + 可选 `topath`）。
+
+### 3.4 `GET web/menu/category` 菜单关联内容分类
+
+| 参数             | 类型   | 说明                |
+| ---------------- | ------ | ------------------- |
+| `admin_model_id` | int    | 已选择的关联模型 id |
+| `pagetype`       | string | 固定 `list`         |
+
+响应：级联树 `[{ "id": 1, "title": "分类", "children": [...] }]`。
+
+---
+
+## 4. 模型管理 `pages/dev/model`
+
+基础路由 `dev/model`。
+
+| 接口                 | 方法与 URL                       | 说明                                                                   |
+| -------------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| CRUD                 | 见 1.4                           | 主表 `dev/model`                                                       |
+| 复制到文件夹         | `POST dev/model/copyToFolder`    | 参数 `{ id, toid }`                                                    |
+| 通过已存在表生成字段 | `GET dev/model/getJsonFromTable` | 参数 `name`（表名）、`parent_id`（可选），返回字段配置数组填 `columns` |
+| 快速创建             | `POST dev/model/quickCreate`     | 见 4.2                                                                 |
+
+### 4.1 保存字段（`base` 内字段，模型表单，type 必填）
+
+| dataIndex          | 类型   | 说明                                                                                                                                                  |
+| ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`            | string | 名称（必填）                                                                                                                                          |
+| `name`             | string | 模型名（必填，用于建表/路由）                                                                                                                         |
+| `admin_type`       | string | 模型所属（枚举 `admin_types`，由接口 `search` 返回）                                                                                                  |
+| `type`             | int    | 类型：`0` 文件夹，`1` 模型                                                                                                                            |
+| `leixing`          | string | 模型类型：`category/normal/auth`                                                                                                                      |
+| `columns`          | array  | 字段配置（对话框子表单，见下方说明）                                                                                                                  |
+| `setting`          | object | 模型设置（`settingColumns` 子表单）                                                                                                                   |
+| `afterPostOptions` | array  | 提交后动作，如 `["createModelSchema"]`（自动生成/更新数据库表）                                                                                       |
+| `search_columns`   | array  | 搜索配置列表：每项 `{ name, type, columns }`，`type` ∈ `=/like/whereBetween/whereIn/has/doesntHave`，`columns` 为目标字段（可多选，`has` 类填关联名） |
+| `unique_fields`    | array  | 唯一检测列表：每项 `{ columns[], message }`                                                                                                           |
+| `parent_id`        | int    | 上级文件夹 id                                                                                                                                         |
+
+字段配置 `columns` 项结构（`fieldColumn` formList 子表单生成，通常无需手写，`SchemaToJsonButton` 提供快捷填充），每项字段：
+
+| dataIndex              | 类型     | 说明                                                                                                                                     |
+| ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                | string   | 字段名称（备注，默认作为表备注名）                                                                                                       |
+| `name`                 | string   | 字段名（数据库列名）                                                                                                                     |
+| `type`                 | select   | 字段类型：`int/varchar/datetime/date/text/bigint/longtext/enum/varbinary/other`（`enum` 需在下面的 `json` 配置可选数据，第一个为默认值） |
+| `default`              | string   | 默认值                                                                                                                                   |
+| `length`               | string   | 字段长度                                                                                                                                 |
+| `desc`                 | string   | 备注                                                                                                                                     |
+| `form_type`            | select   | 表单渲染类型（见附录 A 常用类型 + 组件专有类型：`search_select/searchSelect/searchSelects/tinyEditor/saSlider/config` 等）               |
+| `empty`                | checkbox | `1` 允许空值                                                                                                                             |
+| `table_menu`           | switch   | 是否加入列表 Tab 菜单列                                                                                                                  |
+| `setting`              | object   | 字段参数配置（见 4.1.2）                                                                                                                 |
+| `add_customer_columns` | -        | 快捷操作（模板填充按钮，不提交）                                                                                                         |
+
+系统保留字段（`devDefaultFields`）：`created_at / updated_at / deleted_at / displayorder / customer_field / sys_admin_id / sys_admin_uuid`。
+
+#### 4.1.2 字段配置 `columns[].setting` 参数详解
+
+`setting` 由「配置」按钮对话框子表单生成（`fieldColumns.tsx` 的 formColumns），按用途分组：
+
+| dataIndex     | 类型   | 说明                                                                                                                                           |
+| ------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open`        | string | switch 开启文本（如 `启用`）                                                                                                                   |
+| `close`       | string | switch 关闭文本（如 `禁用`）                                                                                                                   |
+| `pca_level`   | digit  | 省市区层级                                                                                                                                     |
+| `pca_topCode` | string | 省市区前缀（限定上级省市显示，逗号分割）                                                                                                       |
+| `label`       | string | 下拉/tree 的 label 字段名，默认 `title`                                                                                                        |
+| `value`       | string | 下拉/tree 的 value 字段名，默认 `id`                                                                                                           |
+| `children`    | string | 树形子级字段名                                                                                                                                 |
+| `image_count` | digit  | 图片/视频上传数量限制                                                                                                                          |
+| `lat`         | string | 地图选点 lat 字段名                                                                                                                            |
+| `lng`         | string | 地图选点 lng 字段名                                                                                                                            |
+| `index`       | switch | 是否建立索引                                                                                                                                   |
+| `locale`      | switch | 是否多语言                                                                                                                                     |
+| `image_crop`  | switch | 是否图片裁切                                                                                                                                   |
+| `json`        | array  | json 可选数据（`enum`/图例等）：每项 `{ id, title, icon, color, status }`，`status` ∈ `success/error/processing/warning/default`（Badge 状态） |
+
+#### 4.1.1 模型设置 `setting` 字段详解
+
+`setting` 由对话框子表单 `src/components/Sadmin/dev/vars/model/settingColumns.tsx` 生成，共 **2 个 Tab**。
+
+**Tab1 基础信息**
+
+| dataIndex              | 类型   | 说明                                         |
+| ---------------------- | ------ | -------------------------------------------- |
+| `soft_delete`          | switch | 软删除（生成 `deleted_at`）                  |
+| `with_system_admin_id` | switch | 自动插入系统用户 ID                          |
+| `global_data_search`   | switch | 使用全局过滤数据                             |
+| `global_post_check`    | switch | 使用全局检测提交数据                         |
+| `has_uuids`            | switch | 开启 HasUuids（自动插入 uuid）               |
+| `has_uuids_name`       | string | UUID 字段名，默认 `sys_admin_uuid`           |
+| `justModelFile`        | switch | 仅生成模型文件（不生成控制器）               |
+| `justControllerFile`   | switch | 仅生成控制器文件（虚拟模型，无字段信息）     |
+| `openDragSort`         | switch | 开启拖拽排序（列表增加拖拽排序列）           |
+| `with_platform_id`     | switch | 开启 Platform 字段（自动增加 `platform_id`） |
+
+**Tab2 导出配置**
+
+`export` 为 formList 模板管理，每项：`{ label 模板名称, value 模板索引, config 模板配置 }`。`config` 为对话框子表单，含 3 个 Tab：
+
+| dataIndex      | 类型   | 说明                                                                                                                                   |
+| -------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `head.columns` | array  | 表头设置（saFormList 表格）：每项 `{ ctitle 表头显示, width 宽度(默认15), cname 自定义字段, type 类型, key 字段选择, setting 列设置 }` |
+| `head_setting` | object | 表头整体样式：`head.background / color / fontsize / height / border / bold`                                                            |
+| `top.content`  | string | 顶部显示内容（支持 blade 模板 `{{data}}`）                                                                                             |
+| `top.*`        | object | 顶部样式，同 head                                                                                                                      |
+| `data.*`       | object | 默认样式（数据区），同 head                                                                                                            |
+
+表头列 `type` 取值：`price` 价格 / `date` 日期 / `index` 序号。
+表头列 `key` 为字段选择（cascader，来源为模型字段，可 `changeOnSelect`）。
+表头列 `setting`（confirmForm，columnsSetting）字段：
+
+| dataIndex    | 类型   | 说明                           |
+| ------------ | ------ | ------------------------------ |
+| `dateformat` | string | 日期格式（该列日期按此格式化） |
+| `sum`        | switch | 是否合计                       |
+| `row_merge`  | switch | 是否行合并                     |
+
+样式 `styleColumns` 通用 6 项（对不同的嵌套前缀生效，如上 `head.`/`top.`/`data.`）：
+
+| dataIndex           | 类型        | 说明     |
+| ------------------- | ----------- | -------- |
+| `<前缀>.background` | colorPicker | 背景色   |
+| `<前缀>.color`      | colorPicker | 字体颜色 |
+| `<前缀>.fontsize`   | digit       | 字号大小 |
+| `<前缀>.height`     | digit       | 行高     |
+| `<前缀>.border`     | switch      | 是否边框 |
+| `<前缀>.bold`       | switch      | 是否加粗 |
+
+### 4.2 `POST dev/model/quickCreate` 快速创建
+
+批量生成「模型 + 菜单 + 路由 + 后端代码」。
+
+| dataIndex        | 类型   | 必填 | 说明                                                                                             |
+| ---------------- | ------ | ---- | ------------------------------------------------------------------------------------------------ |
+| `type`           | string | 是   | `posts` 内容模块 / `perm` 后台用户 / `shop` 门店 / `goods` 商品 / `order` 订单 / `user` 普通用户 |
+| `category_id`    | int    | 否   | 指定已有分类模型（type ∈ posts/shop/goods；不选自动创建分类模型）                                |
+| `goods_id`       | int    | 否   | 指定商品模型（type=order）                                                                       |
+| `user_id`        | int    | 否   | 用户模型（type=order）                                                                           |
+| `title`          | string | 否   | 内容名称                                                                                         |
+| `name`           | string | 否   | 路径名称                                                                                         |
+| `model_to_id`    | int    | 否   | 模型创建到哪个文件夹                                                                             |
+| `menu_to_id`     | int    | 否   | 菜单创建到哪个菜单下                                                                             |
+| `category_level` | int    | 否   | 分类层级，默认 `1`                                                                               |
+| `category_type`  | string | 否   | `single` 单选 / `multiple` 多选，默认 `single`                                                   |
+
+---
+
+## 5. 关联管理 `pages/dev/modelRelation`
+
+基础路由 `dev/relation`，固定携带 `model_id`（当前模型 id，作为业务参数与 `base` 平级）。
+
+| 接口       | 方法与 URL                      | 说明                                          |
+| ---------- | ------------------------------- | --------------------------------------------- |
+| CRUD       | 见 1.4                          | 主表 `dev/relation`，请求/提交均带 `model_id` |
+| 复制到模型 | `POST dev/relation/copyToModel` | 见 5.2                                        |
+
+### 5.1 保存字段（`base` 内字段）
+
+| dataIndex                | 类型   | 说明                                                       |
+| ------------------------ | ------ | ---------------------------------------------------------- |
+| `title`                  | string | 名称                                                       |
+| `name`                   | string | 关联名（必填，后端方法名）                                 |
+| `local_key`              | string | 本地关联字段（`devColumnSelect`）                          |
+| `type`                   | string | 关系类型：`one / many / cascaders / cascader`              |
+| `foreign_model_id`       | int    | 关联的目标模型 id                                          |
+| `foreign_key`            | string | 目标模型字段（依赖 `foreign_model_id`）                    |
+| `can_search`             | bool   | 是否支持搜索                                               |
+| `search_columns`         | array  | 搜索包含字段（多选，依赖 `foreign_model_id`+`can_search`） |
+| `with_count`             | bool   | 是否计算数量总和（仅 `type=many`）                         |
+| `with_sum`               | array  | 求和包含字段（仅 `type=many`）                             |
+| `is_with`                | bool   | 是否加入 `with` 预加载                                     |
+| `select_columns`         | array  | 预加载选择字段（树选择，空=全部）                          |
+| `is_with_in_page`        | bool   | 是否加入 `with_in_page`（仅 `one`）                        |
+| `in_page_select_columns` | array  | 页内选择字段                                               |
+| `setting`                | object | 关联设置（`settingColumns` 子表单）                        |
+| `with_default`           | object | JSON 默认关联参数                                          |
+| `filter`                 | object | JSON 筛选条件                                              |
+| `order_by`               | object | JSON 排序                                                  |
+
+### 5.2 `POST dev/relation/copyToModel` 复制关联
+
+| 参数   | 类型   | 说明                                                         |
+| ------ | ------ | ------------------------------------------------------------ |
+| `toid` | int    | 复制到哪个模型（`modelSelect`）                              |
+| `type` | string | `create` 插入 / `update` 覆盖 / `copy` 复制（默认 `create`） |
+
+---
+
+## 6. 系统设置 `pages/dev/setting`
+
+基础路由 `dev/setting`，为单条配置记录（详情/保存）。
+
+### 6.1 字段（按表单 Tab 分组）
+
+**基础配置**
+
+| dataIndex                               | 类型     | 说明                                        |
+| --------------------------------------- | -------- | ------------------------------------------- |
+| `title`                                 | string   | 系统名称                                    |
+| `baseurl`                               | string   | 后台访问前缀（构建期写死，默认 `antadmin`） |
+| `tech`                                  | string   | 技术支持/备案信息                           |
+| `subtitle`                              | textarea | 登录页子标题                                |
+| `watermark`                             | string   | 水印：`username` 显示后台用户名；空=关闭    |
+| `menu_max_level`                        | digit    | 菜单最大层级（≤5，默认 4）                  |
+| `logo`                                  | uploader | 系统 logo（上传返回 URL）                   |
+| `dev`                                   | switch   | 开发模式                                    |
+| `lang`                                  | switch   | 多语言开关                                  |
+| `sms_type` / `sms_code_id` / `sms_name` | string   | 短信平台（`aliyun`）、验证码模板 id、签名   |
+
+**地图设置**
+
+| dataIndex                                                          | 类型   | 说明                                                               |
+| ------------------------------------------------------------------ | ------ | ------------------------------------------------------------------ |
+| `map_type`                                                         | string | `tianmap/tmap/bmap/amap`                                           |
+| `tmap_key` / `bmap_key` / `tianmap_key` / `amap_key` / `amap_skey` | string | 各平台 key / 安全密钥                                              |
+| `map.default_lat` / `map.default_lng`                              | string | 默认经纬度（嵌套 key，提交为 `map: { default_lat, default_lng }`） |
+
+其余 Tab（主题/登录/集成等）字段众多，`dataIndex` 由 `src/components/Sadmin/dev/vars/setting/*` 内各子表单（`settingColumns` 族）定义，提交时同样整包进入 `base`。需要新增字段时以「后台设置」页面编辑为准。
+
+---
+
+## 7. 示例与其它 `pages/dev/test`
+
+| 页面             | 接口                         | 说明                                      |
+| ---------------- | ---------------------------- | ----------------------------------------- |
+| `test/table.tsx` | `GET/POST example/news/news` | 示例 CRUD，规范同 1.4                     |
+| `test/map.tsx`   | `GET test`                   | 地图示例数据（GeoJSON FeatureCollection） |
+
+> `pages/dev/test/form.tsx`（url 已注释）、`test/dnd.tsx`、`test/map/index.tsx`（点数据本地常量）、`test/formCodePhp.tsx`、`404.tsx`、`403.tsx` 均无接口调用。
+
+---
+
+## 附录 A：字段类型说明（valueType）
+
+`valueType` 决定前端渲染与提交格式，常见类型如下：
+
+| valueType                                 | 提交格式     | 说明                                        |
+| ----------------------------------------- | ------------ | ------------------------------------------- |
+| 默认(input)/textarea                      | string       | 文本                                        |
+| `digit`                                   | int          | 数字                                        |
+| `select` / `radioSegmented`               | string       | 单选（值字符串）                            |
+| `checkbox`                                | array        | 多选                                        |
+| `switch`                                  | bool         | 布尔开关                                    |
+| `date*` / `dateTime`                      | string       | 日期时间（默认格式化后提交）                |
+| `formList`                                | array        | 嵌套数组子表单                              |
+| `menuSelect` / `modelSelect`              | int          | 菜单/模型选择（提交 id）                    |
+| `debounceSelect`                          | string       | 远程搜索选择                                |
+| `devColumnSelect` / `devColumnTreeSelect` | string/array | 模型字段选择                                |
+| `jsonEditor`                              | object       | JSON 编辑                                   |
+| `confirmForm`                             | string       | 对话框子表单（嵌套编辑，返回其 returnData） |
+| `iconSelect`                              | string       | 图标名称                                    |
+
+## 附录 B：错误处理约定
+
+- 前端 `request` 封装对非 200 状态码直接返回 `response`；`code` 缺失视为异常。
+- `code != 0` 时默认弹出 `notification.error(msg)`；页面可通过 `msgcls`/`then` 自定义处理（登录页即如此）。
+- 表单重置时机：`page` 类型或开启 `resetForm` 时，保存成功后会重置表单并回填返回的 `data`。
