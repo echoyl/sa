@@ -69,6 +69,22 @@ location /antadmin/ {
 }
 ```
 
+## 其它
+
+安装已有的功能表，按需安装。数据只安装基础表，实现简化功能，如需要更多功能，请自行安装。
+
+```bash
+php artisan deadmin:table                # 显示帮助
+php artisan deadmin:table pca            # 省市区
+php artisan deadmin:table workflow       # 工作流程
+php artisan deadmin:table web            # 网站菜单
+php artisan deadmin:table wechat --all                    # 微信全部
+php artisan deadmin:table wechat --miniprogram            # 只装小程序
+php artisan deadmin:table wechat --offiaccount            # 只装公众号
+php artisan deadmin:table wechat --pay                    # 只装支付
+php artisan deadmin:table pca --force                     # 强制重建
+```
+
 ## 前端
 
 安装完毕后 直接访问 `http://域名/antadmin`
