@@ -70,10 +70,8 @@ class Creator
 
     public function updateMenuDesc($menu_id)
     {
-        $ds = new DevService;
-        $ds->allMenu(true);
-        $ds->allModel(true);
         $mc = new MenuController(new Menu);
+        $mc->clearCache();
         $mc->tableConfig($menu_id);
         $mc->formConfig($menu_id);
         $mc->otherConfig($menu_id);
@@ -243,6 +241,7 @@ class Creator
             'columns' => $model_columns,
             'menu_columns' => $menu_columns,
             'menu_form_columns' => $menu_form_columns,
+            'column_name' => $c_name,
         ];
 
     }

@@ -16,13 +16,13 @@ class Posts extends Creator
     public function __construct()
     {
         $this->schema = [
-            'posts' => '[{"title":"ID","name":"id","type":"int"},{"title":"标题","name":"title","type":"varchar"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea","empty":[1]},{"title":"作者来源","name":"author","type":"varchar","empty":[1]},{"title":"阅读数","name":"hits","type":"int","form_type":"digit"},{"title":"内容","name":"content","type":"text","form_type":"tinyEditor"},{"title":"其它属性","name":"specs","type":"text","form_type":"json"},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"table_menu":true,"setting":{"open":"启用","close":"禁用"}},{"title":"外链","name":"link","type":"varchar","empty":[1]}]',
+            'posts' => '[{"title":"ID","name":"id","type":"int"},{"title":"标题","name":"title","type":"varchar"},{"title":"图片","name":"titlepic","type":"varchar","form_type":"image","setting":{"image_count":"1"}},{"title":"图集","name":"pics","type":"text","form_type":"image","setting":{"image_count":"9"}},{"title":"描述","name":"desc","type":"varchar","form_type":"textarea","empty":[1]},{"title":"作者来源","name":"author","type":"varchar","empty":[1]},{"title":"阅读数","name":"hits","type":"int","form_type":"digit"},{"title":"内容","name":"content","type":"text","form_type":"tinyEditor"},{"title":"其它属性","name":"specs","type":"text","form_type":"json"},{"title":"状态","name":"state","type":"int","form_type":"switch","default":1,"table_menu":true,"setting":{"open":"启用","close":"禁用"}},{"title":"外链","name":"link","type":"varchar","empty":[1]},{"title":"发布时间","name":"published_at","type":"datetime","form_type":"datetime"}]',
         ];
 
         $this->confJson = [
             'posts' => [
                 'table_config' => '[{"key":"id","props":[]},{"key":"title","can_search":[1],"props":{"width":"300","copyable":true,"ellipsis":true}},{"key":"titlepic"},{"key":"created_at","sort":[1]},{"key":"displayorder"},{"key":"state","table_menu":[1]},{"key":"option"}]',
-                'form_config' => '{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"created_at","props":{"width":"100%"}}]},{"columns":[{"key":"titlepic"},{"key":["pics"]}]},{"columns":[{"key":"displayorder"},{"key":["state"]}]}]},{"tab":{"title":"详情"},"config":[{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]}]},{"tab":{"title":"其它信息"},"config":[{"columns":[{"key":"author"},{"key":"hits"}]},{"id":"rqfxwd86o28","columns":[{"key":["link"],"props":{"tooltip":"设置后列表会跳转该外链"}}]}]}]}',
+                'form_config' => '{"tabs":[{"tab":{"title":"基础信息"},"config":[{"columns":[{"key":"title","required":true},{"key":"published_at","props":{"width":"100%"}}]},{"columns":[{"key":"titlepic"},{"key":"pics"}]},{"columns":[{"key":"displayorder"},{"key":"state"}]},{"columns":[{"key":"desc"}]},{"columns":[{"key":"content","required":true}]}]}]}',
             ],
         ];
     }
@@ -113,9 +113,12 @@ class Posts extends Creator
         // 5.2列表
         $form_config = json_decode($this->confJson['posts']['form_config'], true);
         $tabs = Arr::get($form_config, 'tabs', []);
-        $tabs0 = json_encode(Arr::get($tabs, 0, []));
-        $tabs0 = $this->addColumns($tabs0, $category['menu_form_columns'], 'config');
-        Arr::set($tabs, 0, json_decode($tabs0, true));
+        $config0 = Arr::get($tabs, '0.config', []);
+        // $tabs0 = json_encode(Arr::get($tabs, 0, []));
+        $category_column_name = $category['column_name'];
+        array_splice($config0, 1, 0, $category['menu_form_columns']);
+        // $tabs0 = $this->addColumns($tabs0, $category['menu_form_columns'], 'config');
+        Arr::set($tabs, '0.config', $config0);
         $form_config = json_encode(['tabs' => $tabs]);
 
         $menu = array_merge([
