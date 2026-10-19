@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Services\dev\utils;
 use Echoyl\Sa\Models\dev\Menu;
 use Echoyl\Sa\Models\dev\Model;
 use Echoyl\Sa\Models\dev\model\Relation;
+use Echoyl\Sa\Services\dev\DevService;
 use Echoyl\Sa\Services\HelperService;
 use Illuminate\Support\Facades\DB;
 
@@ -245,7 +246,9 @@ class Dump
 
     public function export($ids = [], $type = 'model')
     {
-        $filename = 'export.'.date('Ymdhis').'.sql';
+        $appname = DevService::appname();
+
+        $filename = ($appname ? $appname.'.' : '').'export.'.date('Ymdhis').'.sql';
 
         $file = storage_path('app/public/'.$filename);
 
