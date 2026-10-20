@@ -41,6 +41,8 @@ class UploadService
 
         $maxsize = Arr::get($setting, 'maxsize', 5); // 默认最大5m
 
+        $maxsize = $maxsize ?: 5;
+
         $sufix = 'extensions';
         if (version_compare(App::version(), '10') < 0) {
             // 小于版本10的用 mimes
