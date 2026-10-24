@@ -63,7 +63,7 @@ class WaterMarkService
 
         $watermark_image = Image::read($watermark_path);
 
-        if ($angle) {
+        if ($angle && $watermark_image->manager) {
             $watermark_image->manager->rotate($angle);
         }
 

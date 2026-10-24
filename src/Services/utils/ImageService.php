@@ -35,6 +35,10 @@ class ImageService
             $manager = Image::make($path);
             $is_old = true;
         } else {
+            // 未安装imagick拓展时不做图片处理
+            if (!extension_loaded('imagick')) {
+                return new self(false);
+            }
             $manager = new ImageManager(new Driver);
             // 检测$manager是否有read方法
             if (method_exists($manager, 'read')) {
@@ -51,6 +55,9 @@ class ImageService
 
     public function height()
     {
+        if (!$this->manager) {
+            return 0;
+        }
         if ($this->is_old) {
             return $this->manager->getHeight();
         } else {
@@ -61,6 +68,9 @@ class ImageService
 
     public function width()
     {
+        if (!$this->manager) {
+            return 0;
+        }
         if ($this->is_old) {
             return $this->manager->getWidth();
         } else {
@@ -70,6 +80,9 @@ class ImageService
 
     public function scale($width, $height)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         if ($this->is_old) {
             $this->manager->resize($width, $height, function ($constraint) {
                 $constraint->aspectRatio();
@@ -83,6 +96,9 @@ class ImageService
 
     public function resize($width, $height)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         $this->manager->resize($width, $height);
 
         return $this;
@@ -90,6 +106,9 @@ class ImageService
 
     public function rotate($angle)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         $this->manager->rotate($angle);
 
         return $this;
@@ -97,6 +116,9 @@ class ImageService
 
     public function place(ImageService $place, $position, $offset_x, $offset_y, $opacity = 100)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         if ($this->is_old) {
             $this->manager->insert($place->manager, $position, $offset_x, $offset_y);
         } else {
@@ -108,6 +130,9 @@ class ImageService
 
     public function align($position, $offset_x, $offset_y)
     {
+        if (!$this->manager) {
+            return [0, 0];
+        }
         if ($this->is_old) {
             $size = $this->manager->getSize()->align($position, $offset_x, $offset_y);
 
@@ -121,6 +146,9 @@ class ImageService
 
     public function text($text, $x, $y, $c)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         if ($this->is_old) {
             $this->manager->text($text, $x, $y, $c);
         } else {
@@ -132,11 +160,18 @@ class ImageService
 
     public function save($path)
     {
+        if (!$this->manager) {
+            return false;
+        }
+
         return $this->manager->save($path);
     }
 
     public function modify($p)
     {
+        if (!$this->manager) {
+            return $this;
+        }
         $this->manager->modify($p);
 
         return $this;
