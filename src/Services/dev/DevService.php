@@ -291,7 +291,7 @@ class DevService
 
         $this->line('开始生成model文件：');
 
-        [$use_namespace, $crud_config, $parse_columns, $useModelArr, $locale_columns] = $this->createControllerRelation($data);
+        [$use_namespace, $crud_config, $parse_columns, $useModelArr, $locale_columns,$model_config] = $this->createControllerRelation($data);
         [$use_namespace2, $tpl, $use] = $this->createModelRelation($data, $useModelArr);
 
         $use_namespace = array_unique(array_merge($use_namespace, $use_namespace2));
@@ -315,10 +315,9 @@ class DevService
         }
 
         // 添加唯一字段检测
-        $crud_config = [];
         if ($data['unique_fields']) {
             $_unique_fields = json_decode($data['unique_fields'], true);
-            $crud_config[] = 'public $uniqueFields = '.(Dev::export($_unique_fields, 1)).';';
+            $model_config[] = 'public $uniqueFields = '.(Dev::export($_unique_fields, 1)).';';
         }
 
         // 检测文件是否已经存在 存在的话将自定义代码带入
@@ -353,8 +352,8 @@ class DevService
             $replace_arr['/\s+\$sys_admin_uuid\$/'] = "\r";
         }
 
-        if (! empty($crud_config)) {
-            $replace_arr['/\$crud_config\$/'] = "\r\t".implode("\r\t\t", $crud_config)."\r";
+        if (! empty($model_config)) {
+            $replace_arr['/\$crud_config\$/'] = "\r\t".implode("\r\t\t", $model_config)."\r";
         } else {
             $replace_arr['/\s+\$crud_config\$/'] = "\r";
         }
@@ -522,7 +521,7 @@ class DevService
         $namespace_data = [];
         $parse_columns = [];
         $crud_config = [];
-        $with_sum = $with_count = $with_columns = $search_config = $can_be_null_columns = $locale_columns = []; // 配置处理好后 直接返回代码了
+        $with_sum = $with_count = $with_columns = $search_config = $can_be_null_columns = $locale_columns = $model_config = []; // 配置处理好后 直接返回代码了
 
         $relations = (new Relation)->where(['model_id' => $model_id])->with(['foreignModel.relations'])->get()->toArray();
 
@@ -859,9 +858,10 @@ class DevService
 
         if (! empty($can_be_null_columns)) {
             $crud_config[] = '$this->can_be_null_columns = '.(json_encode($can_be_null_columns)).';';
+            $model_config[] = 'public $can_be_null_columns = '.(json_encode($can_be_null_columns)).';';
         }
 
-        return [$namespace_data, $crud_config, $parse_columns, $useModelArr, $locale_columns];
+        return [$namespace_data, $crud_config, $parse_columns, $useModelArr, $locale_columns, $model_config];
     }
 
     /**
@@ -1078,12 +1078,17 @@ class DevService
             }
             $data[] = $d;
         }
-        $key_len = count($data);
+        // 获取非hidden元素的长度
+        $key_len = collect($data)->filter(function ($item) {
+            return ! Arr::get($item, 'formItemProps.hidden');
+        })->count();
+        // $key_len = count($data);
         if ($key_len < 1) {
             return $data;
         }
         foreach ($data as $key => $val) {
-            if (is_string($val)) {
+            $hidden = Arr::get($val, 'formItemProps.hidden');
+            if (is_string($val) || $hidden) {
                 continue;
             }
             $span = floor(24 / $key_len);

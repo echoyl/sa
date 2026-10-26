@@ -40,8 +40,8 @@ class Relation
             switch ($type) {
                 case 'model':
                     if (isset($data[$name])) {
-                        $idata = filterEmpty($data[$name]);
-                        $this->hasOne($idata, $column);
+                        // $idata = filterEmpty($data[$name]);
+                        $this->hasOne($data[$name], $column);
                     }
                     break;
                 case 'models':
@@ -63,12 +63,14 @@ class Relation
         if (! $class || ! $foreign_key) {
             return;
         }
-        foreach ($datas as $data) {
-            $data = filterEmpty($data);
+        $model = new $class;
+        $can_be_null_columns = $model->can_be_null_columns ?? [];
 
+        foreach ($datas as $data) {
+            $data = filterEmpty($data, $can_be_null_columns);
             $id = Arr::get($data, 'id', 0);
 
-            (new ParseData($class))->make($data, 'encode', $id ? 'update' : 'insert');
+            (new ParseData($class, ['can_be_null_columns' => $can_be_null_columns]))->make($data, 'encode', $id ? 'update' : 'insert');
             $data[$foreign_key] = $data_id;
             $check_unique_result = $this->checkUnique($data, $id, $class);
             if ($check_unique_result) {
@@ -115,6 +117,8 @@ class Relation
         }
 
         $model = new $class;
+        $can_be_null_columns = $model->can_be_null_columns ?? [];
+        $data = filterEmpty($data, $can_be_null_columns);
         $ext_data = [];
         if ($foreign_key == 'id') {
             return; // 暂时只支持更新外键不是id的数据
@@ -132,7 +136,7 @@ class Relation
             // 新增
             $from = 'insert';
         }
-        (new ParseData($class))->make($data, 'encode', $from);
+        (new ParseData($class, ['can_be_null_columns' => $can_be_null_columns]))->make($data, 'encode', $from);
 
         $data = array_merge($data, $ext_data);
 
