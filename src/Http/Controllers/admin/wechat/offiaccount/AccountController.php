@@ -23,7 +23,18 @@ class AccountController extends CrudController
         $this->displayorder = [['id', 'desc']];
         // customer construct end
     }
-    // customer code start
 
+    // customer code start
+    public function handleSearch($search = [])
+    {
+        $m = $this->getModel();
+
+        $select = request('select');
+        if (! empty($select)) {
+            $this->select_columns = $select;
+        }
+
+        return [$m, $search];
+    }
     // customer code end
 }
