@@ -70,6 +70,11 @@ class Relation
             $data = filterEmpty($data, $can_be_null_columns);
             $id = Arr::get($data, 'id', 0);
 
+            if (! $id) {
+                // 自动生成created_at
+                $data['created_at'] = now();
+            }
+
             (new ParseData($class, ['can_be_null_columns' => $can_be_null_columns]))->make($data, 'encode', $id ? 'update' : 'insert');
             $data[$foreign_key] = $data_id;
             $check_unique_result = $this->checkUnique($data, $id, $class);
@@ -134,6 +139,7 @@ class Relation
             $from = 'update';
         } else {
             // 新增
+            $data['created_at'] = now();
             $from = 'insert';
         }
         (new ParseData($class, ['can_be_null_columns' => $can_be_null_columns]))->make($data, 'encode', $from);
