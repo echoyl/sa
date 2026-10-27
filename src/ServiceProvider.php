@@ -23,6 +23,9 @@ class ServiceProvider extends LaravelServiceProvider
      */
     public function register()
     {
+        // 合并包内默认配置，保证未发布 config/sa.php 的旧项目也能拿到新增配置项
+        $this->mergeConfigFrom(__DIR__.'/../config/sa.php', 'sa');
+
         //
         $this->app->bind(SaAdminAppServiceInterface::class, config('sa.adminAppService'));
         $this->app->bind(SaServiceInterface::class, config('sa.service'));

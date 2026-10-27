@@ -371,7 +371,7 @@ class AdminService
     {
         $action = request()->route()->action;
         $uri = request()->route()->uri();
-        $prefix = env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', '');
+        $prefix = config('sa.app_prefix').config('sa.app_admin_prefix');
         $now_router = trim(str_replace($prefix, '', $uri), '/');
         $now_routers = explode('/', $now_router);
         $old_a = array_pop($now_routers);
@@ -467,7 +467,7 @@ class AdminService
 
             $data = [
                 'user_id' => $admin['id'],
-                'url' => implode(':', [$method, str_replace(env('APP_URL', ''), '', request()->fullUrl())]),
+                'url' => implode(':', [$method, str_replace(config('app.url'), '', request()->fullUrl())]),
                 'request' => json_encode($log_data),
                 'ip' => request()->ip(),
                 'created_at' => now(),

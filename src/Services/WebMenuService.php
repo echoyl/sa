@@ -229,7 +229,7 @@ class WebMenuService
             $menu = Menu::where(['id' => $mid])->with(['adminModel'])->first();
         }
         if (! $menu) {
-            $uri = str_replace(env('APP_PREFIX', ''), '', request()->route()->uri);
+            $uri = str_replace(config('sa.app_prefix'), '', request()->route()->uri);
             if ($uri && $uri != '/') {
                 $menu = $this->getByUri(explode('/', $uri));
             }
@@ -337,7 +337,7 @@ class WebMenuService
         }
         $menu = $this->getMenu(true);
 
-        $uri = str_replace(env('APP_PREFIX', ''), '', request()->route()->uri);
+        $uri = str_replace(config('sa.app_prefix'), '', request()->route()->uri);
         $selected = $menu ? $menu['id'] : ($uri == '/' ? 0 : -999);
 
         $list = self::format(0, self::all());

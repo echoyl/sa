@@ -5,6 +5,7 @@ namespace Echoyl\Sa\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Echoyl\Sa\Models\Attachment;
 use Echoyl\Sa\Models\AttachmentGroup;
+use Echoyl\Sa\Services\HelperService;
 use Illuminate\Http\Request;
 
 class AttachmentController extends Controller
@@ -20,8 +21,8 @@ class AttachmentController extends Controller
 
     public function index(Request $request)
     {
-        $psize = $request->input('limit', 28);
-        $page = $request->input('page', 1);
+        $psize = HelperService::pageSize($request->input('limit'), 28);
+        $page = HelperService::pageNumber($request->input('page'));
         $isFile = $request->input('isFile', 0);
         $groupId = $request->input('groupId', 0);
         $where = ['type' => 0, 'group_id' => $groupId];

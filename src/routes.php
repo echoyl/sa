@@ -3,18 +3,18 @@
 use Echoyl\Sa\Services\dev\DevService;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers', 'prefix' => env('APP_PREFIX', '')], function () {
+Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers', 'prefix' => config('sa.app_prefix')], function () {
     // 图片处理显示
     Route::get('img/storage/{path}', 'ImageController@show')->where('path', '.*');
 });
 
-Route::group(['namespace' => 'admin', 'prefix' => env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', 'sadmin')], function () {
+Route::group(['namespace' => 'admin', 'prefix' => config('sa.app_prefix').config('sa.app_admin_prefix')], function () {
     Route::middleware(['api', 'echoyl.remember',  'auth:sanctum', 'echoyl.sa', 'echoyl.permcheck'])->group(function () {
         DevService::aliasRoute();
     });
 });
 
-Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', 'sadmin')], function () {
+Route::group(['namespace' => '\Echoyl\Sa\Http\Controllers\admin', 'prefix' => config('sa.app_prefix').config('sa.app_admin_prefix')], function () {
     // 默认暴露这些公用路由
     Route::middleware(['api', 'echoyl.remember'])->group(function () {
 

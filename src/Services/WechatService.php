@@ -24,7 +24,7 @@ class WechatService
         if (HelperService::isDev()) {
             $wxconfig = json_encode([]);
         } else {
-            $app->jssdk->setUrl($url ?: env('APP_URL'));
+            $app->jssdk->setUrl($url ?: config('app.url'));
             if (! empty($config)) {
                 $wxconfig = $app->jssdk->buildConfig($config, false, false, false, ['wx-open-launch-weapp']);
             } else {
@@ -62,7 +62,7 @@ class WechatService
             // 'cert_path'          => 'path/to/your/cert.pem', // XXX: 绝对路径！！！！
             // 'key_path'           => 'path/to/your/key',      // XXX: 绝对路径！！！！
 
-            'notify_url' => env('APP_URL').'/wx/wxnotifys',     // 你也可以在下单时单独设置来想覆盖它
+            'notify_url' => config('app.url').'/wx/wxnotifys',     // 你也可以在下单时单独设置来想覆盖它
         ];
 
         $cert_path = base_path('cert/cert_'.$pay['id'].'.pem');
@@ -303,7 +303,7 @@ class WechatService
             // 'aes_key' => $account['encodingaeskey'],
             'oauth' => [
                 'scopes' => $params['scopes'] ?? ['snsapi_userinfo'],
-                'callback' => '/'.env('APP_PREFIX', '').'wx/auth',
+                'callback' => '/'.config('sa.app_prefix').'wx/auth',
                 'redirect_url' => url('wx/auth'),
             ],
             // 'response_type' => 'array',
@@ -660,7 +660,7 @@ class WechatService
                 'total' => $pay_log['money'],
                 'currency' => 'CNY',
             ],
-            'notify_url' => env('APP_URL').'/wx/wxrefundnotifys',
+            'notify_url' => config('app.url').'/wx/wxrefundnotifys',
         ];
 
         // 插入数据

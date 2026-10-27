@@ -56,7 +56,7 @@ class UrlService
             $url .= '?'.http_build_query($query);
         }
 
-        return URL::to('/'.env('APP_PREFIX', '').$url);
+        return URL::to('/'.config('sa.app_prefix').$url);
         // return url('/' . env('APP_PREFIX', '') . $url,$query);
     }
 }

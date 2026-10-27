@@ -461,8 +461,8 @@ class CrudController extends ApiBaseController
             }
         }
 
-        $psize = request('pageSize', $this->page_size);
-        $page = request('current', 1);
+        $psize = HelperService::pageSize(request('pageSize'), $this->page_size);
+        $page = HelperService::pageNumber(request('current'));
 
         $list = $m->offset(($page - 1) * $psize)
             ->limit($psize)

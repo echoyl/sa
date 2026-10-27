@@ -53,7 +53,7 @@ class UserController extends CrudController
 
     public function syncUser()
     {
-        $url = url(env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', '').'/wechat/offiaccount/user/_syncUser');
+        $url = url(config('sa.app_prefix').config('sa.app_admin_prefix').'/wechat/offiaccount/user/_syncUser');
         HelperService::asynUrl($url, ['account_id' => request('account_id', 0)]);
 
         return ['code' => 0, 'msg' => '已提交计划任务，正在同步中'];

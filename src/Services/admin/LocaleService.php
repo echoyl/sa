@@ -200,7 +200,7 @@ class LocaleService
 
     public static function getLang($name = 'Locale')
     {
-        $language = request()->header($name, env('APP_LOCALE', 'zh-CN')); // 默认简中
+        $language = request()->header($name, config('sa.app_locale', 'zh-CN')); // 默认简中
 
         $language = $language == 'en' ? 'en-US' : $language; // 英文使用en-US .env文件中默认是en,前端是en-US 需要转化一下
 

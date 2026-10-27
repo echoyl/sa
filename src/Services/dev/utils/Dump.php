@@ -88,7 +88,7 @@ class Dump
 
     public function exportTable($table_name, $where = '', $check = [])
     {
-        $config = config('database.connections.'.env('DB_CONNECTION'));
+        $config = config('database.connections.'.config('database.default'));
         $prefix = $config['prefix'] ?? '';
         $table_name = $this->delimite($prefix.$table_name);
 

@@ -156,10 +156,42 @@ class HelperService
         // return str_replace($search,$replace,$content);
     }
 
+    /**
+     * 解析每页条数并限制上限，避免前端传入过大的 pageSize 导致慢查询/内存暴涨
+     *
+     * @param  mixed  $size  前端传入的值
+     * @param  int  $default  未传或非法时使用的默认值
+     * @return int
+     */
+    public static function pageSize($size = null, $default = 10)
+    {
+        $size = is_numeric($size) ? (int) $size : (int) $default;
+        $max = (int) config('sa.max_page_size', 1000);
+        if ($max > 0) {
+            $size = min($size, $max);
+        }
+
+        return max($size, 1);
+    }
+
+    /**
+     * 解析页码，最小为 1，避免出现负数 offset
+     *
+     * @param  mixed  $page  前端传入的值
+     * @param  int  $default  未传或非法时使用的默认值
+     * @return int
+     */
+    public static function pageNumber($page = null, $default = 1)
+    {
+        $page = is_numeric($page) ? (int) $page : (int) $default;
+
+        return max($page, 1);
+    }
+
     public static function list($model, $callback, $order_by = [], $where = [])
     {
-        $page = webapi_request('page', 1);
-        $page_size = webapi_request('page_size', 10);
+        $page = self::pageNumber(webapi_request('page', 1));
+        $page_size = self::pageSize(webapi_request('page_size', 10));
 
         $m = $model->where($where);
 
@@ -180,8 +212,8 @@ class HelperService
 
     public static function map($model, $callback, $order_by = [], $where = [])
     {
-        $page = webapi_request('page', 1);
-        $page_size = webapi_request('page_size', 10);
+        $page = self::pageNumber(webapi_request('page', 1));
+        $page_size = self::pageSize(webapi_request('page_size', 10));
 
         $m = $model->where($where);
 
@@ -385,10 +417,10 @@ class HelperService
 
     public static function getFileImagePrefix($img = false)
     {
-        $prefix = $img ? rtrim(env('APP_URL'), '/').'/img/storage' : rtrim(env('APP_URL'), '/').'/storage'; // 本地存储
-        if (env('ALIYUN_OSS')) {
+        $prefix = $img ? rtrim(config('app.url'), '/').'/img/storage' : rtrim(config('app.url'), '/').'/storage'; // 本地存储
+        if (config('sa.aliyun_oss')) {
             // 如果开启阿里云存储 返回
-            $prefix = implode('/', [env('ALIYUN_DOMAIN'), env('ALIYUN_OSS')]);
+            $prefix = implode('/', [config('sa.aliyun_domain'), config('sa.aliyun_oss')]);
         }
 
         return rtrim($prefix).'/';
@@ -859,7 +891,7 @@ class HelperService
 
     public static function isDev()
     {
-        return env('APP_ENV') == 'local';
+        return config('app.env') == 'local';
     }
 
     public static function getDevModel($model_id)

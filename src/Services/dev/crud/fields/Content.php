@@ -38,7 +38,7 @@ class Content extends BaseField
     {
         $matches = $this->getMatch($content);
 
-        $replace = rtrim(env('APP_URL'), '/').'/storage/';
+        $replace = rtrim(config('app.url'), '/').'/storage/';
 
         $search = $replace.$this->tmp_prefix;
 
@@ -77,7 +77,7 @@ class Content extends BaseField
 
         $mt = [];
 
-        $prefix = rtrim(env('APP_URL'), '/').'/storage/';
+        $prefix = rtrim(config('app.url'), '/').'/storage/';
 
         foreach ($_matches as $src) {
             if (strpos($src, $prefix) !== false) {
@@ -100,7 +100,7 @@ class Content extends BaseField
 
         $matches = $this->getMatch($content);
 
-        $prefix = rtrim(env('APP_URL'), '/').'/storage/';
+        $prefix = rtrim(config('app.url'), '/').'/storage/';
 
         foreach ($matches as $src) {
             $data[] = [

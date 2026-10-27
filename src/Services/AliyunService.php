@@ -10,8 +10,8 @@ class AliyunService
 {
     public function getVideoUrl($vid)
     {
-        $accessKeyId = env('ALI_accessKeyId');
-        $accessKeySecret = env('ALI_accessKeySecret');
+        $accessKeyId = config('sa.ali_access_key_id');
+        $accessKeySecret = config('sa.ali_access_key_secret');
         AlibabaCloud::accessKeyClient($accessKeyId, $accessKeySecret)
             ->regionId('cn-hangzhou')
             ->asDefaultClient();
@@ -50,8 +50,8 @@ class AliyunService
 
     public function createUploadVideo($title, $filename, $qt_tpl = '7a1216f13a466a89dfc9546f1a4da4e6')
     {
-        $accessKeyId = env('ALI_accessKeyId');
-        $accessKeySecret = env('ALI_accessKeySecret');
+        $accessKeyId = config('sa.ali_access_key_id');
+        $accessKeySecret = config('sa.ali_access_key_secret');
         AlibabaCloud::accessKeyClient($accessKeyId, $accessKeySecret)
             ->regionId('cn-hangzhou')
             ->asDefaultClient();
@@ -115,8 +115,8 @@ class AliyunService
 
     public function refreshUploadVideo($id)
     {
-        $accessKeyId = env('ALI_accessKeyId');
-        $accessKeySecret = env('ALI_accessKeySecret');
+        $accessKeyId = config('sa.ali_access_key_id');
+        $accessKeySecret = config('sa.ali_access_key_secret');
         AlibabaCloud::accessKeyClient($accessKeyId, $accessKeySecret)
             ->regionId('cn-hangzhou')
             ->asDefaultClient();
@@ -172,8 +172,8 @@ class AliyunService
 
         // $tp = isset($tplArr[$tp])?$tplArr[$tp]:$tp;
 
-        $accessKeyId = env('ALI_accessKeyId');
-        $accessKeySecret = env('ALI_accessKeySecret');
+        $accessKeyId = config('sa.ali_access_key_id');
+        $accessKeySecret = config('sa.ali_access_key_secret');
         AlibabaCloud::accessKeyClient($accessKeyId, $accessKeySecret)
             ->regionId('cn-hangzhou') // replace regionId as you need
             ->asDefaultClient();

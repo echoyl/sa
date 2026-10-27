@@ -65,7 +65,7 @@ class MenuController extends CrudController
         $ws = new WebsiteService;
         $search['modules'] = $ws->modules;
 
-        return $this->list($this->model->getChild(0, ['type' => env('APP_NAME')]), 0, $search);
+        return $this->list($this->model->getChild(0, ['type' => config('app.name')]), 0, $search);
     }
 
     public function postData(&$data)
@@ -74,8 +74,8 @@ class MenuController extends CrudController
         $data['spec_arr'] = $ws->spec_arr;
         $data['modules'] = $ws->modules;
         $ds = new DevService;
-        $data['admin_model_ids'] = $ds->getModelsTreeData([env('APP_NAME')]);
-        // $data['admin_model_folder_ids'] = $ds->getModelsFolderTree([env('APP_NAME')]);
+        $data['admin_model_ids'] = $ds->getModelsTreeData([config('app.name')]);
+        // $data['admin_model_folder_ids'] = $ds->getModelsFolderTree([config('app.name')]);
         HelperService::deImagesFromConfig($data);
 
     }
@@ -96,7 +96,7 @@ class MenuController extends CrudController
             // $has_where = [
             //     ['parent_id', '=', $data['parent_id'] ?? 0],
             //     ['alias', '=', $alias],
-            //     ['type','=',env('APP_NAME')],
+            //     ['type','=',config('app.name')],
             // ];
             // if ($id) {
             //     $has_where[] = ['id', '!=', $id];
@@ -115,7 +115,7 @@ class MenuController extends CrudController
             }
         }
 
-        $data['type'] = env('APP_NAME');
+        $data['type'] = config('app.name');
 
     }
 
@@ -157,7 +157,7 @@ class MenuController extends CrudController
         if ($pagetype == 'detail') {
             // 获取单个内容信息
             $page = 1;
-            $psize = request('pageSize', 10);
+            $psize = HelperService::pageSize(request('pageSize'), 10);
 
             $keyword = request('keyword');
             $data = $model->select(['id', 'title']);

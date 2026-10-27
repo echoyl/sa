@@ -23,13 +23,13 @@ if (! function_exists('tomedia')) {
             if (strpos($url, 'http') !== false || strpos($url, 'https') !== false) {
                 return $url;
             } else {
-                if (env('ALIYUN_OSS')) {
-                    return implode('/', [env('ALIYUN_DOMAIN'), env('ALIYUN_OSS'), $url]);
+                if (config('sa.aliyun_oss')) {
+                    return implode('/', [config('sa.aliyun_domain'), config('sa.aliyun_oss'), $url]);
                 } else {
                     if ($img) {
-                        return $url ? rtrim(env('APP_URL'), '/').'/img/storage/'.$url : '';
+                        return $url ? rtrim(config('app.url'), '/').'/img/storage/'.$url : '';
                     } else {
-                        return $url ? rtrim(env('APP_URL'), '/').'/storage/'.$url : '';
+                        return $url ? rtrim(config('app.url'), '/').'/storage/'.$url : '';
                     }
 
                 }
@@ -256,7 +256,7 @@ if (! function_exists('captcha_img_html')) {
             $attrs_str .= $attr.'="'.$value.'" ';
         }
         $str = new Str;
-        $src = url(env('APP_PREFIX', '').'captcha/'.$config).'?'.$str->random(8);
+        $src = url(config('sa.app_prefix').'captcha/'.$config).'?'.$str->random(8);
 
         return new HtmlString('<img onclick="javascript:resetVerifyCode(this);" src="'.$src.'" '.trim($attrs_str).'>');
     }

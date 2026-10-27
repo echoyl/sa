@@ -412,7 +412,7 @@ class UploadService
             $path = $file->store('');
             $newPath = storage_path('app/public/'.$path);
             require_once app_path().DIRECTORY_SEPARATOR.'Libs'.DIRECTORY_SEPARATOR.'voduploadsdk'.DIRECTORY_SEPARATOR.'Autoloader.php';
-            $uploader = new \AliyunVodUploader(env('ALI_accessKeyId_video'), env('ALI_accessKeySecret_video'));
+            $uploader = new \AliyunVodUploader(config('sa.ali_access_key_id_video'), config('sa.ali_access_key_secret_video'));
             $uploadVideoRequest = new \UploadVideoRequest($newPath, $file->getClientOriginalName());
             // $uploadVideoRequest->setCateId(1);
             // $uploadVideoRequest->setCoverURL("http://xxxx.jpg");

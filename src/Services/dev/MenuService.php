@@ -451,7 +451,7 @@ class MenuService
         }
 
         // 先搜索一遍是否有菜单 - 最后一项可能是 action name 也可能是真的path 如果菜单设置为是form类型的话
-        $type_arr = [env('APP_NAME'), 'system'];
+        $type_arr = [config('app.name'), 'system'];
         $m = $this->getAll()->filter(function ($item) use ($name, $type_arr) {
             return $item['path'] == $name && in_array($item['page_type'], ['form', 'panel', 'panel2', 'justTable', 'api']) && in_array($item['type'], $type_arr);
         });
@@ -500,7 +500,7 @@ class MenuService
         $parent = $this->getAll()->first(function ($m) use ($item) {
             return $m['id'] == $item['parent_id'];
         });
-        if (! $parent || $parent['path'] != $path[0] || ! in_array($parent['type'], [env('APP_NAME'), 'system'])) {
+        if (! $parent || $parent['path'] != $path[0] || ! in_array($parent['type'], [config('app.name'), 'system'])) {
             return false;
         }
         if (isset($path[1])) {

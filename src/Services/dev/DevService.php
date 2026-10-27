@@ -27,7 +27,7 @@ class DevService
 
     public static function appname()
     {
-        return env('APP_NAME', '');
+        return config('app.name', '');
     }
 
     /**
@@ -492,7 +492,7 @@ class DevService
             '/\$customer_construct\$/' => $customer_construct,
             '/\$customer_property\$/' => $customer_property,
             '/\$customer_namespace\$/' => $customer_namespace,
-            '/\$app_name\$/' => env('APP_NAME', ''),
+            '/\$app_name\$/' => config('app.name'),
             // '/\$hasone\$/'=>implode("\r",$hasone_data),
             // '/\$hasmany\$/'=>$hasmany_data
         ];
@@ -939,7 +939,7 @@ class DevService
     public function formatFile($files = [])
     {
         // 格式化代码 - windows需要将php路径加入到环境变量中
-        $url = url(env('APP_PREFIX', '').env('APP_ADMIN_PREFIX', '').'/dev/formatFile');
+        $url = url(config('sa.app_prefix').config('sa.app_admin_prefix').'/dev/formatFile');
         // Log::channel('daily')->info('createFile start:', ['url' => $url, 'file' => implode(',', $files)]);
         HelperService::asynUrl($url, ['file_path' => $files]);
         // $command = base_path('vendor/bin/pint ').$file;
@@ -1274,7 +1274,7 @@ class DevService
     public static function getMenuByParentId($pid = 0, $type = '')
     {
         $s = new self;
-        $type = $type ?: env('APP_NAME');
+        $type = $type ?: config('app.name');
 
         return collect($s->allMenu())->filter(function ($item) use ($pid, $type) {
             if ($pid) {

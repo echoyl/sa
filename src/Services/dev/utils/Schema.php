@@ -511,7 +511,7 @@ class Schema
      */
     public static function hasColumn($table, $column)
     {
-        if (env('DB_CONNECTION') == 'mysql') {
+        if (config('database.default') == 'mysql') {
             // 复用带缓存的表字段信息 避免每次调用都查询数据库
             $columns = static::getTableColumns($table);
 
