@@ -1,7 +1,7 @@
 {
     "name": "echoyl/sa",
     "description": "echoyl/deadmin 依赖的核心包文件",
-    "type": "project",
+    "type": "library",
     "authors": [
         {
             "name": "echoyl",
