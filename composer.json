@@ -2,20 +2,46 @@
     "name": "echoyl/sa",
     "description": "echoyl/deadmin 依赖的核心包文件",
     "type": "library",
+    "keywords": [
+        "laravel",
+        "admin",
+        "crud",
+        "deadmin",
+        "antd"
+    ],
+    "homepage": "https://github.com/echoyl/sa",
+    "license": "MIT",
     "authors": [
         {
             "name": "echoyl",
-            "email": "inandan@126.com"
+            "email": "inandan@126.com",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/echoyl/sa/issues",
+        "source": "https://github.com/echoyl/sa"
+    },
     "require": {
-        "php": "^8.0 | ^8.1 | ^8.2 | ^8.3 | ^8.4",
+        "php": "^8.0",
         "laravel/framework": "^9.0 | ^10.0 | ^11.0 | ^12.0 | ^13.0",
         "laravel/sanctum": "^3.0 | ^4.0",
         "mews/captcha": "^3.2",
-		"symfony/var-exporter": "^6.4|^7.0|^8.0"
+        "symfony/var-exporter": "^6.4 | ^7.0 | ^8.0"
     },
-    "license": "MIT",
+    "require-dev": {
+        "laravel/pint": "^1.25"
+    },
+    "suggest": {
+        "alibabacloud/client": "阿里云视频点播/SMS 功能需要 (AliyunService)",
+        "w7corp/easywechat": "微信公众号/小程序/支付功能需要 (WechatService, ^6.0)",
+        "league/glide": "图片裁剪路由 /img/storage 需要 (ImageController, ^2.2|^3.0)",
+        "intervention/image": "图片水印/缩略图处理需要 (ImageService, ^3.0)，另需 ext-imagick",
+        "simplesoftwareio/simple-qrcode": "推广二维码生成需要 (UploadService::qrcode)",
+        "workerman/gateway-worker": "WebSocket 消息推送需要 (SocketService)",
+        "fakerphp/faker": "后台假数据生成需要 (FakeData)",
+        "ext-xlswriter": "Excel 导出需要 (Vtiful/ExcelService)"
+    },
     "autoload": {
         "psr-4": {
             "Echoyl\\Sa\\": "src/"
@@ -31,7 +57,11 @@
             ]
         }
     },
-    "require-dev": {
-        "laravel/pint": "^1.25"
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "fix": "pint"
     }
 }
