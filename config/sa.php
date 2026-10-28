@@ -11,6 +11,7 @@ return [
     'app_admin_prefix' => env('APP_ADMIN_PREFIX', 'sadmin'),
     'app_locale' => env('APP_LOCALE', 'zh-CN'), // 默认语言，en 会自动转换为 en-US
     'max_page_size' => 1000, // 列表分页每页最大条数，防止 pageSize 传入过大导致慢查询/内存暴涨
+    'route_cache' => env('SA_ROUTE_CACHE', true), // 后台动态菜单路由定义缓存到 bootstrap/cache/sa-routes.php，菜单变更后执行 php artisan sa:route cache
     'service' => AppApiService::class,
     'imageSize' => [
         's' => [

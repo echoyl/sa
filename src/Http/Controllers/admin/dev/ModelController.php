@@ -196,6 +196,7 @@ class ModelController extends CrudController
         $ds = new DevService;
         $ds->allMenu(true);
         $ds->allModel(true);
+        DevService::flushRouteCache();
 
         return $this->success('success');
     }

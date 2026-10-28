@@ -81,6 +81,7 @@ class MenuController extends CrudController
         $ds->allMenu(true);
         $ds->allModel(true);
         MenuService::flushCache();
+        DevService::flushRouteCache();
 
         return $this->success('success');
     }
@@ -232,6 +233,7 @@ class MenuController extends CrudController
         }
         $this->model->insert($data);
         MenuService::flushCache();
+        DevService::flushRouteCache();
 
         return $this->success('操作成功');
     }
@@ -1050,6 +1052,7 @@ class MenuController extends CrudController
                 $val->delete();
             }
             MenuService::flushCache();
+            DevService::flushRouteCache();
 
             return $this->success(['currentUser' => $this->getUserInfo()]);
         }
